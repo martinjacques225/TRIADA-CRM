@@ -46,7 +46,7 @@ function _citaCard(c, p, dim) {
   const stBgs    = { Pendiente:'var(--amber-l)', Confirmada:'var(--primary-l)', Realizada:'var(--green-l)', Cancelada:'var(--surface3)' };
   const tipoIcon = { 'Primer contacto':'📞','Diagnóstico 360':'🔍','Presentación propuesta':'📋','Seguimiento':'🔄','Otro':'📅' };
 
-  return `<div class="agenda-card card card-pad${dim?' agenda-dim':''}" style="margin-bottom:10px;display:flex;gap:14px;align-items:center">
+  return `<div class="agenda-card card card-pad${dim?' agenda-dim':''}" style="margin-bottom:10px;display:flex;gap:14px;align-items:center;border-left:3px solid ${stColors[c.estado]||'var(--border)'}">
     <div class="agenda-tipo-icon">${tipoIcon[c.tipo] || '📅'}</div>
     <div style="flex:1;min-width:0">
       <div style="font-size:14.5px;font-weight:600;color:var(--navy)">${escHtml(c.titulo || c.tipo || 'Cita')}</div>

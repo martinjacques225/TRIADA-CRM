@@ -44,12 +44,12 @@ export async function render() {
     <div class="section-head"><h2>Informes y Analítica</h2></div>
 
     <div class="kpi-grid" style="margin-bottom:28px">
-      <div class="kpi-card kpi-accent"><div class="kpi-label">Total prospectos</div><div class="kpi-value">${todos.length}</div></div>
-      <div class="kpi-card" style="border-left:3px solid var(--green)"><div class="kpi-label">Tasa de conversión</div><div class="kpi-value">${tasa}%</div><div class="kpi-sub">${clientes} clientes / ${todos.length} prospectos</div></div>
-      <div class="kpi-card" style="border-left:3px solid var(--amber)"><div class="kpi-label">Valor cerrado</div><div class="kpi-value kpi-value-sm">${formatCLP(valorTotal)}</div></div>
-      <div class="kpi-card" style="border-left:3px solid var(--violet)"><div class="kpi-label">Valor en pipeline</div><div class="kpi-value kpi-value-sm">${formatCLP(valorAbierto)}</div></div>
-      <div class="kpi-card" style="border-left:3px solid var(--primary)"><div class="kpi-label">Diagnósticos realizados</div><div class="kpi-value">${todosD.length}</div></div>
-      <div class="kpi-card" style="border-left:3px solid var(--navy)"><div class="kpi-label">Citas realizadas</div><div class="kpi-value">${todasC.filter(c=>c.estado==='Realizada').length}</div></div>
+      <div class="kpi-card"><div class="kpi-top"><span class="kpi-label">Total prospectos</span><span class="kpi-ic" style="background:var(--primary-l);color:var(--primary)">👥</span></div><div class="kpi-value">${todos.length}</div></div>
+      <div class="kpi-card"><div class="kpi-top"><span class="kpi-label">Tasa de conversión</span><span class="kpi-ic" style="background:var(--green-l);color:var(--green)">🎯</span></div><div class="kpi-value">${tasa}%</div><div class="kpi-sub">${clientes} clientes / ${todos.length} prospectos</div></div>
+      <div class="kpi-card"><div class="kpi-top"><span class="kpi-label">Valor cerrado</span><span class="kpi-ic" style="background:var(--amber-l);color:var(--amber)">💰</span></div><div class="kpi-value kpi-value-sm">${formatCLP(valorTotal)}</div></div>
+      <div class="kpi-card"><div class="kpi-top"><span class="kpi-label">Valor en pipeline</span><span class="kpi-ic" style="background:var(--violet-l);color:var(--violet)">📊</span></div><div class="kpi-value kpi-value-sm">${formatCLP(valorAbierto)}</div></div>
+      <div class="kpi-card"><div class="kpi-top"><span class="kpi-label">Diagnósticos realizados</span><span class="kpi-ic" style="background:var(--primary-l);color:var(--primary)">🔍</span></div><div class="kpi-value">${todosD.length}</div></div>
+      <div class="kpi-card"><div class="kpi-top"><span class="kpi-label">Citas realizadas</span><span class="kpi-ic" style="background:var(--navy-l);color:var(--navy)">📅</span></div><div class="kpi-value">${todasC.filter(c=>c.estado==='Realizada').length}</div></div>
     </div>
 
     <div class="inf-grid">
