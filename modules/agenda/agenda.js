@@ -61,8 +61,8 @@ function _citaCard(c, p, dim) {
     <div style="display:flex;flex-direction:column;align-items:flex-end;gap:8px">
       <span class="badge" style="color:${stColors[c.estado]||'var(--text3)'};background:${stBgs[c.estado]||'var(--surface3)'};border-color:${stColors[c.estado]||'var(--border)'}">${escHtml(c.estado||'Pendiente')}</span>
       <div style="display:flex;gap:4px">
-        <button class="btn btn-ghost btn-sm" onclick="window._app.editCita(${c.id})">Editar</button>
-        <button class="btn btn-ghost btn-sm" onclick="window._app.deleteCita(${c.id})" style="color:var(--danger)">Eliminar</button>
+        <button class="btn btn-ghost btn-sm" onclick="window._app.editCita('${c.id}')">Editar</button>
+        <button class="btn btn-ghost btn-sm" onclick="window._app.deleteCita('${c.id}')" style="color:var(--danger)">Eliminar</button>
       </div>
     </div>
   </div>`;

@@ -117,7 +117,7 @@ export async function openProspectoDetail(id) {
           ${p.dolorPrincipal?`<span class="chip-dolor">${escHtml(p.dolorPrincipal)}</span>`:''}
         </div>
       </div>
-      <button class="btn btn-ghost btn-sm" onclick="closeModal();window._app.openProspectoModal(${p.id})">Editar</button>
+      <button class="btn btn-ghost btn-sm" onclick="closeModal();window._app.openProspectoModal('${p.id}')">Editar</button>
     </div>
     <hr class="divider">
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px;font-size:13.5px">
@@ -129,9 +129,9 @@ export async function openProspectoDetail(id) {
     ${p.notas?`<div style="background:var(--surface2);border-radius:8px;padding:12px;font-size:13.5px;color:var(--text2);margin-bottom:16px"><em>${escHtml(p.notas)}</em></div>`:''}
 
     <div style="display:flex;gap:10px;margin-bottom:18px;flex-wrap:wrap">
-      <button class="btn btn-primary btn-sm" onclick="window._app.openDiagnosticoModal(${p.id})">+ Diagnóstico</button>
-      <button class="btn btn-ghost btn-sm" onclick="window._app.openCitaModalForProspecto(${p.id})">+ Cita</button>
-      <button class="btn btn-ghost btn-sm" onclick="window._app.openPropuestaModalForProspecto(${p.id})">+ Propuesta</button>
+      <button class="btn btn-primary btn-sm" onclick="window._app.openDiagnosticoModal('${p.id}')">+ Diagnóstico</button>
+      <button class="btn btn-ghost btn-sm" onclick="window._app.openCitaModalForProspecto('${p.id}')">+ Cita</button>
+      <button class="btn btn-ghost btn-sm" onclick="window._app.openPropuestaModalForProspecto('${p.id}')">+ Propuesta</button>
     </div>
 
     <h4 style="font-size:14px;font-weight:700;color:var(--navy);margin-bottom:10px">Diagnósticos (${diags.length})</h4>
@@ -145,7 +145,7 @@ export async function openProspectoDetail(id) {
         return `<div style="background:var(--surface2);border-radius:10px;padding:12px;margin-bottom:8px;font-size:13px">
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
             <div style="font-weight:600;color:var(--navy)">${new Date(d.fecha).toLocaleDateString('es-CL')}</div>
-            <button class="btn btn-navy btn-sm" onclick="window._app.openInformeEjecutivo(${d.id})">📄 Informe 360</button>
+            <button class="btn btn-navy btn-sm" onclick="window._app.openInformeEjecutivo('${d.id}')">📄 Informe 360</button>
           </div>
           <div style="display:flex;gap:14px">
             ${[{l:'🖥️ Tec',v:scores.tec,c:'#5B6BD6'},{l:'📈 Ventas',v:scores.ventas,c:'#028090'},{l:'💰 Fin',v:scores.finanzas,c:'#4FB286'}].map(a=>

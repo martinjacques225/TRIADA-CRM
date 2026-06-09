@@ -76,7 +76,7 @@ export async function render() {
           ${recientes.length === 0
             ? `<div class="card-pad" style="color:var(--text3);font-size:14px">Sin prospectos aún.</div>`
             : recientes.map(p => `
-              <div class="prospect-row" onclick="window._app.openProspectoDetail(${p.id})" style="display:flex;align-items:center;gap:12px;padding:12px 16px;border-bottom:1px solid var(--border);cursor:pointer;transition:var(--tr)" onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background=''">
+              <div class="prospect-row" onclick="window._app.openProspectoDetail('${p.id}')" style="display:flex;align-items:center;gap:12px;padding:12px 16px;border-bottom:1px solid var(--border);cursor:pointer;transition:var(--tr)" onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background=''">
                 <div style="width:36px;height:36px;border-radius:50%;background:var(--primary);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;flex-shrink:0">${(p.nombre||'?')[0].toUpperCase()}</div>
                 <div style="flex:1;min-width:0">
                   <div style="font-size:13.5px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${p.nombre || '—'}</div>

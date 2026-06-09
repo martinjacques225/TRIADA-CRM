@@ -151,10 +151,10 @@ function _prospectCard(p, st) {
       ${dolorChip}
     </div>
     <div class="prospect-actions">
-      ${p.telefono ? `<button class="btn-action" onclick="window._app.callProspecto(${p.id})" title="Llamar">${_ico.phone}</button>` : ''}
-      <button class="btn-action" onclick="window._app.openDiagnosticoModal(${p.id})" title="Diagnóstico">${_ico.diag}</button>
-      <button class="btn-action" onclick="window._app.openProspectoDetail(${p.id})" title="Ver ficha">${_ico.edit}</button>
-      <button class="btn-action" onclick="window._app.deleteProspecto(${p.id})" title="Eliminar">${_ico.trash}</button>
+      ${p.telefono ? `<button class="btn-action" onclick="window._app.callProspecto('${p.id}')" title="Llamar">${_ico.phone}</button>` : ''}
+      <button class="btn-action" onclick="window._app.openDiagnosticoModal('${p.id}')" title="Diagnóstico">${_ico.diag}</button>
+      <button class="btn-action" onclick="window._app.openProspectoDetail('${p.id}')" title="Ver ficha">${_ico.edit}</button>
+      <button class="btn-action" onclick="window._app.deleteProspecto('${p.id}')" title="Eliminar">${_ico.trash}</button>
     </div>
   </div>`;
 }
@@ -178,9 +178,9 @@ function _buildList(list) {
           <td style="color:var(--text3);font-size:12.5px">${formatDate(p.fechaCreacion)}</td>
           <td>
             <div style="display:flex;gap:4px">
-              <button class="btn-icon btn-sm" onclick="window._app.openProspectoDetail(${p.id})" title="Ver">${_ico.edit}</button>
-              <button class="btn-icon btn-sm" onclick="window._app.openDiagnosticoModal(${p.id})" title="Diagnóstico">${_ico.diag}</button>
-              <button class="btn-icon btn-sm" onclick="window._app.deleteProspecto(${p.id})" title="Eliminar">${_ico.trash}</button>
+              <button class="btn-icon btn-sm" onclick="window._app.openProspectoDetail('${p.id}')" title="Ver">${_ico.edit}</button>
+              <button class="btn-icon btn-sm" onclick="window._app.openDiagnosticoModal('${p.id}')" title="Diagnóstico">${_ico.diag}</button>
+              <button class="btn-icon btn-sm" onclick="window._app.deleteProspecto('${p.id}')" title="Eliminar">${_ico.trash}</button>
             </div>
           </td>
         </tr>`).join('')}

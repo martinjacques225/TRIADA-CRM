@@ -48,8 +48,8 @@ export async function render() {
                   <td><span class="badge" style="color:${stColors[p.estado]};background:${stBgs[p.estado]};border-color:${stColors[p.estado]}">${escHtml(p.estado)}</span></td>
                   <td>
                     <div style="display:flex;gap:4px">
-                      <button class="btn btn-ghost btn-sm" onclick="window._app.editPropuesta(${p.id})">Editar</button>
-                      <button class="btn btn-ghost btn-sm" onclick="window._app.deletePropuesta(${p.id})" style="color:var(--danger)">Eliminar</button>
+                      <button class="btn btn-ghost btn-sm" onclick="window._app.editPropuesta('${p.id}')">Editar</button>
+                      <button class="btn btn-ghost btn-sm" onclick="window._app.deletePropuesta('${p.id}')" style="color:var(--danger)">Eliminar</button>
                     </div>
                   </td>
                 </tr>`;
