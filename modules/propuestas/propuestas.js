@@ -1,6 +1,7 @@
 // modules/propuestas/propuestas.js
 import { propuestas, prospectos } from '../../js/db.js';
 import { escHtml, formatDate, formatCLP, todayStr } from '../../js/utils.js';
+import { attachFormatting, parseCLP } from '../../js/format.js';
 
 const ESTADOS_PROP = ['Borrador','Enviada','Negociando','Aceptada','Rechazada'];
 const SERVICIOS = ['Diagnóstico 360','Implementación CRM','Automatización de procesos','Asesoría financiera','Consultoría de ventas','Transformación digital integral'];
@@ -85,7 +86,7 @@ export function renderPropuestaModal(prospectosAll, onSave, existing = null) {
     <div class="form-row">
       <div class="form-group">
         <label>Valor estimado (CLP)</label>
-        <input id="propValor" type="number" placeholder="Ej: 1500000" value="${p.valor||''}">
+        <input id="propValor" type="text" inputmode="numeric" data-fmt="clp" placeholder="Ej: 1.500.000" value="${p.valor ? Number(p.valor).toLocaleString('es-CL') : ''}">
       </div>
       <div class="form-group">
         <label>Estado</label>
@@ -103,12 +104,14 @@ export function renderPropuestaModal(prospectosAll, onSave, existing = null) {
       <textarea id="propNotas">${escHtml(p.notas||'')}</textarea>
     </div>`;
 
+  attachFormatting(body);
+
   document.getElementById('modalSave').onclick = async () => {
     const servicios = [...document.querySelectorAll('#propServicios input:checked')].map(i=>i.value);
     const data = {
       prospectoId: +document.getElementById('propProspecto').value || null,
       servicios,
-      valor:    +document.getElementById('propValor').value || 0,
+      valor:    parseCLP(document.getElementById('propValor').value),
       estado:    document.getElementById('propEstado').value,
       vigencia:  document.getElementById('propVigencia').value,
       notas:     document.getElementById('propNotas').value.trim(),

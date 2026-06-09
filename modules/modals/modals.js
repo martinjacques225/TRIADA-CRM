@@ -1,6 +1,7 @@
 // modules/modals/modals.js
 import { prospectos, diagnosticos, citas, propuestas } from '../../js/db.js';
 import { escHtml, PIPELINE_STAGES, RUBROS, TAMANOS, DOLORES, ORIGENES, todayStr, toast } from '../../js/utils.js';
+import { attachFormatting, validateRut, validateEmail } from '../../js/format.js';
 import { renderCitaModal } from '../agenda/agenda.js';
 import { renderPropuestaModal } from '../propuestas/propuestas.js';
 import { renderDiagnosticoModal } from '../diagnosticos/diagnosticos.js';
@@ -26,12 +27,16 @@ export async function openProspectoModal(id = null) {
   const p = existing || {};
   body.innerHTML = `
     <div class="form-row">
-      <div class="form-group"><label>Nombre *</label><input id="pNombre" value="${escHtml(p.nombre||'')}" placeholder="Nombre completo"></div>
-      <div class="form-group"><label>Empresa</label><input id="pEmpresa" value="${escHtml(p.empresa||'')}" placeholder="Nombre de la empresa"></div>
+      <div class="form-group"><label>Nombre *</label><input id="pNombre" data-fmt="upper" value="${escHtml(p.nombre||'')}" placeholder="NOMBRE COMPLETO"></div>
+      <div class="form-group"><label>Empresa</label><input id="pEmpresa" data-fmt="upper" value="${escHtml(p.empresa||'')}" placeholder="NOMBRE DE LA EMPRESA"></div>
     </div>
     <div class="form-row">
-      <div class="form-group"><label>Email</label><input id="pEmail" type="email" value="${escHtml(p.email||'')}" placeholder="correo@empresa.cl"></div>
-      <div class="form-group"><label>Teléfono / WhatsApp</label><input id="pTelefono" value="${escHtml(p.telefono||'')}" placeholder="+56 9 …"></div>
+      <div class="form-group"><label>RUT empresa</label><input id="pRut" data-fmt="rut" value="${escHtml(p.rut||'')}" placeholder="76.123.456-7"></div>
+      <div class="form-group"><label>Email</label><input id="pEmail" type="email" data-fmt="email" value="${escHtml(p.email||'')}" placeholder="correo@empresa.cl"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Teléfono / WhatsApp</label><input id="pTelefono" data-fmt="phone" value="${escHtml(p.telefono||'')}" placeholder="+56 9 1234 5678"></div>
+      <div class="form-group"></div>
     </div>
     <div class="form-row">
       <div class="form-group"><label>Rubro</label>
@@ -56,13 +61,20 @@ export async function openProspectoModal(id = null) {
       <textarea id="pNotas">${escHtml(p.notas||'')}</textarea>
     </div>`;
 
+  attachFormatting(body);
+
   document.getElementById('modalSave').onclick = async () => {
     const nombre = document.getElementById('pNombre').value.trim();
     if (!nombre) { toast('El nombre es obligatorio', 'error'); return; }
+    const rut   = document.getElementById('pRut').value.trim();
+    const email = document.getElementById('pEmail').value.trim();
+    if (rut && !validateRut(rut))       { toast('El RUT no es válido', 'error'); return; }
+    if (email && !validateEmail(email)) { toast('El correo no es válido', 'error'); return; }
     const data = {
       nombre,
       empresa:        document.getElementById('pEmpresa').value.trim(),
-      email:          document.getElementById('pEmail').value.trim(),
+      rut,
+      email,
       telefono:       document.getElementById('pTelefono').value.trim(),
       rubro:          document.getElementById('pRubro').value,
       tamano:         document.getElementById('pTamano').value,
