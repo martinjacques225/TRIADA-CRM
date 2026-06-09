@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="description" content="Tríada CRM - Gestión de prospectos, diagnósticos y pipeline comercial para pymes">
+  <meta name="theme-color" content="#028090">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="Tríada CRM">
+  <title>Tríada CRM</title>
+  <link rel="manifest" href="./manifest.json">
+  <link rel="apple-touch-icon" href="./icon-lgs.png">
+  <link rel="stylesheet" href="./styles.css">
+  <link rel="stylesheet" href="./modules/home/home.css">
+  <link rel="stylesheet" href="./modules/agenda/agenda.css">
+  <link rel="stylesheet" href="./modules/leads/leads.css">
+  <link rel="stylesheet" href="./modules/calculadora/calculadora.css">
+  <link rel="stylesheet" href="./modules/ventas/ventas.css">
+  <link rel="stylesheet" href="./modules/medallas/medallas.css">
+  <link rel="stylesheet" href="./modules/dashboard/dashboard.css">
+  <link rel="stylesheet" href="./modules/plantillas-wa/whatsapp.css">
+  <link rel="stylesheet" href="./modules/respaldos/respaldos.css">
+  <link rel="stylesheet" href="./modules/informes/informes.css">
+  <link rel="stylesheet" href="./modules/configuracion/configuracion.css">
+  <!-- FASE 1: capa de rediseño visual + accesibilidad (debe ir AL FINAL para ganar la cascada) -->
+  <link rel="stylesheet" href="./fase1-rediseno.css">
+  <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js" defer></script>
+</head>
+<body>
+
+<div id="app">
+  <nav id="nav"></nav>
+  <div id="main">
+    <div id="topbar"></div>
+    <div id="content">
+      <main id="center"></main>
+      <aside id="panel"></aside>
+    </div>
+  </div>
+  <nav id="bottom-nav"></nav>
+</div>
+
+<!-- MASCOT BUBBLE -->
+<div id="mascot-bubble" class="mascot-bubble hidden">
+  <div class="mascot-avatar-wrap" id="mascotAvatarWrap"></div>
+  <div class="mascot-msg">
+    <div class="mascot-name" id="mascotName"></div>
+    <div id="mascotMsg"></div>
+  </div>
+  <button class="mascot-close" id="mascotClose">✕</button>
+</div>
+
+<!-- MODAL GLOBAL -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title" id="modalTitle"></span>
+      <button class="modal-close" id="modalClose">✕</button>
+    </div>
+    <div class="modal-body" id="modalBody"></div>
+    <div class="modal-footer">
+      <button class="btn-secondary" id="modalCancel">Cancelar</button>
+      <button class="btn-primary" id="modalSave">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- CALL RESULT QUICK MODAL -->
+<div class="modal-overlay" id="callResultOverlay">
+  <div class="modal modal-sm">
+    <div class="modal-header">
+      <span class="modal-title">¿Cómo resultó la llamada?</span>
+      <button class="modal-close" id="callResultClose">✕</button>
+    </div>
+    <div class="modal-body" id="callResultBody"></div>
+  </div>
+</div>
+
+<!-- FILE ERROR OVERLAY -->
+<div id="fileErrorOverlay" class="file-error-overlay hidden">
+  <div class="file-error-card">
+    <div class="file-error-emoji" id="fileErrorEmoji">😅</div>
+    <div class="file-error-msg" id="fileErrorMsg"></div>
+    <button class="btn-primary" onclick="document.getElementById('fileErrorOverlay').classList.add('hidden')">Entendido</button>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div id="toast-container"></div>
+
+<script type="module" src="./app.js"><

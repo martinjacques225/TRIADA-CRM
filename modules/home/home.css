@@ -1,0 +1,79 @@
+/* ═══════════ HOME / LANDING (v3.4) ═══════════ */
+/* Reutiliza clases de dashboard.css (kpi, card, dh-appt, donut, dash-banner, pc-*). */
+
+/* ── Sparkline en KPI comisión ── */
+.hm-spark { width: 100%; height: 30px; margin-top: 14px; }
+.hm-spark polyline { fill: none; stroke: var(--success); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; vector-effect: non-scaling-stroke; }
+
+/* ── Misión del día ── */
+.hm-mission {
+  background: linear-gradient(120deg, var(--primary-light), var(--surface));
+  border: 1px solid var(--border); border-radius: var(--radius-xl);
+  padding: 16px 20px; box-shadow: 0 2px 8px rgba(15,23,42,.05);
+}
+.hm-mission-head { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+.hm-mission-ico { width: 30px; height: 30px; border-radius: 9px; background: var(--primary); color: #fff; display: flex; align-items: center; justify-content: center; }
+.hm-mission-ico svg { width: 17px; height: 17px; }
+.hm-mission-title { font-size: 1.05rem; font-weight: 800; color: var(--text); letter-spacing: -.01em; }
+.hm-mission-body { display: flex; align-items: center; gap: 18px; }
+.hm-mission-stats { flex: 1; display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; }
+.hm-stat { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; padding-right: 10px; border-right: 1px solid var(--border-soft); }
+.hm-stat:last-child { border-right: none; }
+.hm-stat-ic { font-size: 1.25rem; line-height: 1; margin-bottom: 4px; }
+.hm-stat-val { font-size: 1.5rem; font-weight: 800; color: var(--text); line-height: 1; font-variant-numeric: tabular-nums; }
+.hm-stat-lbl { font-size: .72rem; font-weight: 600; color: var(--text2); line-height: 1.2; }
+.hm-mission-mascot { width: 96px; height: 96px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 3rem; }
+.hm-mission-mascot img { width: 100%; height: 100%; object-fit: contain; filter: drop-shadow(0 6px 14px rgba(15,23,42,.18)); }
+
+/* ── Actividad reciente (timeline) ── */
+.act-feed { display: flex; flex-direction: column; }
+.act-item { display: flex; align-items: center; gap: 12px; padding: 9px 2px; border-bottom: 1px solid var(--border-soft); }
+.act-item:last-child { border-bottom: none; }
+.act-ic { width: 34px; height: 34px; border-radius: 50%; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
+.act-ic svg { width: 17px; height: 17px; }
+.act-ic.green  { background: var(--success-bg); color: var(--success); }
+.act-ic.blue   { background: var(--primary-light); color: var(--primary); }
+.act-ic.purple { background: var(--purple-bg); color: var(--purple); }
+.act-ic.amber  { background: var(--warning-bg); color: var(--warning); }
+.act-main { flex: 1; min-width: 0; }
+.act-title { font-size: .85rem; font-weight: 700; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.act-det { font-size: .74rem; font-weight: 500; color: var(--text2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.act-time { font-size: .72rem; font-weight: 600; color: var(--text3); flex-shrink: 0; white-space: nowrap; }
+
+/* ── Mini KPIs + gráfico (Rendimiento del mes) ── */
+.hm-minis { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; margin-bottom: 18px; }
+.hm-mini { background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius); padding: 12px; }
+.hm-mini-lbl { font-size: .72rem; font-weight: 700; color: var(--text2); margin-bottom: 6px; }
+.hm-mini-val { font-size: 1.25rem; font-weight: 800; color: var(--text); line-height: 1.1; font-variant-numeric: tabular-nums; }
+.hm-mini-sub { font-size: .7rem; font-weight: 500; color: var(--text3); margin-top: 2px; }
+.hm-mini-bar { height: 6px; border-radius: 99px; background: var(--surface3); margin-top: 9px; overflow: hidden; }
+.hm-mini-fill { height: 100%; border-radius: 99px; background: var(--mc, var(--primary)); transition: width .8s ease; }
+.hm-mini-blue   { --mc: #2563EB; } .hm-mini-green { --mc: #22C55E; }
+.hm-mini-purple { --mc: #8B5CF6; } .hm-mini-amber { --mc: #F59E0B; }
+.hm-mini-meta { display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
+.hm-mini-meta .donut { width: 96px; height: 96px; margin: 4px auto 0; }
+
+.hm-chart-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
+.hm-chart-title { font-size: .9rem; font-weight: 700; color: var(--text); }
+.hm-range { width: auto; min-width: 130px; padding: 6px 10px; font-size: .8rem; cursor: pointer; }
+
+/* Línea con eje X y callout */
+.hm-line { position: relative; min-height: 230px; padding-top: 6px; }
+.hm-line .line-chart { width: 100%; height: 200px; }
+.hm-dot { fill: var(--primary); stroke: var(--surface); stroke-width: 2; }
+.hm-line-callout { position: absolute; transform: translate(-50%, -150%); background: var(--primary); color: #fff; font-size: .74rem; font-weight: 700; padding: 3px 9px; border-radius: 99px; box-shadow: var(--shadow-sm); white-space: nowrap; }
+.hm-xaxis { position: relative; height: 18px; margin-top: 2px; }
+.hm-xlbl { position: absolute; transform: translateX(-50%); font-size: .68rem; font-weight: 600; color: var(--text3); white-space: nowrap; }
+
+/* ── Responsive ── */
+@media (max-width: 960px) {
+  .hm-minis { grid-template-columns: repeat(3, 1fr); }
+  .hm-mission-stats { grid-template-columns: repeat(3, 1fr); gap: 12px; }
+  .hm-stat:nth-child(3n) { border-right: none; }
+}
+@media (max-width: 640px) {
+  .hm-mission-mascot { display: none; }
+  .hm-mission-stats { grid-template-columns: repeat(2, 1fr); }
+  .hm-stat { border-right: none; }
+  .hm-minis { grid-template-columns: repeat(2, 1fr); }
+}

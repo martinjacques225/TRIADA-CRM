@@ -1,0 +1,237 @@
+/* ═══ PANEL DERECHO ═══ */
+.panel-next {
+  background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+  border-radius: var(--radius); padding: 14px; color: white;
+}
+.panel-card-title {
+  font-size: .66rem; font-weight: 700; text-transform: uppercase;
+  letter-spacing: .08em; color: var(--text3); margin-bottom: 10px;
+}
+.panel-next .panel-card-title { color: rgba(255,255,255,.7); }
+.panel-next-name { font-size: .96rem; font-weight: 700; margin-bottom: 2px; }
+.panel-next-time { font-size: 1.5rem; font-weight: 800; font-variant-numeric: tabular-nums; }
+.panel-next-interest { font-size: .74rem; opacity: .8; margin-top: 4px; }
+.panel-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px; }
+.panel-stat { display: flex; justify-content: space-between; align-items: center; padding: 5px 0; border-bottom: 1px solid var(--border-soft); }
+.panel-stat:last-child { border-bottom: none; }
+.panel-stat-label { font-size: .77rem; color: var(--text2); }
+.panel-stat-val { font-size: .88rem; font-weight: 700; color: var(--text); font-variant-numeric: tabular-nums; }
+.origen-bar { margin-bottom: 8px; }
+.origen-bar-label { display: flex; justify-content: space-between; font-size: .73rem; color: var(--text2); margin-bottom: 3px; }
+.origen-bar-label strong { color: var(--text); font-weight: 600; }
+.origen-bar-track { height: 4px; background: var(--surface3); border-radius: 99px; overflow: hidden; }
+.origen-bar-fill { height: 100%; background: var(--primary); border-radius: 99px; transition: width .6s ease; }
+
+/* ═══ AGENDA — TIME GRID ═══ */
+.time-grid { display: flex; flex-direction: column; }
+.time-slot { display: flex; min-height: 54px; border-bottom: 1px solid var(--border-soft); }
+.time-slot:last-child { border-bottom: none; }
+.time-label {
+  width: 50px; min-width: 50px; font-size: .7rem; color: var(--text3);
+  font-variant-numeric: tabular-nums; padding: 8px 8px 0 0;
+  text-align: right; font-family: var(--mono);
+}
+.time-line { flex: 1; position: relative; padding: 4px 0 4px 8px; border-left: 1px solid var(--border-soft); }
+.time-cards { display: flex; flex-direction: column; gap: 4px; }
+.time-now-line {
+  position: absolute; left: 0; right: 0; height: 2px;
+  background: var(--danger); border-radius: 1px; z-index: 1;
+}
+.time-now-line::before {
+  content:''; position: absolute; left: -4px; top: -3px;
+  width: 8px; height: 8px; border-radius: 50%; background: var(--danger);
+}
+.empty-day {
+  display: flex; flex-direction: column; align-items: center;
+  justify-content: center; gap: 10px; padding: 60px 20px;
+  text-align: center; color: var(--text3);
+}
+.empty-day svg { width: 40px; height: 40px; opacity: .3; }
+.empty-day h3 { font-size: .96rem; font-weight: 600; color: var(--text2); }
+.empty-day p { font-size: .78rem; }
+
+/* ═══ AGENDA — BLOQUE SUPERIOR (próxima cita + pendientes) ═══ */
+.agenda-top { display: flex; flex-direction: column; gap: 10px; margin-bottom: 14px; }
+.next-hero {
+  display: flex; align-items: center; gap: 14px;
+  background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+  color: #fff; border-radius: var(--radius); padding: 12px 16px;
+}
+.next-hero-time { font-size: 1.7rem; font-weight: 800; font-variant-numeric: tabular-nums; font-family: var(--mono); line-height: 1; }
+.next-hero-body { flex: 1; min-width: 0; }
+.next-hero-title { font-size: .95rem; font-weight: 700; }
+.next-hero-sub { font-size: .76rem; opacity: .85; margin-top: 3px; }
+.next-hero .hero-wa {
+  flex-shrink: 0; background: rgba(255,255,255,.16); border-color: rgba(255,255,255,.3);
+  color: #fff; padding: 7px;
+}
+.next-hero .hero-wa:hover { background: rgba(255,255,255,.28); }
+.next-hero .hero-wa svg { width: 16px; height: 16px; }
+
+.pend-strip { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.pend-label { font-size: .68rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--text3); }
+.pend-chip {
+  display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px;
+  border: 1px solid var(--border); background: var(--surface); border-radius: 99px;
+  font-size: .76rem; color: var(--text2); cursor: pointer; font-family: var(--font);
+  transition: all var(--transition); -webkit-tap-highlight-color: transparent;
+}
+.pend-chip:hover { border-color: var(--primary); color: var(--primary); }
+.pend-n { font-weight: 800; color: var(--primary); font-variant-numeric: tabular-nums; }
+
+/* ═══ AGENDA — LISTA COMPACTA ═══ */
+.apt-list { display: flex; flex-direction: column; gap: 8px; }
+.apt-now {
+  display: flex; align-items: center; gap: 8px;
+  font-size: .68rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em;
+  color: var(--danger); margin: 2px 0;
+}
+.apt-now::after { content: ''; flex: 1; height: 1px; background: var(--danger); opacity: .35; }
+
+/* ═══ APPOINTMENT CARDS ═══ */
+.apt-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius-sm); padding: 11px 13px;
+  cursor: pointer; transition: all var(--transition);
+  border-left: 3px solid var(--border);
+  display: flex; gap: 13px; align-items: flex-start;
+}
+.apt-card:hover { box-shadow: var(--shadow); transform: translateY(-1px); }
+.apt-time-chip {
+  font-size: 1.3rem; font-weight: 800; color: var(--text);
+  font-variant-numeric: tabular-nums; font-family: var(--mono);
+  min-width: 56px; line-height: 1.35;
+}
+.apt-body { flex: 1; min-width: 0; }
+.apt-card[data-estado="Pendiente"]     { border-left-color: var(--s-pendiente); }
+.apt-card[data-estado="Asistió"]       { border-left-color: var(--s-asistio); }
+.apt-card[data-estado="No asistió"]    { border-left-color: var(--s-noasistio); }
+.apt-card[data-estado="Contrató"]      { border-left-color: var(--s-contrato); }
+.apt-card[data-estado="Reagendada"]    { border-left-color: var(--s-reagendada); }
+.apt-card[data-estado="No interesado"] { border-left-color: var(--s-nointeresado); }
+.apt-card-header { display: flex; align-items: center; gap: 8px; margin-bottom: 5px; flex-wrap: wrap; }
+.apt-card-time { font-family: var(--mono); font-size: .75rem; color: var(--text3); min-width: 38px; }
+.apt-card-name { font-size: .87rem; font-weight: 600; color: var(--text); flex: 1; }
+.apt-card-status { margin-left: auto; }
+.apt-card-meta { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
+.apt-meta-item { display: inline-flex; align-items: center; gap: 4px; font-size: .7rem; color: var(--text2); }
+.apt-meta-item svg { width: 11px; height: 11px; }
+.apt-card-actions { display: flex; flex-wrap: wrap; gap: 4px; }
+
+.btn-action {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 4px 9px; border-radius: var(--radius-xs);
+  font-size: .7rem; font-weight: 600; border: 1px solid var(--border);
+  background: var(--surface2); color: var(--text2);
+  cursor: pointer; transition: all var(--transition);
+  -webkit-tap-highlight-color: transparent;
+}
+.btn-action:hover { background: var(--bg); }
+.btn-action.green  { border-color:#BBF7D0; background:#F0FDF4; color:#16A34A; }
+.btn-action.green:hover { background:#DCFCE7; }
+.btn-action.blue   { border-color:#BFDBFE; background: var(--primary-light); color: var(--primary); }
+.btn-action.blue:hover { background:#DBEAFE; }
+.btn-action.primary{ border-color:transparent; background: var(--primary); color:white; }
+.btn-action.primary:hover { background: var(--primary-dark); }
+.btn-action.danger { border-color:#FCA5A5; background: var(--danger-bg); color: var(--danger); }
+.btn-action svg { width: 11px; height: 11px; }
+
+/* ═══ MENÚ "⋯" DE ACCIONES SECUNDARIAS ═══ */
+.apt-menu { position: relative; display: inline-block; }
+.apt-menu-btn { padding: 4px 7px; }
+.apt-menu-btn svg { width: 14px; height: 14px; }
+.apt-menu-list {
+  position: absolute; right: 0; top: calc(100% + 4px); z-index: 30;
+  min-width: 156px; padding: 4px;
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius-sm); box-shadow: var(--shadow);
+  display: none; flex-direction: column; gap: 2px;
+}
+.apt-menu.open .apt-menu-list { display: flex; }
+.apt-menu-item {
+  display: flex; align-items: center; gap: 8px; width: 100%; text-align: left;
+  padding: 8px 10px; border: none; background: transparent; color: var(--text);
+  font-family: var(--font); font-size: .8rem; font-weight: 500; cursor: pointer;
+  border-radius: var(--radius-xs); transition: background var(--transition);
+}
+.apt-menu-item:hover { background: var(--surface2); }
+.apt-menu-item.danger { color: var(--danger); }
+.apt-menu-item.danger:hover { background: var(--danger-bg); }
+.apt-menu-item svg { width: 14px; height: 14px; flex-shrink: 0; }
+
+
+/* ═══ FASE 2 — Toggle Agenda/Calendario ═══ */
+.agenda-view-toggle { display: flex; gap: 6px; margin-bottom: 14px; }
+.av-btn {
+  display: flex; align-items: center; gap: 6px;
+  padding: 8px 14px; border: 1px solid var(--border); border-radius: var(--radius-sm);
+  background: var(--surface); color: var(--text2); font-size: .8rem; font-weight: 600;
+  font-family: var(--font); cursor: pointer; transition: all var(--transition);
+}
+.av-btn svg { width: 15px; height: 15px; }
+.av-btn.active { background: var(--primary); color: #fff; border-color: var(--primary); }
+
+/* ═══ Ficha resumen de cita ═══ */
+.apt-ficha {
+  margin: 6px 0 2px; padding: 8px 10px;
+  background: var(--surface2); border: 1px solid var(--border-soft);
+  border-radius: var(--radius-sm);
+}
+.apt-ficha-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 5px; }
+.ficha-tag {
+  font-size: .68rem; font-weight: 700; padding: 2px 8px; border-radius: 999px;
+  background: var(--primary-light); color: var(--primary-dark);
+}
+.ficha-nivel { background: #DCFCE7; color: #15803D; }
+.apt-ficha-line { font-size: .74rem; color: var(--text2); line-height: 1.5; }
+.apt-ficha-line b { color: var(--text); font-weight: 700; }
+
+/* ═══ Horarios disponibles (panel lateral) ═══ */
+.slots-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; }
+.slot {
+  font-size: .72rem; font-weight: 600; text-align: center; padding: 6px 2px;
+  border-radius: var(--radius-xs); font-family: var(--font);
+}
+.slot-free {
+  background: var(--surface); border: 1px solid var(--border); color: var(--text2);
+  cursor: pointer; transition: all var(--transition);
+}
+.slot-free:hover { background: var(--primary); color: #fff; border-color: var(--primary); }
+.slot-taken {
+  background: var(--surface3); border: 1px solid transparent; color: var(--text3);
+  text-decoration: line-through; cursor: not-allowed;
+}
+
+/* ═══ Vista Calendario ═══ */
+.cal-wrap { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px; }
+.cal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+.cal-month { font-size: .95rem; font-weight: 800; color: var(--text); text-transform: capitalize; }
+.cal-nav {
+  width: 34px; height: 34px; border-radius: 50%; border: 1px solid var(--border);
+  background: var(--surface); color: var(--text); font-size: 1.25rem; line-height: 1;
+  cursor: pointer; transition: all var(--transition);
+}
+.cal-nav:hover { background: var(--primary); color: #fff; border-color: var(--primary); }
+.cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
+.cal-dow { margin-bottom: 4px; }
+.cal-dow-cell { text-align: center; font-size: .68rem; font-weight: 700; color: var(--text3); padding: 2px 0; }
+.cal-cell {
+  position: relative; aspect-ratio: 1 / 1; min-height: 40px;
+  border: 1px solid var(--border-soft); border-radius: var(--radius-xs);
+  background: var(--surface); cursor: pointer; font-family: var(--font);
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
+  transition: all var(--transition);
+}
+.cal-cell:hover { border-color: var(--primary); }
+.cal-empty { background: transparent; border: none; cursor: default; }
+.cal-num { font-size: .82rem; font-weight: 600; color: var(--text); }
+.cal-has { background: var(--primary-light); }
+.cal-dot {
+  font-size: .6rem; font-weight: 800; color: #fff; background: var(--primary);
+  min-width: 16px; height: 16px; border-radius: 999px; padding: 0 4px;
+  display: flex; align-items: center; justify-content: center;
+}
+.cal-today { border-color: var(--primary); border-width: 2px; }
+.cal-sel { background: var(--primary); }
+.cal-sel .cal-num { color: #fff; }
+.cal-sel .cal-dot { background: #fff; color: var(--primary); }

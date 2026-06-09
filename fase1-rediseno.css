@@ -1,0 +1,172 @@
+/* ════════════════════════════════════════════════════════════════════════
+   FASE 1 — REDISEÑO VISUAL PREMIUM + ACCESIBILIDAD  (capa overlay)
+   SOLO UI/UX. No toca lógica ni datos. Se carga al final → gana la cascada.
+   Objetivos: legibilidad (mínimos de tamaño), contraste WCAG AA,
+   profundidad de tarjetas, sidebar corporativo y mascota con contenedor propio.
+   Estilo de referencia: Salesforce / HubSpot / Monday / ClickUp.
+   ════════════════════════════════════════════════════════════════════════ */
+
+/* ── 1. BASE TIPOGRÁFICA (1rem = 16px estable en todo viewport) ── */
+html { font-size: 16px !important; }
+body { font-size: 1rem; line-height: 1.5; letter-spacing: -.003em; }
+
+/* ── 2. CONTRASTE — WCAG AA. Reemplaza grises lavados por slate fuerte ── */
+:root {
+  --text2: #334155;          /* secundario — slate-700, AA sobre blanco */
+  --text3: #475569;          /* terciario  — slate-600, AA sobre blanco */
+  --nav-text: #1E293B;       /* ítems del nav en reposo, casi negro corporativo */
+  --nav-text-label: #475569; /* etiquetas de sección legibles */
+  --nav-hover: #EEF2F8;
+  --border: #DCE3EC;
+  --border-soft: #E8EDF3;
+  --shadow-sm: 0 1px 2px rgba(15,23,42,.06), 0 2px 6px rgba(15,23,42,.05);
+  --shadow:    0 6px 20px rgba(15,23,42,.10), 0 2px 6px rgba(15,23,42,.06);
+  --shadow-lg: 0 18px 50px rgba(15,23,42,.16), 0 6px 16px rgba(15,23,42,.08);
+}
+[data-theme="dark"] {
+  --text2: #C9D1D9;
+  --text3: #AEB6C2;
+  --nav-text: #E6EDF3;
+  --nav-text-label: #8B95A1;
+  --nav-hover: #21262D;      /* faltaba: el hover/selección del nav se veía blanco */
+  --border: #2A3340;
+  --border-soft: #232B36;
+}
+
+/* ── 3. ESCALA TIPOGRÁFICA (mínimos: nada < 14px; secundario ≥15; base 16) ── */
+
+/* 3a. Texto secundario — 15px */
+.kpi-sub, .hm-mini-sub, .dh-appt-meta, .dh-lead-meta, .act-det, .pc-row,
+.pc-proj-sub, .pc-proj-now, .pc-hint, .card-tag, .nav-level-sub, .nav-status-sub,
+.tb-greet-date, .hm-stat-lbl, .card-link, .btn-today, .btn-primary, .btn-secondary,
+.nav-install-btn, .pc-quick, .toast, .mascot-msg, .dh-lead-date, .act-time,
+.bar-val, .bar-lbl, .reagendar-info-detail, .nav-user-role, .nav-level-name,
+.dh-appt-time { font-size: .9375rem; }            /* 15px */
+
+/* 3b. Microcopy / etiquetas — nunca por debajo de 14px */
+.kpi-lbl, .nav-section-label, .pc-title, .hm-chart-title, .hm-mini-lbl,
+.kpi-bar-pct, .hm-xlbl, .dh-empty, .empty-mini, .form-error, .form-label,
+.nav-status-on, .badge, .bottom-nav-item, .mascot-name, .nav-brand-text span,
+.call-result-btn { font-size: .875rem; }          /* 14px */
+
+/* 3c. Texto principal — 16px */
+.nav-item, .nav-user-name, .act-title, .dh-appt-name, .dh-lead-name,
+.topbar-title, .form-input, .form-select, .form-textarea, .pc-medal-name,
+.modal-title, .date-display, .reagendar-info-name { font-size: 1rem; }   /* 16px */
+
+/* 3d. Títulos de sección — 22px */
+.card-title, .hm-mission-title, .tb-greet-title, .section-header > .card-title {
+  font-size: 1.375rem; line-height: 1.2; letter-spacing: -.015em; font-weight: 800;
+}
+
+/* 3e. KPIs principales — tamaño contenido para no opacar la info de apoyo */
+.kpi-val { font-size: 1.875rem; line-height: 1.08; letter-spacing: -.02em; }  /* 30px */
+/* KPIs secundarios / cifras de apoyo */
+.hm-stat-val { font-size: 1.625rem; }             /* 26px */
+.hm-mini-val, .pc-proj { font-size: 1.5rem; }     /* 24px */
+.donut-pct { font-size: 30px; }
+.donut-lbl { font-size: 14px; }
+
+/* Marca del sidebar (corporativa, no en el rango de títulos de sección) */
+.nav-brand-text h1 { font-size: 1.0625rem; font-weight: 800; letter-spacing: -.01em; }
+
+/* ── 4. TARJETAS — profundidad + radios 16px + jerarquía ── */
+.card, .hm-mission, .panel-card {
+  border-radius: 16px;
+  box-shadow: var(--shadow);
+  border: 1px solid var(--border);
+}
+.kpi { border-radius: 18px; box-shadow: var(--shadow); }
+.kpi::before { width: 5px; }
+.card:hover, .kpi:hover { box-shadow: var(--shadow-lg); }
+.kpi:hover { transform: translateY(-3px); }
+
+/* Panel derecho: las tarjetas no tenían contenedor propio definido */
+.panel-card {
+  background: var(--surface);
+  padding: 18px;
+}
+#panel { gap: 14px; padding: 18px; }
+
+/* Espaciado general más premium */
+#center { padding: 24px; }
+.dash { gap: 22px; }
+
+/* ── 5. SIDEBAR CORPORATIVO — usuario, cargo y menú más grandes ── */
+.nav-brand { padding: 18px 16px 14px; gap: 12px; }
+.nav-brand-icon { width: 38px; height: 38px; }
+
+.nav-user { padding: 14px 16px; gap: 12px; }
+.nav-user-avatar { width: 44px; height: 44px; font-size: .9375rem; }
+.nav-user-name { font-size: 1rem; font-weight: 700; }
+
+.nav-section { padding: 14px 12px 2px; }
+.nav-section-label { letter-spacing: .1em; font-weight: 800; padding-bottom: 8px; }
+.nav-item { padding: 12px 12px; gap: 13px; font-weight: 600; font-size: 1rem; }
+.nav-item svg { width: 19px; height: 19px; opacity: .9; }
+.nav-item.active { font-weight: 700; }
+.nav-item.active::before { width: 4px; height: 22px; }
+
+.nav-level { margin: 10px 12px 6px; padding: 13px 14px; }
+.nav-level-medal { width: 34px; height: 34px; }
+
+/* ── 6. MASCOTA — contenedor propio (no parece imagen pegada) ── */
+.hm-mission-mascot {
+  width: 108px; height: 108px; padding: 10px;
+  border: 1px solid var(--border);
+  border-radius: 22px;
+  background: radial-gradient(120% 120% at 50% 28%, var(--primary-light), var(--surface) 78%);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.65), var(--shadow-sm);
+}
+.hm-mission-mascot img { filter: drop-shadow(0 8px 16px rgba(15,23,42,.20)); }
+[data-theme="dark"] .hm-mission-mascot {
+  background: radial-gradient(120% 120% at 50% 28%, var(--primary-light), var(--surface2) 80%);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.06), var(--shadow-sm);
+}
+
+/* Mascota flotante: marco coherente con el resto */
+.mascot-msg { border-radius: 16px 16px 16px 6px; }
+
+/* ── 7. HOME · "Programación del día" — encabezado más marcado ── */
+.hm-mission { padding: 20px 24px; }
+.hm-mission-ico { width: 34px; height: 34px; }
+.hm-mission-stats { gap: 14px; }
+
+/* ── 8. DASHBOARD/KPI — acentos y bordes más definidos (estilo CRM premium) ── */
+.kpi-ico, .hm-mission-ico, .kpi-bar, .hm-mini-bar, .pc-bar, .nav-level-bar { border-radius: 99px; }
+.kpi-ico { width: 34px; height: 34px; }
+.kpi-ico svg { width: 18px; height: 18px; }
+
+/* ── 9. RESPONSIVE — mantener mínimos sin romper densidad móvil ── */
+@media (max-width: 768px) {
+  #center { padding: 16px; padding-bottom: calc(var(--bottom-nav-h) + env(safe-area-inset-bottom) + 12px); }
+  .kpi-val { font-size: 1.75rem; }      /* 28px en móvil */
+  .card-title, .hm-mission-title, .tb-greet-title { font-size: 1.25rem; }  /* 20px en móvil */
+  .bottom-nav-item { font-size: .8125rem; }  /* 13px etiquetas de barra inferior (excepción de densidad) */
+}
+@media (max-width: 900px) {
+  /* nav colapsado: el texto se oculta, no afecta a los mínimos */
+  .nav-item { justify-content: center; }
+}
+
+/* ── 10. MODO OSCURO — botones de acción de leads/agenda (antes casi invisibles) ── */
+/* Las variantes usaban fondos claros fijos (#F0FDF4…) que se perdían sobre tarjetas oscuras. */
+[data-theme="dark"] .btn-action {
+  background: var(--surface3); border-color: #3A4452; color: var(--text);
+}
+[data-theme="dark"] .btn-action:hover { background: #2A3340; }
+[data-theme="dark"] .btn-action.green {
+  background: rgba(34,197,94,.18); border-color: rgba(34,197,94,.50); color: #4ADE80;
+}
+[data-theme="dark"] .btn-action.green:hover { background: rgba(34,197,94,.28); }
+[data-theme="dark"] .btn-action.blue {
+  background: rgba(77,142,255,.18); border-color: rgba(77,142,255,.50); color: #7FB0FF;
+}
+[data-theme="dark"] .btn-action.blue:hover { background: rgba(77,142,255,.28); }
+[data-theme="dark"] .btn-action.primary {
+  background: var(--primary); border-color: var(--primary); color: #fff;
+}
+[data-theme="dark"] .btn-action.danger {
+  background: rgba(239,68,68,.18); border-color: rgba(239,68,68,.50); color: #FCA5A5;
+}
+[data-theme="dark"] .btn-action.danger:hover { background: rgba(239,68,68,.28); }
