@@ -28,7 +28,7 @@ export async function render() {
           ${_ico.search}
           <input id="pSearch" placeholder="Buscar prospecto…" value="${escHtml(S.searchQ)}">
         </div>
-        <select class="filter-sel" id="pEstado" style="padding:7px 12px;border:1px solid var(--border);border-radius:8px;font-size:13px;background:var(--surface);color:var(--text)">
+        <select class="filter-sel" id="pEstado">
           <option value="">Todas las etapas</option>
           ${PIPELINE_STAGES.map(s=>`<option value="${s.id}"${S.searchEstado===s.id?' selected':''}>${s.icon} ${s.id}</option>`).join('')}
         </select>
@@ -43,7 +43,7 @@ export async function render() {
     <div class="pipeline-stats">
       ${PIPELINE_STAGES.filter(s=>s.id!=='Descartado').map(st=>{
         const cnt = all.filter(p=>p.estado===st.id).length;
-        return `<div class="pipe-stat" style="border-top:3px solid ${st.color}">
+        return `<div class="pipe-stat${S.searchEstado===st.id?' active':''}" data-stage="${st.id}" style="border-top:3px solid ${st.color}">
           <div class="pipe-stat-icon">${st.icon}</div>
           <div class="pipe-stat-cnt" style="color:${st.color}">${cnt}</div>
           <div class="pipe-stat-lbl">${st.id}</div>
@@ -59,6 +59,11 @@ export async function render() {
   document.getElementById('pEstado').addEventListener('change', e => { S.searchEstado = e.target.value; _renderResults(); });
   document.getElementById('btnKanban').addEventListener('click', () => { S.pipelineView = 'kanban'; render(); });
   document.getElementById('btnList').addEventListener('click', () => { S.pipelineView = 'list'; render(); });
+  // Click en una estadística → filtra el tablero por esa etapa (toggle)
+  document.querySelectorAll('.pipe-stat').forEach(el => el.addEventListener('click', () => {
+    S.searchEstado = (S.searchEstado === el.dataset.stage) ? '' : el.dataset.stage;
+    render();
+  }));
 
   _attachKanbanDnD();
 }
@@ -118,7 +123,7 @@ function _buildKanban(all, filtered) {
         <div class="kanban-col-head" style="border-top:3px solid ${st.color}">
           <span class="col-icon">${st.icon}</span>
           <span class="col-title">${st.id}</span>
-          <span class="col-count">${cards.length}</span>
+          <span class="col-count" style="color:${st.color}">${cards.length}</span>
         </div>
         <div class="kanban-col-body">
           ${cards.length === 0

@@ -313,7 +313,8 @@ html, body { height: 100%; font-family: var(--font); color: var(--text); backgro
 .score-question:last-child { border-bottom: none; }
 .score-q-text { flex: 1; font-size: 13px; color: var(--text2); }
 .score-q-btns { display: flex; gap: 4px; }
-.score-q-btn { width: 36px; height: 28px; border: 1px solid var(--border); border-radius: 6px; background: transparent; font-size: 12px; font-weight: 600; cursor: pointer; transition: var(--tr); color: var(--text3); }
+.score-q-btn { min-width: 48px; height: 32px; padding: 0 12px; border: 1px solid var(--border); border-radius: 7px; background: var(--surface2); font-size: 12.5px; font-weight: 600; cursor: pointer; transition: var(--tr); color: var(--text2); }
+.score-q-btn:hover { border-color: var(--primary); color: var(--primary); }
 .score-q-btn.active-yes { background: var(--green); color: #fff; border-color: var(--green); }
 .score-q-btn.active-no  { background: var(--danger); color: #fff; border-color: var(--danger); }
 
