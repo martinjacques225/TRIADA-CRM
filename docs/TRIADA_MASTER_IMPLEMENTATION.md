@@ -13,11 +13,11 @@
 
 | Métrica | Valor |
 |---|---|
-| **% completado** | ~11 % |
+| **% completado** | ~12 % |
 | **Tareas totales** | 148 |
-| **Completadas** | 16 |
-| **En progreso** | 0 |
-| **Pendientes** | 132 |
+| **Completadas** | 18 |
+| **En progreso** | 1 |
+| **Pendientes** | 129 |
 | **Última actualización** | 2026-06-09 |
 
 **Leyenda:** `[ ]` Pendiente · `[-]` En progreso · `[x]` Completado
@@ -25,7 +25,7 @@
 | Fase | Título | Estado | Avance |
 |---|---|---|---|
 | 0 | Auditoría del sistema actual | ✅ Completada | 9/9 |
-| 1 | Reestructuración UX/UI | ⏳ Pendiente | 0/10 |
+| 1 | Reestructuración UX/UI | 🔄 En progreso | 2/10 |
 | 2 | Estandarización de datos | ✅ Completada | 7/7 |
 | 3 | Sistema de identificadores | ⏳ Pendiente | 0/6 |
 | 4 | Módulo de Leads | ⏳ Pendiente | 0/19 |
@@ -124,9 +124,9 @@ El producto tiene una **base de UI sólida y una capa de datos bien aislada**, p
 **Objetivo:** estándar comparable a HubSpot · Pipedrive · Monday · Salesforce.
 **Principios:** menos ruido visual · mayor jerarquía · mejor legibilidad · mejor flujo · menos clics.
 
-[ ] Navegación
-[ ] Sidebar
-[ ] Dashboard
+[-] Navegación — indicador de activo, badges y footer clickeable (falta routing por URL)
+[x] Sidebar — botón global "+ Nuevo", indicador de activo, badge de leads, footer → Configuración
+[x] Dashboard — saludo personalizado, KPIs con chips de ícono, embudo con color por etapa
 [ ] Formularios
 [ ] Propuestas
 [ ] Diagnósticos
@@ -378,6 +378,12 @@ IA genera:
 ---
 
 # REGISTRO DE CAMBIOS
+
+### 2026-06-09 · Fase 1 — Rediseño UX Sidebar + Dashboard (commit `d729838`)
+- **Módulos:** app (sidebar/nav), home (dashboard), design system
+- **Archivos:** `app.js`, `styles.css`, `modules/home/home.js`
+- **Motivo:** elevar la UX al estándar HubSpot/Pipedrive (Fase 1, primera pasada opinada).
+- **Resultado:** Sidebar y Dashboard ✅. Botón global de creación, indicador de activo, badge de leads, footer→config; saludo personalizado, KPIs con chips de ícono, embudo con color por etapa. Verificado en preview 1280px sin errores. Navegación en progreso (falta routing por URL).
 
 ### 2026-06-09 · Fase 2 — Estandarización de datos (commit `4409199`)
 - **Módulos:** núcleo (nuevo `js/format.js`), modals (prospecto), propuestas
