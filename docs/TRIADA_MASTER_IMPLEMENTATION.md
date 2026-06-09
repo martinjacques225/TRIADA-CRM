@@ -13,11 +13,11 @@
 
 | Métrica | Valor |
 |---|---|
-| **% completado** | ~12 % |
+| **% completado** | ~14 % |
 | **Tareas totales** | 148 |
-| **Completadas** | 18 |
+| **Completadas** | 20 |
 | **En progreso** | 1 |
-| **Pendientes** | 129 |
+| **Pendientes** | 127 |
 | **Última actualización** | 2026-06-09 |
 
 **Leyenda:** `[ ]` Pendiente · `[-]` En progreso · `[x]` Completado
@@ -25,7 +25,7 @@
 | Fase | Título | Estado | Avance |
 |---|---|---|---|
 | 0 | Auditoría del sistema actual | ✅ Completada | 9/9 |
-| 1 | Reestructuración UX/UI | 🔄 En progreso | 2/10 |
+| 1 | Reestructuración UX/UI | 🔄 En progreso | 4/10 |
 | 2 | Estandarización de datos | ✅ Completada | 7/7 |
 | 3 | Sistema de identificadores | ⏳ Pendiente | 0/6 |
 | 4 | Módulo de Leads | ⏳ Pendiente | 0/19 |
@@ -127,8 +127,8 @@ El producto tiene una **base de UI sólida y una capa de datos bien aislada**, p
 [-] Navegación — indicador de activo, badges y footer clickeable (falta routing por URL)
 [x] Sidebar — botón global "+ Nuevo", indicador de activo, badge de leads, footer → Configuración
 [x] Dashboard — saludo personalizado, KPIs con chips de ícono, embudo con color por etapa
-[ ] Formularios
-[ ] Propuestas
+[x] Formularios — secciones, hints, asterisco de requerido, selects con chevron (global)
+[x] Propuestas — KPIs con chips de ícono + selección de servicios en tarjetas (estado activo)
 [ ] Diagnósticos
 [ ] Agenda
 [ ] Leads
@@ -378,6 +378,12 @@ IA genera:
 ---
 
 # REGISTRO DE CAMBIOS
+
+### 2026-06-09 · Fase 1 — UX Formularios + Propuestas (commit `ac371ae`)
+- **Módulos:** design system (styles.css), modals (prospecto), propuestas
+- **Archivos:** `styles.css`, `modules/modals/modals.js`, `modules/propuestas/propuestas.js`
+- **Motivo:** elevar formularios y la pantalla de propuestas (Fase 1).
+- **Resultado:** formularios con secciones/hints/asterisco y selects con chevron (global → beneficia todos los modales); prospecto agrupado en 2 secciones (11 campos intactos); propuestas con KPIs de ícono y selección de servicios en tarjetas (estado activo vía `:has()`). Verificado en preview, sin errores.
 
 ### 2026-06-09 · Fase 1 — Rediseño UX Sidebar + Dashboard (commit `d729838`)
 - **Módulos:** app (sidebar/nav), home (dashboard), design system
