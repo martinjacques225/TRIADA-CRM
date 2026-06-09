@@ -446,3 +446,33 @@ canvas.radar-chart { max-width: 280px; max-height: 280px; }
 .prospect-card[data-stage="Cliente"] { border-left: 3px solid var(--green); }
 .prospect-card[data-stage="Negociando"] { border-left: 3px solid var(--amber); }
 .prospect-card[data-stage="Descartado"] { opacity: .65; }
+
+/* ─── Accesibilidad ─── */
+:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+.btn:focus-visible, .nav-create:focus-visible, .btn-navy:focus-visible { outline-color: var(--navy); }
+.nav-item:focus-visible, .nav-user-link:focus-visible { outline-offset: -2px; }
+.modal-close:focus-visible, .btn-icon:focus-visible { outline-offset: 1px; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ─── Responsive (refuerzo) ─── */
+@media (max-width: 760px) {
+  .section-head { flex-wrap: wrap; }
+  .section-head .actions { flex-wrap: wrap; }
+  .card:has(.data-table) { overflow-x: auto; }
+  .data-table { min-width: 560px; }
+  .btn-icon { min-height: 38px; min-width: 38px; }
+}
+@media (max-width: 480px) {
+  .kpi-grid { grid-template-columns: 1fr; }
+  #center { padding: 16px 12px; }
+  .modal-box { max-width: 100%; }
+  .home-header { flex-direction: column; align-items: stretch; }
+}
