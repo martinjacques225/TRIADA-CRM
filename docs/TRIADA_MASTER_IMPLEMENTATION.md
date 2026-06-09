@@ -13,11 +13,11 @@
 
 | Métrica | Valor |
 |---|---|
-| **% completado** | ~14 % |
+| **% completado** | ~15 % |
 | **Tareas totales** | 148 |
-| **Completadas** | 20 |
+| **Completadas** | 22 |
 | **En progreso** | 1 |
-| **Pendientes** | 127 |
+| **Pendientes** | 125 |
 | **Última actualización** | 2026-06-09 |
 
 **Leyenda:** `[ ]` Pendiente · `[-]` En progreso · `[x]` Completado
@@ -25,7 +25,7 @@
 | Fase | Título | Estado | Avance |
 |---|---|---|---|
 | 0 | Auditoría del sistema actual | ✅ Completada | 9/9 |
-| 1 | Reestructuración UX/UI | 🔄 En progreso | 4/10 |
+| 1 | Reestructuración UX/UI | 🔄 En progreso | 6/10 |
 | 2 | Estandarización de datos | ✅ Completada | 7/7 |
 | 3 | Sistema de identificadores | ⏳ Pendiente | 0/6 |
 | 4 | Módulo de Leads | ⏳ Pendiente | 0/19 |
@@ -129,9 +129,9 @@ El producto tiene una **base de UI sólida y una capa de datos bien aislada**, p
 [x] Dashboard — saludo personalizado, KPIs con chips de ícono, embudo con color por etapa
 [x] Formularios — secciones, hints, asterisco de requerido, selects con chevron (global)
 [x] Propuestas — KPIs con chips de ícono + selección de servicios en tarjetas (estado activo)
-[ ] Diagnósticos
+[x] Diagnósticos — polish de tarjetas y botones Sí/No (rediseño de flujo en Fase 7)
 [ ] Agenda
-[ ] Leads
+[x] Leads — Pipeline/Kanban: estadísticas clickeables (filtro), contadores por color, filtro con chevron
 [ ] Responsive
 [ ] Accesibilidad
 
@@ -378,6 +378,12 @@ IA genera:
 ---
 
 # REGISTRO DE CAMBIOS
+
+### 2026-06-09 · Fase 1 — UX Pipeline (Kanban) + Diagnósticos (commit `2ca49e3`)
+- **Módulos:** pipeline, diagnósticos (vía styles.css), design system
+- **Archivos:** `modules/pipeline/pipeline.js`, `modules/pipeline/pipeline.css`, `styles.css`
+- **Motivo:** elevar el tablero de pipeline y la pantalla de diagnósticos (Fase 1).
+- **Resultado:** estadísticas del pipeline clickeables para filtrar (toggle + estado activo), contador por color de etapa, filtro con chevron; botones Sí/No del diagnóstico con mejor toque (48×32). El flujo del diagnóstico se rediseña en Fase 7. Verificado en preview, sin errores.
 
 ### 2026-06-09 · Fase 1 — UX Formularios + Propuestas (commit `ac371ae`)
 - **Módulos:** design system (styles.css), modals (prospecto), propuestas
