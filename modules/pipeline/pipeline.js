@@ -3,6 +3,8 @@ import { prospectos } from '../../js/db.js';
 import { S } from '../../js/state.js';
 import { escHtml, formatDate, PIPELINE_STAGES, stageBadge, RUBROS } from '../../js/utils.js';
 
+let _all = [];
+
 const _ico = {
   search: `<svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd"/></svg>`,
   kanban: `<svg viewBox="0 0 20 20" fill="currentColor"><path d="M2 4a1 1 0 011-1h5a1 1 0 011 1v12a1 1 0 01-1 1H3a1 1 0 01-1-1V4zm7 0a1 1 0 011-1h5a1 1 0 011 1v7a1 1 0 01-1 1h-5a1 1 0 01-1-1V4z"/></svg>`,
@@ -14,7 +16,7 @@ const _ico = {
 };
 
 export async function render() {
-  const all = await prospectos.getAll();
+  const all = _all = await prospectos.getAll();
   const filtered = _filter(all);
 
   const center = document.getElementById('center');
@@ -49,16 +51,53 @@ export async function render() {
       }).join('')}
     </div>
 
-    ${filtered.length === 0 && all.length === 0
-      ? `<div class="empty-state"><div class="empty-icon">🎯</div><h3>Sin prospectos aún</h3><p>Agrega tu primer prospecto o importa leads desde el landing.</p><button class="btn btn-primary" onclick="window._app.openProspectoModal()">+ Agregar prospecto</button></div>`
-      : S.pipelineView === 'kanban' ? _buildKanban(all, filtered) : _buildList(filtered)
-    }
+    <div id="pipeResults">${_buildResults(all, filtered)}</div>
   </div>`;
 
-  document.getElementById('pSearch').addEventListener('input', e => { S.searchQ = e.target.value; render(); });
-  document.getElementById('pEstado').addEventListener('change', e => { S.searchEstado = e.target.value; render(); });
+  // Buscar: actualización PARCIAL para no perder el foco del input
+  document.getElementById('pSearch').addEventListener('input', e => { S.searchQ = e.target.value; _renderResults(); });
+  document.getElementById('pEstado').addEventListener('change', e => { S.searchEstado = e.target.value; _renderResults(); });
   document.getElementById('btnKanban').addEventListener('click', () => { S.pipelineView = 'kanban'; render(); });
   document.getElementById('btnList').addEventListener('click', () => { S.pipelineView = 'list'; render(); });
+
+  _attachKanbanDnD();
+}
+
+function _buildResults(all, filtered) {
+  if (filtered.length === 0 && all.length === 0) {
+    return `<div class="empty-state"><div class="empty-icon">🎯</div><h3>Sin prospectos aún</h3><p>Agrega tu primer prospecto o importa leads desde el landing.</p><button class="btn btn-primary" onclick="window._app.openProspectoModal()">+ Agregar prospecto</button></div>`;
+  }
+  return S.pipelineView === 'kanban' ? _buildKanban(all, filtered) : _buildList(filtered);
+}
+
+function _renderResults() {
+  const filtered = _filter(_all);
+  const el = document.getElementById('pipeResults');
+  if (el) el.innerHTML = _buildResults(_all, filtered);
+  _attachKanbanDnD();
+}
+
+// Drag & drop: arrastra una tarjeta a otra columna para cambiar su etapa
+function _attachKanbanDnD() {
+  if (S.pipelineView !== 'kanban') return;
+  document.querySelectorAll('.prospect-card[draggable="true"]').forEach(card => {
+    card.addEventListener('dragstart', e => { e.dataTransfer.setData('text/plain', card.dataset.id); card.style.opacity = '0.45'; });
+    card.addEventListener('dragend', () => { card.style.opacity = ''; });
+  });
+  document.querySelectorAll('.kanban-col').forEach(col => {
+    const hi = () => { col.style.outline = '2px dashed var(--primary)'; col.style.outlineOffset = '-4px'; };
+    const lo = () => { col.style.outline = ''; };
+    col.addEventListener('dragover', e => { e.preventDefault(); hi(); });
+    col.addEventListener('dragleave', lo);
+    col.addEventListener('drop', async e => {
+      e.preventDefault(); lo();
+      const id = +e.dataTransfer.getData('text/plain');
+      const stage = col.dataset.stage;
+      if (!id || !stage) return;
+      const p = await prospectos.get(id);
+      if (p && p.estado !== stage) { await prospectos.update({ ...p, estado: stage }); render(); }
+    });
+  });
 }
 
 function _filter(all) {
@@ -75,7 +114,7 @@ function _buildKanban(all, filtered) {
   return `<div class="kanban-board">
     ${PIPELINE_STAGES.map(st => {
       const cards = filtered.filter(p => p.estado === st.id);
-      return `<div class="kanban-col">
+      return `<div class="kanban-col" data-stage="${st.id}">
         <div class="kanban-col-head" style="border-top:3px solid ${st.color}">
           <span class="col-icon">${st.icon}</span>
           <span class="col-title">${st.id}</span>
@@ -93,7 +132,7 @@ function _buildKanban(all, filtered) {
 
 function _prospectCard(p, st) {
   const dolorChip = p.dolorPrincipal ? `<span class="prospect-meta-chip" style="color:var(--primary)">${escHtml(p.dolorPrincipal)}</span>` : '';
-  return `<div class="prospect-card" data-stage="${escHtml(p.estado)}" data-id="${p.id}">
+  return `<div class="prospect-card" draggable="true" data-stage="${escHtml(p.estado)}" data-id="${p.id}">
     <div class="prospect-card-top">
       <div style="width:32px;height:32px;border-radius:50%;background:${st.color};color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;flex-shrink:0">${(p.nombre||'?')[0].toUpperCase()}</div>
       <div style="min-width:0;flex:1">

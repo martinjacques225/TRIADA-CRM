@@ -1,6 +1,6 @@
 // modules/diagnosticos/diagnosticos.js
 import { diagnosticos, prospectos } from '../../js/db.js';
-import { escHtml, formatDate, DIAG_AREAS, DIAG_PREGUNTAS } from '../../js/utils.js';
+import { escHtml, formatDate, DIAG_AREAS, DIAG_PREGUNTAS, toast } from '../../js/utils.js';
 
 export async function render() {
   const [todos, todosP] = await Promise.all([diagnosticos.getAll(), prospectos.getAll()]);
@@ -94,16 +94,18 @@ export function renderDiagnosticoModal(prospectoId, onSave) {
         <div class="score-question">
           <div class="score-q-text">${escHtml(q)}</div>
           <div class="score-q-btns">
-            <button class="score-q-btn ${answers[aId][i]===true?'active-yes':''}" data-a="${aId}" data-i="${i}" data-v="yes">Sí</button>
-            <button class="score-q-btn ${answers[aId][i]===false?'active-no':''}"  data-a="${aId}" data-i="${i}" data-v="no">No</button>
+            <button type="button" class="score-q-btn ${answers[aId][i]===true?'active-yes':''}" data-a="${aId}" data-i="${i}" data-v="yes">Sí</button>
+            <button type="button" class="score-q-btn ${answers[aId][i]===false?'active-no':''}"  data-a="${aId}" data-i="${i}" data-v="no">No</button>
           </div>
         </div>`).join('');
     });
+    // Listeners una sola vez; al hacer clic solo se actualiza el botón tocado (sin re-render total)
     document.querySelectorAll('.score-q-btn').forEach(btn => {
       btn.addEventListener('click', () => {
         const a = btn.dataset.a, i = +btn.dataset.i, v = btn.dataset.v === 'yes';
         answers[a][i] = v;
-        _renderAnswers();
+        btn.parentElement.querySelectorAll('.score-q-btn').forEach(b => b.classList.remove('active-yes', 'active-no'));
+        btn.classList.add(v ? 'active-yes' : 'active-no');
         _updateScores();
       });
     });
@@ -149,6 +151,8 @@ export function renderDiagnosticoModal(prospectoId, onSave) {
   _renderAnswers();
 
   document.getElementById('modalSave').onclick = async () => {
+    const respondidas = [...answers.tec, ...answers.ventas, ...answers.finanzas].filter(x => x !== null).length;
+    if (respondidas === 0) { toast('Responde al menos una pregunta antes de guardar', 'error'); return; }
     const hallazgos    = (document.getElementById('diagHallazgos')?.value    || '').split('\n').map(s=>s.trim()).filter(Boolean);
     const oportunidades= (document.getElementById('diagOportunidades')?.value || '').split('\n').map(s=>s.trim()).filter(Boolean);
     const notas        =  document.getElementById('diagNotas')?.value || '';

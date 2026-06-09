@@ -23,7 +23,7 @@ export async function render() {
   center.innerHTML = `<div class="view-animate">
     <div class="home-header">
       <div>
-        <div class="home-greeting">Buenos días 👋</div>
+        <div class="home-greeting">${_saludo()} 👋</div>
         <h1 class="home-title">Panel de Consultoría</h1>
       </div>
       <button class="btn btn-primary" onclick="window._app.openProspectoModal()">+ Nuevo prospecto</button>
@@ -110,4 +110,11 @@ function _tipoIcon(tipo) {
   if (tipo.includes('ropuesta') || tipo.includes('resentación')) return '📋';
   if (tipo.includes('ontacto')) return '📞';
   return '📅';
+}
+
+function _saludo() {
+  const h = new Date().getHours();
+  if (h < 12) return 'Buenos días';
+  if (h < 20) return 'Buenas tardes';
+  return 'Buenas noches';
 }
