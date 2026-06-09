@@ -13,11 +13,11 @@
 
 | Métrica | Valor |
 |---|---|
-| **% completado** | ~6 % |
+| **% completado** | ~11 % |
 | **Tareas totales** | 148 |
-| **Completadas** | 9 |
+| **Completadas** | 16 |
 | **En progreso** | 0 |
-| **Pendientes** | 139 |
+| **Pendientes** | 132 |
 | **Última actualización** | 2026-06-09 |
 
 **Leyenda:** `[ ]` Pendiente · `[-]` En progreso · `[x]` Completado
@@ -26,7 +26,7 @@
 |---|---|---|---|
 | 0 | Auditoría del sistema actual | ✅ Completada | 9/9 |
 | 1 | Reestructuración UX/UI | ⏳ Pendiente | 0/10 |
-| 2 | Estandarización de datos | ⏳ Pendiente | 0/7 |
+| 2 | Estandarización de datos | ✅ Completada | 7/7 |
 | 3 | Sistema de identificadores | ⏳ Pendiente | 0/6 |
 | 4 | Módulo de Leads | ⏳ Pendiente | 0/19 |
 | 5 | Pipeline unificado | ⏳ Pendiente | 0/4 |
@@ -139,13 +139,15 @@ El producto tiene una **base de UI sólida y una capa de datos bien aislada**, p
 
 # FASE 2 — ESTANDARIZACIÓN DE DATOS
 
-[ ] Campos de texto en MAYÚSCULAS automáticamente
-[ ] Validación RUT chileno (módulo 11)
-[ ] Formato de teléfonos (+56 9 ...)
-[ ] Validación de correos
-[ ] Formato moneda CLP
-[ ] Formato de porcentajes
-[ ] Formato de fechas
+[x] Campos de texto en MAYÚSCULAS automáticamente — `data-fmt="upper"` (nombre, empresa)
+[x] Validación RUT chileno (módulo 11) — `validateRut`/`formatRut`; campo RUT en prospecto
+[x] Formato de teléfonos (+56 9 ...) — `formatPhoneCL`
+[x] Validación de correos — `validateEmail`
+[x] Formato moneda CLP — `formatCLP`/`parseCLP`; valor de propuesta con miles en vivo
+[x] Formato de porcentajes — `formatPercent` (lib)
+[x] Formato de fechas — `formatDate` (utils, ya existente)
+
+> Implementado en `js/format.js` (lib reutilizable) + cableado por `data-fmt`. Disponible para reusar en Fase 4 (leads) y Fase 8 (presupuesto).
 
 ---
 
@@ -376,6 +378,12 @@ IA genera:
 ---
 
 # REGISTRO DE CAMBIOS
+
+### 2026-06-09 · Fase 2 — Estandarización de datos (commit `4409199`)
+- **Módulos:** núcleo (nuevo `js/format.js`), modals (prospecto), propuestas
+- **Archivos:** `js/format.js` (nuevo), `modules/modals/modals.js`, `modules/propuestas/propuestas.js`
+- **Motivo:** estandarizar y validar datos de entrada (Fase 2).
+- **Resultado:** ✅ 7/7. RUT (módulo 11) con formato + validación, teléfono CL, email, CLP con miles en vivo, mayúsculas automáticas, % y fechas. Verificado en preview. Se agregó el campo `rut` al prospecto (aditivo, sin migración). Lib reutilizable.
 
 ### 2026-06-09 · Creación del documento maestro + Fase 0
 - **Módulo:** documentación / auditoría
