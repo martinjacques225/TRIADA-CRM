@@ -6,6 +6,7 @@
 > Este documento **reemplaza** al previo `00-PLANEACION/Auditoria_y_Propuestas_CRM.md` (queda como histórico).
 >
 > **Cómo usarlo:** antes de tocar una fase → leer "Mapa de dependencias" y "analizar impacto". Después de cada tarea → marcar el checkbox y añadir entrada en REGISTRO DE CAMBIOS.
+> **Backbone (Supabase):** plan de arquitectura en `docs/SUPABASE_PLAN.md` — base de Fases 3, 4, 5, 10 y 12 y del fix del funnel. **Pendiente de aprobación + cuenta Supabase del usuario.**
 
 ---
 
@@ -378,6 +379,11 @@ IA genera:
 ---
 
 # REGISTRO DE CAMBIOS
+
+### 2026-06-09 · Plan de backbone Supabase (diseño)
+- **Archivos:** `docs/SUPABASE_PLAN.md` (nuevo)
+- **Motivo:** analizar impacto antes de migrar (regla #7) — base de Fases 3/4/5/10/12 y fix del funnel.
+- **Resultado:** plan de arquitectura completo: esquema SQL (tablas, enums, correlativos, triggers), Auth + roles, RLS ("acceso compartido + login"), fix funnel landing→leads, estrategia de migración (incl. refactor de IDs uuid) y riesgos. **Pendiente:** aprobación del usuario + cuenta Supabase.
 
 ### 2026-06-09 · Fase 1 — Responsive + Accesibilidad (commit `091a51a`)
 - **Módulos:** design system (styles.css), index.html
