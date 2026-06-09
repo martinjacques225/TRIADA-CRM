@@ -27,9 +27,9 @@ export async function render() {
     </div>
 
     <div class="kpi-grid" style="margin-bottom:24px">
-      <div class="kpi-card kpi-accent"><div class="kpi-label">Abiertas</div><div class="kpi-value">${totalEnv}</div><div class="kpi-sub">En espera / negociación</div></div>
-      <div class="kpi-card" style="border-left:3px solid var(--green)"><div class="kpi-label">Aceptadas</div><div class="kpi-value">${totalAcept}</div><div class="kpi-sub">${formatCLP(valorAcept)} en valor</div></div>
-      <div class="kpi-card" style="border-left:3px solid var(--violet)"><div class="kpi-label">Tasa de cierre</div><div class="kpi-value">${tasa}%</div><div class="kpi-sub">Sobre ${todas.length} propuestas</div></div>
+      <div class="kpi-card"><div class="kpi-top"><span class="kpi-label">Abiertas</span><span class="kpi-ic" style="background:var(--primary-l);color:var(--primary)">📂</span></div><div class="kpi-value">${totalEnv}</div><div class="kpi-sub">En espera / negociación</div></div>
+      <div class="kpi-card"><div class="kpi-top"><span class="kpi-label">Aceptadas</span><span class="kpi-ic" style="background:var(--green-l);color:var(--green)">✅</span></div><div class="kpi-value">${totalAcept}</div><div class="kpi-sub">${formatCLP(valorAcept)} en valor</div></div>
+      <div class="kpi-card"><div class="kpi-top"><span class="kpi-label">Tasa de cierre</span><span class="kpi-ic" style="background:var(--violet-l);color:var(--violet)">🎯</span></div><div class="kpi-value">${tasa}%</div><div class="kpi-sub">Sobre ${todas.length} propuestas</div></div>
     </div>
 
     ${sorted.length === 0
@@ -76,10 +76,10 @@ export function renderPropuestaModal(prospectosAll, onSave, existing = null) {
     </div>
     <div class="form-group">
       <label>Servicios incluidos</label>
-      <div class="prop-servicios" id="propServicios">
-        ${SERVICIOS.map(s=>`<label class="serv-check" style="display:flex;align-items:center;gap:8px;padding:8px 12px;border:1px solid var(--border);border-radius:8px;cursor:pointer;margin-bottom:6px;transition:var(--tr)">
-          <input type="checkbox" value="${s}"${selServ.includes(s)?' checked':''} style="accent-color:var(--primary)">
-          <span style="font-size:13.5px">${escHtml(s)}</span>
+      <div class="serv-grid" id="propServicios">
+        ${SERVICIOS.map(s=>`<label class="serv-check">
+          <input type="checkbox" value="${escHtml(s)}"${selServ.includes(s)?' checked':''}>
+          <span>${escHtml(s)}</span>
         </label>`).join('')}
       </div>
     </div>

@@ -26,36 +26,38 @@ export async function openProspectoModal(id = null) {
   const body = document.getElementById('modalBody');
   const p = existing || {};
   body.innerHTML = `
+    <div class="form-section">Datos de contacto</div>
     <div class="form-row">
-      <div class="form-group"><label>Nombre *</label><input id="pNombre" data-fmt="upper" value="${escHtml(p.nombre||'')}" placeholder="NOMBRE COMPLETO"></div>
+      <div class="form-group"><label>Nombre <span class="req">*</span></label><input id="pNombre" data-fmt="upper" value="${escHtml(p.nombre||'')}" placeholder="NOMBRE COMPLETO"></div>
       <div class="form-group"><label>Empresa</label><input id="pEmpresa" data-fmt="upper" value="${escHtml(p.empresa||'')}" placeholder="NOMBRE DE LA EMPRESA"></div>
     </div>
     <div class="form-row">
-      <div class="form-group"><label>RUT empresa</label><input id="pRut" data-fmt="rut" value="${escHtml(p.rut||'')}" placeholder="76.123.456-7"></div>
+      <div class="form-group"><label>RUT empresa</label><input id="pRut" data-fmt="rut" value="${escHtml(p.rut||'')}" placeholder="76.123.456-7"><div class="form-hint">Se valida automáticamente (módulo 11)</div></div>
       <div class="form-group"><label>Email</label><input id="pEmail" type="email" data-fmt="email" value="${escHtml(p.email||'')}" placeholder="correo@empresa.cl"></div>
     </div>
     <div class="form-row">
       <div class="form-group"><label>Teléfono / WhatsApp</label><input id="pTelefono" data-fmt="phone" value="${escHtml(p.telefono||'')}" placeholder="+56 9 1234 5678"></div>
-      <div class="form-group"></div>
-    </div>
-    <div class="form-row">
       <div class="form-group"><label>Rubro</label>
         <select id="pRubro"><option value="">Selecciona…</option>${RUBROS.map(r=>`<option${p.rubro===r?' selected':''}>${r}</option>`).join('')}</select>
       </div>
+    </div>
+
+    <div class="form-section">Clasificación y pipeline</div>
+    <div class="form-row">
       <div class="form-group"><label>N° trabajadores</label>
         <select id="pTamano">${TAMANOS.map(t=>`<option${p.tamano===t?' selected':''}>${t}</option>`).join('')}</select>
       </div>
-    </div>
-    <div class="form-row">
       <div class="form-group"><label>Etapa en pipeline</label>
         <select id="pEstado">${PIPELINE_STAGES.map(s=>`<option value="${s.id}"${(p.estado||'Nuevo')===s.id?' selected':''}>${s.icon} ${s.id}</option>`).join('')}</select>
       </div>
+    </div>
+    <div class="form-row">
       <div class="form-group"><label>Origen</label>
         <select id="pOrigen"><option value="">—</option>${ORIGENES.map(o=>`<option${p.origen===o?' selected':''}>${o}</option>`).join('')}</select>
       </div>
-    </div>
-    <div class="form-group"><label>Dolor / preocupación principal</label>
-      <select id="pDolor"><option value="">—</option>${DOLORES.map(d=>`<option${p.dolorPrincipal===d?' selected':''}>${d}</option>`).join('')}</select>
+      <div class="form-group"><label>Dolor / preocupación principal</label>
+        <select id="pDolor"><option value="">—</option>${DOLORES.map(d=>`<option${p.dolorPrincipal===d?' selected':''}>${d}</option>`).join('')}</select>
+      </div>
     </div>
     <div class="form-group"><label>Notas internas</label>
       <textarea id="pNotas">${escHtml(p.notas||'')}</textarea>
