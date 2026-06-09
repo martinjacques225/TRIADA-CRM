@@ -13,11 +13,11 @@
 
 | Métrica | Valor |
 |---|---|
-| **% completado** | ~16 % |
+| **% completado** | ~17 % |
 | **Tareas totales** | 148 |
-| **Completadas** | 23 |
+| **Completadas** | 25 |
 | **En progreso** | 1 |
-| **Pendientes** | 124 |
+| **Pendientes** | 122 |
 | **Última actualización** | 2026-06-09 |
 
 **Leyenda:** `[ ]` Pendiente · `[-]` En progreso · `[x]` Completado
@@ -25,7 +25,7 @@
 | Fase | Título | Estado | Avance |
 |---|---|---|---|
 | 0 | Auditoría del sistema actual | ✅ Completada | 9/9 |
-| 1 | Reestructuración UX/UI | 🔄 En progreso | 7/10 |
+| 1 | Reestructuración UX/UI | 🔄 En progreso | 9/10 |
 | 2 | Estandarización de datos | ✅ Completada | 7/7 |
 | 3 | Sistema de identificadores | ⏳ Pendiente | 0/6 |
 | 4 | Módulo de Leads | ⏳ Pendiente | 0/19 |
@@ -132,8 +132,8 @@ El producto tiene una **base de UI sólida y una capa de datos bien aislada**, p
 [x] Diagnósticos — polish de tarjetas y botones Sí/No (rediseño de flujo en Fase 7)
 [x] Agenda — tarjetas de cita con acento por estado e ícono en chip
 [x] Leads — Pipeline/Kanban: estadísticas clickeables (filtro), contadores por color, filtro con chevron
-[ ] Responsive
-[ ] Accesibilidad
+[x] Responsive — KPIs a 1 col en móvil, toolbar que envuelve, tablas con scroll horizontal, áreas de toque
+[x] Accesibilidad — focus-visible, prefers-reduced-motion, ARIA (modal/hamburguesa). *Follow-up:* asociar `for/id` en todos los labels + auditoría de contraste de la paleta (decisión de diseño)
 
 ---
 
@@ -378,6 +378,12 @@ IA genera:
 ---
 
 # REGISTRO DE CAMBIOS
+
+### 2026-06-09 · Fase 1 — Responsive + Accesibilidad (commit `091a51a`)
+- **Módulos:** design system (styles.css), index.html
+- **Archivos:** `styles.css`, `index.html`
+- **Motivo:** cerrar la base de Fase 1.
+- **Resultado:** focus-visible, prefers-reduced-motion, ARIA en modal/hamburguesa (role/aria-modal/aria-label); KPIs a 1 col en móvil, toolbar que envuelve, tablas con scroll horizontal (`:has`), áreas de toque. Verificado en móvil 375px, sin errores. **Pendiente documentado:** asociación `for/id` en labels + auditoría de contraste. Fase 1 = 9/10 (falta routing por URL en Navegación).
 
 ### 2026-06-09 · Fase 1 — UX Agenda + Informes (commit `7a474e9`)
 - **Módulos:** agenda, informes
