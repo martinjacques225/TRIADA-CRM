@@ -61,33 +61,42 @@ export async function refreshView() {
 export async function renderNav() {
   const nombre  = await config.get('userName') || 'Consultor';
   const cargo   = await config.get('cargo')    || 'Tríada';
+  let nuevos = 0;
+  try { nuevos = (await prospectos.getAll()).filter(p => p.estado === 'Nuevo').length; } catch (_) {}
+  const badges = { pipeline: nuevos };
   const nav = document.getElementById('nav');
   nav.innerHTML = `
     <a class="nav-brand" href="#" onclick="navigate('home');return false">
-      <svg width="28" height="28" viewBox="0 0 120 120" fill="none">
+      <svg width="26" height="26" viewBox="0 0 120 120" fill="none">
         <path d="M26 90 L60 62 L94 90" stroke="#1E2761" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>
         <path d="M26 73 L60 45 L94 73" stroke="#028090" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>
         <path d="M26 56 L60 28 L94 56" stroke="#4FB286" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>
       </svg>
-      TRÍADA CRM
+      <span>TRÍADA <b style="font-weight:800;color:var(--primary)">CRM</b></span>
     </a>
+    <button class="nav-create" onclick="window._app.openProspectoModal()">
+      <svg viewBox="0 0 20 20" fill="currentColor"><path d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z"/></svg>
+      Nuevo prospecto
+    </button>
     <div class="nav-section-label">Principal</div>
-    ${NAV_ITEMS.slice(0,2).map(_navItem).join('')}
+    ${NAV_ITEMS.slice(0,2).map(i=>_navItem(i,badges)).join('')}
     <div class="nav-section-label">Gestión</div>
-    ${NAV_ITEMS.slice(2,5).map(_navItem).join('')}
+    ${NAV_ITEMS.slice(2,5).map(i=>_navItem(i,badges)).join('')}
     <div class="nav-section-label">Análisis</div>
-    ${NAV_ITEMS.slice(5).map(_navItem).join('')}
-    <div class="nav-footer">
+    ${NAV_ITEMS.slice(5).map(i=>_navItem(i,badges)).join('')}
+    <a class="nav-footer nav-user-link" href="#" onclick="navigate('config');return false" title="Configuración">
       <div class="nav-user">
-        <div class="avatar" style="width:34px;height:34px;background:var(--navy);font-size:13px">${(nombre[0]||'C').toUpperCase()}</div>
-        <div><div class="nav-user-name">${escHtml(nombre)}</div><div class="nav-user-role">${escHtml(cargo)}</div></div>
+        <div class="avatar" style="width:36px;height:36px;background:var(--navy);font-size:14px">${(nombre[0]||'C').toUpperCase()}</div>
+        <div style="flex:1;min-width:0"><div class="nav-user-name">${escHtml(nombre)}</div><div class="nav-user-role">${escHtml(cargo)}</div></div>
+        <span class="nav-user-gear">${_icoConfig()}</span>
       </div>
-    </div>`;
+    </a>`;
 }
 
-function _navItem(item) {
+function _navItem(item, badges = {}) {
+  const b = badges[item.id];
   return `<a class="nav-item${S.view===item.id?' active':''}" href="#" onclick="navigate('${item.id}');return false">
-    <span class="nav-icon">${item.icon}</span>${escHtml(item.label)}
+    <span class="nav-icon">${item.icon}</span><span class="nav-item-label">${escHtml(item.label)}</span>${b ? `<span class="nav-badge">${b}</span>` : ''}
   </a>`;
 }
 

@@ -1,10 +1,10 @@
 // modules/home/home.js
-import { prospectos, citas, propuestas } from '../../js/db.js';
-import { formatDate, formatCLP, PIPELINE_STAGES, todayStr, stageBadge } from '../../js/utils.js';
+import { prospectos, citas, propuestas, config } from '../../js/db.js';
+import { formatDate, formatCLP, PIPELINE_STAGES, todayStr, stageBadge, escHtml } from '../../js/utils.js';
 
 export async function render() {
-  const [todos, todasCitas, todasPropuestas] = await Promise.all([
-    prospectos.getAll(), citas.getAll(), propuestas.getAll()
+  const [todos, todasCitas, todasPropuestas, userName] = await Promise.all([
+    prospectos.getAll(), citas.getAll(), propuestas.getAll(), config.get('userName')
   ]);
 
   const today = todayStr();
@@ -23,30 +23,30 @@ export async function render() {
   center.innerHTML = `<div class="view-animate">
     <div class="home-header">
       <div>
-        <div class="home-greeting">${_saludo()} 👋</div>
+        <div class="home-greeting">${_saludo()}${userName ? ', ' + escHtml(userName.split(' ')[0]) : ''} 👋</div>
         <h1 class="home-title">Panel de Consultoría</h1>
       </div>
       <button class="btn btn-primary" onclick="window._app.openProspectoModal()">+ Nuevo prospecto</button>
     </div>
 
     <div class="kpi-grid">
-      <div class="kpi-card kpi-accent">
-        <div class="kpi-label">Prospectos activos</div>
+      <div class="kpi-card">
+        <div class="kpi-top"><span class="kpi-label">Prospectos activos</span><span class="kpi-ic" style="background:var(--primary-l);color:var(--primary)">👥</span></div>
         <div class="kpi-value">${todos.filter(p=>p.estado!=='Descartado').length}</div>
         <div class="kpi-sub">${nuevos} nuevos sin contactar</div>
       </div>
-      <div class="kpi-card" style="border-left:3px solid var(--amber)">
-        <div class="kpi-label">Propuestas abiertas</div>
+      <div class="kpi-card">
+        <div class="kpi-top"><span class="kpi-label">Propuestas abiertas</span><span class="kpi-ic" style="background:var(--amber-l);color:var(--amber)">📄</span></div>
         <div class="kpi-value">${propEnv}</div>
         <div class="kpi-sub">En espera o negociación</div>
       </div>
-      <div class="kpi-card" style="border-left:3px solid var(--green)">
-        <div class="kpi-label">Clientes activos</div>
+      <div class="kpi-card">
+        <div class="kpi-top"><span class="kpi-label">Clientes activos</span><span class="kpi-ic" style="background:var(--green-l);color:var(--green)">✅</span></div>
         <div class="kpi-value">${clientes}</div>
         <div class="kpi-sub">Proyectos en curso</div>
       </div>
-      <div class="kpi-card" style="border-left:3px solid var(--violet)">
-        <div class="kpi-label">Valor proyectado</div>
+      <div class="kpi-card">
+        <div class="kpi-top"><span class="kpi-label">Valor proyectado</span><span class="kpi-ic" style="background:var(--violet-l);color:var(--violet)">💰</span></div>
         <div class="kpi-value kpi-value-sm">${formatCLP(valorProyectado)}</div>
         <div class="kpi-sub">Propuestas en negociación</div>
       </div>
@@ -93,7 +93,7 @@ export async function render() {
       <div class="home-funnel">
         ${PIPELINE_STAGES.filter(s=>s.id!=='Descartado').map(st=>{
           const cnt = todos.filter(p=>p.estado===st.id).length;
-          return `<div class="funnel-stage" onclick="window._app.navigate('pipeline')">
+          return `<div class="funnel-stage" onclick="window._app.navigate('pipeline')" style="border-top:3px solid ${st.color}">
             <div class="funnel-icon">${st.icon}</div>
             <div class="funnel-label">${st.id}</div>
             <div class="funnel-count" style="color:${st.color}">${cnt}</div>
