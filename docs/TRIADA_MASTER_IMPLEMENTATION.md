@@ -13,11 +13,11 @@
 
 | Métrica | Valor |
 |---|---|
-| **% completado** | ~15 % |
+| **% completado** | ~16 % |
 | **Tareas totales** | 148 |
-| **Completadas** | 22 |
+| **Completadas** | 23 |
 | **En progreso** | 1 |
-| **Pendientes** | 125 |
+| **Pendientes** | 124 |
 | **Última actualización** | 2026-06-09 |
 
 **Leyenda:** `[ ]` Pendiente · `[-]` En progreso · `[x]` Completado
@@ -25,7 +25,7 @@
 | Fase | Título | Estado | Avance |
 |---|---|---|---|
 | 0 | Auditoría del sistema actual | ✅ Completada | 9/9 |
-| 1 | Reestructuración UX/UI | 🔄 En progreso | 6/10 |
+| 1 | Reestructuración UX/UI | 🔄 En progreso | 7/10 |
 | 2 | Estandarización de datos | ✅ Completada | 7/7 |
 | 3 | Sistema de identificadores | ⏳ Pendiente | 0/6 |
 | 4 | Módulo de Leads | ⏳ Pendiente | 0/19 |
@@ -130,7 +130,7 @@ El producto tiene una **base de UI sólida y una capa de datos bien aislada**, p
 [x] Formularios — secciones, hints, asterisco de requerido, selects con chevron (global)
 [x] Propuestas — KPIs con chips de ícono + selección de servicios en tarjetas (estado activo)
 [x] Diagnósticos — polish de tarjetas y botones Sí/No (rediseño de flujo en Fase 7)
-[ ] Agenda
+[x] Agenda — tarjetas de cita con acento por estado e ícono en chip
 [x] Leads — Pipeline/Kanban: estadísticas clickeables (filtro), contadores por color, filtro con chevron
 [ ] Responsive
 [ ] Accesibilidad
@@ -378,6 +378,12 @@ IA genera:
 ---
 
 # REGISTRO DE CAMBIOS
+
+### 2026-06-09 · Fase 1 — UX Agenda + Informes (commit `7a474e9`)
+- **Módulos:** agenda, informes
+- **Archivos:** `modules/agenda/agenda.js`, `modules/agenda/agenda.css`, `modules/informes/informes.js`
+- **Motivo:** alinear agenda e informes a la estética del rediseño (Fase 1).
+- **Resultado:** Informes con 6 KPIs de ícono; tarjetas de cita con acento de color por estado e ícono en chip. (Informes no figura en el checklist de Fase 1; queda alineado igual.) Verificado en preview, sin errores.
 
 ### 2026-06-09 · Fase 1 — UX Pipeline (Kanban) + Diagnósticos (commit `2ca49e3`)
 - **Módulos:** pipeline, diagnósticos (vía styles.css), design system
