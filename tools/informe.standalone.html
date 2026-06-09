@@ -1,0 +1,856 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Informe Ejecutivo Tríada 360 — Constructora RM</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+
+:root{
+  --bg:#FBFBFD; --surface:#fff; --surface2:#F4F6FB; --surface3:#ECEEF5;
+  --border:#ECEEF5; --text:#0B1020; --text2:#666d84; --text3:#9aa0b3;
+  --primary:#028090; --navy:#1E2761; --green:#4FB286; --violet:#5B6BD6;
+  --amber:#F0B429; --danger:#E0604F;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html,body{background:#fff;}
+body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;-webkit-font-smoothing:antialiased;}
+/* En PDF cada página es una hoja A4 independiente */
+.report-doc{display:block;}
+.report-page{
+  width:210mm; min-height:297mm; height:297mm;
+  margin:0; box-shadow:none; page-break-after:always; break-after:page;
+  -webkit-print-color-adjust:exact; print-color-adjust:exact;
+}
+.report-page:last-child{page-break-after:auto;break-after:auto;}
+
+/* ══════════════════════════════════════════════════════════
+   INFORME EJECUTIVO TRÍADA 360 — estilos premium (pantalla + print)
+   ══════════════════════════════════════════════════════════ */
+
+.informe-viewer {
+  position: fixed; inset: 0; z-index: 500;
+  background: #2A2E3D;
+  display: flex; flex-direction: column;
+  animation: fadeIn .25s ease;
+}
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+/* ── Toolbar ── */
+.report-toolbar {
+  height: 60px; flex-shrink: 0;
+  background: #fff; border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 20px; box-shadow: 0 2px 12px rgba(0,0,0,.18);
+}
+.report-toolbar .rt-left { display: flex; align-items: center; gap: 12px; }
+.report-toolbar .rt-name { font-size: 14px; font-weight: 700; color: #1E2761; }
+.report-toolbar .rt-meta { font-size: 12px; color: #666d84; }
+.report-toolbar .rt-actions { display: flex; gap: 10px; }
+
+/* ── Scroll area ── */
+.report-scroll { flex: 1; overflow-y: auto; padding: 32px 16px 60px; }
+.report-doc { display: flex; flex-direction: column; align-items: center; gap: 28px; }
+
+/* ── Hoja A4 ── */
+.report-page {
+  width: 210mm; min-height: 297mm;
+  background: #fff; color: #0B1020;
+  box-shadow: 0 16px 50px rgba(0,0,0,.34);
+  padding: 22mm 20mm 16mm;
+  position: relative;
+  font-family: 'Inter', system-ui, sans-serif;
+  display: flex; flex-direction: column;
+  -webkit-print-color-adjust: exact; print-color-adjust: exact;
+}
+
+/* ── Encabezado de sección ── */
+.report-head { display: flex; align-items: center; gap: 14px; margin-bottom: 22px; }
+.rh-num { font-size: 13px; font-weight: 800; color: #028090; letter-spacing: .1em; background: #E6F4F5; padding: 6px 11px; border-radius: 8px; }
+.rh-title { font-size: 26px; font-weight: 800; color: #1E2761; letter-spacing: -.02em; }
+.rh-rule { flex: 1; height: 1px; background: linear-gradient(90deg, #ECEEF5, transparent); }
+
+.page-intro { font-size: 13.5px; color: #666d84; line-height: 1.6; margin-bottom: 22px; max-width: 92%; }
+
+/* ── Footer ── */
+.report-footer {
+  margin-top: auto; padding-top: 16px; border-top: 1px solid #ECEEF5;
+  display: flex; justify-content: space-between; align-items: center;
+  font-size: 10.5px; color: #9aa0b3; letter-spacing: .03em;
+}
+.rf-brand { font-weight: 600; color: #666d84; }
+.rf-code { font-family: 'DM Mono', monospace; }
+
+/* ══════════ PORTADA ══════════ */
+.cover-page {
+  background: linear-gradient(165deg, #1E2761 0%, #141a3f 55%, #0B1020 100%);
+  color: #fff; overflow: hidden;
+}
+.cover-aura {
+  position: absolute; inset: 0; pointer-events: none;
+  background:
+    radial-gradient(50% 40% at 80% 8%, rgba(2,128,144,.40), transparent 60%),
+    radial-gradient(45% 38% at 12% 38%, rgba(91,107,214,.34), transparent 62%),
+    radial-gradient(48% 46% at 62% 100%, rgba(79,178,134,.30), transparent 62%);
+}
+.cover-top { display: flex; justify-content: space-between; align-items: flex-start; position: relative; z-index: 2; }
+.cover-brand { display: flex; align-items: center; gap: 12px; font-size: 22px; font-weight: 700; letter-spacing: .14em; color: #fff; }
+.report-logo { width: 44px; height: 44px; color: #fff; }
+.cover-areas { display: flex; flex-direction: column; gap: 8px; font-size: 12.5px; color: rgba(255,255,255,.82); }
+.cover-areas span { display: flex; align-items: center; gap: 8px; justify-content: flex-end; }
+.cover-areas i { width: 9px; height: 9px; border-radius: 50%; }
+
+.cover-center { position: relative; z-index: 2; margin: auto 0; }
+.cover-kicker { font-size: 14px; font-weight: 650; letter-spacing: .32em; text-transform: uppercase; color: #4FB286; margin-bottom: 14px; }
+.cover-title { font-size: 76px; font-weight: 800; letter-spacing: -.03em; line-height: .98; color: #fff; }
+.cover-sub { font-size: 21px; font-weight: 400; color: rgba(255,255,255,.86); margin-top: 16px; letter-spacing: .01em; }
+.cover-quote { margin-top: 46px; font-size: 16px; font-style: italic; line-height: 1.7; color: rgba(255,255,255,.72); border-left: 3px solid #028090; padding-left: 20px; max-width: 80%; }
+
+.cover-meta {
+  position: relative; z-index: 2; margin-top: auto;
+  display: grid; grid-template-columns: 1fr 1fr; gap: 1px;
+  background: rgba(255,255,255,.12); border: 1px solid rgba(255,255,255,.14);
+  border-radius: 16px; overflow: hidden;
+}
+.cmeta { background: rgba(20,26,63,.55); padding: 18px 22px; }
+.cmeta-l { display: block; font-size: 11px; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; color: rgba(255,255,255,.55); margin-bottom: 6px; }
+.cmeta-v { font-size: 16px; font-weight: 650; color: #fff; }
+.cmeta-v.mono { font-family: 'DM Mono', monospace; letter-spacing: .04em; color: #4FB286; }
+
+/* ══════════ RESUMEN ══════════ */
+.resumen-grid { display: grid; grid-template-columns: 280px 1fr; gap: 36px; align-items: center; flex: 1; }
+.resumen-gauge { text-align: center; }
+.rg-label { font-size: 12px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: #9aa0b3; margin-bottom: 12px; }
+.rg-tag { display: inline-block; margin-top: 16px; font-size: 13px; font-weight: 650; padding: 7px 16px; border-radius: 980px; }
+
+.resumen-clasif { display: flex; gap: 7px; margin-bottom: 22px; }
+.clasif-pill { font-size: 12px; font-weight: 600; padding: 6px 13px; border-radius: 980px; border: 1px solid #ECEEF5; color: #9aa0b3; }
+.rt-title { font-size: 17px; font-weight: 700; color: #1E2761; margin-bottom: 12px; }
+.rt-body { font-size: 14.5px; line-height: 1.75; color: #3a4366; }
+.rt-areas { display: flex; gap: 12px; margin-top: 28px; }
+.rt-area-mini { flex: 1; background: #F4F6FB; border-radius: 12px; padding: 14px; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.rt-area-dot { width: 10px; height: 10px; border-radius: 50%; }
+.rt-area-name { font-size: 12px; color: #666d84; font-weight: 550; }
+.rt-area-score { font-size: 26px; font-weight: 800; }
+
+/* ══════════ RESULTADOS ══════════ */
+.resultados-grid { display: grid; grid-template-columns: 1fr 320px; gap: 30px; margin-bottom: 26px; }
+.resultados-bars { display: flex; flex-direction: column; gap: 22px; justify-content: center; }
+.resultados-radar { text-align: center; }
+.radar-caption { font-size: 11.5px; color: #9aa0b3; margin-top: 8px; }
+
+.chart-areabar .areabar-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 8px; }
+.areabar-name { font-size: 14px; font-weight: 650; color: #1E2761; }
+.areabar-score { font-size: 22px; font-weight: 800; }
+.areabar-score small { font-size: 12px; font-weight: 500; color: #9aa0b3; }
+.areabar-track { position: relative; height: 12px; background: #ECEEF5; border-radius: 8px; overflow: visible; }
+.areabar-fill { height: 100%; border-radius: 8px; }
+.areabar-target { position: absolute; top: -3px; width: 2px; height: 18px; background: #1E2761; opacity: .5; }
+.areabar-target::after { content: '▾'; position: absolute; top: -13px; left: -4px; font-size: 10px; color: #1E2761; }
+.areabar-meta { display: flex; justify-content: space-between; margin-top: 6px; font-size: 11.5px; }
+.areabar-nivel { font-weight: 650; }
+.areabar-target-lbl { color: #9aa0b3; }
+
+.area-detail-list { display: flex; flex-direction: column; gap: 14px; }
+.area-detail { border: 1px solid #ECEEF5; border-radius: 14px; padding: 16px 18px; }
+.ad-head { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+.ad-icon { font-size: 18px; }
+.ad-name { font-size: 14.5px; font-weight: 700; color: #1E2761; flex: 1; }
+.ad-score { font-size: 18px; font-weight: 800; }
+.ad-score small { font-size: 11px; font-weight: 500; color: #9aa0b3; }
+.ad-nivel { font-size: 11.5px; font-weight: 650; padding: 4px 11px; border-radius: 980px; }
+.ad-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 22px; }
+.ad-col-h { font-size: 11px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; margin-bottom: 8px; }
+.ad-pos { color: #4FB286; }
+.ad-neg { color: #E0604F; }
+.ad-item { font-size: 12.5px; line-height: 1.5; margin-bottom: 5px; }
+.ad-item-pos { color: #2f6b52; }
+.ad-item-neg { color: #99453a; }
+.ad-empty { font-size: 12px; color: #9aa0b3; font-style: italic; }
+
+/* ══════════ HALLAZGOS ══════════ */
+.hallazgos-list { display: flex; flex-direction: column; gap: 14px; }
+.hallazgo-card { display: flex; gap: 16px; border: 1px solid #ECEEF5; border-radius: 14px; padding: 18px 20px; transition: box-shadow .2s; }
+.hz-rank { width: 40px; height: 40px; flex-shrink: 0; border-radius: 11px; display: flex; align-items: center; justify-content: center; font-size: 19px; font-weight: 800; }
+.hz-top { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 6px; }
+.hz-title { font-size: 15.5px; font-weight: 700; color: #1E2761; }
+.hz-area { font-size: 12px; font-weight: 650; white-space: nowrap; }
+.hz-impacto { font-size: 13px; color: #666d84; line-height: 1.55; margin-bottom: 10px; }
+.hz-risk { font-size: 11.5px; font-weight: 650; padding: 4px 12px; border-radius: 980px; border: 1px solid; }
+
+/* ══════════ OPORTUNIDADES ══════════ */
+.oport-grid { display: grid; grid-template-columns: 1fr 380px; gap: 28px; }
+.oport-list { display: flex; flex-direction: column; gap: 12px; }
+.oport-card { display: flex; gap: 14px; border: 1px solid #ECEEF5; border-radius: 14px; padding: 15px 16px; }
+.op-num { width: 30px; height: 30px; flex-shrink: 0; border-radius: 50%; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 800; }
+.op-title { font-size: 14.5px; font-weight: 700; color: #1E2761; margin-bottom: 5px; }
+.op-benef { font-size: 12.5px; color: #666d84; line-height: 1.5; margin-bottom: 9px; }
+.op-benef strong { color: #028090; }
+.op-tags { display: flex; flex-wrap: wrap; gap: 12px; }
+.op-tag { font-size: 11.5px; font-weight: 650; }
+
+.oport-matrix { text-align: center; }
+.matrix-title { font-size: 13px; font-weight: 700; color: #1E2761; margin-bottom: 8px; }
+.matrix-legend { margin-top: 12px; text-align: left; display: flex; flex-direction: column; gap: 5px; }
+.ml-item { font-size: 11px; color: #666d84; display: flex; align-items: center; gap: 7px; line-height: 1.3; }
+.ml-num { width: 17px; height: 17px; flex-shrink: 0; border-radius: 50%; color: #fff; display: inline-flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 800; }
+
+/* ══════════ MAPA DE MADUREZ ══════════ */
+.mapa-wrap { margin: 10px 0 24px; }
+.mapa-delta { display: flex; align-items: center; justify-content: center; gap: 40px; margin: 10px 0 34px; }
+.md-box { text-align: center; }
+.md-label { font-size: 11px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: #9aa0b3; margin-bottom: 4px; }
+.md-val { font-size: 48px; font-weight: 800; line-height: 1; letter-spacing: -.03em; }
+.md-nivel { font-size: 12px; font-weight: 650; margin-top: 4px; }
+.md-arrow { text-align: center; }
+.md-potencial { font-size: 22px; font-weight: 800; color: #4FB286; }
+.md-potencial-lbl { font-size: 11px; color: #9aa0b3; margin-top: 2px; }
+
+.mapa-areas { display: flex; flex-direction: column; gap: 14px; margin-top: 10px; }
+.ma-row { display: flex; align-items: center; gap: 16px; }
+.ma-name { width: 140px; font-size: 13px; font-weight: 600; color: #1E2761; }
+.ma-track { flex: 1; position: relative; height: 12px; background: #ECEEF5; border-radius: 8px; overflow: hidden; }
+.ma-fill-now { position: absolute; left: 0; top: 0; height: 100%; border-radius: 8px; }
+.ma-fill-target { position: absolute; top: 0; height: 100%; opacity: .28; }
+.ma-vals { font-size: 13px; width: 90px; text-align: right; }
+
+/* ══════════ PLAN DE ACCIÓN ══════════ */
+.plan-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; flex: 1; }
+.plan-fase { display: flex; flex-direction: column; }
+.pf-head { display: flex; align-items: center; gap: 11px; padding-bottom: 12px; border-bottom: 2px solid; margin-bottom: 14px; }
+.pf-dot { width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0; }
+.pf-title { font-size: 15px; font-weight: 800; color: #1E2761; }
+.pf-plazo { font-size: 11.5px; color: #9aa0b3; font-weight: 600; }
+.pf-items { display: flex; flex-direction: column; gap: 10px; }
+.pf-item { background: #F4F6FB; border-radius: 12px; padding: 13px 14px; }
+.pfi-title { font-size: 13px; font-weight: 700; color: #1E2761; line-height: 1.35; margin-bottom: 5px; }
+.pfi-benef { font-size: 11.5px; color: #666d84; line-height: 1.45; margin-bottom: 8px; }
+.pfi-area { font-size: 10.5px; font-weight: 700; letter-spacing: .04em; }
+
+/* ══════════ CONCLUSIÓN ══════════ */
+.conclusion-body { display: flex; flex-direction: column; gap: 16px; margin-bottom: 26px; }
+.conclusion-body p { font-size: 14px; line-height: 1.8; color: #3a4366; }
+.conclusion-body p:first-child { font-size: 15px; color: #1E2761; font-weight: 500; }
+.conclusion-highlight { display: flex; align-items: center; justify-content: center; gap: 28px; border: 1.5px solid; border-radius: 16px; padding: 22px 30px; margin-bottom: 30px; background: #FBFBFD; }
+.ch-label { font-size: 11px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: #9aa0b3; margin-bottom: 4px; text-align: center; }
+.ch-val { font-size: 40px; font-weight: 800; line-height: 1; text-align: center; }
+.ch-val small { font-size: 14px; font-weight: 500; color: #9aa0b3; }
+.conclusion-sign { display: flex; align-items: center; gap: 16px; margin-bottom: 24px; }
+.cs-line { flex: 1; height: 1px; background: #ECEEF5; }
+.cs-who { text-align: center; }
+.cs-name { font-size: 15px; font-weight: 700; color: #1E2761; }
+.cs-role { font-size: 12px; color: #9aa0b3; }
+.cs-brand { display: flex; }
+.conclusion-cta { background: linear-gradient(120deg, #E6F4F5, #ECF7F1); border-radius: 14px; padding: 18px 22px; font-size: 13.5px; color: #1E2761; line-height: 1.6; }
+.conclusion-cta strong { color: #028090; }
+
+.report-empty { padding: 40px; text-align: center; font-size: 14px; color: #4FB286; background: #ECF7F1; border-radius: 14px; line-height: 1.6; }
+
+/* ══════════ RESPONSIVE (visor en pantalla) ══════════ */
+@media (max-width: 880px) {
+  .report-page { width: 100%; min-height: auto; padding: 28px 22px; }
+  .resumen-grid, .resultados-grid, .oport-grid { grid-template-columns: 1fr; gap: 24px; }
+  .plan-grid { grid-template-columns: 1fr; }
+  .cover-title { font-size: 52px; }
+  .cover-meta { grid-template-columns: 1fr; }
+  .resultados-radar, .oport-matrix { max-width: 360px; margin: 0 auto; }
+}
+
+/* ══════════════════════════════════════════════════════════
+   IMPRESIÓN / PDF
+   ══════════════════════════════════════════════════════════ */
+@media print {
+  @page { size: A4; margin: 0; }
+  body.has-report-open > *:not(.informe-viewer) { display: none !important; }
+  .informe-viewer { position: static; background: #fff; height: auto; }
+  .report-toolbar { display: none !important; }
+  .report-scroll { overflow: visible; padding: 0; }
+  .report-doc { gap: 0; }
+  .report-page {
+    width: 210mm; min-height: 297mm; height: 297mm;
+    box-shadow: none; margin: 0;
+    page-break-after: always; break-after: page;
+    -webkit-print-color-adjust: exact; print-color-adjust: exact;
+  }
+  .report-page:last-child { page-break-after: auto; break-after: auto; }
+}
+
+@page { size: A4; margin: 0; }
+</style>
+</head>
+<body class="has-report-open">
+<div class="informe-viewer">
+  <div class="report-scroll">
+    <div class="report-doc"><section class="report-page cover-page">
+    <div class="cover-aura"></div>
+    <div class="cover-top">
+      <div class="cover-brand"><svg viewBox="0 0 120 120" fill="none" class="report-logo">
+  <path d="M26 90 L60 62 L94 90" stroke="currentColor" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M26 73 L60 45 L94 73" stroke="currentColor" stroke-width="11" stroke-linecap="round" stroke-linejoin="round" opacity=".72"/>
+  <path d="M26 56 L60 28 L94 56" stroke="currentColor" stroke-width="11" stroke-linecap="round" stroke-linejoin="round" opacity=".45"/>
+</svg><span>TRÍADA</span></div>
+      <div class="cover-areas">
+        <span><i style="background:#5B6BD6"></i>Tecnología</span>
+        <span><i style="background:#028090"></i>Ventas</span>
+        <span><i style="background:#4FB286"></i>Finanzas</span>
+      </div>
+    </div>
+
+    <div class="cover-center">
+      <div class="cover-kicker">Informe Ejecutivo</div>
+      <h1 class="cover-title">TRÍADA 360</h1>
+      <div class="cover-sub">Diagnóstico Integral de Madurez Empresarial</div>
+      <div class="cover-quote">“Las empresas más exitosas no son las que trabajan más,<br>sino las que entienden mejor dónde enfocar sus esfuerzos.”</div>
+    </div>
+
+    <div class="cover-meta">
+      <div class="cmeta"><span class="cmeta-l">Empresa</span><span class="cmeta-v">Constructora RM</span></div>
+      <div class="cmeta"><span class="cmeta-l">Fecha</span><span class="cmeta-v">09 de junio de 2026</span></div>
+      <div class="cmeta"><span class="cmeta-l">Evaluador</span><span class="cmeta-v">Equipo Tríada · Consultoría Estratégica</span></div>
+      <div class="cmeta"><span class="cmeta-l">Código de informe</span><span class="cmeta-v mono">TR360-260609-0001</span></div>
+    </div>
+  </section><section class="report-page">
+    <div class="report-head">
+    <span class="rh-num">01</span>
+    <h2 class="rh-title">Resumen Ejecutivo</h2>
+    <span class="rh-rule"></span>
+  </div>
+    <div class="resumen-grid">
+      <div class="resumen-gauge">
+        <div class="rg-label">Índice General de Madurez</div>
+        <svg width="240" height="240" viewBox="0 0 240 240" class="chart-ring" role="img" aria-label="Índice 40 de 100">
+    <circle cx="120" cy="120" r="111" fill="none" stroke="#ECEEF5" stroke-width="18"/>
+    <circle cx="120" cy="120" r="111" fill="none" stroke="#F0B429" stroke-width="18"
+            stroke-linecap="round" stroke-dasharray="697.4" stroke-dashoffset="418.5"
+            transform="rotate(-90 120 120)"/>
+    <text x="120" y="115.2" text-anchor="middle" style="font-size:72px;font-weight:800;fill:#1E2761;letter-spacing:-.03em">40</text>
+    <text x="120" y="153.6" text-anchor="middle" style="font-size:18px;font-weight:600;fill:#9aa0b3;letter-spacing:.18em">/ 100</text>
+    <text x="120" y="184.8" text-anchor="middle" style="font-size:17px;font-weight:700;fill:#F0B429;text-transform:uppercase;letter-spacing:.1em">En Riesgo</text>
+  </svg>
+        <div class="rg-tag" style="color:#F0B429;background:#FEF6E6">Oportunidad de mejora significativa</div>
+      </div>
+      <div class="resumen-text">
+        <div class="resumen-clasif">
+          <div class="clasif-pill " >Crítico</div><div class="clasif-pill on" style="background:#F0B429;color:#fff;border-color:#F0B429">En Riesgo</div><div class="clasif-pill " >Funcional</div><div class="clasif-pill " >Optimizado</div>
+        </div>
+        <h3 class="rt-title">Lectura del diagnóstico</h3>
+        <p class="rt-body">Constructora RM presenta un Índice General de Madurez Empresarial de 40/100, ubicándose en un nivel «En Riesgo». El área de Finanzas muestra el mejor desempeño (60/100) y constituye una base sólida sobre la cual construir. Se identifican oportunidades relevantes principalmente en Ventas (20/100) y Tecnología (40/100). Con un plan estructurado y enfocado, el diagnóstico proyecta alcanzar un nivel de madurez cercano a 76/100.</p>
+        <div class="rt-areas">
+          <div class="rt-area-mini">
+            <span class="rt-area-dot" style="background:#5B6BD6"></span>
+            <span class="rt-area-name">Tecnología</span>
+            <span class="rt-area-score" style="color:#5B6BD6">40</span>
+          </div><div class="rt-area-mini">
+            <span class="rt-area-dot" style="background:#028090"></span>
+            <span class="rt-area-name">Ventas</span>
+            <span class="rt-area-score" style="color:#028090">20</span>
+          </div><div class="rt-area-mini">
+            <span class="rt-area-dot" style="background:#4FB286"></span>
+            <span class="rt-area-name">Finanzas</span>
+            <span class="rt-area-score" style="color:#4FB286">60</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="report-footer">
+    <span class="rf-brand">TRÍADA · Diagnóstico Empresarial 360</span>
+    <span class="rf-code">TR360-260609-0001</span>
+    <span class="rf-page">2 / 8</span>
+  </div>
+  </section><section class="report-page">
+    <div class="report-head">
+    <span class="rh-num">02</span>
+    <h2 class="rh-title">Resultados por Área</h2>
+    <span class="rh-rule"></span>
+  </div>
+    <div class="resultados-grid">
+      <div class="resultados-bars">
+        <div class="chart-areabar">
+    <div class="areabar-head">
+      <span class="areabar-name">🖥️ Tecnología y Digitalización</span>
+      <span class="areabar-score" style="color:#5B6BD6">40<small>/100</small></span>
+    </div>
+    <div class="areabar-track">
+      <div class="areabar-fill" style="width:40%;background:#5B6BD6"></div>
+      <div class="areabar-target" style="left:76%" title="Objetivo: 76"></div>
+    </div>
+    <div class="areabar-meta">
+      <span class="areabar-nivel" style="color:#F0B429">● En Riesgo</span>
+      <span class="areabar-target-lbl">Objetivo 76</span>
+    </div>
+  </div><div class="chart-areabar">
+    <div class="areabar-head">
+      <span class="areabar-name">📈 Gestión Comercial y Ventas</span>
+      <span class="areabar-score" style="color:#028090">20<small>/100</small></span>
+    </div>
+    <div class="areabar-track">
+      <div class="areabar-fill" style="width:20%;background:#028090"></div>
+      <div class="areabar-target" style="left:68%" title="Objetivo: 68"></div>
+    </div>
+    <div class="areabar-meta">
+      <span class="areabar-nivel" style="color:#E0604F">● Crítico</span>
+      <span class="areabar-target-lbl">Objetivo 68</span>
+    </div>
+  </div><div class="chart-areabar">
+    <div class="areabar-head">
+      <span class="areabar-name">💰 Finanzas y Gestión Empresarial</span>
+      <span class="areabar-score" style="color:#4FB286">60<small>/100</small></span>
+    </div>
+    <div class="areabar-track">
+      <div class="areabar-fill" style="width:60%;background:#4FB286"></div>
+      <div class="areabar-target" style="left:84%" title="Objetivo: 84"></div>
+    </div>
+    <div class="areabar-meta">
+      <span class="areabar-nivel" style="color:#028090">● Funcional</span>
+      <span class="areabar-target-lbl">Objetivo 84</span>
+    </div>
+  </div>
+      </div>
+      <div class="resultados-radar">
+        <svg width="300" height="300" viewBox="0 0 300 300" class="chart-radar" role="img" aria-label="Radar de madurez por área">
+    <polygon points="150.0,124.5 172.1,162.8 127.9,162.8" fill="none" stroke="#ECEEF5" stroke-width="1"/><polygon points="150.0,99.0 194.2,175.5 105.8,175.5" fill="none" stroke="#ECEEF5" stroke-width="1"/><polygon points="150.0,73.5 216.3,188.3 83.7,188.3" fill="none" stroke="#ECEEF5" stroke-width="1"/><polygon points="150.0,48.0 238.3,201.0 61.7,201.0" fill="#FBFBFD" stroke="#ECEEF5" stroke-width="1"/><line x1="150" y1="150" x2="150.0" y2="48.0" stroke="#ECEEF5" stroke-width="1"/><line x1="150" y1="150" x2="238.3" y2="201.0" stroke="#ECEEF5" stroke-width="1"/><line x1="150" y1="150" x2="61.7" y2="201.0" stroke="#ECEEF5" stroke-width="1"/>
+    <polygon points="150.0,109.2 167.7,160.2 97.0,180.6" fill="rgba(2,128,144,.14)" stroke="#028090" stroke-width="2.5" stroke-linejoin="round"/>
+    <circle cx="150.0" cy="109.2" r="5" fill="#5B6BD6" stroke="#fff" stroke-width="2"/><circle cx="167.7" cy="160.2" r="5" fill="#028090" stroke="#fff" stroke-width="2"/><circle cx="97.0" cy="180.6" r="5" fill="#4FB286" stroke="#fff" stroke-width="2"/><text x="150.0" y="23.5" text-anchor="middle" dominant-baseline="middle" style="font-size:12.5px;font-weight:700;fill:#1E2761">Tecnología</text>
+            <text x="150.0" y="39.5" text-anchor="middle" dominant-baseline="middle" style="font-size:12px;font-weight:700;fill:#5B6BD6">40</text><text x="259.5" y="213.2" text-anchor="middle" dominant-baseline="middle" style="font-size:12.5px;font-weight:700;fill:#1E2761">Ventas</text>
+            <text x="259.5" y="229.2" text-anchor="middle" dominant-baseline="middle" style="font-size:12px;font-weight:700;fill:#028090">20</text><text x="40.5" y="213.2" text-anchor="middle" dominant-baseline="middle" style="font-size:12.5px;font-weight:700;fill:#1E2761">Finanzas</text>
+            <text x="40.5" y="229.2" text-anchor="middle" dominant-baseline="middle" style="font-size:12px;font-weight:700;fill:#4FB286">60</text>
+  </svg>
+        <div class="radar-caption">Perfil de madurez en las tres dimensiones evaluadas</div>
+      </div>
+    </div>
+    <div class="area-detail-list">
+      <div class="area-detail">
+        <div class="ad-head">
+          <span class="ad-icon">🖥️</span>
+          <span class="ad-name">Tecnología y Digitalización</span>
+          <span class="ad-score" style="color:#5B6BD6">40<small>/100</small></span>
+          <span class="ad-nivel" style="color:#F0B429;background:#FEF6E6">En Riesgo</span>
+        </div>
+        <div class="ad-cols">
+          <div class="ad-col">
+            <div class="ad-col-h ad-pos">Fortalezas</div>
+            <div class="ad-item ad-item-pos">✓ Equipo con buena adopción de herramientas digitales</div><div class="ad-item ad-item-pos">✓ Desempeño digital medido con indicadores</div>
+          </div>
+          <div class="ad-col">
+            <div class="ad-col-h ad-neg">Debilidades</div>
+            <div class="ad-item ad-item-neg">• Sistemas y herramientas desconectados</div><div class="ad-item ad-item-neg">• Procesos manuales sin automatización</div><div class="ad-item ad-item-neg">• Datos dispersos y poco accesibles</div>
+          </div>
+        </div>
+      </div><div class="area-detail">
+        <div class="ad-head">
+          <span class="ad-icon">📈</span>
+          <span class="ad-name">Gestión Comercial y Ventas</span>
+          <span class="ad-score" style="color:#028090">20<small>/100</small></span>
+          <span class="ad-nivel" style="color:#E0604F;background:#FCEEEC">Crítico</span>
+        </div>
+        <div class="ad-cols">
+          <div class="ad-col">
+            <div class="ad-col-h ad-pos">Fortalezas</div>
+            <div class="ad-item ad-item-pos">✓ Conversión de cotizaciones medida</div>
+          </div>
+          <div class="ad-col">
+            <div class="ad-col-h ad-neg">Debilidades</div>
+            <div class="ad-item ad-item-neg">• Proceso de ventas no documentado</div><div class="ad-item ad-item-neg">• Falta de seguimiento comercial estructurado</div><div class="ad-item ad-item-neg">• Equipo comercial sin metas ni seguimiento</div><div class="ad-item ad-item-neg">• Ausencia de un CRM</div>
+          </div>
+        </div>
+      </div><div class="area-detail">
+        <div class="ad-head">
+          <span class="ad-icon">💰</span>
+          <span class="ad-name">Finanzas y Gestión Empresarial</span>
+          <span class="ad-score" style="color:#4FB286">60<small>/100</small></span>
+          <span class="ad-nivel" style="color:#028090;background:#E6F4F5">Funcional</span>
+        </div>
+        <div class="ad-cols">
+          <div class="ad-col">
+            <div class="ad-col-h ad-pos">Fortalezas</div>
+            <div class="ad-item ad-item-pos">✓ Margen real conocido por producto/servicio</div><div class="ad-item ad-item-pos">✓ Costos fijos y variables claramente identificados</div><div class="ad-item ad-item-pos">✓ Revisión financiera mensual establecida</div>
+          </div>
+          <div class="ad-col">
+            <div class="ad-col-h ad-neg">Debilidades</div>
+            <div class="ad-item ad-item-neg">• Flujo de caja sin proyección</div><div class="ad-item ad-item-neg">• Falta de indicadores de rentabilidad</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="report-footer">
+    <span class="rf-brand">TRÍADA · Diagnóstico Empresarial 360</span>
+    <span class="rf-code">TR360-260609-0001</span>
+    <span class="rf-page">3 / 8</span>
+  </div>
+  </section><section class="report-page">
+    <div class="report-head">
+    <span class="rh-num">03</span>
+    <h2 class="rh-title">Hallazgos Principales</h2>
+    <span class="rh-rule"></span>
+  </div>
+    <p class="page-intro">Los siguientes hallazgos representan los puntos de mayor atención detectados en el diagnóstico, ordenados por nivel de riesgo para el negocio.</p>
+    <div class="hallazgos-list">
+      <div class="hallazgo-card">
+          <div class="hz-rank" style="background:#FCEEEC;color:#E0604F">1</div>
+          <div class="hz-body">
+            <div class="hz-top">
+              <span class="hz-title">Procesos manuales sin automatización</span>
+              <span class="hz-area" style="color:#5B6BD6">🖥️ Tecnología</span>
+            </div>
+            <p class="hz-impacto">Tareas repetitivas consumen horas del equipo que podrían destinarse a actividades de mayor valor.</p>
+            <div class="hz-tags">
+              <span class="hz-risk" style="color:#E0604F;background:#FCEEEC;border-color:#E0604F">Riesgo Alto</span>
+            </div>
+          </div>
+        </div><div class="hallazgo-card">
+          <div class="hz-rank" style="background:#FCEEEC;color:#E0604F">2</div>
+          <div class="hz-body">
+            <div class="hz-top">
+              <span class="hz-title">Datos dispersos y poco accesibles</span>
+              <span class="hz-area" style="color:#5B6BD6">🖥️ Tecnología</span>
+            </div>
+            <p class="hz-impacto">Sin una única fuente de verdad, las decisiones se toman con información incompleta o desactualizada.</p>
+            <div class="hz-tags">
+              <span class="hz-risk" style="color:#E0604F;background:#FCEEEC;border-color:#E0604F">Riesgo Alto</span>
+            </div>
+          </div>
+        </div><div class="hallazgo-card">
+          <div class="hz-rank" style="background:#FCEEEC;color:#E0604F">3</div>
+          <div class="hz-body">
+            <div class="hz-top">
+              <span class="hz-title">Proceso de ventas no documentado</span>
+              <span class="hz-area" style="color:#028090">📈 Ventas</span>
+            </div>
+            <p class="hz-impacto">Cada vendedor opera a su manera; los resultados dependen de personas y no de un sistema replicable.</p>
+            <div class="hz-tags">
+              <span class="hz-risk" style="color:#E0604F;background:#FCEEEC;border-color:#E0604F">Riesgo Alto</span>
+            </div>
+          </div>
+        </div><div class="hallazgo-card">
+          <div class="hz-rank" style="background:#FCEEEC;color:#E0604F">4</div>
+          <div class="hz-body">
+            <div class="hz-top">
+              <span class="hz-title">Falta de seguimiento comercial estructurado</span>
+              <span class="hz-area" style="color:#028090">📈 Ventas</span>
+            </div>
+            <p class="hz-impacto">Oportunidades se enfrían sin gestión; se pierden ventas que ya estaban al alcance.</p>
+            <div class="hz-tags">
+              <span class="hz-risk" style="color:#E0604F;background:#FCEEEC;border-color:#E0604F">Riesgo Alto</span>
+            </div>
+          </div>
+        </div><div class="hallazgo-card">
+          <div class="hz-rank" style="background:#FCEEEC;color:#E0604F">5</div>
+          <div class="hz-body">
+            <div class="hz-top">
+              <span class="hz-title">Ausencia de un CRM</span>
+              <span class="hz-area" style="color:#028090">📈 Ventas</span>
+            </div>
+            <p class="hz-impacto">La relación con clientes y prospectos se gestiona de memoria o en planillas, con alto riesgo de fuga.</p>
+            <div class="hz-tags">
+              <span class="hz-risk" style="color:#E0604F;background:#FCEEEC;border-color:#E0604F">Riesgo Alto</span>
+            </div>
+          </div>
+        </div>
+    </div>
+    <div class="report-footer">
+    <span class="rf-brand">TRÍADA · Diagnóstico Empresarial 360</span>
+    <span class="rf-code">TR360-260609-0001</span>
+    <span class="rf-page">4 / 8</span>
+  </div>
+  </section><section class="report-page">
+    <div class="report-head">
+    <span class="rh-num">04</span>
+    <h2 class="rh-title">Oportunidades de Mejora</h2>
+    <span class="rh-rule"></span>
+  </div>
+    <div class="oport-grid">
+      <div class="oport-list">
+        <div class="oport-card">
+            <div class="op-num" style="background:#028090">1</div>
+            <div class="op-body">
+              <div class="op-title">Documentar y estandarizar el proceso de ventas</div>
+              <div class="op-benef"><strong>Beneficio:</strong> Resultados predecibles e independientes de personas</div>
+              <div class="op-tags">
+                <span class="op-tag" style="color:#028090">◆ Impacto alto</span>
+                <span class="op-tag" style="color:#4FB286">⚙ Esfuerzo bajo</span>
+                <span class="op-tag" style="color:#028090">Ventas</span>
+              </div>
+            </div>
+          </div><div class="oport-card">
+            <div class="op-num" style="background:#028090">2</div>
+            <div class="op-body">
+              <div class="op-title">Implementar seguimiento comercial estructurado</div>
+              <div class="op-benef"><strong>Beneficio:</strong> Recuperar ventas que hoy se enfrían sin gestión</div>
+              <div class="op-tags">
+                <span class="op-tag" style="color:#028090">◆ Impacto alto</span>
+                <span class="op-tag" style="color:#4FB286">⚙ Esfuerzo bajo</span>
+                <span class="op-tag" style="color:#028090">Ventas</span>
+              </div>
+            </div>
+          </div><div class="oport-card">
+            <div class="op-num" style="background:#4FB286">3</div>
+            <div class="op-body">
+              <div class="op-title">Proyectar el flujo de caja a 3-6 meses</div>
+              <div class="op-benef"><strong>Beneficio:</strong> Anticipar necesidades de liquidez</div>
+              <div class="op-tags">
+                <span class="op-tag" style="color:#028090">◆ Impacto alto</span>
+                <span class="op-tag" style="color:#4FB286">⚙ Esfuerzo bajo</span>
+                <span class="op-tag" style="color:#4FB286">Finanzas</span>
+              </div>
+            </div>
+          </div><div class="oport-card">
+            <div class="op-num" style="background:#5B6BD6">4</div>
+            <div class="op-body">
+              <div class="op-title">Automatizar las tareas repetitivas clave</div>
+              <div class="op-benef"><strong>Beneficio:</strong> Recuperar horas del equipo cada semana</div>
+              <div class="op-tags">
+                <span class="op-tag" style="color:#028090">◆ Impacto alto</span>
+                <span class="op-tag" style="color:#F0B429">⚙ Esfuerzo medio</span>
+                <span class="op-tag" style="color:#5B6BD6">Tecnología</span>
+              </div>
+            </div>
+          </div><div class="oport-card">
+            <div class="op-num" style="background:#5B6BD6">5</div>
+            <div class="op-body">
+              <div class="op-title">Centralizar los datos en una única fuente de verdad</div>
+              <div class="op-benef"><strong>Beneficio:</strong> Decisiones basadas en datos confiables y al día</div>
+              <div class="op-tags">
+                <span class="op-tag" style="color:#028090">◆ Impacto alto</span>
+                <span class="op-tag" style="color:#F0B429">⚙ Esfuerzo medio</span>
+                <span class="op-tag" style="color:#5B6BD6">Tecnología</span>
+              </div>
+            </div>
+          </div>
+      </div>
+      <div class="oport-matrix">
+        <div class="matrix-title">Matriz Impacto vs Esfuerzo</div>
+        <svg width="360" height="360" viewBox="0 0 360 360" class="chart-matrix" role="img" aria-label="Matriz impacto vs esfuerzo">
+    <rect x="48" y="48" width="132" height="132" fill="rgba(79,178,134,.10)"/><rect x="180" y="48" width="132" height="132" fill="rgba(240,180,41,.07)"/><rect x="48" y="180" width="132" height="132" fill="rgba(91,107,214,.05)"/><rect x="180" y="180" width="132" height="132" fill="rgba(224,96,79,.05)"/><text x="114" y="66" text-anchor="middle" style="font-size:10.5px;font-weight:700;fill:#4FB286;letter-spacing:.1em;text-transform:uppercase">Prioridad</text>
+    <line x1="48" y1="312" x2="312" y2="312" stroke="#D8DCE8" stroke-width="1.5"/>
+    <line x1="48" y1="48" x2="48" y2="312" stroke="#D8DCE8" stroke-width="1.5"/>
+    <line x1="180" y1="48" x2="180" y2="312" stroke="#ECEEF5" stroke-width="1" stroke-dasharray="4 4"/>
+    <line x1="48" y1="180" x2="312" y2="180" stroke="#ECEEF5" stroke-width="1" stroke-dasharray="4 4"/>
+    <text x="180" y="348" text-anchor="middle" style="font-size:12px;font-weight:700;fill:#666d84">Esfuerzo de implementación →</text>
+    <text x="16" y="180" text-anchor="middle" transform="rotate(-90 16 180)" style="font-size:12px;font-weight:700;fill:#666d84">Impacto potencial →</text><g>
+      <circle cx="98.2" cy="99.5" r="15" fill="#028090" opacity=".92"/>
+      <text x="98.2" y="104.0" text-anchor="middle" style="font-size:13px;font-weight:800;fill:#fff">1</text>
+    </g><g>
+      <circle cx="114.0" cy="99.5" r="15" fill="#028090" opacity=".92"/>
+      <text x="114.0" y="104.0" text-anchor="middle" style="font-size:13px;font-weight:800;fill:#fff">2</text>
+    </g><g>
+      <circle cx="98.2" cy="112.7" r="15" fill="#4FB286" opacity=".92"/>
+      <text x="98.2" y="117.2" text-anchor="middle" style="font-size:13px;font-weight:800;fill:#fff">3</text>
+    </g><g>
+      <circle cx="187.9" cy="112.7" r="15" fill="#5B6BD6" opacity=".92"/>
+      <text x="187.9" y="117.2" text-anchor="middle" style="font-size:13px;font-weight:800;fill:#fff">4</text>
+    </g><g>
+      <circle cx="172.1" cy="125.9" r="15" fill="#5B6BD6" opacity=".92"/>
+      <text x="172.1" y="130.4" text-anchor="middle" style="font-size:13px;font-weight:800;fill:#fff">5</text>
+    </g>
+  </svg>
+        <div class="matrix-legend"><div class="ml-item"><span class="ml-num" style="background:#028090">1</span>Documentar y estandarizar el proceso de ventas</div><div class="ml-item"><span class="ml-num" style="background:#028090">2</span>Implementar seguimiento comercial estructurado</div><div class="ml-item"><span class="ml-num" style="background:#4FB286">3</span>Proyectar el flujo de caja a 3-6 meses</div><div class="ml-item"><span class="ml-num" style="background:#5B6BD6">4</span>Automatizar las tareas repetitivas clave</div><div class="ml-item"><span class="ml-num" style="background:#5B6BD6">5</span>Centralizar los datos en una única fuente de verdad</div></div>
+      </div>
+    </div>
+    <div class="report-footer">
+    <span class="rf-brand">TRÍADA · Diagnóstico Empresarial 360</span>
+    <span class="rf-code">TR360-260609-0001</span>
+    <span class="rf-page">5 / 8</span>
+  </div>
+  </section><section class="report-page">
+    <div class="report-head">
+    <span class="rh-num">05</span>
+    <h2 class="rh-title">Mapa de Madurez Empresarial</h2>
+    <span class="rh-rule"></span>
+  </div>
+    <p class="page-intro">Posición actual de la empresa en la escala de madurez y el nivel objetivo alcanzable con la implementación del plan recomendado.</p>
+    <div class="mapa-wrap">
+      <svg width="100%" viewBox="0 0 760 150" class="chart-maturity" role="img" aria-label="Mapa de madurez empresarial">
+    
+    <rect x="0" y="64" width="304" height="22" fill="#E0604F" opacity=".85"/>
+    <text x="152" y="104" text-anchor="middle" style="font-size:11px;font-weight:600;fill:#666d84">Crítico</text>
+    <text x="304" y="56" text-anchor="middle" style="font-size:10px;fill:#9aa0b3">40</text>
+    <rect x="304" y="64" width="152" height="22" fill="#F0B429" opacity=".85"/>
+    <text x="380" y="104" text-anchor="middle" style="font-size:11px;font-weight:600;fill:#666d84">En Riesgo</text>
+    <text x="456" y="56" text-anchor="middle" style="font-size:10px;fill:#9aa0b3">60</text>
+    <rect x="456" y="64" width="152" height="22" fill="#028090" opacity=".85"/>
+    <text x="532" y="104" text-anchor="middle" style="font-size:11px;font-weight:600;fill:#666d84">Funcional</text>
+    <text x="608" y="56" text-anchor="middle" style="font-size:10px;fill:#9aa0b3">80</text>
+    <rect x="608" y="64" width="152" height="22" fill="#4FB286" opacity=".85"/>
+    <text x="684" y="104" text-anchor="middle" style="font-size:11px;font-weight:600;fill:#666d84">Optimizado</text>
+    <text x="760" y="56" text-anchor="middle" style="font-size:10px;fill:#9aa0b3">100</text>
+    
+    <line x1="304" y1="75" x2="577.6" y2="75" stroke="#1E2761" stroke-width="2" stroke-dasharray="5 4"/>
+    
+    
+      <path d="M 297 62 L 311 62 L 304 72 Z" fill="#1E2761"/>
+      <circle cx="304" cy="42" r="16" fill="#1E2761"/>
+      <text x="304" y="47" text-anchor="middle" style="font-size:13px;font-weight:800;fill:#fff">40</text>
+      <text x="304" y="20" text-anchor="middle" style="font-size:11px;font-weight:700;fill:#1E2761;text-transform:uppercase;letter-spacing:.08em">Hoy</text>
+    
+      <path d="M 570.6 88 L 584.6 88 L 577.6 78 Z" fill="#4FB286"/>
+      <circle cx="577.6" cy="122" r="16" fill="#4FB286"/>
+      <text x="577.6" y="127" text-anchor="middle" style="font-size:13px;font-weight:800;fill:#fff">76</text>
+      <text x="577.6" y="146" text-anchor="middle" style="font-size:11px;font-weight:700;fill:#4FB286;text-transform:uppercase;letter-spacing:.08em">Objetivo</text>
+  </svg>
+    </div>
+    <div class="mapa-delta">
+      <div class="md-box">
+        <div class="md-label">Hoy</div>
+        <div class="md-val" style="color:#1E2761">40</div>
+        <div class="md-nivel" style="color:#F0B429">En Riesgo</div>
+      </div>
+      <div class="md-arrow">
+        <div class="md-potencial">+36</div>
+        <svg viewBox="0 0 80 24" width="80" height="24"><path d="M2 12 H70 M62 5 L72 12 L62 19" stroke="#4FB286" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <div class="md-potencial-lbl">de mejora potencial</div>
+      </div>
+      <div class="md-box">
+        <div class="md-label">Objetivo</div>
+        <div class="md-val" style="color:#4FB286">76</div>
+        <div class="md-nivel" style="color:#F0B429">proyectado</div>
+      </div>
+    </div>
+    <div class="mapa-areas">
+      <div class="ma-row">
+        <span class="ma-name">🖥️ Tecnología</span>
+        <div class="ma-track">
+          <div class="ma-fill-now" style="width:40%;background:#5B6BD6"></div>
+          <div class="ma-fill-target" style="left:40%;width:36%;background:#5B6BD6"></div>
+        </div>
+        <span class="ma-vals"><b style="color:#5B6BD6">40</b> → <b style="color:#4FB286">76</b></span>
+      </div><div class="ma-row">
+        <span class="ma-name">📈 Ventas</span>
+        <div class="ma-track">
+          <div class="ma-fill-now" style="width:20%;background:#028090"></div>
+          <div class="ma-fill-target" style="left:20%;width:48%;background:#028090"></div>
+        </div>
+        <span class="ma-vals"><b style="color:#028090">20</b> → <b style="color:#4FB286">68</b></span>
+      </div><div class="ma-row">
+        <span class="ma-name">💰 Finanzas</span>
+        <div class="ma-track">
+          <div class="ma-fill-now" style="width:60%;background:#4FB286"></div>
+          <div class="ma-fill-target" style="left:60%;width:24%;background:#4FB286"></div>
+        </div>
+        <span class="ma-vals"><b style="color:#4FB286">60</b> → <b style="color:#4FB286">84</b></span>
+      </div>
+    </div>
+    <div class="report-footer">
+    <span class="rf-brand">TRÍADA · Diagnóstico Empresarial 360</span>
+    <span class="rf-code">TR360-260609-0001</span>
+    <span class="rf-page">6 / 8</span>
+  </div>
+  </section><section class="report-page">
+    <div class="report-head">
+    <span class="rh-num">06</span>
+    <h2 class="rh-title">Plan de Acción Recomendado</h2>
+    <span class="rh-rule"></span>
+  </div>
+    <p class="page-intro">Hoja de ruta priorizada. Cada acción responde directamente a los hallazgos detectados y avanza de las victorias rápidas hacia los cambios de mayor alcance.</p>
+    <div class="plan-grid">
+      <div class="plan-fase">
+    <div class="pf-head" style="border-color:#4FB286">
+      <span class="pf-dot" style="background:#4FB286"></span>
+      <div><div class="pf-title">Corto Plazo</div><div class="pf-plazo">0 – 30 días</div></div>
+    </div>
+    <div class="pf-items">
+      <div class="pf-item">
+        <div class="pfi-title">Documentar y estandarizar el proceso de ventas</div>
+        <div class="pfi-benef">Resultados predecibles e independientes de personas</div>
+        <span class="pfi-area" style="color:#028090">Ventas</span>
+      </div><div class="pf-item">
+        <div class="pfi-title">Implementar seguimiento comercial estructurado</div>
+        <div class="pfi-benef">Recuperar ventas que hoy se enfrían sin gestión</div>
+        <span class="pfi-area" style="color:#028090">Ventas</span>
+      </div><div class="pf-item">
+        <div class="pfi-title">Proyectar el flujo de caja a 3-6 meses</div>
+        <div class="pfi-benef">Anticipar necesidades de liquidez</div>
+        <span class="pfi-area" style="color:#4FB286">Finanzas</span>
+      </div>
+    </div>
+  </div>
+      <div class="plan-fase">
+    <div class="pf-head" style="border-color:#028090">
+      <span class="pf-dot" style="background:#028090"></span>
+      <div><div class="pf-title">Mediano Plazo</div><div class="pf-plazo">30 – 90 días</div></div>
+    </div>
+    <div class="pf-items">
+      <div class="pf-item">
+        <div class="pfi-title">Automatizar las tareas repetitivas clave</div>
+        <div class="pfi-benef">Recuperar horas del equipo cada semana</div>
+        <span class="pfi-area" style="color:#5B6BD6">Tecnología</span>
+      </div><div class="pf-item">
+        <div class="pfi-title">Centralizar los datos en una única fuente de verdad</div>
+        <div class="pfi-benef">Decisiones basadas en datos confiables y al día</div>
+        <span class="pfi-area" style="color:#5B6BD6">Tecnología</span>
+      </div><div class="pf-item">
+        <div class="pfi-title">Implementar un CRM para gestionar clientes</div>
+        <div class="pfi-benef">Cero fuga de oportunidades y relación trazable</div>
+        <span class="pfi-area" style="color:#028090">Ventas</span>
+      </div><div class="pf-item">
+        <div class="pfi-title">Construir indicadores de rentabilidad por línea</div>
+        <div class="pfi-benef">Visibilidad de qué aporta al resultado</div>
+        <span class="pfi-area" style="color:#4FB286">Finanzas</span>
+      </div>
+    </div>
+  </div>
+      <div class="plan-fase">
+    <div class="pf-head" style="border-color:#1E2761">
+      <span class="pf-dot" style="background:#1E2761"></span>
+      <div><div class="pf-title">Largo Plazo</div><div class="pf-plazo">90 – 180 días</div></div>
+    </div>
+    <div class="pf-items">
+      <div class="pf-item">
+        <div class="pfi-title">Integrar los sistemas en una plataforma unificada</div>
+        <div class="pfi-benef">Trazabilidad completa y fin de la duplicación de datos</div>
+        <span class="pfi-area" style="color:#5B6BD6">Tecnología</span>
+      </div>
+    </div>
+  </div>
+    </div>
+    <div class="report-footer">
+    <span class="rf-brand">TRÍADA · Diagnóstico Empresarial 360</span>
+    <span class="rf-code">TR360-260609-0001</span>
+    <span class="rf-page">7 / 8</span>
+  </div>
+  </section><section class="report-page">
+    <div class="report-head">
+    <span class="rh-num">07</span>
+    <h2 class="rh-title">Conclusión Ejecutiva</h2>
+    <span class="rh-rule"></span>
+  </div>
+    <div class="conclusion-body">
+      <p>Constructora RM se encuentra hoy en un nivel de madurez «En Riesgo», con un Índice General de 40/100. La empresa cuenta con algunos elementos en su lugar, pero las brechas existentes generan ineficiencias y pérdida de oportunidades. Cerrarlas de forma ordenada libera valor en el corto plazo.</p><p>El diagnóstico identificó 5 hallazgos prioritarios, concentrados principalmente en el área de Ventas. Estos representan los puntos donde la empresa está dejando valor sobre la mesa —tiempo, ventas o control— que hoy no se captura.</p><p>Al mismo tiempo, Finanzas opera como un activo sobre el cual apalancar el crecimiento. La buena noticia es que las oportunidades detectadas son accionables: con un plan estructurado, Constructora RM puede proyectar un nivel de madurez cercano a 76/100.</p><p>Recomendamos comenzar por las acciones de corto plazo de alto impacto y bajo esfuerzo, que generan resultados visibles con rapidez y construyen el impulso necesario para los cambios de mayor alcance.</p>
+    </div>
+    <div class="conclusion-highlight" style="border-color:#F0B429">
+      <div class="ch-left">
+        <div class="ch-label">Índice actual</div>
+        <div class="ch-val" style="color:#F0B429">40<small>/100</small></div>
+      </div>
+      <svg viewBox="0 0 60 24" width="60" height="24"><path d="M2 12 H48 M40 5 L52 12 L40 19" stroke="#4FB286" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <div class="ch-right">
+        <div class="ch-label">Potencial proyectado</div>
+        <div class="ch-val" style="color:#4FB286">76<small>/100</small></div>
+      </div>
+    </div>
+    <div class="conclusion-sign">
+      <div class="cs-line"></div>
+      <div class="cs-who">
+        <div class="cs-name">Equipo Tríada</div>
+        <div class="cs-role">Consultoría Estratégica · Tríada</div>
+      </div>
+      <div class="cs-brand"><svg viewBox="0 0 120 120" fill="none" style="width:38px;height:38px">
+  <path d="M26 90 L60 62 L94 90" stroke="#1E2761" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M26 73 L60 45 L94 73" stroke="#028090" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M26 56 L60 28 L94 56" stroke="#4FB286" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/>
+</svg></div>
+    </div>
+    <div class="conclusion-cta">
+      <strong>Próximo paso sugerido:</strong> revisar en conjunto este diagnóstico y priorizar las acciones de mayor impacto para tu empresa.
+    </div>
+    <div class="report-footer">
+    <span class="rf-brand">TRÍADA · Diagnóstico Empresarial 360</span>
+    <span class="rf-code">TR360-260609-0001</span>
+    <span class="rf-page">8 / 8</span>
+  </div>
+  </section></div>
+  </div>
+</div>
+</body>
+</html>

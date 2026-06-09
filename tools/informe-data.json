@@ -1,0 +1,30 @@
+{
+  "diag": {
+    "prospectoId": 4,
+    "fecha": "2026-06-09T04:16:08.173Z",
+    "scoresTec": [false, true, false, false, true],
+    "scoresVentas": [false, false, true, false, false],
+    "scoresFinanzas": [true, false, true, true, false],
+    "hallazgos": [],
+    "oportunidades": [],
+    "notasDiagnostico": "Empresa con foco en crecer ventas.",
+    "id": 1
+  },
+  "prospecto": {
+    "nombre": "Rodrigo Muñoz",
+    "empresa": "Constructora RM",
+    "rubro": "Construcción",
+    "tamano": "21 a 50",
+    "estado": "Diagnóstico Realizado",
+    "dolorPrincipal": "Automatizar / tecnología",
+    "origen": "Contacto directo",
+    "email": "rodrigo@crm.cl",
+    "telefono": "+56911223344",
+    "id": 4
+  },
+  "evaluador": {
+    "nombre": "Equipo Tríada",
+    "cargo": "Consultoría Estratégica",
+    "empresa": "Tríada"
+  }
+}

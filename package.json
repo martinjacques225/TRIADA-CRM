@@ -1,0 +1,7 @@
+{
+  "name": "triada-diagnostico-crm",
+  "version": "1.0.0",
+  "description": "CRM de gestión de diagnósticos empresariales 360 para Tríada Consultoría",
+  "type": "module",
+  "private": true
+}

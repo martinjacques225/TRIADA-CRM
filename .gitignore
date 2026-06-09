@@ -1,0 +1,24 @@
+# Dependencias
+node_modules/
+
+# Config local de editores / Claude Code
+.claude/
+.vscode/
+.idea/
+
+# Sistema operativo
+Thumbs.db
+.DS_Store
+desktop.ini
+
+# Logs / temporales
+*.log
+_t.txt
+err.txt
+
+# Secretos / entorno (para la migración a Supabase)
+.env
+.env.local
+.env.*.local
+config.local.js
+supabase.local.js

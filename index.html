@@ -3,90 +3,79 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-  <meta name="description" content="Tríada CRM - Gestión de prospectos, diagnósticos y pipeline comercial para pymes">
+  <meta name="description" content="Tríada CRM — Gestión de diagnósticos empresariales 360">
   <meta name="theme-color" content="#028090">
   <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="default">
-  <meta name="apple-mobile-web-app-title" content="Tríada CRM">
-  <title>Tríada CRM</title>
+  <meta name="apple-mobile-web-app-title" content="Tríada Diagnóstico CRM">
+  <title>Tríada · Diagnóstico CRM</title>
   <link rel="manifest" href="./manifest.json">
-  <link rel="apple-touch-icon" href="./icon-lgs.png">
   <link rel="stylesheet" href="./styles.css">
   <link rel="stylesheet" href="./modules/home/home.css">
+  <link rel="stylesheet" href="./modules/pipeline/pipeline.css">
+  <link rel="stylesheet" href="./modules/diagnosticos/diagnosticos.css">
   <link rel="stylesheet" href="./modules/agenda/agenda.css">
-  <link rel="stylesheet" href="./modules/leads/leads.css">
-  <link rel="stylesheet" href="./modules/calculadora/calculadora.css">
-  <link rel="stylesheet" href="./modules/ventas/ventas.css">
-  <link rel="stylesheet" href="./modules/medallas/medallas.css">
-  <link rel="stylesheet" href="./modules/dashboard/dashboard.css">
-  <link rel="stylesheet" href="./modules/plantillas-wa/whatsapp.css">
-  <link rel="stylesheet" href="./modules/respaldos/respaldos.css">
+  <link rel="stylesheet" href="./modules/propuestas/propuestas.css">
   <link rel="stylesheet" href="./modules/informes/informes.css">
+  <link rel="stylesheet" href="./modules/informe-ejecutivo/informe.css">
   <link rel="stylesheet" href="./modules/configuracion/configuracion.css">
-  <!-- FASE 1: capa de rediseño visual + accesibilidad (debe ir AL FINAL para ganar la cascada) -->
-  <link rel="stylesheet" href="./fase1-rediseno.css">
-  <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js" defer></script>
 </head>
 <body>
 
 <div id="app">
   <nav id="nav"></nav>
   <div id="main">
-    <div id="topbar"></div>
+    <div id="topbar">
+      <button class="btn-icon" id="menuToggle" style="display:none" title="Menú">
+        <svg viewBox="0 0 20 20" fill="currentColor" width="20" height="20"><path fill-rule="evenodd" d="M3 5a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM3 10a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM3 15a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clip-rule="evenodd"/></svg>
+      </button>
+      <div id="topbarTitle" class="topbar-title">Tríada CRM</div>
+      <div class="topbar-actions" id="topbarActions"></div>
+    </div>
     <div id="content">
       <main id="center"></main>
-      <aside id="panel"></aside>
     </div>
   </div>
-  <nav id="bottom-nav"></nav>
-</div>
-
-<!-- MASCOT BUBBLE -->
-<div id="mascot-bubble" class="mascot-bubble hidden">
-  <div class="mascot-avatar-wrap" id="mascotAvatarWrap"></div>
-  <div class="mascot-msg">
-    <div class="mascot-name" id="mascotName"></div>
-    <div id="mascotMsg"></div>
-  </div>
-  <button class="mascot-close" id="mascotClose">✕</button>
 </div>
 
 <!-- MODAL GLOBAL -->
 <div class="modal-overlay" id="modalOverlay">
-  <div class="modal">
-    <div class="modal-header">
-      <span class="modal-title" id="modalTitle"></span>
-      <button class="modal-close" id="modalClose">✕</button>
+  <div class="modal-box">
+    <div class="modal-head">
+      <h3 id="modalTitle">Modal</h3>
+      <button class="modal-close" id="modalClose">
+        <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/></svg>
+      </button>
     </div>
     <div class="modal-body" id="modalBody"></div>
-    <div class="modal-footer">
-      <button class="btn-secondary" id="modalCancel">Cancelar</button>
-      <button class="btn-primary" id="modalSave">Guardar</button>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" id="modalCancel">Cancelar</button>
+      <button class="btn btn-primary" id="modalSave">Guardar</button>
     </div>
   </div>
 </div>
 
-<!-- CALL RESULT QUICK MODAL -->
-<div class="modal-overlay" id="callResultOverlay">
-  <div class="modal modal-sm">
-    <div class="modal-header">
-      <span class="modal-title">¿Cómo resultó la llamada?</span>
-      <button class="modal-close" id="callResultClose">✕</button>
-    </div>
-    <div class="modal-body" id="callResultBody"></div>
-  </div>
-</div>
+<!-- Expose navigate globally for inline onclick -->
+<script type="module" src="./app.js"></script>
+<script>
+  // Allow inline onclick="navigate(...)" before module loads
+  window.navigate = function(v) { window._app?.navigate(v); };
+  window.closeModal = function() { document.getElementById('modalOverlay').classList.remove('open'); };
 
-<!-- FILE ERROR OVERLAY -->
-<div id="fileErrorOverlay" class="file-error-overlay hidden">
-  <div class="file-error-card">
-    <div class="file-error-emoji" id="fileErrorEmoji">😅</div>
-    <div class="file-error-msg" id="fileErrorMsg"></div>
-    <button class="btn-primary" onclick="document.getElementById('fileErrorOverlay').classList.add('hidden')">Entendido</button>
-  </div>
-</div>
-
-<!-- TOAST -->
-<div id="toast-container"></div>
-
-<script type="module" src="./app.js"><
+  // Mobile nav toggle
+  document.addEventListener('DOMContentLoaded', () => {
+    const toggle = document.getElementById('menuToggle');
+    const nav    = document.getElementById('nav');
+    if (window.innerWidth <= 900) toggle.style.display = '';
+    window.addEventListener('resize', () => {
+      toggle.style.display = window.innerWidth <= 900 ? '' : 'none';
+      if (window.innerWidth > 900) nav.classList.remove('open');
+    });
+    toggle.addEventListener('click', () => nav.classList.toggle('open'));
+    // close nav on main click (mobile)
+    document.getElementById('main').addEventListener('click', () => {
+      if (window.innerWidth <= 900) nav.classList.remove('open');
+    });
+  });
+</script>
+</body>
+</html>

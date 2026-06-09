@@ -1,110 +1,127 @@
 // modules/informes/informes.js
-// VISTA "Informes y Respaldos". Centro de Informes (genera PDF profesional) + respaldo de datos.
-// Reutiliza el motor de respaldos existente (no duplica lógica de export/import).
-import { ico } from '../../js/ui.js';
-import { toast, todayStr } from '../../js/utils.js';
-import { REPORTS, generate } from './report.engine.js';
-import { exportExcel, exportJSON, importLeadsExcel, importJSON } from '../respaldos/respaldos.js';
+import { prospectos, diagnosticos, propuestas, citas } from '../../js/db.js';
+import { PIPELINE_STAGES, RUBROS, DIAG_AREAS, formatCLP } from '../../js/utils.js';
 
-const PERIODOS = [
-  { id: 'hoy', label: 'Hoy' }, { id: 'semana', label: 'Semana actual' },
-  { id: 'mes', label: 'Mes actual' }, { id: 'custom', label: 'Personalizado' }
-];
-const INCLUIR = [
-  { id: 'inc_graficos', key: 'graficos', label: 'Gráficos', def: true },
-  { id: 'inc_recomendaciones', key: 'recomendaciones', label: 'Recomendaciones IA', def: true },
-  { id: 'inc_kpis', key: 'kpis', label: 'KPIs', def: true },
-  { id: 'inc_estadisticas', key: 'estadisticas', label: 'Estadísticas', def: true }
-];
+export async function render() {
+  const [todos, todosD, todasP, todasC] = await Promise.all([
+    prospectos.getAll(), diagnosticos.getAll(), propuestas.getAll(), citas.getAll()
+  ]);
 
-export function render() {
+  // Conversión por etapa
+  const byStage = PIPELINE_STAGES.map(st => ({ ...st, cnt: todos.filter(p=>p.estado===st.id).length }));
+  const clientes  = todos.filter(p=>p.estado==='Cliente').length;
+  const total     = todos.length || 1;
+  const tasa      = Math.round(clientes/total*100);
+
+  // Por rubro
+  const rubroMap = {};
+  todos.forEach(p=>{ const r=p.rubro||'Otro'; rubroMap[r]=(rubroMap[r]||0)+1; });
+  const rubros = Object.entries(rubroMap).sort((a,b)=>b[1]-a[1]);
+
+  // Diagnósticos promedio por área
+  function avgScore(diagList, areaKey) {
+    if (!diagList.length) return 0;
+    const vals = diagList.map(d=>{
+      const arr = d[`scores${areaKey.charAt(0).toUpperCase()+areaKey.slice(1)}`] || [];
+      return Math.round((arr.filter(x=>x===true).length/5)*100);
+    });
+    return Math.round(vals.reduce((s,v)=>s+v,0)/vals.length);
+  }
+  const avgTec     = avgScore(todosD, 'Tec');
+  const avgVentas  = avgScore(todosD, 'Ventas');
+  const avgFinanzas= avgScore(todosD, 'Finanzas');
+
+  // Valor propuestas
+  const valorTotal   = todasP.filter(p=>p.estado==='Aceptada').reduce((s,p)=>s+(+p.valor||0),0);
+  const valorAbierto = todasP.filter(p=>p.estado==='Enviada'||p.estado==='Negociando').reduce((s,p)=>s+(+p.valor||0),0);
+
+  // Orígenes
+  const origenMap = {};
+  todos.forEach(p=>{ const o=p.origen||'Otro'; origenMap[o]=(origenMap[o]||0)+1; });
+
   const center = document.getElementById('center');
-  const reportCards = REPORTS.map(r => `
-    <label class="rep-opt${r.available ? '' : ' off'}">
-      <input type="checkbox" class="rep-check" value="${r.id}" ${r.available ? '' : 'disabled'} ${r.id === 'general' ? 'checked' : ''}>
-      <span class="rep-opt-box"></span>
-      <span class="rep-opt-txt">${r.label}${r.available ? '' : '<em>Etapa 2</em>'}</span>
-    </label>`).join('');
+  center.innerHTML = `<div class="view-animate">
+    <div class="section-head"><h2>Informes y Analítica</h2></div>
 
-  const periodoBtns = PERIODOS.map((p, i) =>
-    `<label class="seg${i === 2 ? ' on' : ''}"><input type="radio" name="periodo" value="${p.id}" ${i === 2 ? 'checked' : ''}>${p.label}</label>`).join('');
-
-  const incluirChecks = INCLUIR.map(c =>
-    `<label class="inc-opt"><input type="checkbox" id="${c.id}" ${c.def ? 'checked' : ''}><span>${c.label}</span></label>`).join('');
-
-  center.innerHTML = `<div class="view-animate informes">
-    <div class="inf-card">
-      <div class="inf-head">${ico.chart}<div><h3>Centro de Informes</h3><p>Genera informes ejecutivos en PDF. Puedes combinar varios en un único documento.</p></div></div>
-
-      <div class="inf-block"><div class="inf-block-t">1 · Selecciona informes</div>
-        <div class="rep-grid">${reportCards}</div></div>
-
-      <div class="inf-block"><div class="inf-block-t">2 · Periodo</div>
-        <div class="seg-group">${periodoBtns}</div>
-        <div class="custom-dates" id="customDates" style="display:none">
-          <label>Desde <input type="date" id="dStart"></label>
-          <label>Hasta <input type="date" id="dEnd"></label>
-        </div></div>
-
-      <div class="inf-block"><div class="inf-block-t">3 · Incluir</div>
-        <div class="inc-grid">${incluirChecks}</div></div>
-
-      <button class="btn-primary inf-generate" id="btnGenerar">${ico.download}<span>Generar PDF</span></button>
-      <div class="inf-hint">El PDF se descargará automáticamente. La primera vez necesita conexión para cargar el generador.</div>
+    <div class="kpi-grid" style="margin-bottom:28px">
+      <div class="kpi-card kpi-accent"><div class="kpi-label">Total prospectos</div><div class="kpi-value">${todos.length}</div></div>
+      <div class="kpi-card" style="border-left:3px solid var(--green)"><div class="kpi-label">Tasa de conversión</div><div class="kpi-value">${tasa}%</div><div class="kpi-sub">${clientes} clientes / ${todos.length} prospectos</div></div>
+      <div class="kpi-card" style="border-left:3px solid var(--amber)"><div class="kpi-label">Valor cerrado</div><div class="kpi-value kpi-value-sm">${formatCLP(valorTotal)}</div></div>
+      <div class="kpi-card" style="border-left:3px solid var(--violet)"><div class="kpi-label">Valor en pipeline</div><div class="kpi-value kpi-value-sm">${formatCLP(valorAbierto)}</div></div>
+      <div class="kpi-card" style="border-left:3px solid var(--primary)"><div class="kpi-label">Diagnósticos realizados</div><div class="kpi-value">${todosD.length}</div></div>
+      <div class="kpi-card" style="border-left:3px solid var(--navy)"><div class="kpi-label">Citas realizadas</div><div class="kpi-value">${todasC.filter(c=>c.estado==='Realizada').length}</div></div>
     </div>
 
-    <div class="inf-card">
-      <div class="inf-head">${ico.backup}<div><h3>Respaldo de datos</h3><p>Exporta o restaura tu información.</p></div></div>
-      <div class="backup-grid">
-        <div class="backup-card">${ico.backup}<h3>Exportar Excel</h3><p>Todas las citas en .xlsx</p><button class="btn-primary" id="expExcel">${ico.download} Exportar Excel</button></div>
-        <div class="backup-card">${ico.upload}<h3>Importar Leads</h3><p>Carga leads desde .xlsx o .csv</p><div class="file-input-wrap"><input type="file" id="impExcel" accept=".xlsx,.xls,.csv"><p>${ico.upload} Seleccionar archivo</p></div></div>
-        <div class="backup-card">${ico.json}<h3>Exportar JSON</h3><p>Backup completo de todos los datos</p><button class="btn-primary" id="expJson">${ico.download} Exportar JSON</button></div>
-        <div class="backup-card">${ico.upload}<h3>Importar JSON</h3><p>Restaurar desde backup</p><div class="file-input-wrap"><input type="file" id="impJson" accept=".json"><p>${ico.upload} Seleccionar .json</p></div></div>
+    <div class="inf-grid">
+      <!-- FUNNEL -->
+      <div class="card card-pad">
+        <h3 class="inf-title">Embudo de conversión</h3>
+        <div class="inf-funnel">
+          ${byStage.filter(s=>s.id!=='Descartado').map((s,i,arr)=>{
+            const w = total > 0 ? Math.max(30, Math.round(s.cnt/total*100)) : 30;
+            return `<div class="inf-funnel-stage" style="background:${s.bg};border:1px solid ${s.color}22;width:${w}%">
+              <span style="font-size:12px;color:${s.color};font-weight:600">${s.icon} ${s.id}</span>
+              <span style="font-size:18px;font-weight:800;color:${s.color}">${s.cnt}</span>
+            </div>`;
+          }).join('')}
+        </div>
+      </div>
+
+      <!-- SCORES DIAGNÓSTICO -->
+      <div class="card card-pad">
+        <h3 class="inf-title">Madurez promedio por área <span style="font-size:12px;font-weight:400;color:var(--text3)">(${todosD.length} diagnósticos)</span></h3>
+        ${todosD.length === 0
+          ? `<p style="color:var(--text3);font-size:13.5px;margin-top:12px">Realiza diagnósticos para ver estadísticas.</p>`
+          : `<div style="margin-top:16px">
+              ${[{l:'🖥️ Tecnología',v:avgTec,c:'#5B6BD6'},{l:'📈 Ventas',v:avgVentas,c:'#028090'},{l:'💰 Finanzas',v:avgFinanzas,c:'#4FB286'}].map(a=>`
+                <div style="margin-bottom:16px">
+                  <div style="display:flex;justify-content:space-between;margin-bottom:6px">
+                    <span style="font-size:13.5px;font-weight:600;color:var(--text)">${a.l}</span>
+                    <span style="font-size:15px;font-weight:700;color:${a.c}">${a.v}%</span>
+                  </div>
+                  <div class="score-bar"><div class="score-fill" style="width:${a.v}%;background:${a.c}"></div></div>
+                  <div style="font-size:11.5px;color:var(--text3);margin-top:3px">${a.v>=80?'Maduro ✅':a.v>=50?'En desarrollo ⚠️':'Crítico 🚨'}</div>
+                </div>`).join('')}
+            </div>`}
+      </div>
+
+      <!-- RUBROS -->
+      <div class="card card-pad">
+        <h3 class="inf-title">Prospectos por rubro</h3>
+        <div style="margin-top:14px">
+          ${rubros.length === 0
+            ? `<p style="color:var(--text3);font-size:13.5px">Sin datos aún.</p>`
+            : rubros.map(([r,cnt])=>{
+                const pct = Math.round(cnt/todos.length*100);
+                return `<div style="margin-bottom:12px">
+                  <div style="display:flex;justify-content:space-between;margin-bottom:5px">
+                    <span style="font-size:13px;color:var(--text)">${r}</span>
+                    <span style="font-size:13px;font-weight:600;color:var(--navy)">${cnt} (${pct}%)</span>
+                  </div>
+                  <div class="score-bar" style="height:8px"><div class="score-fill" style="width:${pct}%;background:var(--primary)"></div></div>
+                </div>`;
+              }).join('')}
+        </div>
+      </div>
+
+      <!-- ORIGENES -->
+      <div class="card card-pad">
+        <h3 class="inf-title">Fuente de prospectos</h3>
+        <div style="margin-top:14px">
+          ${Object.entries(origenMap).length === 0
+            ? `<p style="color:var(--text3);font-size:13.5px">Sin datos aún.</p>`
+            : Object.entries(origenMap).sort((a,b)=>b[1]-a[1]).map(([o,cnt])=>{
+                const pct = Math.round(cnt/todos.length*100);
+                return `<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border)">
+                  <span style="font-size:13.5px;color:var(--text)">${o}</span>
+                  <div style="display:flex;align-items:center;gap:10px">
+                    <div style="width:80px;height:6px;background:var(--surface3);border-radius:4px;overflow:hidden"><div style="width:${pct}%;height:100%;background:var(--violet);border-radius:4px"></div></div>
+                    <span style="font-size:13px;font-weight:600;color:var(--navy);min-width:30px;text-align:right">${cnt}</span>
+                  </div>
+                </div>`;
+              }).join('')}
+        </div>
       </div>
     </div>
   </div>`;
-
-  // Periodo segmentado
-  center.querySelectorAll('input[name="periodo"]').forEach(r => r.addEventListener('change', () => {
-    center.querySelectorAll('.seg').forEach(s => s.classList.toggle('on', s.querySelector('input').checked));
-    center.querySelector('#customDates').style.display = r.value === 'custom' && r.checked ? 'flex' : 'none';
-    if (center.querySelector('input[name="periodo"]:checked').value === 'custom') {
-      const ds = center.querySelector('#dStart'), de = center.querySelector('#dEnd');
-      if (!ds.value) ds.value = todayStr(); if (!de.value) de.value = todayStr();
-    }
-  }));
-
-  center.querySelector('#btnGenerar').addEventListener('click', onGenerate);
-
-  // Respaldos (motor existente)
-  center.querySelector('#expExcel').addEventListener('click', exportExcel);
-  center.querySelector('#expJson').addEventListener('click', exportJSON);
-  center.querySelector('#impExcel').addEventListener('change', e => { importLeadsExcel(e.target.files[0]); e.target.value = ''; });
-  center.querySelector('#impJson').addEventListener('change', e => { importJSON(e.target.files[0]); e.target.value = ''; });
-}
-
-async function onGenerate() {
-  const center = document.getElementById('center');
-  const reports = [...center.querySelectorAll('.rep-check:checked')].map(c => c.value);
-  if (!reports.length) { toast('Selecciona al menos un informe', 'warn'); return; }
-
-  const periodKind = center.querySelector('input[name="periodo"]:checked').value;
-  const customStart = center.querySelector('#dStart')?.value;
-  const customEnd = center.querySelector('#dEnd')?.value;
-  if (periodKind === 'custom' && (!customStart || !customEnd)) { toast('Indica el rango de fechas', 'warn'); return; }
-
-  const includes = {};
-  INCLUIR.forEach(c => { includes[c.key] = center.querySelector('#' + c.id)?.checked !== false; });
-
-  const btn = center.querySelector('#btnGenerar');
-  const prev = btn.innerHTML;
-  btn.disabled = true; btn.innerHTML = '<span class="inf-spin"></span><span>Generando informe…</span>';
-  try {
-    const fname = await generate({ reports, periodKind, customStart, customEnd, includes });
-    toast('Informe generado: ' + fname, 'success');
-  } catch (err) {
-    toast(err.message || 'No se pudo generar el informe', 'warn');
-  } finally {
-    btn.disabled = false; btn.innerHTML = prev;
-  }
 }
