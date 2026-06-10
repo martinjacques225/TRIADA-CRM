@@ -5,4 +5,5 @@ export const S = {
   searchEstado: '',
   pipelineView: 'kanban',  // 'kanban' | 'list'
   deferredInstall: null,
+  profile:      null,      // { nombre, role, area } — set by app.js at init
 };

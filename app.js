@@ -7,12 +7,13 @@ let _profile = null;
 
 async function _setArea(area) {
   _profile = { ..._profile, area };
+  S.profile = _profile;
   await renderNav();
   const uid = getCurrentUserId();
   if (uid) supabase.from('profiles').update({ area }).eq('id', uid).then(() => {});
 }
 import { S } from './js/state.js';
-import { toast, escHtml, PIPELINE_STAGES } from './js/utils.js';
+import { toast, escHtml, PIPELINE_STAGES, DIAG_AREAS, DIAG_PREGUNTAS } from './js/utils.js';
 
 import * as ModHome          from './modules/home/home.js';
 import * as ModPipeline      from './modules/pipeline/pipeline.js';
@@ -136,6 +137,7 @@ async function init() {
   try {
     const { data } = await supabase.from('profiles').select('nombre, role, area').eq('id', user.id).single();
     _profile = data;
+    S.profile = data;
   } catch (_) {}
   await initDB();
 
@@ -200,6 +202,67 @@ async function init() {
       if (p?.telefono) window.open(`tel:${p.telefono}`);
     },
     setArea: _setArea,
+    compartirDiagPorArea: async (diagId) => {
+      const diag = await diagnosticos.get(diagId);
+      if (!diag) { toast('Diagnóstico no encontrado', 'error'); return; }
+      const prospecto = diag.prospectoId ? await prospectos.get(diag.prospectoId) : null;
+      const empresa   = prospecto?.empresa || prospecto?.nombre || 'Cliente';
+
+      const scores = {
+        tec:      Math.round(((diag.scoresTec      || []).filter(x => x === true).length / 5) * 100),
+        ventas:   Math.round(((diag.scoresVentas   || []).filter(x => x === true).length / 5) * 100),
+        finanzas: Math.round(((diag.scoresFinanzas || []).filter(x => x === true).length / 5) * 100),
+      };
+
+      _openSimpleModal('Compartir diagnóstico por área', `
+        <p style="font-size:13px;color:var(--text3);margin-bottom:14px">
+          Haz clic en un área para copiar el resumen y abrir WhatsApp.
+        </p>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          ${DIAG_AREAS.map(a => `
+            <button class="btn btn-ghost" style="justify-content:flex-start;gap:10px"
+              onclick="window._app._sendAreaMsg('${diagId}','${a.id}')">
+              <span style="font-size:16px">${a.icon}</span>
+              <span style="flex:1;text-align:left">${escHtml(a.label)}</span>
+              <span style="font-weight:700;color:${a.color}">${scores[a.id]}%</span>
+            </button>`).join('')}
+        </div>
+      `, null);
+      document.getElementById('modalSave').style.display = 'none';
+      document.getElementById('modalCancel').textContent = 'Cerrar';
+    },
+    _sendAreaMsg: async (diagId, areaId) => {
+      const diag      = await diagnosticos.get(diagId);
+      const prospecto = diag?.prospectoId ? await prospectos.get(diag.prospectoId) : null;
+      const empresa   = prospecto?.empresa || prospecto?.nombre || 'Cliente';
+      const area      = DIAG_AREAS.find(a => a.id === areaId);
+      const areaScores = areaId === 'tec' ? diag?.scoresTec : areaId === 'ventas' ? diag?.scoresVentas : diag?.scoresFinanzas;
+      const score     = Math.round(((areaScores || []).filter(x => x === true).length / 5) * 100);
+      const nivel     = score >= 80 ? 'Maduro ✅' : score >= 50 ? 'En desarrollo ⚠️' : 'Crítico 🔴';
+      const preguntas = DIAG_PREGUNTAS[areaId] || [];
+
+      const lineasPreg = preguntas.map((q, i) => {
+        const resp = (areaScores || [])[i];
+        return `${resp === true ? '✅' : resp === false ? '❌' : '⬜'} ${q}`;
+      });
+
+      const hallazgos    = (diag?.hallazgos    || []).slice(0, 5);
+      const oportunidades = (diag?.oportunidades || []).slice(0, 4);
+
+      const msg = [
+        `🔍 *Diagnóstico 360 – ${empresa}*`,
+        `📊 Área: ${area?.icon} *${area?.label}* · Score: ${score}% (${nivel})`,
+        '',
+        lineasPreg.length ? `*Respuestas:*\n${lineasPreg.join('\n')}` : '',
+        hallazgos.length  ? `\n*Hallazgos detectados:*\n${hallazgos.map(h => `⚠ ${h}`).join('\n')}` : '',
+        oportunidades.length ? `\n*Oportunidades de mejora:*\n${oportunidades.map(o => `💡 ${o}`).join('\n')}` : '',
+        '',
+        '_Diagnóstico realizado con TRIADA CRM_',
+      ].filter(x => x !== '').join('\n');
+
+      try { await navigator.clipboard.writeText(msg); toast('Texto copiado al portapapeles ✓', 'success'); } catch (_) {}
+      window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank');
+    },
     compartirDiag: async (id, empresa) => {
       const base = 'https://martinjacques225.github.io/TRIADA-CRM/diagnostico-publico.html';
       const url  = `${base}?id=${id}&empresa=${encodeURIComponent(empresa)}`;

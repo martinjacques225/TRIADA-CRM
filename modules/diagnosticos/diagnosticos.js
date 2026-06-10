@@ -74,6 +74,7 @@ function _diagCard(d, p) {
     ${d.hallazgos?.length ? `<div class="diag-hallazgos"><span style="font-size:12px;font-weight:600;color:var(--text3);letter-spacing:.08em;text-transform:uppercase">Hallazgos clave</span><div style="margin-top:8px;display:flex;flex-wrap:wrap;gap:6px">${d.hallazgos.slice(0,3).map(h=>`<span style="font-size:12.5px;background:var(--amber-l);color:var(--amber);border:1px solid var(--amber);padding:3px 10px;border-radius:980px">⚠ ${escHtml(h)}</span>`).join('')}</div></div>` : ''}
     <div class="diag-card-actions">
       <button class="btn btn-navy btn-sm" onclick="window._app.openInformeEjecutivo('${d.id}')">📄 Ver Informe Ejecutivo 360</button>
+      <button class="btn btn-ghost btn-sm" onclick="window._app.compartirDiagPorArea('${d.id}')">📤 Compartir</button>
       <button class="btn btn-ghost btn-sm" onclick="window._app.deleteDiagnostico('${d.id}')" style="color:var(--danger)">Eliminar</button>
     </div>
   </div>`;

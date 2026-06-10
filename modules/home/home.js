@@ -1,6 +1,7 @@
 // modules/home/home.js
 import { prospectos, citas, propuestas, config } from '../../js/db.js';
 import { formatDate, formatCLP, PIPELINE_STAGES, todayStr, stageBadge, escHtml } from '../../js/utils.js';
+import { S } from '../../js/state.js';
 
 export async function render() {
   const [todos, todasCitas, todasPropuestas, userName] = await Promise.all([
@@ -16,8 +17,8 @@ export async function render() {
     .filter(p => p.estado === 'Negociando' || p.estado === 'Aceptada')
     .reduce((sum, p) => sum + (Number(p.valor) || 0), 0);
 
-  // Últimos 5 prospectos
   const recientes = [...todos].sort((a,b) => (b.fechaCreacion||'').localeCompare(a.fechaCreacion||'')).slice(0, 5);
+  const area = S.profile?.area || null;
 
   const center = document.getElementById('center');
   center.innerHTML = `<div class="view-animate">
@@ -100,6 +101,114 @@ export async function render() {
           </div>`;
         }).join('')}
       </div>
+    </div>
+
+    ${area ? _buildAreaPanel(area) : `
+      <div style="margin-top:20px;background:var(--surface2);border-radius:10px;padding:14px 16px;font-size:13px;color:var(--text3);text-align:center">
+        Selecciona un área activa (Tec / Vnts / Fin) en el menú lateral para ver las herramientas de consultoría.
+      </div>`}
+  </div>`;
+}
+
+function _buildAreaPanel(area) {
+  const panels = {
+    'Tecnología': {
+      icon: '🖥️', color: 'var(--primary)',
+      cols: [
+        {
+          icon: '📋', title: 'Checklist de diagnóstico',
+          items: ['¿Sistemas internos integrados?', '¿Herramientas digitales en uso diario?', '¿Tareas repetitivas automatizadas?', '¿Datos centralizados y accesibles?', '¿KPIs digitales medidos?'],
+        },
+        {
+          icon: '🔧', title: 'Recursos recomendados',
+          items: ['Zapier / Make — automatización de flujos', 'Google Analytics — métricas web', 'Notion / ClickUp — gestión de proyectos', 'HubSpot Free — CRM básico', 'Looker Studio — dashboards gratis'],
+        },
+        {
+          icon: '📊', title: 'KPIs a monitorear',
+          items: ['% sistemas integrados (obj. >80%)', '% procesos automatizados', 'Tiempo prom. de resolución de incidencias', 'NPS interno del equipo con herramientas', 'Costo IT por empleado / mes'],
+        },
+      ],
+    },
+    'Ventas': {
+      icon: '📈', color: 'var(--green)',
+      cols: [
+        {
+          icon: '📞', title: 'Script de seguimiento',
+          items: ['1. Mencionar el diagnóstico 360 realizado', '2. Preguntar: "¿Cuál es tu mayor urgencia ahora?"', '3. Presentar propuesta ajustada a ese dolor', '4. Pedir: "¿Podemos agendar 20 min esta semana?"', '5. Confirmar la cita antes de cerrar la llamada'],
+        },
+        {
+          icon: '💬', title: 'Plantilla WhatsApp de seguimiento',
+          items: ['Hola [Nombre] 👋, soy [Tu nombre] de TRIADA.', 'En el diagnóstico 360 detectamos [hallazgo].', 'Tenemos una solución concreta para eso.', '¿Te sirve una reunión de 20 min esta semana?'],
+        },
+        {
+          icon: '📊', title: 'KPIs del pipeline',
+          items: ['Tasa de conversión total (%)', 'Días promedio de cierre', 'Ticket promedio por cliente', 'Propuestas enviadas vs aceptadas', '% leads contactados en < 24h'],
+        },
+      ],
+    },
+    'Finanzas': {
+      icon: '💰', color: 'var(--green)',
+      cols: [
+        {
+          icon: '📋', title: 'Checklist mensual',
+          items: ['Flujo de caja real vs proyectado', 'Margen bruto por línea de negocio', 'Top 3 gastos variables evitables', 'Cuentas por cobrar > 30 días', 'Comparar ventas vs mismo mes año anterior'],
+        },
+        {
+          icon: '🧮', title: 'Calculadora IVA rápida',
+          type: 'calc_iva',
+        },
+        {
+          icon: '📊', title: 'KPIs financieros clave',
+          items: ['Margen bruto (>40% en servicios)', 'Días cartera (obj. < 30 días)', 'Ratio corriente (obj. > 1.5)', 'EBITDA / ingresos (%)', 'Punto de equilibrio mensual ($)'],
+        },
+      ],
+    },
+  };
+
+  const p = panels[area];
+  if (!p) return '';
+
+  return `
+    <div style="margin-top:28px">
+      <div class="section-head">
+        <h2>${p.icon} Herramientas — Área ${escHtml(area)}</h2>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px">
+        ${p.cols.map(col => col.type === 'calc_iva' ? _calcIvaCard(col) : _toolCard(col)).join('')}
+      </div>
+    </div>`;
+}
+
+function _toolCard(col) {
+  return `<div class="card card-pad" style="font-size:13px">
+    <div style="font-weight:700;color:var(--navy);margin-bottom:10px;display:flex;gap:6px;align-items:center">
+      <span>${col.icon}</span><span>${escHtml(col.title)}</span>
+    </div>
+    <ul style="padding-left:16px;margin:0;color:var(--text2);display:flex;flex-direction:column;gap:5px">
+      ${col.items.map(i => `<li>${escHtml(i)}</li>`).join('')}
+    </ul>
+  </div>`;
+}
+
+function _calcIvaCard(col) {
+  return `<div class="card card-pad" style="font-size:13px">
+    <div style="font-weight:700;color:var(--navy);margin-bottom:10px;display:flex;gap:6px;align-items:center">
+      <span>${col.icon}</span><span>${escHtml(col.title)}</span>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:8px">
+      <div>
+        <label style="font-size:12px;color:var(--text3)">Precio neto (sin IVA)</label>
+        <input type="text" id="calcNeto" inputmode="numeric" placeholder="Ej: 1.000.000"
+          style="width:100%;margin-top:3px;padding:7px 9px;border:1px solid var(--border);border-radius:6px;font-size:13px;background:var(--surface);color:var(--text);box-sizing:border-box"
+          oninput="(function(v){
+            var n=Number(v.replace(/\\./g,'').replace(/,/g,''));
+            document.getElementById('calcIVAr').textContent=isNaN(n)||!v?'—':'+ IVA 19%: $'+Math.round(n*0.19).toLocaleString('es-CL');
+            document.getElementById('calcTotalr').textContent=isNaN(n)||!v?'—':'= Total: $'+Math.round(n*1.19).toLocaleString('es-CL');
+            this.value=n?n.toLocaleString('es-CL'):'';
+          }).call(this,this.value)">
+      </div>
+      <div id="calcIVAr" style="color:var(--amber);font-weight:600;font-size:13px">—</div>
+      <div id="calcTotalr" style="color:var(--navy);font-weight:800;font-size:14px">—</div>
     </div>
   </div>`;
 }

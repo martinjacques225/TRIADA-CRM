@@ -1,9 +1,12 @@
 // modules/pipeline/pipeline.js
-import { prospectos } from '../../js/db.js';
+import { prospectos, diagnosticos } from '../../js/db.js';
 import { S } from '../../js/state.js';
 import { escHtml, formatDate, PIPELINE_STAGES, stageBadge, RUBROS } from '../../js/utils.js';
 
 let _all = [];
+let _prosConDiag = new Set();
+
+const _BADGE_STAGES = new Set(['Diagnóstico Agendado','Diagnóstico Realizado','Propuesta Enviada','Negociando','Cliente']);
 
 const _ico = {
   search: `<svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd"/></svg>`,
@@ -16,7 +19,9 @@ const _ico = {
 };
 
 export async function render() {
-  const all = _all = await prospectos.getAll();
+  const [allProsp, allDiags] = await Promise.all([prospectos.getAll(), diagnosticos.getAll()]);
+  _prosConDiag = new Set(allDiags.map(d => d.prospectoId).filter(Boolean));
+  const all = _all = allProsp;
   const filtered = _filter(all);
 
   const center = document.getElementById('center');
@@ -150,6 +155,7 @@ function _prospectCard(p, st) {
       ${p.rubro ? `<span class="prospect-meta-chip">${escHtml(p.rubro)}</span>` : ''}
       ${p.tamano ? `<span class="prospect-meta-chip">${escHtml(p.tamano)} trabaj.</span>` : ''}
       ${dolorChip}
+      ${_BADGE_STAGES.has(p.estado) && !_prosConDiag.has(p.id) ? `<span class="prospect-meta-chip" style="background:var(--amber-l);color:var(--amber);border:1px solid var(--amber)">📋 360 pendiente</span>` : ''}
     </div>
     <div class="prospect-actions">
       ${p.telefono ? `<button class="btn-action" onclick="window._app.callProspecto('${p.id}')" title="Llamar">${_ico.phone}</button>` : ''}
