@@ -1,35 +1,48 @@
 // modules/agenda/agenda.js
-import { citas, prospectos } from '../../js/db.js';
+import { citas, prospectos, getCurrentUserId } from '../../js/db.js';
 import { escHtml, formatDate, todayStr } from '../../js/utils.js';
 
 const TIPOS = ['Primer contacto','Diagnóstico 360','Presentación propuesta','Seguimiento','Otro'];
 const ESTADOS_CITA = ['Pendiente','Confirmada','Realizada','Cancelada'];
 
+let _soloMias = false;
+
 export async function render() {
+  const uid = getCurrentUserId();
   const [todas, todosP] = await Promise.all([citas.getAll(), prospectos.getAll()]);
   const pMap = Object.fromEntries(todosP.map(p => [p.id, p]));
   const today = todayStr();
 
-  const proximas = [...todas]
+  const lista = (_soloMias && uid) ? todas.filter(c => c.responsable === uid) : todas;
+
+  const proximas = [...lista]
     .filter(c => c.estado !== 'Cancelada')
     .sort((a,b) => (a.fecha||'').localeCompare(b.fecha||''));
 
-  const hoy   = proximas.filter(c => c.fecha?.slice(0,10) === today);
+  const hoy     = proximas.filter(c => c.fecha?.slice(0,10) === today);
   const futuras = proximas.filter(c => (c.fecha||'') > today);
-  const pasadas = [...todas].filter(c => c.fecha?.slice(0,10) < today || c.estado === 'Cancelada')
+  const pasadas = [...lista].filter(c => c.fecha?.slice(0,10) < today || c.estado === 'Cancelada')
                             .sort((a,b) => (b.fecha||'').localeCompare(a.fecha||'')).slice(0, 10);
 
   const center = document.getElementById('center');
   center.innerHTML = `<div class="view-animate">
     <div class="section-head">
       <h2>Agenda</h2>
-      <button class="btn btn-primary" onclick="window._app.openCitaModal()">+ Nueva cita</button>
+      <div style="display:flex;gap:8px;align-items:center">
+        ${uid ? `<div style="display:flex;gap:2px;background:var(--surface2);border-radius:8px;padding:3px">
+          <button class="btn btn-sm${!_soloMias ? ' btn-primary' : ' btn-ghost'}" style="border-radius:6px" onclick="window._agenda.setFiltro(false)">Todas</button>
+          <button class="btn btn-sm${_soloMias  ? ' btn-primary' : ' btn-ghost'}" style="border-radius:6px" onclick="window._agenda.setFiltro(true)">Mis citas</button>
+        </div>` : ''}
+        <button class="btn btn-primary" onclick="window._app.openCitaModal()">+ Nueva cita</button>
+      </div>
     </div>
 
     ${_section('Hoy', hoy, pMap)}
     ${_section('Próximas', futuras, pMap)}
     ${pasadas.length ? _section('Historial reciente', pasadas, pMap, true) : ''}
   </div>`;
+
+  window._agenda = { setFiltro(val) { _soloMias = val; render(); } };
 }
 
 function _section(title, list, pMap, dim = false) {
@@ -120,7 +133,7 @@ export function renderCitaModal(prospectosAll, onSave, existing = null) {
 
   document.getElementById('modalSave').onclick = async () => {
     const data = {
-      prospectoId: +document.getElementById('citaProspecto').value || null,
+      prospectoId: document.getElementById('citaProspecto').value || null,
       titulo:  document.getElementById('citaTitulo').value.trim(),
       tipo:    document.getElementById('citaTipo').value,
       estado:  document.getElementById('citaEstado').value,

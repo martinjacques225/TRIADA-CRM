@@ -3,6 +3,7 @@ import { supabase } from './supabase.js';
 
 let _uid = null;
 export function setCurrentUser(uid) { _uid = uid; }
+export function getCurrentUserId() { return _uid; }
 
 export function initDB() { return Promise.resolve(); }
 
@@ -183,20 +184,22 @@ function citaFromSupa(row) {
     hora:         row.hora,
     lugar:        row.lugar,
     notas:        row.notas,
+    responsable:  row.responsable,
     fechaCreacion: row.created_at,
   };
 }
 
 function citaToSupa(data) {
   return clean({
-    lead_id: data.prospectoId,
-    titulo:  data.titulo,
-    tipo:    data.tipo,
-    estado:  data.estado,
-    fecha:   data.fecha,
-    hora:    data.hora,
-    lugar:   data.lugar,
-    notas:   data.notas,
+    lead_id:     data.prospectoId,
+    titulo:      data.titulo,
+    tipo:        data.tipo,
+    estado:      data.estado,
+    fecha:       data.fecha,
+    hora:        data.hora,
+    lugar:       data.lugar,
+    notas:       data.notas,
+    responsable: data.responsable,
   });
 }
 
@@ -210,7 +213,9 @@ export const citas = {
     _throw(error); return citaFromSupa(data);
   },
   add:         async (data) => {
-    const { data: row, error } = await supabase.from('citas').insert(citaToSupa(data)).select('id').single();
+    const payload = citaToSupa(data);
+    if (!payload.responsable && _uid) payload.responsable = _uid;
+    const { data: row, error } = await supabase.from('citas').insert(payload).select('id').single();
     _throw(error); return row.id;
   },
   update:      async (data) => {
