@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Diagnóstico Empresarial 360° · Tríada</title>
+<style>
+:root{--navy:#1E2761;--teal:#028090;--green:#4FB286;--violet:#5B6BD6;--amber:#F0B429;--danger:#E0604F;--bg:#f0f4f8;--surface:#fff;--border:#e0e6f0;--text:#1a2035;--text2:#5a6484;--text3:#9aa0b3}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+.header{background:var(--navy);padding:16px 24px;display:flex;align-items:center;gap:12px}
+.brand{font-size:17px;font-weight:700;color:#fff;letter-spacing:.06em}
+.brand b{color:var(--teal)}
+.container{max-width:680px;margin:0 auto;padding:32px 18px 80px}
+.intro{background:var(--surface);border-radius:16px;padding:28px;margin-bottom:24px;box-shadow:0 2px 12px rgba(30,39,97,.07)}
+.intro .tag{font-size:11.5px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--teal);margin-bottom:8px}
+.intro h1{font-size:21px;font-weight:800;color:var(--navy);margin-bottom:10px;line-height:1.25}
+.intro p{font-size:14px;color:var(--text2);line-height:1.6}
+.progress-bar{height:5px;background:var(--border);border-radius:999px;margin-bottom:24px;overflow:hidden}
+.progress-fill{height:100%;background:linear-gradient(90deg,var(--teal),var(--green));border-radius:999px;transition:width .35s ease;width:0%}
+.section{background:var(--surface);border-radius:16px;padding:22px 24px;margin-bottom:18px;box-shadow:0 2px 12px rgba(30,39,97,.07)}
+.sec-head{display:flex;align-items:center;gap:10px;margin-bottom:18px;padding-bottom:14px;border-bottom:1px solid var(--border)}
+.sec-icon{font-size:22px;line-height:1}
+.sec-title{font-size:15px;font-weight:800;color:var(--navy)}
+.sec-sub{font-size:12px;color:var(--text3);margin-top:1px}
+.q-row{display:flex;justify-content:space-between;align-items:center;gap:14px;padding:11px 0;border-bottom:1px solid var(--border)}
+.q-row:last-child{border-bottom:none;padding-bottom:0}
+.q-text{font-size:13.5px;color:var(--text);line-height:1.45;flex:1}
+.q-toggle{display:flex;gap:4px;flex-shrink:0}
+.tog{padding:6px 16px;font-size:12.5px;font-weight:600;border-radius:7px;border:1.5px solid var(--border);background:transparent;color:var(--text3);cursor:pointer;transition:all .15s}
+.tog.no.on{background:rgba(224,96,79,.1);border-color:var(--danger);color:var(--danger)}
+.tog.si.on{background:rgba(79,178,134,.14);border-color:var(--green);color:#2a7a55}
+.submit-wrap{margin-top:28px}
+.submit-btn{width:100%;padding:16px;font-size:15.5px;font-weight:700;background:linear-gradient(135deg,var(--teal),var(--navy));color:#fff;border:none;border-radius:12px;cursor:pointer;transition:opacity .15s}
+.submit-btn:hover{opacity:.92}
+.submit-btn:disabled{opacity:.55;cursor:not-allowed}
+.fine{text-align:center;font-size:12px;color:var(--text3);margin-top:10px}
+#thanks{display:none}
+.ty{background:var(--surface);border-radius:20px;padding:52px 32px;text-align:center;box-shadow:0 2px 20px rgba(30,39,97,.09)}
+.ty-icon{font-size:52px;margin-bottom:18px}
+.ty-title{font-size:22px;font-weight:800;color:var(--navy);margin-bottom:10px}
+.ty-sub{font-size:14.5px;color:var(--text2);line-height:1.6;max-width:380px;margin:0 auto}
+@media(max-width:520px){.q-row{flex-direction:column;align-items:flex-start;gap:9px}.q-toggle{width:100%}.tog{flex:1;text-align:center}}
+</style>
+</head>
+<body>
+
+<header class="header">
+  <svg width="28" height="28" viewBox="0 0 120 120" fill="none">
+    <path d="M26 90 L60 62 L94 90" stroke="#fff" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M26 73 L60 45 L94 73" stroke="#028090" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M26 56 L60 28 L94 56" stroke="#4FB286" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>
+  </svg>
+  <span class="brand">TRÍADA <b>360</b></span>
+</header>
+
+<div class="container">
+  <div id="form-view">
+    <div class="intro">
+      <div class="tag" id="empresa-tag">Diagnóstico Empresarial</div>
+      <h1>Diagnóstico Empresarial 360°</h1>
+      <p>Responde estas 15 preguntas sobre tu empresa con la mayor honestidad posible. No hay respuestas correctas ni incorrectas — toda la información nos ayuda a preparar tu informe personalizado.</p>
+    </div>
+
+    <div class="progress-bar"><div class="progress-fill" id="progress"></div></div>
+
+    <div class="section">
+      <div class="sec-head">
+        <span class="sec-icon">🖥️</span>
+        <div><div class="sec-title">Tecnología</div><div class="sec-sub">Digitalización y herramientas</div></div>
+      </div>
+      <div id="qs-tec"></div>
+    </div>
+
+    <div class="section">
+      <div class="sec-head">
+        <span class="sec-icon">📈</span>
+        <div><div class="sec-title">Ventas</div><div class="sec-sub">Proceso comercial</div></div>
+      </div>
+      <div id="qs-ventas"></div>
+    </div>
+
+    <div class="section">
+      <div class="sec-head">
+        <span class="sec-icon">💰</span>
+        <div><div class="sec-title">Finanzas</div><div class="sec-sub">Control y rentabilidad</div></div>
+      </div>
+      <div id="qs-finanzas"></div>
+    </div>
+
+    <div class="submit-wrap">
+      <button class="submit-btn" id="submit-btn" onclick="submitDiag()">Enviar mi diagnóstico →</button>
+      <p class="fine">Tus respuestas son confidenciales y solo las verá el equipo de Tríada.</p>
+    </div>
+  </div>
+
+  <div id="thanks">
+    <div class="ty">
+      <div class="ty-icon">✅</div>
+      <div class="ty-title" id="ty-title">¡Gracias!</div>
+      <p class="ty-sub">Tu diagnóstico fue enviado correctamente. Un especialista de Tríada lo revisará y te contactará pronto para presentarte los resultados.</p>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  var SUPA_URL='https://pqrjndirqtucoumijben.supabase.co';
+  var SUPA_KEY='sb_publishable_CEm784MwkIW1BqoDjEvlWQ_uDVSzm80';
+
+  var params=new URLSearchParams(location.search);
+  var leadId=params.get('id')||'';
+  var empresa=decodeURIComponent(params.get('empresa')||'');
+
+  if(empresa){
+    document.getElementById('empresa-tag').textContent='Diagnóstico para '+empresa;
+    document.getElementById('ty-title').textContent='¡Gracias, '+empresa+'!';
+  }
+  if(!leadId){
+    document.querySelector('.intro').innerHTML='<p style="color:var(--danger);font-weight:600;font-size:14px">Enlace inválido. Solicita un nuevo enlace a tu consultor de Tríada.</p>';
+    document.getElementById('submit-btn').disabled=true;
+  }
+
+  var PREGUNTAS={
+    tec:[
+      '¿Los sistemas internos están integrados entre sí?',
+      '¿El equipo usa herramientas digitales para su trabajo diario?',
+      '¿Se automatizan tareas repetitivas?',
+      '¿Los datos del negocio están centralizados y accesibles?',
+      '¿Se mide el desempeño digital con indicadores?',
+    ],
+    ventas:[
+      '¿Existe un proceso de ventas documentado y seguido?',
+      '¿Se hace seguimiento estructurado a cada prospecto?',
+      '¿Se mide la tasa de conversión de cotizaciones?',
+      '¿El equipo tiene metas claras y seguimiento regular?',
+      '¿Se usa algún CRM o herramienta de gestión de clientes?',
+    ],
+    finanzas:[
+      '¿Se conoce el margen real de cada producto o servicio?',
+      '¿El flujo de caja se proyecta con al menos 3 meses de anticipación?',
+      '¿Los costos fijos y variables están claramente identificados?',
+      '¿Se revisan los estados financieros mensualmente?',
+      '¿Existen indicadores de rentabilidad por línea de negocio?',
+    ],
+  };
+
+  var answers={tec:[false,false,false,false,false],ventas:[false,false,false,false,false],finanzas:[false,false,false,false,false]};
+
+  function buildArea(area){
+    var c=document.getElementById('qs-'+area);
+    PREGUNTAS[area].forEach(function(q,i){
+      var d=document.createElement('div');
+      d.className='q-row';
+      d.innerHTML='<span class="q-text">'+q+'</span>'
+        +'<div class="q-toggle">'
+        +'<button class="tog no on" id="'+area+'-'+i+'-no" onclick="setA(\''+area+'\','+i+',false)">No</button>'
+        +'<button class="tog si"    id="'+area+'-'+i+'-si"  onclick="setA(\''+area+'\','+i+',true)">Sí</button>'
+        +'</div>';
+      c.appendChild(d);
+    });
+  }
+
+  window.setA=function(area,i,val){
+    answers[area][i]=val;
+    document.getElementById(area+'-'+i+'-si').classList.toggle('on',val);
+    document.getElementById(area+'-'+i+'-no').classList.toggle('on',!val);
+    var yeses=Object.values(answers).flat().filter(Boolean).length;
+    document.getElementById('progress').style.width=Math.round(yeses/15*100)+'%';
+  };
+
+  window.submitDiag=async function(){
+    if(!leadId)return;
+    var btn=document.getElementById('submit-btn');
+    btn.textContent='Enviando…';btn.disabled=true;
+    try{
+      var res=await fetch(SUPA_URL+'/rest/v1/diagnosticos',{
+        method:'POST',
+        headers:{'apikey':SUPA_KEY,'Authorization':'Bearer '+SUPA_KEY,'Content-Type':'application/json','Prefer':'return=minimal'},
+        body:JSON.stringify({lead_id:leadId,scores:{tecnologia:answers.tec,ventas:answers.ventas,finanzas:answers.finanzas},estado:'cliente'})
+      });
+      if(!res.ok)throw new Error('HTTP '+res.status);
+      document.getElementById('form-view').style.display='none';
+      document.getElementById('thanks').style.display='block';
+      window.scrollTo({top:0,behavior:'smooth'});
+    }catch(e){
+      btn.textContent='Error al enviar — intenta de nuevo';
+      btn.style.background='var(--danger)';
+      btn.disabled=false;
+      setTimeout(function(){btn.textContent='Enviar mi diagnóstico →';btn.style.background='';},3500);
+    }
+  };
+
+  buildArea('tec');buildArea('ventas');buildArea('finanzas');
+})();
+</script>
+</body>
+</html>

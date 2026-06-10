@@ -55,22 +55,25 @@
 
 ---
 
-## 🟡 SIGUIENTE — Filtro "Mis citas / Todas" en Agenda (multi-usuario light parte 2)
+## ✅ HECHO ESTA SESIÓN (multi-usuario light + funnel)
 
-El campo `responsable` ya se guarda en nuevos leads y diagnósticos.
-Falta: filtro en la vista de Agenda para que cada consultor vea solo sus citas por defecto.
-
-- Agregar `responsable` a `citaToSupa()` / `citaFromSupa()` en db.js
-- Agregar botones "Mis citas / Todas" en modules/agenda/agenda.js
-- Filtrar con `.eq('responsable', _uid)` cuando el toggle está en "Mis citas"
+- Filtro "Mis citas / Todas" en Agenda ✅
+- Área activa (Tecnología / Ventas / Finanzas) en el nav ✅ — persiste en `profiles.area`
+- Página pública `diagnostico-publico.html` ✅ — cliente llena el 360 sin login
+- Botón "🔗 Compartir 360" en ficha del prospecto ✅
 
 ---
 
-## 🟡 ÁREA ACTIVA (multi-usuario light parte 3)
+## 🔴 SQL PENDIENTE EN SUPABASE (sin esto el cliente no puede enviar el diagnóstico)
 
-- Dropdown en el nav: Tecnología / Ventas / Finanzas
-- Se guarda en `profiles.area` (columna ya existe)
-- Afecta el foco de la agenda y las herramientas del consultor
+Ejecutar en **SQL Editor → New query**:
+
+```sql
+-- Permite al cliente (anon) insertar su diagnóstico desde la URL pública
+CREATE POLICY "diagnosticos_public_ins" ON diagnosticos
+  FOR INSERT TO anon
+  WITH CHECK (lead_id IS NOT NULL);
+```
 
 ---
 
@@ -78,14 +81,13 @@ Falta: filtro en la vista de Agenda para que cada consultor vea solo sus citas p
 
 | Prioridad | Feature | Nota |
 |-----------|---------|------|
-| Alta | Informe 360 integrado al funnel | Motor ya existe (`informe.engine.js`); falta que el cliente lo llene desde una URL pública |
-| Alta | Formulario de contacto dentro del CRM | El lead del formulario debe crear el prospecto y disparar el diagnóstico |
+| Alta | Badge "360 pendiente" en pipeline | Chip en tarjeta cuando el lead no tiene diag con estado='cliente' |
+| Alta | Formulario de contacto dentro del CRM | Lead desde form → crear prospecto + disparar compartirDiag |
 | Media | Catálogo de servicios | Tabla `servicios` ya existe en Supabase |
 | Media | Facturación básica | Tabla `facturas` ya existe en Supabase |
 | Media | URL routing | `navigate('pipeline')` → `?view=pipeline` en la URL |
 | Baja | Service worker PWA | Pospuesto durante desarrollo activo |
 | Baja | Módulo de proyectos | Schema pendiente en Supabase |
-| Baja | Exportar a PDF desde el CRM | Informe 360 ya tiene `window.print()` |
 
 ---
 

@@ -132,6 +132,7 @@ export async function openProspectoDetail(id) {
       <button class="btn btn-primary btn-sm" onclick="window._app.openDiagnosticoModal('${p.id}')">+ Diagnóstico</button>
       <button class="btn btn-ghost btn-sm" onclick="window._app.openCitaModalForProspecto('${p.id}')">+ Cita</button>
       <button class="btn btn-ghost btn-sm" onclick="window._app.openPropuestaModalForProspecto('${p.id}')">+ Propuesta</button>
+      <button class="btn btn-ghost btn-sm" onclick="window._app.compartirDiag('${p.id}','${escHtml(p.empresa||p.nombre)}')" title="Copiar enlace del formulario 360 para el cliente">🔗 Compartir 360</button>
     </div>
 
     <h4 style="font-size:14px;font-weight:700;color:var(--navy);margin-bottom:10px">Diagnósticos (${diags.length})</h4>

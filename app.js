@@ -193,6 +193,16 @@ async function init() {
       if (p?.telefono) window.open(`tel:${p.telefono}`);
     },
     setArea: _setArea,
+    compartirDiag: async (id, empresa) => {
+      const base = 'https://martinjacques225.github.io/TRIADA-CRM/diagnostico-publico.html';
+      const url  = `${base}?id=${id}&empresa=${encodeURIComponent(empresa)}`;
+      try {
+        await navigator.clipboard.writeText(url);
+        toast('Enlace copiado al portapapeles ✓', 'success');
+      } catch (_) {
+        prompt('Copia este enlace para el cliente:', url);
+      }
+    },
     signOut,
     importLanding: async () => {
       const cnt = await importLandingLeads();
