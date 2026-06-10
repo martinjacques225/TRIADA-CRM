@@ -1,5 +1,5 @@
 # HANDOFF — TRIADA CRM · Estado y próximos pasos
-> Actualizado: 2026-06-09 | Sesión: funnel landing + perfil Supabase + responsable
+> Actualizado: 2026-06-10 | Sesión: P0 fix + P1 correlativos + ítems IVA + facturación + cliente
 
 ---
 
@@ -14,108 +14,83 @@
 ### CRM conectado a Supabase
 - `js/supabase.js` — cliente Supabase (CDN ESM, key embebida, es pública)
 - `js/auth.js` — pantalla de login + `signOut()`; bloquea el CRM hasta autenticar
-- `js/db.js` — **reescrito completo** contra Supabase (misma interfaz que IndexedDB)
-  - Mapeo de campos: `rubro↔giro`, `dolorPrincipal↔dolor_principal`, `prospectoId↔lead_id`
-  - `config` usa localStorage (preferencias de UI, no datos de negocio)
-  - IDs: de numérico autoincrement → UUID string
-  - `setCurrentUser(uid)` — exportado; auto-asigna `responsable` en leads.add y diagnosticos.add
-- `app.js` — lee `profiles` de Supabase al init; `_profile.nombre/role` en nav e informe
-- Todos los módulos — onclick handlers entrecomillados para UUID (`('${id}')`)
-- Publicado en GitHub Pages: https://martinjacques225.github.io/TRIADA-CRM/
+- `js/db.js` — capa Supabase con mapeo completo de campos
+  - Correlativos: `leadFromSupa`, `propFromSupa`, `diagFromSupa` exponen `correlativo`
+  - Nuevas secciones: `clientes` (CRUD + getByLead) y `facturas` (CRUD + byLead)
+  - `config` usa localStorage (preferencias de UI)
+  - IDs: UUID string
+  - `setCurrentUser(uid)` — auto-asigna `responsable`
 
-### Landing → Supabase (funnel arreglado)
-- `01-WEB/Triada_Landing_Conversion.html` — submit handler ahora usa `fetch` directo contra
-  Supabase REST API (`/rest/v1/leads`). Respaldo localStorage siempre activo como fallback.
-  El CRM ya no necesita "Importar leads del landing" para recibir nuevos contactos.
+### Correlativos visibles en UI ✅
+- LEAD-000001 visible en tarjeta kanban y header de ficha del prospecto
+- DIA-000001 visible en ficha diagnóstico dentro del detalle del prospecto
+- PROP-000001 visible en tabla propuestas y en el detalle del prospecto
 
-### Perfil desde Supabase
-- `app.js` lee `profiles.nombre` y `profiles.role` al inicio y los usa en:
-  - El avatar del nav (nombre + rol)
-  - El evaluador del Informe 360 PDF
+### Propuesta con ítems + IVA ✅
+- Formulario reemplaza checkboxes por tabla dinámica de servicios
+- Cada ítem: {descripcion, cantidad, precioUnit}
+- Calcula subtotal neto, IVA 19%, total automáticamente
+- Guarda ítems en columna `servicios` (JSON) y total en `valor`
+- Retrocompatible: formato antiguo (string[]) se muestra correctamente
 
-### Responsable automático (multi-usuario light)
-- `db.js` guarda `responsable = user.id` en cada nuevo prospecto y diagnóstico
-- Sin muros de permisos: todos ven todo; el campo solo registra quién lo creó
+### Módulo Facturación ✅
+- `modules/facturacion/facturacion.js` — vista lista + KPIs + modal create/edit
+- Tabla `facturas` en Supabase: correlativo FACT-000001
+- Estados: Pendiente / Enviada / Pagada / Vencida
+- Botón "+ Factura" en ficha del prospecto, y "🧾 Crear factura" en cada propuesta Aceptada
+- Auto-rellena monto desde propuesta seleccionada
+- Agregado al nav en sección "Gestión"
+
+### Crear cliente ✅
+- Botón "👤 Crear ficha de cliente" en ficha del prospecto cuando estado=Cliente
+- Inserta en tabla `clientes` con datos del prospecto (nombre, empresa, rut, email, telefono)
+- Muestra "✓ Ficha de cliente creada" si ya existe (no duplica)
+
+### P0 Bugs corregidos ✅
+- `propuestas.js`: quitado `+` antes de UUID → ya no convierte UUID a NaN
+- `pipeline.js` DnD: mismo fix en el drop handler → drag & drop Kanban funciona
+
+### Landing → Supabase
+- `01-WEB/Triada_Landing_Conversion.html` — submit vía fetch directo a Supabase REST
+- Formulario público del cliente (`diagnostico-publico.html`) funcionando
 
 ---
 
 ## ✅ SETUP COMPLETO
 
 - Usuario admin creado en Supabase Auth ✅
-- `profiles.role = 'admin'` ejecutado ✅
-- `diagnosticos_public_ins` policy creada ✅
 - Login en https://martinjacques225.github.io/TRIADA-CRM/ **funcionando** ✅
-- Formulario público del cliente (`diagnostico-publico.html`) **funcionando** ✅
 
 ---
 
-## 🔴 P0 — BUG CRÍTICO (fix inmediato próxima sesión)
+## 🟠 P1 PENDIENTE
 
-**Propuesta no guarda** — `modules/propuestas/propuestas.js` línea 112:
-```js
-prospectoId: +document.getElementById('propProspecto').value || null,
-//           ↑ convierte UUID a NaN → lead_id llega null → insert falla
+### Crear 2 usuarios nuevos en Supabase
+1. Dashboard → Authentication → Users → Add user × 2 (email + contraseña)
+2. Copiar el UUID del nuevo usuario
+3. Ejecutar en SQL Editor:
+```sql
+update profiles set role = 'consultor', nombre = 'NOMBRE AQUÍ', area = 'ÁREA AQUÍ'
+where id = 'UUID-DEL-USUARIO';
 ```
-Fix: quitar el `+` (igual que se hizo en agenda.js línea 123).
+Áreas válidas: `'Tecnología'` | `'Ventas'` | `'Finanzas'`
 
 ---
 
-## 🟠 P1 — CORE DEL FLUJO (próximas sesiones)
+## 🟡 P2 — MEJORAS UX (pendientes)
 
-### 1. Correlativos visibles en UI
-- El trigger de Supabase ya genera LEAD-000001, PROP-000001, DIA-000001, etc.
-- Falta mostrarlos: en tarjetas del pipeline, ficha de prospecto, modal de propuesta, etc.
-- Campo en DB: `correlativo` (tabla leads), `correlativo` (tabla propuestas), etc.
-- En `leadFromSupa` / `propFromSupa` en db.js: agregar `correlativo: row.correlativo`
+### Panel de herramientas por Área activa (P2a)
+- Home: al seleccionar área activa (Tec/Ventas/Fin), mostrar panel colapsable
+  con recursos relevantes por área. Implementar en `modules/home/home.js`.
 
-### 2. Propuesta con presupuesto real + IVA
-- Reemplazar campo `valor` (número suelto) por tabla de ítems:
-  `[{descripcion, cantidad, precioUnit}]` → subtotal → IVA 19% → total
-- Guardar en columna `servicios` (ya existe como JSON) el detalle de ítems
-- Mostrar resumen en la tarjeta y en el PDF
+### Notificación jefes de área al cerrar diagnóstico (P2b)
+- Modal con 3 botones "Enviar sección Tec/Ventas/Finanzas" que copian
+  resumen formateado para pegar en WhatsApp.
+- Trigger: cuando diagnóstico cambia a estado `completado`.
 
-### 3. Módulo Facturación completo
-- Nuevo módulo `modules/facturacion/` con vista lista + modal
-- Tabla `facturas` ya existe en Supabase (campos: lead_id, propuesta_id, monto, estado, fecha_emision, correlativo)
-- **Lógica de cadena:** diagnóstico → propuesta → factura (cada una referencia la anterior)
-- Flujo: en la ficha del prospecto, botón "Crear factura" activo solo si hay propuesta aceptada
-- Correlativo FACT-000001
-
-### 4. Crear cliente (convertir prospecto)
-- En ficha de prospecto con estado "Cliente": botón "Crear ficha de cliente"
-- Crea registro en tabla `clientes` (ya existe en Supabase) ligada al lead_id
-- Visible en un sub-módulo o tab dentro de Pipeline
-
-### 5. Crear 2 usuarios más en Supabase
-- Supabase Dashboard → Authentication → Users → Add user × 2
-- Luego SQL para cada uno:
-  ```sql
-  update profiles set role = 'consultor', nombre = 'NOMBRE', area = 'AREA'
-  where email = 'EMAIL';
-  ```
-  Áreas válidas: 'Tecnología' | 'Ventas' | 'Finanzas'
-
----
-
-## 🟡 P2 — MEJORAS UX
-
-### 6. Panel de herramientas por Área activa
-- Hoy los botones Tec/Ventas/Fin del nav solo cambian `profiles.area` pero no muestran nada
-- Propuesta: al seleccionar un área, mostrar en el Home un panel de recursos rápidos:
-  - **Tecnología:** checklist de integración, plantilla de auditoría tech, links útiles
-  - **Ventas:** scripts de llamada, calculadora de conversión, plantilla WhatsApp
-  - **Finanzas:** tabla de márgenes, checklist de flujo de caja, calculadora IVA
-- Implementar como widget colapsable en `modules/home/home.js` que lee `S.profile.area`
-
-### 7. Notificación a jefes de área al cerrar diagnóstico
-- Cuando un diagnóstico cambia a estado `'completado'`: enviar copia a cada consultor según su área
-- Cada consultor recibe solo las secciones de su área + notas/consejos de esa área
-- Canal: email vía Supabase Edge Functions (o link compartible por WhatsApp en v1)
-- V1 simple: al guardar diagnóstico, mostrar modal con 3 botones "Enviar sección Tec/Ventas/Finanzas" que copian un resumen formateado para pegar en WhatsApp
-
-### 8. Badge "360 pendiente" en pipeline
-- Chip naranja en tarjeta de prospecto cuando no existe diagnóstico con `estado='cliente'`
-- Query: `diagnosticos.byProspecto(id)` → filtrar por `estado === 'cliente'`
+### Badge "360 pendiente" en pipeline (P2c)
+- Chip naranja en tarjeta kanban cuando el prospecto no tiene diagnóstico
+  con `estado='cliente'`. Requiere fetch de diagnosticos en pipeline render.
 
 ---
 
@@ -123,31 +98,37 @@ Fix: quitar el `+` (igual que se hizo en agenda.js línea 123).
 
 | Feature | Nota |
 |---------|------|
-| URL routing | `navigate('pipeline')` → `?view=pipeline` en la URL |
+| Tab/módulo Clientes | Listar tabla `clientes`, ficha individual |
+| URL routing | `navigate('pipeline')` → `?view=pipeline` en URL |
 | Service worker PWA | Pospuesto hasta estabilizar funcionalidades |
 | Módulo de proyectos | Para seguimiento post-venta |
 
 ---
 
-## Arquitectura actual resumida
+## Arquitectura actual
 
 ```
 index.html
 └── app.js (orquestador)
     ├── js/auth.js       → login gate (Supabase Auth)
     ├── js/supabase.js   → cliente Supabase (key pública embebida)
-    ├── js/db.js         → capa de datos (Supabase, misma interfaz antes)
+    ├── js/db.js         → capa de datos (Supabase)
+    │     tables: leads · diagnosticos · citas · propuestas
+    │             clientes · facturas · profiles
     ├── js/state.js      → estado UI
     ├── js/utils.js      → constantes + helpers
     ├── js/format.js     → formateo RUT/teléfono/email
     └── modules/
         ├── home/        pipeline/  diagnosticos/  agenda/
-        ├── propuestas/  informes/  configuracion/
+        ├── propuestas/  facturacion/  informes/  configuracion/
         ├── modals/      (modal global + detalle de prospecto)
         └── informe-ejecutivo/  (motor PDF estilo McKinsey)
 ```
 
-**DB Supabase:** leads · diagnosticos · citas · propuestas · profiles
-**Config:** localStorage (tema, userName, cargo) → migrar a profiles (pendiente)
+**NAV sections:**
+- Principal: Home, Pipeline
+- Gestión: Diagnósticos, Agenda, Propuestas, **Facturación** ← nuevo
+- Análisis: Informes, Configuración
+
 **Repo:** https://github.com/martinjacques225/TRIADA-CRM
 **Deploy:** https://martinjacques225.github.io/TRIADA-CRM/
