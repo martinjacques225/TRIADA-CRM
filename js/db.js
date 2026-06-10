@@ -1,6 +1,9 @@
 // js/db.js — Supabase data layer (same interface as IndexedDB version)
 import { supabase } from './supabase.js';
 
+let _uid = null;
+export function setCurrentUser(uid) { _uid = uid; }
+
 export function initDB() { return Promise.resolve(); }
 
 // ─── config (localStorage — user preferences only) ────────────
@@ -79,7 +82,9 @@ export const prospectos = {
     _throw(error); return leadFromSupa(data);
   },
   add:      async (data)   => {
-    const { data: row, error } = await supabase.from('leads').insert(leadToSupa(data)).select('id').single();
+    const payload = leadToSupa(data);
+    if (!payload.responsable && _uid) payload.responsable = _uid;
+    const { data: row, error } = await supabase.from('leads').insert(payload).select('id').single();
     _throw(error); return row.id;
   },
   update:   async (data)   => {
@@ -145,7 +150,9 @@ export const diagnosticos = {
     _throw(error); return diagFromSupa(data);
   },
   add:         async (data) => {
-    const { data: row, error } = await supabase.from('diagnosticos').insert(diagToSupa(data)).select('id').single();
+    const payload = diagToSupa(data);
+    if (!payload.responsable && _uid) payload.responsable = _uid;
+    const { data: row, error } = await supabase.from('diagnosticos').insert(payload).select('id').single();
     _throw(error); return row.id;
   },
   update:      async (data) => {

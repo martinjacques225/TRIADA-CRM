@@ -1,6 +1,9 @@
 // app.js — Tríada Diagnóstico CRM orchestrator
-import { initDB, config, prospectos, diagnosticos, propuestas, citas, importLandingLeads } from './js/db.js';
+import { initDB, config, prospectos, diagnosticos, propuestas, citas, importLandingLeads, setCurrentUser } from './js/db.js';
 import { requireAuth, signOut } from './js/auth.js';
+import { supabase } from './js/supabase.js';
+
+let _profile = null;
 import { S } from './js/state.js';
 import { toast, escHtml, PIPELINE_STAGES } from './js/utils.js';
 
@@ -60,8 +63,8 @@ export async function refreshView() {
 }
 
 export async function renderNav() {
-  const nombre  = await config.get('userName') || 'Consultor';
-  const cargo   = await config.get('cargo')    || 'Tríada';
+  const nombre  = _profile?.nombre || await config.get('userName') || 'Consultor';
+  const cargo   = _profile?.role   || await config.get('cargo')    || 'Tríada';
   let nuevos = 0;
   try { nuevos = (await prospectos.getAll()).filter(p => p.estado === 'Nuevo').length; } catch (_) {}
   const badges = { pipeline: nuevos };
@@ -107,7 +110,12 @@ function _navItem(item, badges = {}) {
 
 // ════ INIT ════
 async function init() {
-  await requireAuth();
+  const user = await requireAuth();
+  setCurrentUser(user.id);
+  try {
+    const { data } = await supabase.from('profiles').select('nombre, role, area').eq('id', user.id).single();
+    _profile = data;
+  } catch (_) {}
   await initDB();
 
   const theme = await config.get('theme') || 'light';
@@ -152,9 +160,9 @@ async function init() {
       if (!diag) { toast('Diagnóstico no encontrado', 'error'); return; }
       const prospecto = diag.prospectoId ? await prospectos.get(diag.prospectoId) : null;
       const evaluador = {
-        nombre:  await config.get('userName') || 'Equipo Tríada',
-        cargo:   await config.get('cargo')    || 'Consultoría Estratégica',
-        empresa: await config.get('empresa')  || 'Tríada',
+        nombre:  _profile?.nombre || await config.get('userName') || 'Equipo Tríada',
+        cargo:   _profile?.role   || await config.get('cargo')    || 'Consultoría Estratégica',
+        empresa: await config.get('empresa') || 'Tríada',
       };
       openInformeViewer(diag, prospecto, evaluador);
     },
