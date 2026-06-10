@@ -1,9 +1,16 @@
 // app.js — Tríada Diagnóstico CRM orchestrator
-import { initDB, config, prospectos, diagnosticos, propuestas, citas, importLandingLeads, setCurrentUser } from './js/db.js';
+import { initDB, config, prospectos, diagnosticos, propuestas, citas, importLandingLeads, setCurrentUser, getCurrentUserId } from './js/db.js';
 import { requireAuth, signOut } from './js/auth.js';
 import { supabase } from './js/supabase.js';
 
 let _profile = null;
+
+async function _setArea(area) {
+  _profile = { ..._profile, area };
+  await renderNav();
+  const uid = getCurrentUserId();
+  if (uid) supabase.from('profiles').update({ area }).eq('id', uid).then(() => {});
+}
 import { S } from './js/state.js';
 import { toast, escHtml, PIPELINE_STAGES } from './js/utils.js';
 
@@ -88,6 +95,15 @@ export async function renderNav() {
     ${NAV_ITEMS.slice(2,5).map(i=>_navItem(i,badges)).join('')}
     <div class="nav-section-label">Análisis</div>
     ${NAV_ITEMS.slice(5).map(i=>_navItem(i,badges)).join('')}
+    <div style="padding:8px 14px 6px;border-top:1px solid var(--border);margin-top:4px">
+      <div style="font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--text3);margin-bottom:6px">Área activa</div>
+      <div style="display:flex;gap:3px">
+        ${[['Tecnología','💻','Tec'],['Ventas','📈','Vnts'],['Finanzas','💰','Fin']].map(([a,icon,lbl]) => {
+          const sel = _profile?.area === a;
+          return `<button onclick="window._app.setArea('${a}')" style="flex:1;padding:6px 2px;font-size:11px;font-weight:600;border-radius:7px;border:1.5px solid ${sel?'var(--primary)':'var(--border)'};background:${sel?'rgba(2,128,144,.12)':'transparent'};color:${sel?'var(--primary)':'var(--text3)'};cursor:pointer;transition:all .15s;line-height:1.3">${icon}<br><span style="font-size:9.5px">${lbl}</span></button>`;
+        }).join('')}
+      </div>
+    </div>
     <a class="nav-footer nav-user-link" href="#" onclick="navigate('config');return false" title="Configuración">
       <div class="nav-user">
         <div class="avatar" style="width:36px;height:36px;background:var(--navy);font-size:14px">${(nombre[0]||'C').toUpperCase()}</div>
@@ -176,6 +192,7 @@ async function init() {
       const p = await prospectos.get(id);
       if (p?.telefono) window.open(`tel:${p.telefono}`);
     },
+    setArea: _setArea,
     signOut,
     importLanding: async () => {
       const cnt = await importLandingLeads();
