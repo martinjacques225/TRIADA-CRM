@@ -49,17 +49,83 @@
 
 ---
 
-## 🔵 FUNCIONALIDADES PENDIENTES (roadmap de 14 fases)
+## 🔴 P0 — BUG CRÍTICO (fix inmediato próxima sesión)
 
-| Prioridad | Feature | Nota |
-|-----------|---------|------|
-| Alta | Badge "360 pendiente" en pipeline | Chip en tarjeta cuando el lead no tiene diag con estado='cliente' |
-| Alta | Formulario de contacto dentro del CRM | Lead desde form → crear prospecto + disparar compartirDiag |
-| Media | Catálogo de servicios | Tabla `servicios` ya existe en Supabase |
-| Media | Facturación básica | Tabla `facturas` ya existe en Supabase |
-| Media | URL routing | `navigate('pipeline')` → `?view=pipeline` en la URL |
-| Baja | Service worker PWA | Pospuesto durante desarrollo activo |
-| Baja | Módulo de proyectos | Schema pendiente en Supabase |
+**Propuesta no guarda** — `modules/propuestas/propuestas.js` línea 112:
+```js
+prospectoId: +document.getElementById('propProspecto').value || null,
+//           ↑ convierte UUID a NaN → lead_id llega null → insert falla
+```
+Fix: quitar el `+` (igual que se hizo en agenda.js línea 123).
+
+---
+
+## 🟠 P1 — CORE DEL FLUJO (próximas sesiones)
+
+### 1. Correlativos visibles en UI
+- El trigger de Supabase ya genera LEAD-000001, PROP-000001, DIA-000001, etc.
+- Falta mostrarlos: en tarjetas del pipeline, ficha de prospecto, modal de propuesta, etc.
+- Campo en DB: `correlativo` (tabla leads), `correlativo` (tabla propuestas), etc.
+- En `leadFromSupa` / `propFromSupa` en db.js: agregar `correlativo: row.correlativo`
+
+### 2. Propuesta con presupuesto real + IVA
+- Reemplazar campo `valor` (número suelto) por tabla de ítems:
+  `[{descripcion, cantidad, precioUnit}]` → subtotal → IVA 19% → total
+- Guardar en columna `servicios` (ya existe como JSON) el detalle de ítems
+- Mostrar resumen en la tarjeta y en el PDF
+
+### 3. Módulo Facturación completo
+- Nuevo módulo `modules/facturacion/` con vista lista + modal
+- Tabla `facturas` ya existe en Supabase (campos: lead_id, propuesta_id, monto, estado, fecha_emision, correlativo)
+- **Lógica de cadena:** diagnóstico → propuesta → factura (cada una referencia la anterior)
+- Flujo: en la ficha del prospecto, botón "Crear factura" activo solo si hay propuesta aceptada
+- Correlativo FACT-000001
+
+### 4. Crear cliente (convertir prospecto)
+- En ficha de prospecto con estado "Cliente": botón "Crear ficha de cliente"
+- Crea registro en tabla `clientes` (ya existe en Supabase) ligada al lead_id
+- Visible en un sub-módulo o tab dentro de Pipeline
+
+### 5. Crear 2 usuarios más en Supabase
+- Supabase Dashboard → Authentication → Users → Add user × 2
+- Luego SQL para cada uno:
+  ```sql
+  update profiles set role = 'consultor', nombre = 'NOMBRE', area = 'AREA'
+  where email = 'EMAIL';
+  ```
+  Áreas válidas: 'Tecnología' | 'Ventas' | 'Finanzas'
+
+---
+
+## 🟡 P2 — MEJORAS UX
+
+### 6. Panel de herramientas por Área activa
+- Hoy los botones Tec/Ventas/Fin del nav solo cambian `profiles.area` pero no muestran nada
+- Propuesta: al seleccionar un área, mostrar en el Home un panel de recursos rápidos:
+  - **Tecnología:** checklist de integración, plantilla de auditoría tech, links útiles
+  - **Ventas:** scripts de llamada, calculadora de conversión, plantilla WhatsApp
+  - **Finanzas:** tabla de márgenes, checklist de flujo de caja, calculadora IVA
+- Implementar como widget colapsable en `modules/home/home.js` que lee `S.profile.area`
+
+### 7. Notificación a jefes de área al cerrar diagnóstico
+- Cuando un diagnóstico cambia a estado `'completado'`: enviar copia a cada consultor según su área
+- Cada consultor recibe solo las secciones de su área + notas/consejos de esa área
+- Canal: email vía Supabase Edge Functions (o link compartible por WhatsApp en v1)
+- V1 simple: al guardar diagnóstico, mostrar modal con 3 botones "Enviar sección Tec/Ventas/Finanzas" que copian un resumen formateado para pegar en WhatsApp
+
+### 8. Badge "360 pendiente" en pipeline
+- Chip naranja en tarjeta de prospecto cuando no existe diagnóstico con `estado='cliente'`
+- Query: `diagnosticos.byProspecto(id)` → filtrar por `estado === 'cliente'`
+
+---
+
+## 🔵 P3 — BACKLOG
+
+| Feature | Nota |
+|---------|------|
+| URL routing | `navigate('pipeline')` → `?view=pipeline` en la URL |
+| Service worker PWA | Pospuesto hasta estabilizar funcionalidades |
+| Módulo de proyectos | Para seguimiento post-venta |
 
 ---
 
