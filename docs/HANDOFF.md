@@ -1,5 +1,5 @@
 # HANDOFF — TRIADA CRM · Estado y próximos pasos
-> Actualizado: 2026-06-09 | Sesión: conexión Supabase completa
+> Actualizado: 2026-06-09 | Sesión: funnel landing + perfil Supabase + responsable
 
 ---
 
@@ -18,17 +18,32 @@
   - Mapeo de campos: `rubro↔giro`, `dolorPrincipal↔dolor_principal`, `prospectoId↔lead_id`
   - `config` usa localStorage (preferencias de UI, no datos de negocio)
   - IDs: de numérico autoincrement → UUID string
-- `app.js` — `requireAuth()` en init; botón "Cerrar sesión" en nav; fix `+pid` → string
+  - `setCurrentUser(uid)` — exportado; auto-asigna `responsable` en leads.add y diagnosticos.add
+- `app.js` — lee `profiles` de Supabase al init; `_profile.nombre/role` en nav e informe
 - Todos los módulos — onclick handlers entrecomillados para UUID (`('${id}')`)
 - Publicado en GitHub Pages: https://martinjacques225.github.io/TRIADA-CRM/
 
+### Landing → Supabase (funnel arreglado)
+- `01-WEB/Triada_Landing_Conversion.html` — submit handler ahora usa `fetch` directo contra
+  Supabase REST API (`/rest/v1/leads`). Respaldo localStorage siempre activo como fallback.
+  El CRM ya no necesita "Importar leads del landing" para recibir nuevos contactos.
+
+### Perfil desde Supabase
+- `app.js` lee `profiles.nombre` y `profiles.role` al inicio y los usa en:
+  - El avatar del nav (nombre + rol)
+  - El evaluador del Informe 360 PDF
+
+### Responsable automático (multi-usuario light)
+- `db.js` guarda `responsable = user.id` en cada nuevo prospecto y diagnóstico
+- Sin muros de permisos: todos ven todo; el campo solo registra quién lo creó
+
 ---
 
-## 🔴 PENDIENTE INMEDIATO (setup de hoy, sin esto no funciona el login)
+## 🔴 PENDIENTE INMEDIATO (setup manual, sin esto no funciona el login)
 
 ```
-1. Supabase → Authentication → Users → Add user
-   Email: tu email real   Contraseña: segura
+1. Ir a: https://supabase.com/dashboard/project/pqrjndirqtucoumijben/auth/users
+   → "Add user" → Enter user  (Email: tu email real, Contraseña: segura)
 
 2. SQL Editor → New query:
    update profiles set role = 'admin', nombre = 'Martín'
@@ -40,50 +55,22 @@
 
 ---
 
-## 🟡 SIGUIENTE PRIORIDAD — El funnel roto (caso #1 de Supabase)
+## 🟡 SIGUIENTE — Filtro "Mis citas / Todas" en Agenda (multi-usuario light parte 2)
 
-El formulario de la landing escribe en `localStorage['triada_leads']`, pero ahora
-el CRM vive en Supabase. El lead nunca llega automáticamente.
+El campo `responsable` ya se guarda en nuevos leads y diagnósticos.
+Falta: filtro en la vista de Agenda para que cada consultor vea solo sus citas por defecto.
 
-**Fix:** actualizar la landing (`01-WEB/Triada_Landing_Conversion.html`) para que
-al enviar el formulario llame directamente a Supabase con la anon key:
-
-```js
-import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
-const sb = createClient('https://pqrjndirqtucoumijben.supabase.co',
-                        'sb_publishable_CEm784MwkIW1BqoDjEvlWQ_uDVSzm80');
-await sb.from('leads').insert({ nombre, empresa, email, telefono,
-  giro: rubro, dolor_principal: interes, origen: 'landing', estado: 'Nuevo' });
-```
-
-La política RLS `leads_public_ins` ya permite esto (anon + `origen = 'landing'`).
+- Agregar `responsable` a `citaToSupa()` / `citaFromSupa()` en db.js
+- Agregar botones "Mis citas / Todas" en modules/agenda/agenda.js
+- Filtrar con `.eq('responsable', _uid)` cuando el toggle está en "Mis citas"
 
 ---
 
-## 🟡 PERFIL DE USUARIO desde Supabase
+## 🟡 ÁREA ACTIVA (multi-usuario light parte 3)
 
-Hoy `config.get('userName')` / `config.get('cargo')` leen de localStorage.
-Mejora: leerlos de `profiles` (ya existe la tabla) para que cada consultor
-tenga su propio nombre/cargo sin configurar manualmente.
-
-```js
-// En app.js init(), después de requireAuth():
-const { data: profile } = await supabase
-  .from('profiles').select('nombre, role, area').eq('id', user.id).single();
-// Usar profile.nombre en el nav en vez de config.get('userName')
-```
-
----
-
-## 🟡 MULTI-USUARIO LIGHT (las 3 costuras del plan)
-
-El plan acordado: acceso compartido a todo, SIN muros de permisos, pero con:
-
-1. **Responsable en registros** — al crear prospecto/cita, guardar `responsable: user.id`
-   (el campo ya existe en el schema de Supabase)
-2. **Agenda personalizada** — filtro "Mis citas / Todas" en Agenda
-3. **Área activa** — dropdown en el nav para que cada consultor declare su área
-   (Tecnología / Ventas / Finanzas); afecta el foco de la agenda y herramientas
+- Dropdown en el nav: Tecnología / Ventas / Finanzas
+- Se guarda en `profiles.area` (columna ya existe)
+- Afecta el foco de la agenda y las herramientas del consultor
 
 ---
 
