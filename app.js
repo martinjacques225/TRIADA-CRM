@@ -21,6 +21,7 @@ import * as ModAgenda        from './modules/agenda/agenda.js';
 import * as ModPropuestas    from './modules/propuestas/propuestas.js';
 import * as ModInformes      from './modules/informes/informes.js';
 import * as ModConfig        from './modules/configuracion/configuracion.js';
+import * as ModFacturacion   from './modules/facturacion/facturacion.js';
 
 import {
   closeModal,
@@ -28,6 +29,8 @@ import {
   openDiagnosticoModal,
   openCitaModal, openCitaModalForProspecto,
   openPropuestaModal, openPropuestaModalForProspecto,
+  openFacturaModal, editFactura, deleteFactura,
+  convertirACliente,
   deleteProspecto, deleteCita, deletePropuesta,
 } from './modules/modals/modals.js';
 import { openInformeViewer } from './modules/informe-ejecutivo/informe.view.js';
@@ -38,7 +41,8 @@ const NAV_ITEMS = [
   { id: 'pipeline',     icon: _icoPipe(),    label: 'Pipeline' },
   { id: 'diagnosticos', icon: _icoDiag(),    label: 'Diagnósticos' },
   { id: 'agenda',       icon: _icoAgenda(),  label: 'Agenda' },
-  { id: 'propuestas',   icon: _icoProp(),    label: 'Propuestas' },
+  { id: 'propuestas',   icon: _icoProp(),     label: 'Propuestas' },
+  { id: 'facturacion',  icon: _icoFactura(), label: 'Facturación' },
   { id: 'informes',     icon: _icoChart(),   label: 'Informes' },
   { id: 'config',       icon: _icoConfig(),  label: 'Configuración' },
 ];
@@ -58,6 +62,7 @@ async function refreshCenter() {
     diagnosticos: ModDiagnosticos.render,
     agenda:       ModAgenda.render,
     propuestas:   ModPropuestas.render,
+    facturacion:  ModFacturacion.render,
     informes:     ModInformes.render,
     config:       ModConfig.render,
   };
@@ -92,9 +97,9 @@ export async function renderNav() {
     <div class="nav-section-label">Principal</div>
     ${NAV_ITEMS.slice(0,2).map(i=>_navItem(i,badges)).join('')}
     <div class="nav-section-label">Gestión</div>
-    ${NAV_ITEMS.slice(2,5).map(i=>_navItem(i,badges)).join('')}
+    ${NAV_ITEMS.slice(2,6).map(i=>_navItem(i,badges)).join('')}
     <div class="nav-section-label">Análisis</div>
-    ${NAV_ITEMS.slice(5).map(i=>_navItem(i,badges)).join('')}
+    ${NAV_ITEMS.slice(6).map(i=>_navItem(i,badges)).join('')}
     <div style="padding:8px 14px 6px;border-top:1px solid var(--border);margin-top:4px">
       <div style="font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--text3);margin-bottom:6px">Área activa</div>
       <div style="display:flex;gap:3px">
@@ -170,6 +175,8 @@ async function init() {
     openPropuestaModal, openPropuestaModalForProspecto,
     editCita:      (id) => openCitaModal(id),
     editPropuesta: (id) => openPropuestaModal(id),
+    openFacturaModal, editFactura, deleteFactura,
+    convertirACliente,
     deleteProspecto, deleteCita, deletePropuesta,
     openInformeEjecutivo: async (diagId) => {
       const diag = await diagnosticos.get(diagId);
@@ -249,6 +256,7 @@ function _icoDiag()   { return `<svg viewBox="0 0 20 20" fill="currentColor"><pa
 function _icoAgenda() { return `<svg viewBox="0 0 20 20" fill="currentColor"><path d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z"/></svg>`; }
 function _icoProp()   { return `<svg viewBox="0 0 20 20" fill="currentColor"><path d="M9 2a2 2 0 00-2 2v8a2 2 0 002 2h6a2 2 0 002-2V6.414A2 2 0 0016.414 5L14 2.586A2 2 0 0012.586 2H9z"/><path d="M3 8a2 2 0 012-2v10h8a2 2 0 01-2 2H5a2 2 0 01-2-2V8z"/></svg>`; }
 function _icoChart()  { return `<svg viewBox="0 0 20 20" fill="currentColor"><path d="M2 11a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 01-1 1H3a1 1 0 01-1-1v-5zm6-4a1 1 0 011-1h2a1 1 0 011 1v9a1 1 0 01-1 1H9a1 1 0 01-1-1V7zm6-3a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1h-2a1 1 0 01-1-1V4z"/></svg>`; }
-function _icoConfig() { return `<svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clip-rule="evenodd"/></svg>`; }
+function _icoConfig()   { return `<svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clip-rule="evenodd"/></svg>`; }
+function _icoFactura()  { return `<svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z" clip-rule="evenodd"/></svg>`; }
 
 document.addEventListener('DOMContentLoaded', init);

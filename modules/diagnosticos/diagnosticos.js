@@ -53,7 +53,7 @@ function _diagCard(d, p) {
     <div class="diag-card-head">
       <div>
         <div style="font-size:16px;font-weight:700;color:var(--navy)">${escHtml(p?.nombre || 'Prospecto eliminado')}</div>
-        <div style="font-size:13px;color:var(--text3)">${escHtml(p?.empresa||'')} · ${formatDate(d.fecha)}</div>
+        <div style="font-size:13px;color:var(--text3)">${escHtml(p?.empresa||'')} · ${formatDate(d.fecha)}${d.correlativo ? ` · <span style="font-weight:600">${escHtml(d.correlativo)}</span>` : ''}</div>
       </div>
       <div class="diag-overall" style="border-color:${oc};color:${oc}">
         <div class="diag-overall-val">${overall}%</div>

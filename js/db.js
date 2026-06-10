@@ -31,6 +31,7 @@ function leadFromSupa(row) {
   if (!row) return null;
   return {
     id:                 row.id,
+    correlativo:        row.correlativo,
     nombre:             row.nombre,
     empresa:            row.empresa,
     rut:                row.rut,
@@ -114,6 +115,7 @@ function diagFromSupa(row) {
   const sc = row.scores || {};
   return {
     id:             row.id,
+    correlativo:    row.correlativo,
     prospectoId:    row.lead_id,
     scoresTec:      sc.tecnologia  || [],
     scoresVentas:   sc.ventas      || [],
@@ -242,6 +244,7 @@ function propFromSupa(row) {
   if (!row) return null;
   return {
     id:          row.id,
+    correlativo: row.correlativo,
     prospectoId: row.lead_id,
     servicios:   row.servicios,
     valor:       row.valor,
@@ -292,6 +295,110 @@ export const propuestas = {
   byEstado:    async (est) => {
     const { data, error } = await supabase.from('propuestas').select('*').eq('estado', est).order('created_at', { ascending: false });
     _throw(error); return data.map(propFromSupa);
+  },
+};
+
+// ─── CLIENTES ────────────────────────────────────────────────
+function clienteFromSupa(row) {
+  if (!row) return null;
+  return {
+    id:        row.id,
+    leadId:    row.lead_id,
+    nombre:    row.nombre,
+    empresa:   row.empresa,
+    rut:       row.rut,
+    email:     row.email,
+    telefono:  row.telefono,
+    fechaAlta: row.created_at,
+  };
+}
+
+function clienteToSupa(data) {
+  return clean({
+    lead_id:  data.leadId,
+    nombre:   data.nombre,
+    empresa:  data.empresa,
+    rut:      data.rut,
+    email:    data.email,
+    telefono: data.telefono,
+  });
+}
+
+export const clientes = {
+  getAll: async () => {
+    const { data, error } = await supabase.from('clientes').select('*').order('created_at', { ascending: false });
+    _throw(error); return data.map(clienteFromSupa);
+  },
+  get: async (id) => {
+    const { data, error } = await supabase.from('clientes').select('*').eq('id', id).single();
+    _throw(error); return clienteFromSupa(data);
+  },
+  getByLead: async (leadId) => {
+    const { data, error } = await supabase.from('clientes').select('*').eq('lead_id', leadId);
+    _throw(error); return data.map(clienteFromSupa);
+  },
+  add: async (data) => {
+    const { data: row, error } = await supabase.from('clientes').insert(clienteToSupa(data)).select('id').single();
+    _throw(error); return row.id;
+  },
+  delete: async (id) => {
+    const { error } = await supabase.from('clientes').delete().eq('id', id);
+    _throw(error);
+  },
+};
+
+// ─── FACTURAS ────────────────────────────────────────────────
+function facturaFromSupa(row) {
+  if (!row) return null;
+  return {
+    id:           row.id,
+    correlativo:  row.correlativo,
+    leadId:       row.lead_id,
+    propuestaId:  row.propuesta_id,
+    monto:        row.monto,
+    estado:       row.estado,
+    fechaEmision: row.fecha_emision,
+    notas:        row.notas,
+    fechaCreacion: row.created_at,
+  };
+}
+
+function facturaToSupa(data) {
+  return clean({
+    lead_id:      data.leadId,
+    propuesta_id: data.propuestaId,
+    monto:        data.monto,
+    estado:       data.estado || 'Pendiente',
+    fecha_emision: data.fechaEmision,
+    notas:        data.notas,
+  });
+}
+
+export const facturas = {
+  getAll: async () => {
+    const { data, error } = await supabase.from('facturas').select('*').order('created_at', { ascending: false });
+    _throw(error); return data.map(facturaFromSupa);
+  },
+  get: async (id) => {
+    const { data, error } = await supabase.from('facturas').select('*').eq('id', id).single();
+    _throw(error); return facturaFromSupa(data);
+  },
+  add: async (data) => {
+    const { data: row, error } = await supabase.from('facturas').insert(facturaToSupa(data)).select('id').single();
+    _throw(error); return row.id;
+  },
+  update: async (data) => {
+    const { id, ...rest } = data;
+    const { error } = await supabase.from('facturas').update(facturaToSupa(rest)).eq('id', id);
+    _throw(error);
+  },
+  delete: async (id) => {
+    const { error } = await supabase.from('facturas').delete().eq('id', id);
+    _throw(error);
+  },
+  byLead: async (leadId) => {
+    const { data, error } = await supabase.from('facturas').select('*').eq('lead_id', leadId).order('created_at', { ascending: false });
+    _throw(error); return data.map(facturaFromSupa);
   },
 };
 

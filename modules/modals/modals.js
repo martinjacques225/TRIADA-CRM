@@ -1,10 +1,11 @@
 // modules/modals/modals.js
-import { prospectos, diagnosticos, citas, propuestas } from '../../js/db.js';
-import { escHtml, PIPELINE_STAGES, RUBROS, TAMANOS, DOLORES, ORIGENES, todayStr, toast } from '../../js/utils.js';
+import { prospectos, diagnosticos, citas, propuestas, clientes, facturas } from '../../js/db.js';
+import { escHtml, PIPELINE_STAGES, RUBROS, TAMANOS, DOLORES, ORIGENES, todayStr, toast, formatCLP } from '../../js/utils.js';
 import { attachFormatting, validateRut, validateEmail } from '../../js/format.js';
 import { renderCitaModal } from '../agenda/agenda.js';
 import { renderPropuestaModal } from '../propuestas/propuestas.js';
 import { renderDiagnosticoModal } from '../diagnosticos/diagnosticos.js';
+import { renderFacturaModal } from '../facturacion/facturacion.js';
 
 function _openModal(title, size = '') {
   document.getElementById('modalTitle').textContent = title;
@@ -95,8 +96,9 @@ export async function openProspectoModal(id = null) {
 export async function openProspectoDetail(id) {
   const p = await prospectos.get(id);
   if (!p) return;
-  const [diags, todasC, todasProp] = await Promise.all([
-    diagnosticos.byProspecto(id), citas.byProspecto(id), propuestas.byProspecto(id)
+  const [diags, todasC, todasProp, clienteExistente] = await Promise.all([
+    diagnosticos.byProspecto(id), citas.byProspecto(id),
+    propuestas.byProspecto(id), clientes.getByLead(id),
   ]);
 
   _openModal(`Ficha: ${p.nombre}`, 'lg');
@@ -104,13 +106,17 @@ export async function openProspectoDetail(id) {
   document.getElementById('modalCancel').textContent = 'Cerrar';
 
   const st = PIPELINE_STAGES.find(s=>s.id===p.estado) || PIPELINE_STAGES[0];
+  const tieneClienteFicha = clienteExistente && clienteExistente.length > 0;
 
   const body = document.getElementById('modalBody');
   body.innerHTML = `
     <div style="display:flex;gap:14px;align-items:flex-start;margin-bottom:18px;flex-wrap:wrap">
       <div style="width:56px;height:56px;border-radius:50%;background:${st.color};color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:22px;flex-shrink:0">${(p.nombre||'?')[0].toUpperCase()}</div>
       <div style="flex:1">
-        <div style="font-size:20px;font-weight:800;color:var(--navy)">${escHtml(p.nombre)}</div>
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+          <div style="font-size:20px;font-weight:800;color:var(--navy)">${escHtml(p.nombre)}</div>
+          ${p.correlativo ? `<span style="font-size:11px;font-weight:700;color:var(--text3);background:var(--surface2);padding:2px 8px;border-radius:980px;letter-spacing:.04em">${escHtml(p.correlativo)}</span>` : ''}
+        </div>
         <div style="font-size:14px;color:var(--text3)">${escHtml(p.empresa||'')}${p.rubro?' · '+p.rubro:''}</div>
         <div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap">
           <span class="badge" style="color:${st.color};background:${st.bg};border-color:${st.color}">${st.icon} ${st.id}</span>
@@ -128,11 +134,17 @@ export async function openProspectoDetail(id) {
     </div>
     ${p.notas?`<div style="background:var(--surface2);border-radius:8px;padding:12px;font-size:13.5px;color:var(--text2);margin-bottom:16px"><em>${escHtml(p.notas)}</em></div>`:''}
 
-    <div style="display:flex;gap:10px;margin-bottom:18px;flex-wrap:wrap">
+    <div style="display:flex;gap:8px;margin-bottom:18px;flex-wrap:wrap">
       <button class="btn btn-primary btn-sm" onclick="window._app.openDiagnosticoModal('${p.id}')">+ Diagnóstico</button>
       <button class="btn btn-ghost btn-sm" onclick="window._app.openCitaModalForProspecto('${p.id}')">+ Cita</button>
       <button class="btn btn-ghost btn-sm" onclick="window._app.openPropuestaModalForProspecto('${p.id}')">+ Propuesta</button>
+      <button class="btn btn-ghost btn-sm" onclick="window._app.openFacturaModal('${p.id}')">+ Factura</button>
       <button class="btn btn-ghost btn-sm" onclick="window._app.compartirDiag('${p.id}','${escHtml(p.empresa||p.nombre)}')" title="Copiar enlace del formulario 360 para el cliente">🔗 Compartir 360</button>
+      ${p.estado === 'Cliente'
+        ? tieneClienteFicha
+          ? `<span style="font-size:12px;color:var(--green);align-self:center">✓ Ficha de cliente creada</span>`
+          : `<button class="btn btn-ghost btn-sm" onclick="window._app.convertirACliente('${p.id}')">👤 Crear ficha de cliente</button>`
+        : ''}
     </div>
 
     <h4 style="font-size:14px;font-weight:700;color:var(--navy);margin-bottom:10px">Diagnósticos (${diags.length})</h4>
@@ -145,7 +157,7 @@ export async function openProspectoDetail(id) {
         };
         return `<div style="background:var(--surface2);border-radius:10px;padding:12px;margin-bottom:8px;font-size:13px">
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
-            <div style="font-weight:600;color:var(--navy)">${new Date(d.fecha).toLocaleDateString('es-CL')}</div>
+            <div style="font-weight:600;color:var(--navy)">${new Date(d.fecha).toLocaleDateString('es-CL')}${d.correlativo?` · <span style="font-size:11px;color:var(--text3);font-weight:700">${escHtml(d.correlativo)}</span>`:''}</div>
             <button class="btn btn-navy btn-sm" onclick="window._app.openInformeEjecutivo('${d.id}')">📄 Informe 360</button>
           </div>
           <div style="display:flex;gap:14px">
@@ -164,10 +176,27 @@ export async function openProspectoDetail(id) {
 
     <h4 style="font-size:14px;font-weight:700;color:var(--navy);margin:14px 0 10px">Propuestas (${todasProp.length})</h4>
     ${todasProp.length===0?`<p style="font-size:13px;color:var(--text3)">Sin propuestas.</p>`:
-      todasProp.map(prop=>`<div style="font-size:13px;padding:8px 0;border-bottom:1px solid var(--border);display:flex;justify-content:space-between">
-        <span>${(prop.servicios||[]).slice(0,2).join(', ')||'—'}</span>
-        <span style="font-weight:700;color:var(--navy)">${prop.valor?'$'+Number(prop.valor).toLocaleString('es-CL'):'—'} · ${prop.estado}</span>
-      </div>`).join('')}
+      todasProp.map(prop => {
+        const items = Array.isArray(prop.servicios)
+          ? (typeof prop.servicios[0] === 'string' ? prop.servicios : prop.servicios.map(it => it.descripcion || '—'))
+          : [];
+        const desc = items.slice(0, 2).join(', ') || '—';
+        return `<div style="font-size:13px;padding:10px 0;border-bottom:1px solid var(--border)">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px">
+            <div>
+              ${prop.correlativo ? `<div style="font-size:11px;font-weight:700;color:var(--text3);margin-bottom:3px">${escHtml(prop.correlativo)}</div>` : ''}
+              <span style="color:var(--text2)">${escHtml(desc)}${items.length > 2 ? ` +${items.length-2} más` : ''}</span>
+            </div>
+            <div style="text-align:right;flex-shrink:0">
+              <div style="font-weight:700;color:var(--navy)">${prop.valor ? formatCLP(prop.valor) : '—'}</div>
+              <div style="font-size:12px;color:var(--text3)">${escHtml(prop.estado)}</div>
+            </div>
+          </div>
+          ${prop.estado === 'Aceptada'
+            ? `<button class="btn btn-ghost btn-sm" style="margin-top:6px;font-size:12px" onclick="window._app.openFacturaModal('${p.id}','${prop.id}')">🧾 Crear factura</button>`
+            : ''}
+        </div>`;
+      }).join('')}
   `;
 
   window.closeModal = closeModal;
@@ -178,13 +207,11 @@ export async function openDiagnosticoModal(prospectoId) {
   _openModal(`Diagnóstico 360 — ${p?.nombre || 'Prospecto'}`, 'lg');
   renderDiagnosticoModal(prospectoId, async (newDiagId) => {
     closeModal();
-    // advance prospecto stage if still Nuevo/Contactado
     if (p && (p.estado === 'Nuevo' || p.estado === 'Contactado' || p.estado === 'Diagnóstico Agendado')) {
       await prospectos.update({ ...p, estado: 'Diagnóstico Realizado' });
     }
     toast('Diagnóstico guardado · generando informe…', 'success');
     await window._app?.refreshView?.();
-    // Generar y abrir el Informe Ejecutivo automáticamente
     if (newDiagId) setTimeout(() => window._app?.openInformeEjecutivo?.(newDiagId), 400);
   });
 }
@@ -200,22 +227,65 @@ export async function openCitaModalForProspecto(prospectoId) {
   const allP = await prospectos.getAll();
   const p = allP.find(x=>x.id===prospectoId);
   _openModal(`Nueva cita — ${p?.nombre||''}`);
-  const fakeCita = { prospectoId };
-  renderCitaModal(allP, () => { closeModal(); toast('Cita creada','success'); window._app?.refreshView?.(); }, fakeCita);
+  renderCitaModal(allP, () => { closeModal(); toast('Cita creada','success'); window._app?.refreshView?.(); }, { prospectoId });
 }
 
 export async function openPropuestaModal(id = null) {
   const existing = id ? await propuestas.get(id) : null;
   const allP = await prospectos.getAll();
-  _openModal(existing ? 'Editar propuesta' : 'Nueva propuesta');
+  _openModal(existing ? 'Editar propuesta' : 'Nueva propuesta', 'lg');
   renderPropuestaModal(allP, () => { closeModal(); toast(existing?'Propuesta actualizada':'Propuesta creada','success'); window._app?.refreshView?.(); }, existing);
 }
 
 export async function openPropuestaModalForProspecto(prospectoId) {
   const allP = await prospectos.getAll();
   const p = allP.find(x=>x.id===prospectoId);
-  _openModal(`Nueva propuesta — ${p?.nombre||''}`);
+  _openModal(`Nueva propuesta — ${p?.nombre||''}`, 'lg');
   renderPropuestaModal(allP, () => { closeModal(); toast('Propuesta creada','success'); window._app?.refreshView?.(); }, { prospectoId });
+}
+
+export async function openFacturaModal(leadId = null, propuestaId = null) {
+  const [allP, allProp] = await Promise.all([prospectos.getAll(), propuestas.getAll()]);
+  _openModal('Nueva factura');
+  const fakeFact = {};
+  if (leadId)     fakeFact.leadId     = leadId;
+  if (propuestaId) fakeFact.propuestaId = propuestaId;
+  renderFacturaModal(allP, allProp, () => {
+    closeModal();
+    toast('Factura creada', 'success');
+    window._app?.refreshView?.();
+  }, Object.keys(fakeFact).length ? fakeFact : null);
+}
+
+export async function editFactura(id) {
+  const existing = await facturas.get(id);
+  const [allP, allProp] = await Promise.all([prospectos.getAll(), propuestas.getAll()]);
+  _openModal('Editar factura');
+  renderFacturaModal(allP, allProp, () => {
+    closeModal();
+    toast('Factura actualizada', 'success');
+    window._app?.refreshView?.();
+  }, existing);
+}
+
+export async function convertirACliente(leadId) {
+  const p = await prospectos.get(leadId);
+  if (!p) { toast('Prospecto no encontrado', 'error'); return; }
+  const existing = await clientes.getByLead(leadId);
+  if (existing && existing.length > 0) {
+    toast('Este prospecto ya tiene ficha de cliente', 'info');
+    return;
+  }
+  await clientes.add({
+    leadId,
+    nombre:   p.nombre,
+    empresa:  p.empresa,
+    rut:      p.rut,
+    email:    p.email,
+    telefono: p.telefono,
+  });
+  toast(`Cliente "${p.nombre}" creado exitosamente`, 'success');
+  window._app?.refreshView?.();
 }
 
 export async function deleteProspecto(id) {
@@ -236,5 +306,12 @@ export async function deletePropuesta(id) {
   if (!confirm('¿Eliminar esta propuesta?')) return;
   await propuestas.delete(id);
   toast('Propuesta eliminada', 'info');
+  window._app?.refreshView?.();
+}
+
+export async function deleteFactura(id) {
+  if (!confirm('¿Eliminar esta factura?')) return;
+  await facturas.delete(id);
+  toast('Factura eliminada', 'info');
   window._app?.refreshView?.();
 }

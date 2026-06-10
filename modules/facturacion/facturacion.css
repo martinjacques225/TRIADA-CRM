@@ -1,0 +1,5 @@
+/* modules/facturacion/facturacion.css */
+.fact-estado-Pendiente { color: var(--amber);   background: var(--amber-l);   border-color: var(--amber); }
+.fact-estado-Enviada   { color: var(--primary); background: var(--primary-l); border-color: var(--primary); }
+.fact-estado-Pagada    { color: var(--green);   background: var(--green-l);   border-color: var(--green); }
+.fact-estado-Vencida   { color: var(--danger);  background: var(--danger-l);  border-color: var(--danger); }

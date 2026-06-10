@@ -96,7 +96,7 @@ function _attachKanbanDnD() {
     col.addEventListener('dragleave', lo);
     col.addEventListener('drop', async e => {
       e.preventDefault(); lo();
-      const id = +e.dataTransfer.getData('text/plain');
+      const id = e.dataTransfer.getData('text/plain');
       const stage = col.dataset.stage;
       if (!id || !stage) return;
       const p = await prospectos.get(id);
@@ -143,6 +143,7 @@ function _prospectCard(p, st) {
       <div style="min-width:0;flex:1">
         <div class="prospect-name" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escHtml(p.nombre||'Sin nombre')}</div>
         <div class="prospect-empresa">${escHtml(p.empresa||p.rubro||'—')}</div>
+        ${p.correlativo ? `<div style="font-size:10.5px;color:var(--text3);font-weight:600;letter-spacing:.04em;margin-top:1px">${escHtml(p.correlativo)}</div>` : ''}
       </div>
     </div>
     <div class="prospect-meta">
