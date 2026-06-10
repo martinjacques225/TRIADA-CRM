@@ -39,41 +39,13 @@
 
 ---
 
-## 🔴 PENDIENTE INMEDIATO (setup manual, sin esto no funciona el login)
+## ✅ SETUP COMPLETO
 
-```
-1. Ir a: https://supabase.com/dashboard/project/pqrjndirqtucoumijben/auth/users
-   → "Add user" → Enter user  (Email: tu email real, Contraseña: segura)
-
-2. SQL Editor → New query:
-   update profiles set role = 'admin', nombre = 'Martín'
-   where email = 'TU_EMAIL_AQUI';
-
-3. Abrir https://martinjacques225.github.io/TRIADA-CRM/
-   → debe aparecer pantalla de login → entrar → verificar que funciona
-```
-
----
-
-## ✅ HECHO ESTA SESIÓN (multi-usuario light + funnel)
-
-- Filtro "Mis citas / Todas" en Agenda ✅
-- Área activa (Tecnología / Ventas / Finanzas) en el nav ✅ — persiste en `profiles.area`
-- Página pública `diagnostico-publico.html` ✅ — cliente llena el 360 sin login
-- Botón "🔗 Compartir 360" en ficha del prospecto ✅
-
----
-
-## 🔴 SQL PENDIENTE EN SUPABASE (sin esto el cliente no puede enviar el diagnóstico)
-
-Ejecutar en **SQL Editor → New query**:
-
-```sql
--- Permite al cliente (anon) insertar su diagnóstico desde la URL pública
-CREATE POLICY "diagnosticos_public_ins" ON diagnosticos
-  FOR INSERT TO anon
-  WITH CHECK (lead_id IS NOT NULL);
-```
+- Usuario admin creado en Supabase Auth ✅
+- `profiles.role = 'admin'` ejecutado ✅
+- `diagnosticos_public_ins` policy creada ✅
+- Login en https://martinjacques225.github.io/TRIADA-CRM/ **funcionando** ✅
+- Formulario público del cliente (`diagnostico-publico.html`) **funcionando** ✅
 
 ---
 
