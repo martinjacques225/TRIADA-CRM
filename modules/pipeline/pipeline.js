@@ -1,21 +1,22 @@
 // modules/pipeline/pipeline.js
 import { prospectos, diagnosticos } from '../../js/db.js';
 import { S } from '../../js/state.js';
-import { escHtml, formatDate, PIPELINE_STAGES, stageBadge, RUBROS } from '../../js/utils.js';
+import { escHtml, formatDate, PIPELINE_STAGES, stageBadge, stageIcon, RUBROS } from '../../js/utils.js';
 
 let _all = [];
 let _prosConDiag = new Set();
 
 const _BADGE_STAGES = new Set(['Diagnóstico Agendado','Diagnóstico Realizado','Propuesta Enviada','Negociando','Cliente']);
 
+const _li = (n) => (window.icon ? window.icon(n) : '');
 const _ico = {
-  search: `<svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd"/></svg>`,
-  kanban: `<svg viewBox="0 0 20 20" fill="currentColor"><path d="M2 4a1 1 0 011-1h5a1 1 0 011 1v12a1 1 0 01-1 1H3a1 1 0 01-1-1V4zm7 0a1 1 0 011-1h5a1 1 0 011 1v7a1 1 0 01-1 1h-5a1 1 0 01-1-1V4z"/></svg>`,
-  list:   `<svg viewBox="0 0 20 20" fill="currentColor"><path d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z"/></svg>`,
-  phone:  `<svg viewBox="0 0 20 20" fill="currentColor"><path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z"/></svg>`,
-  diag:   `<svg viewBox="0 0 20 20" fill="currentColor"><path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z"/><path fill-rule="evenodd" d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3zm-3 4a1 1 0 100 2h.01a1 1 0 100-2H7zm3 0a1 1 0 100 2h3a1 1 0 100-2h-3z" clip-rule="evenodd"/></svg>`,
-  edit:   `<svg viewBox="0 0 20 20" fill="currentColor"><path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z"/></svg>`,
-  trash:  `<svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>`,
+  search: _li('search'),
+  kanban: _li('kanban'),
+  list:   _li('list'),
+  phone:  _li('phone'),
+  diag:   _li('diag'),
+  edit:   _li('pencil'),
+  trash:  _li('trash'),
 };
 
 export async function render() {
@@ -49,7 +50,7 @@ export async function render() {
       ${PIPELINE_STAGES.filter(s=>s.id!=='Descartado').map(st=>{
         const cnt = all.filter(p=>p.estado===st.id).length;
         return `<div class="pipe-stat${S.searchEstado===st.id?' active':''}" data-stage="${st.id}" style="border-top:3px solid ${st.color}">
-          <div class="pipe-stat-icon">${st.icon}</div>
+          <div class="pipe-stat-icon" style="color:${st.color}">${stageIcon(st.id,18)}</div>
           <div class="pipe-stat-cnt" style="color:${st.color}">${cnt}</div>
           <div class="pipe-stat-lbl">${st.id}</div>
         </div>`;
@@ -75,7 +76,7 @@ export async function render() {
 
 function _buildResults(all, filtered) {
   if (filtered.length === 0 && all.length === 0) {
-    return `<div class="empty-state"><div class="empty-icon">🎯</div><h3>Sin prospectos aún</h3><p>Agrega tu primer prospecto o importa leads desde el landing.</p><button class="btn btn-primary" onclick="window._app.openProspectoModal()">+ Agregar prospecto</button></div>`;
+    return `<div class="empty-state"><div class="empty-icon">${window.icon?window.icon('target'):''}</div><h3>Sin prospectos aún</h3><p>Agrega tu primer prospecto o importa leads desde el landing.</p><button class="btn btn-primary" onclick="window._app.openProspectoModal()">+ Agregar prospecto</button></div>`;
   }
   return S.pipelineView === 'kanban' ? _buildKanban(all, filtered) : _buildList(filtered);
 }
@@ -126,7 +127,7 @@ function _buildKanban(all, filtered) {
       const cards = filtered.filter(p => p.estado === st.id);
       return `<div class="kanban-col" data-stage="${st.id}">
         <div class="kanban-col-head" style="border-top:3px solid ${st.color}">
-          <span class="col-icon">${st.icon}</span>
+          <span class="col-icon" style="color:${st.color}">${stageIcon(st.id,17)}</span>
           <span class="col-title">${st.id}</span>
           <span class="col-count" style="color:${st.color}">${cards.length}</span>
         </div>
@@ -155,7 +156,7 @@ function _prospectCard(p, st) {
       ${p.rubro ? `<span class="prospect-meta-chip">${escHtml(p.rubro)}</span>` : ''}
       ${p.tamano ? `<span class="prospect-meta-chip">${escHtml(p.tamano)} trabaj.</span>` : ''}
       ${dolorChip}
-      ${_BADGE_STAGES.has(p.estado) && !_prosConDiag.has(p.id) ? `<span class="prospect-meta-chip" style="background:var(--amber-l);color:var(--amber);border:1px solid var(--amber)">📋 360 pendiente</span>` : ''}
+      ${_BADGE_STAGES.has(p.estado) && !_prosConDiag.has(p.id) ? `<span class="prospect-meta-chip" style="background:var(--amber-l);color:var(--amber);border:1px solid var(--amber);display:inline-flex;align-items:center;gap:4px">${window.icon?window.icon('clipCheck','',12):''} 360 pendiente</span>` : ''}
     </div>
     <div class="prospect-actions">
       ${p.telefono ? `<button class="btn-action" onclick="window._app.callProspecto('${p.id}')" title="Llamar">${_ico.phone}</button>` : ''}
@@ -167,7 +168,7 @@ function _prospectCard(p, st) {
 }
 
 function _buildList(list) {
-  if (list.length === 0) return `<div class="empty-state"><div class="empty-icon">🔍</div><h3>Sin resultados</h3><p>Prueba con otros filtros.</p></div>`;
+  if (list.length === 0) return `<div class="empty-state"><div class="empty-icon">${window.icon?window.icon('search'):''}</div><h3>Sin resultados</h3><p>Prueba con otros filtros.</p></div>`;
   return `<div class="card" style="overflow:hidden">
     <table class="data-table">
       <thead>

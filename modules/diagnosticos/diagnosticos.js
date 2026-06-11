@@ -1,6 +1,8 @@
 // modules/diagnosticos/diagnosticos.js
 import { diagnosticos, prospectos } from '../../js/db.js';
-import { escHtml, formatDate, DIAG_AREAS, DIAG_PREGUNTAS, toast } from '../../js/utils.js';
+import { escHtml, formatDate, DIAG_AREAS, DIAG_PREGUNTAS, areaIcon, toast } from '../../js/utils.js';
+
+const _i = (n, s) => (window.icon ? window.icon(n, '', s) : '');
 
 export async function render() {
   const [todos, todosP] = await Promise.all([diagnosticos.getAll(), prospectos.getAll()]);
@@ -17,7 +19,7 @@ export async function render() {
 
     ${todos.length === 0
       ? `<div class="empty-state">
-          <div class="empty-icon">🔍</div>
+          <div class="empty-icon">${_i('diag')}</div>
           <h3>Sin diagnósticos aún</h3>
           <p>Realiza un Diagnóstico 360 con un prospecto para ver resultados de Tecnología, Ventas y Finanzas.</p>
           <button class="btn btn-primary" onclick="window._app.openNuevoDiagnostico()">Iniciar diagnóstico</button>
@@ -29,9 +31,9 @@ export async function render() {
 }
 
 function _scoreColor(score) {
-  if (score >= 80) return '#4FB286';
-  if (score >= 50) return '#F0B429';
-  return '#E0604F';
+  if (score >= 80) return '#2E9B73';
+  if (score >= 50) return '#C2871A';
+  return '#C04F3F';
 }
 
 function _scoreLabel(score) {
@@ -65,16 +67,16 @@ function _diagCard(d, p) {
         const s = scores[a.id];
         const c = _scoreColor(s);
         return `<div class="diag-area-mini">
-          <div class="diag-area-mini-head">${a.icon} <span style="color:${c}">${a.label}</span></div>
+          <div class="diag-area-mini-head" style="display:flex;align-items:center;gap:7px"><span style="color:${a.color};display:inline-flex">${areaIcon(a.id,16)}</span><span style="color:${c}">${a.label}</span></div>
           <div class="score-bar" style="height:8px;margin:6px 0"><div class="score-fill" style="width:${s}%;background:${c}"></div></div>
           <div style="font-size:13px;font-weight:700;color:${c}">${s}%</div>
         </div>`;
       }).join('')}
     </div>
-    ${d.hallazgos?.length ? `<div class="diag-hallazgos"><span style="font-size:12px;font-weight:600;color:var(--text3);letter-spacing:.08em;text-transform:uppercase">Hallazgos clave</span><div style="margin-top:8px;display:flex;flex-wrap:wrap;gap:6px">${d.hallazgos.slice(0,3).map(h=>`<span style="font-size:12.5px;background:var(--amber-l);color:var(--amber);border:1px solid var(--amber);padding:3px 10px;border-radius:980px">⚠ ${escHtml(h)}</span>`).join('')}</div></div>` : ''}
+    ${d.hallazgos?.length ? `<div class="diag-hallazgos"><span style="font-size:12px;font-weight:600;color:var(--text3);letter-spacing:.08em;text-transform:uppercase">Hallazgos clave</span><div style="margin-top:8px;display:flex;flex-wrap:wrap;gap:6px">${d.hallazgos.slice(0,3).map(h=>`<span style="font-size:12.5px;background:var(--amber-l);color:var(--amber);border:1px solid var(--amber);padding:3px 10px;border-radius:980px;display:inline-flex;align-items:center;gap:5px">${_i('alert',12)} ${escHtml(h)}</span>`).join('')}</div></div>` : ''}
     <div class="diag-card-actions">
-      <button class="btn btn-navy btn-sm" onclick="window._app.openInformeEjecutivo('${d.id}')">📄 Ver Informe Ejecutivo 360</button>
-      <button class="btn btn-ghost btn-sm" onclick="window._app.compartirDiagPorArea('${d.id}')">📤 Compartir</button>
+      <button class="btn btn-navy btn-sm" onclick="window._app.openInformeEjecutivo('${d.id}')">${_i('fileText')} Ver Informe Ejecutivo 360</button>
+      <button class="btn btn-ghost btn-sm" onclick="window._app.compartirDiagPorArea('${d.id}')">${_i('share')} Compartir</button>
       <button class="btn btn-ghost btn-sm" onclick="window._app.deleteDiagnostico('${d.id}')" style="color:var(--danger)">Eliminar</button>
     </div>
   </div>`;
@@ -118,14 +120,14 @@ export function renderDiagnosticoModal(prospectoId, onSave) {
       const el = document.getElementById(`score_${area.id}`);
       const bar = document.getElementById(`bar_${area.id}`);
       if (el) el.textContent = s + '%';
-      if (bar) { bar.style.width = s + '%'; bar.style.background = s>=80?'#4FB286':s>=50?'#F0B429':'#E0604F'; }
+      if (bar) { bar.style.width = s + '%'; bar.style.background = s>=80?'#2E9B73':s>=50?'#C2871A':'#C04F3F'; }
     });
   }
 
   body.innerHTML = `
     <div style="display:flex;gap:16px;margin-bottom:18px;flex-wrap:wrap">
       ${DIAG_AREAS.map(a=>`<div style="flex:1;min-width:120px;background:var(--surface2);border-radius:10px;padding:12px;text-align:center">
-        <div style="font-size:18px;margin-bottom:4px">${a.icon}</div>
+        <div style="margin-bottom:4px;color:${a.color};display:flex;justify-content:center">${areaIcon(a.id,22)}</div>
         <div style="font-size:13px;font-weight:600;color:${a.color}">${a.label}</div>
         <div id="score_${a.id}" style="font-size:22px;font-weight:800;color:var(--navy);margin:4px 0">0%</div>
         <div class="score-bar"><div class="score-fill" id="bar_${a.id}" style="width:0;background:${a.color}"></div></div>
@@ -133,7 +135,7 @@ export function renderDiagnosticoModal(prospectoId, onSave) {
     </div>
     ${DIAG_AREAS.map(a=>`
       <div style="margin-bottom:18px">
-        <div style="font-size:14px;font-weight:700;color:var(--text);margin-bottom:10px;display:flex;align-items:center;gap:6px">${a.icon} ${a.label}</div>
+        <div style="font-size:14px;font-weight:700;color:var(--text);margin-bottom:10px;display:flex;align-items:center;gap:7px"><span style="color:${a.color};display:inline-flex">${areaIcon(a.id,17)}</span> ${a.label}</div>
         <div data-area="${a.id}"></div>
       </div>`).join('')}
     <div class="form-group" style="margin-top:8px">

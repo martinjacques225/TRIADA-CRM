@@ -79,10 +79,10 @@
 .aic-label { display: block; font-size: 12px; font-weight: 600; color: var(--text2); margin-bottom: 6px; letter-spacing: .04em; }
 .aic-textarea {
   width: 100%; padding: 11px 13px; border: 1px solid var(--border); border-radius: var(--radius-sm);
-  font-family: 'Inter', monospace; font-size: 12.5px; line-height: 1.5; color: var(--text);
+  font-family: ui-monospace, 'DM Mono', 'SF Mono', monospace; font-size: 12.5px; line-height: 1.5; color: var(--text);
   background: var(--surface2); resize: vertical; transition: var(--tr);
 }
-.aic-textarea:focus { outline: none; border-color: var(--primary); background: var(--surface); box-shadow: 0 0 0 3px rgba(2,128,144,.1); }
+.aic-textarea:focus { outline: none; border-color: var(--primary); background: var(--surface); box-shadow: 0 0 0 3px rgba(12,124,136,.1); }
 
 .aic-template-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 7px; }
 @media (max-width: 600px) { .aic-template-grid { grid-template-columns: repeat(2, 1fr); } }

@@ -1,6 +1,8 @@
 // modules/informes/informes.js
 import { prospectos, diagnosticos, propuestas, citas } from '../../js/db.js';
-import { PIPELINE_STAGES, RUBROS, DIAG_AREAS, formatCLP } from '../../js/utils.js';
+import { PIPELINE_STAGES, RUBROS, DIAG_AREAS, formatCLP, stageIcon, areaIcon } from '../../js/utils.js';
+
+const _i = (n, s) => (window.icon ? window.icon(n, '', s) : '');
 
 export async function render() {
   const [todos, todosD, todasP, todasC] = await Promise.all([
@@ -44,12 +46,12 @@ export async function render() {
     <div class="section-head"><h2>Informes y Analítica</h2></div>
 
     <div class="kpi-grid" style="margin-bottom:28px">
-      <div class="kpi-card"><div class="kpi-top"><span class="kpi-label">Total prospectos</span><span class="kpi-ic" style="background:var(--primary-l);color:var(--primary)">👥</span></div><div class="kpi-value">${todos.length}</div></div>
-      <div class="kpi-card"><div class="kpi-top"><span class="kpi-label">Tasa de conversión</span><span class="kpi-ic" style="background:var(--green-l);color:var(--green)">🎯</span></div><div class="kpi-value">${tasa}%</div><div class="kpi-sub">${clientes} clientes / ${todos.length} prospectos</div></div>
-      <div class="kpi-card"><div class="kpi-top"><span class="kpi-label">Valor cerrado</span><span class="kpi-ic" style="background:var(--amber-l);color:var(--amber)">💰</span></div><div class="kpi-value kpi-value-sm">${formatCLP(valorTotal)}</div></div>
-      <div class="kpi-card"><div class="kpi-top"><span class="kpi-label">Valor en pipeline</span><span class="kpi-ic" style="background:var(--violet-l);color:var(--violet)">📊</span></div><div class="kpi-value kpi-value-sm">${formatCLP(valorAbierto)}</div></div>
-      <div class="kpi-card"><div class="kpi-top"><span class="kpi-label">Diagnósticos realizados</span><span class="kpi-ic" style="background:var(--primary-l);color:var(--primary)">🔍</span></div><div class="kpi-value">${todosD.length}</div></div>
-      <div class="kpi-card"><div class="kpi-top"><span class="kpi-label">Citas realizadas</span><span class="kpi-ic" style="background:var(--navy-l);color:var(--navy)">📅</span></div><div class="kpi-value">${todasC.filter(c=>c.estado==='Realizada').length}</div></div>
+      <div class="kpi-card"><div class="kpi-top"><span class="kpi-label">Total prospectos</span><span class="kpi-ic" style="background:var(--primary-l);color:var(--primary)">${_i('users')}</span></div><div class="kpi-value">${todos.length}</div></div>
+      <div class="kpi-card"><div class="kpi-top"><span class="kpi-label">Tasa de conversión</span><span class="kpi-ic" style="background:var(--green-l);color:var(--green)">${_i('target')}</span></div><div class="kpi-value">${tasa}%</div><div class="kpi-sub">${clientes} clientes / ${todos.length} prospectos</div></div>
+      <div class="kpi-card"><div class="kpi-top"><span class="kpi-label">Valor cerrado</span><span class="kpi-ic" style="background:var(--amber-l);color:var(--amber)">${_i('coins')}</span></div><div class="kpi-value kpi-value-sm">${formatCLP(valorTotal)}</div></div>
+      <div class="kpi-card"><div class="kpi-top"><span class="kpi-label">Valor en pipeline</span><span class="kpi-ic" style="background:var(--violet-l);color:var(--violet)">${_i('informes')}</span></div><div class="kpi-value kpi-value-sm">${formatCLP(valorAbierto)}</div></div>
+      <div class="kpi-card"><div class="kpi-top"><span class="kpi-label">Diagnósticos realizados</span><span class="kpi-ic" style="background:var(--primary-l);color:var(--primary)">${_i('search')}</span></div><div class="kpi-value">${todosD.length}</div></div>
+      <div class="kpi-card"><div class="kpi-top"><span class="kpi-label">Citas realizadas</span><span class="kpi-ic" style="background:var(--navy-l);color:var(--navy)">${_i('calClock')}</span></div><div class="kpi-value">${todasC.filter(c=>c.estado==='Realizada').length}</div></div>
     </div>
 
     <div class="inf-grid">
@@ -60,7 +62,7 @@ export async function render() {
           ${byStage.filter(s=>s.id!=='Descartado').map((s,i,arr)=>{
             const w = total > 0 ? Math.max(30, Math.round(s.cnt/total*100)) : 30;
             return `<div class="inf-funnel-stage" style="background:${s.bg};border:1px solid ${s.color}22;width:${w}%">
-              <span style="font-size:12px;color:${s.color};font-weight:600">${s.icon} ${s.id}</span>
+              <span style="font-size:12px;color:${s.color};font-weight:600;display:inline-flex;align-items:center;gap:6px">${stageIcon(s.id,14)} ${s.id}</span>
               <span style="font-size:18px;font-weight:800;color:${s.color}">${s.cnt}</span>
             </div>`;
           }).join('')}
@@ -73,14 +75,14 @@ export async function render() {
         ${todosD.length === 0
           ? `<p style="color:var(--text3);font-size:13.5px;margin-top:12px">Realiza diagnósticos para ver estadísticas.</p>`
           : `<div style="margin-top:16px">
-              ${[{l:'🖥️ Tecnología',v:avgTec,c:'#5B6BD6'},{l:'📈 Ventas',v:avgVentas,c:'#028090'},{l:'💰 Finanzas',v:avgFinanzas,c:'#4FB286'}].map(a=>`
+              ${[{id:'tec',l:'Tecnología',v:avgTec,c:'#5160C0'},{id:'ventas',l:'Ventas',v:avgVentas,c:'#0C7C88'},{id:'finanzas',l:'Finanzas',v:avgFinanzas,c:'#2E9B73'}].map(a=>`
                 <div style="margin-bottom:16px">
                   <div style="display:flex;justify-content:space-between;margin-bottom:6px">
-                    <span style="font-size:13.5px;font-weight:600;color:var(--text)">${a.l}</span>
+                    <span style="font-size:13.5px;font-weight:600;color:var(--text);display:inline-flex;align-items:center;gap:7px">${areaIcon(a.id,15)} ${a.l}</span>
                     <span style="font-size:15px;font-weight:700;color:${a.c}">${a.v}%</span>
                   </div>
                   <div class="score-bar"><div class="score-fill" style="width:${a.v}%;background:${a.c}"></div></div>
-                  <div style="font-size:11.5px;color:var(--text3);margin-top:3px">${a.v>=80?'Maduro ✅':a.v>=50?'En desarrollo ⚠️':'Crítico 🚨'}</div>
+                  <div style="font-size:11.5px;color:var(--text3);margin-top:3px">${a.v>=80?'Maduro':a.v>=50?'En desarrollo':'Crítico'}</div>
                 </div>`).join('')}
             </div>`}
       </div>

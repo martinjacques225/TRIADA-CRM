@@ -87,15 +87,18 @@ export async function renderNav() {
   const nav = document.getElementById('nav');
   nav.innerHTML = `
     <a class="nav-brand" href="#" onclick="navigate('home');return false">
-      <svg width="26" height="26" viewBox="0 0 120 120" fill="none">
-        <path d="M26 90 L60 62 L94 90" stroke="#1E2761" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>
-        <path d="M26 73 L60 45 L94 73" stroke="#028090" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>
-        <path d="M26 56 L60 28 L94 56" stroke="#4FB286" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>
+      <svg class="brand-mark" width="30" height="30" viewBox="0 0 120 120" fill="none">
+        <path d="M26 90 L60 62 L94 90" stroke="var(--navy)"  stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M26 73 L60 45 L94 73" stroke="var(--teal)"  stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M26 56 L60 28 L94 56" stroke="var(--green)" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>
       </svg>
-      <span>TRÍADA <b style="font-weight:800;color:var(--primary)">CRM</b></span>
+      <span class="brand-text">
+        <span class="brand-name">Tríada</span>
+        <span class="brand-tag">Diagnóstico CRM</span>
+      </span>
     </a>
     <button class="nav-create" onclick="window._app.openProspectoModal()">
-      <svg viewBox="0 0 20 20" fill="currentColor"><path d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z"/></svg>
+      ${_ln('<path d="M12 5v14M5 12h14"/>')}
       Nuevo prospecto
     </button>
     <div class="nav-section-label">Principal</div>
@@ -108,10 +111,14 @@ export async function renderNav() {
     ${NAV_ITEMS.slice(7).map(i=>_navItem(i,badges)).join('')}
     <div style="padding:8px 14px 6px;border-top:1px solid var(--border);margin-top:4px">
       <div style="font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--text3);margin-bottom:6px">Área activa</div>
-      <div style="display:flex;gap:3px">
-        ${[['Tecnología','💻','Tec'],['Ventas','📈','Vnts'],['Finanzas','💰','Fin']].map(([a,icon,lbl]) => {
+      <div style="display:flex;gap:6px">
+        ${[
+          ['Tecnología','Tec','<rect x="6" y="6" width="12" height="12" rx="2"/><rect x="9.5" y="9.5" width="5" height="5" rx="1"/><path d="M9 2v2.5M15 2v2.5M9 19.5V22M15 19.5V22M2 9h2.5M2 15h2.5M19.5 9H22M19.5 15H22"/>'],
+          ['Ventas','Vnts','<path d="M3 17 9.5 10.5l4 4L21 7"/><path d="M15 7h6v6"/>'],
+          ['Finanzas','Fin','<ellipse cx="9" cy="7" rx="6" ry="3"/><path d="M3 7v5c0 1.7 2.7 3 6 3s6-1.3 6-3"/><path d="M9 12.9V17c0 1.7 2.7 3 6 3s6-1.3 6-3v-5c0-1.7-2.7-3-6-3"/>'],
+        ].map(([a,lbl,inner]) => {
           const sel = _profile?.area === a;
-          return `<button onclick="window._app.setArea('${a}')" style="flex:1;padding:6px 2px;font-size:11px;font-weight:600;border-radius:7px;border:1.5px solid ${sel?'var(--primary)':'var(--border)'};background:${sel?'rgba(2,128,144,.12)':'transparent'};color:${sel?'var(--primary)':'var(--text3)'};cursor:pointer;transition:all .15s;line-height:1.3">${icon}<br><span style="font-size:9.5px">${lbl}</span></button>`;
+          return `<button onclick="window._app.setArea('${a}')" style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;padding:9px 2px 7px;font-size:9.5px;font-weight:600;border-radius:9px;border:1px solid ${sel?'transparent':'var(--border)'};background:${sel?'var(--teal-l)':'transparent'};color:${sel?'var(--teal)':'var(--text3)'};cursor:pointer;transition:var(--tr);line-height:1.2"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${inner}</svg>${lbl}</button>`;
         }).join('')}
       </div>
     </div>
@@ -123,7 +130,7 @@ export async function renderNav() {
       </div>
     </a>
     <button onclick="window._app.signOut()" title="Cerrar sesión" style="display:flex;align-items:center;gap:7px;width:100%;padding:8px 16px;margin-top:2px;border:none;background:none;color:var(--text3);font-size:12.5px;cursor:pointer;border-radius:8px;transition:background .15s" onmouseover="this.style.background='var(--surface2)';this.style.color='var(--danger)'" onmouseout="this.style.background='none';this.style.color='var(--text3)'">
-      <svg viewBox="0 0 20 20" fill="currentColor" width="14" height="14"><path fill-rule="evenodd" d="M3 3a1 1 0 00-1 1v12a1 1 0 102 0V4a1 1 0 00-1-1zm10.293 9.293a1 1 0 001.414 1.414l3-3a1 1 0 000-1.414l-3-3a1 1 0 10-1.414 1.414L14.586 9H7a1 1 0 100 2h7.586l-1.293 1.293z" clip-rule="evenodd"/></svg>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" width="15" height="15" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg>
       Cerrar sesión
     </button>`;
 }
@@ -148,6 +155,8 @@ async function init() {
 
   const theme = await config.get('theme') || 'light';
   document.documentElement.setAttribute('data-theme', theme);
+  const density = await config.get('density') || 'comfortable';
+  document.documentElement.setAttribute('data-density', density);
 
   // Modal close
   document.getElementById('modalClose').addEventListener('click', closeModal);
@@ -207,6 +216,14 @@ async function init() {
       if (p?.telefono) window.open(`tel:${p.telefono}`);
     },
     setArea: _setArea,
+    setDensity: async (d) => {
+      document.documentElement.setAttribute('data-density', d);
+      await config.set('density', d);
+    },
+    setTheme: async (t) => {
+      document.documentElement.setAttribute('data-theme', t);
+      await config.set('theme', t);
+    },
     compartirDiagPorArea: async (diagId) => {
       const diag = await diagnosticos.get(diagId);
       if (!diag) { toast('Diagnóstico no encontrado', 'error'); return; }
@@ -317,15 +334,16 @@ function _openSimpleModal(title, bodyHtml, onSave) {
   document.getElementById('modalOverlay').classList.add('open');
 }
 
-// ════ SVG ICONS (inline, no deps) ════
-function _icoHome()   { return `<svg viewBox="0 0 20 20" fill="currentColor"><path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z"/></svg>`; }
-function _icoPipe()   { return `<svg viewBox="0 0 20 20" fill="currentColor"><path d="M2 4a1 1 0 011-1h5a1 1 0 011 1v12a1 1 0 01-1 1H3a1 1 0 01-1-1V4zm7 0a1 1 0 011-1h5a1 1 0 011 1v7a1 1 0 01-1 1h-5a1 1 0 01-1-1V4z"/></svg>`; }
-function _icoDiag()   { return `<svg viewBox="0 0 20 20" fill="currentColor"><path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z"/><path fill-rule="evenodd" d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3zm-3 4a1 1 0 100 2h.01a1 1 0 100-2H7zm3 0a1 1 0 100 2h3a1 1 0 100-2h-3z" clip-rule="evenodd"/></svg>`; }
-function _icoAgenda() { return `<svg viewBox="0 0 20 20" fill="currentColor"><path d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z"/></svg>`; }
-function _icoProp()   { return `<svg viewBox="0 0 20 20" fill="currentColor"><path d="M9 2a2 2 0 00-2 2v8a2 2 0 002 2h6a2 2 0 002-2V6.414A2 2 0 0016.414 5L14 2.586A2 2 0 0012.586 2H9z"/><path d="M3 8a2 2 0 012-2v10h8a2 2 0 01-2 2H5a2 2 0 01-2-2V8z"/></svg>`; }
-function _icoChart()  { return `<svg viewBox="0 0 20 20" fill="currentColor"><path d="M2 11a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 01-1 1H3a1 1 0 01-1-1v-5zm6-4a1 1 0 011-1h2a1 1 0 011 1v9a1 1 0 01-1 1H9a1 1 0 01-1-1V7zm6-3a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1h-2a1 1 0 01-1-1V4z"/></svg>`; }
-function _icoConfig()   { return `<svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clip-rule="evenodd"/></svg>`; }
-function _icoFactura()  { return `<svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z" clip-rule="evenodd"/></svg>`; }
-function _icoAi()        { return `<svg viewBox="0 0 20 20" fill="currentColor"><path d="M9 2a1 1 0 112 0v1h2a3 3 0 013 3v1a2 2 0 012 2v3a2 2 0 01-2 2v1a3 3 0 01-3 3H7a3 3 0 01-3-3v-1a2 2 0 01-2-2V9a2 2 0 012-2V6a3 3 0 013-3h2V2zm-1 8a1 1 0 100 2 1 1 0 000-2zm4 0a1 1 0 100 2 1 1 0 000-2z"/></svg>`; }
+// ════ SVG ICONS — set de línea profesional (trazo currentColor, viewBox 24) ════
+function _ln(inner) { return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${inner}</svg>`; }
+function _icoHome()   { return _ln('<rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/>'); }
+function _icoPipe()   { return _ln('<rect x="3" y="4" width="5" height="16" rx="1.5"/><rect x="10" y="4" width="5" height="11" rx="1.5"/><rect x="17" y="4" width="4" height="7" rx="1.5"/>'); }
+function _icoDiag()   { return _ln('<path d="M3 12h3l2-5 4 11 2.5-7 1.5 3h5"/>'); }
+function _icoAgenda() { return _ln('<rect x="3" y="4.5" width="18" height="16" rx="2"/><path d="M3 9h18M8 2.5v4M16 2.5v4"/><path d="M8 13h2M14 13h2M8 17h2"/>'); }
+function _icoProp()   { return _ln('<path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/><path d="M9 13h6M9 16.5h4"/>'); }
+function _icoChart()  { return _ln('<path d="M4 20V4M4 20h16"/><rect x="7" y="11" width="3" height="6"/><rect x="12" y="7" width="3" height="10"/><rect x="17" y="13" width="3" height="4"/>'); }
+function _icoConfig() { return _ln('<path d="M4 6h10M18 6h2M4 12h2M10 12h10M4 18h7M15 18h5"/><circle cx="16" cy="6" r="2"/><circle cx="8" cy="12" r="2"/><circle cx="13" cy="18" r="2"/>'); }
+function _icoFactura(){ return _ln('<path d="M6 2h12v20l-3-2-3 2-3-2-3 2z"/><path d="M9 7h6M9 11h6M9 15h3"/>'); }
+function _icoAi()     { return _ln('<rect x="6" y="6" width="12" height="12" rx="2"/><rect x="9.5" y="9.5" width="5" height="5" rx="1"/><path d="M9 2v2.5M15 2v2.5M9 19.5V22M15 19.5V22M2 9h2.5M2 15h2.5M19.5 9H22M19.5 15H22"/>'); }
 
 document.addEventListener('DOMContentLoaded', init);

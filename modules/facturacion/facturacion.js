@@ -36,17 +36,17 @@ export async function render() {
 
     <div class="kpi-grid" style="margin-bottom:24px">
       <div class="kpi-card">
-        <div class="kpi-top"><span class="kpi-label">Total facturado</span><span class="kpi-ic" style="background:var(--primary-l);color:var(--primary)">🧾</span></div>
+        <div class="kpi-top"><span class="kpi-label">Total facturado</span><span class="kpi-ic" style="background:var(--primary-l);color:var(--primary)">${window.icon?window.icon('factura'):''}</span></div>
         <div class="kpi-value">${todas.length}</div>
         <div class="kpi-sub">${formatCLP(totalMonto)} en facturas</div>
       </div>
       <div class="kpi-card">
-        <div class="kpi-top"><span class="kpi-label">Por cobrar</span><span class="kpi-ic" style="background:var(--amber-l);color:var(--amber)">⏳</span></div>
+        <div class="kpi-top"><span class="kpi-label">Por cobrar</span><span class="kpi-ic" style="background:var(--amber-l);color:var(--amber)">${window.icon?window.icon('clock'):''}</span></div>
         <div class="kpi-value">${formatCLP(pendiente)}</div>
         <div class="kpi-sub">Pendiente + Enviada</div>
       </div>
       <div class="kpi-card">
-        <div class="kpi-top"><span class="kpi-label">Cobrado</span><span class="kpi-ic" style="background:var(--green-l);color:var(--green)">✅</span></div>
+        <div class="kpi-top"><span class="kpi-label">Cobrado</span><span class="kpi-ic" style="background:var(--green-l);color:var(--green)">${window.icon?window.icon('checkCirc'):''}</span></div>
         <div class="kpi-value">${formatCLP(pagado)}</div>
         <div class="kpi-sub">Facturas pagadas</div>
       </div>
@@ -54,7 +54,7 @@ export async function render() {
 
     ${todas.length === 0
       ? `<div class="empty-state">
-          <div class="empty-icon">🧾</div>
+          <div class="empty-icon">${window.icon?window.icon('factura'):''}</div>
           <h3>Sin facturas aún</h3>
           <p>Las facturas se crean cuando una propuesta es aceptada. Puedes crear una desde aquí o desde la ficha del prospecto.</p>
           <button class="btn btn-primary" onclick="window._app.openFacturaModal()">+ Nueva factura</button>

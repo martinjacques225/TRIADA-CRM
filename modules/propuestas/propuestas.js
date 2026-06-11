@@ -106,13 +106,13 @@ export async function render() {
     </div>
 
     <div class="kpi-grid" style="margin-bottom:24px">
-      <div class="kpi-card"><div class="kpi-top"><span class="kpi-label">Abiertas</span><span class="kpi-ic" style="background:var(--primary-l);color:var(--primary)">📂</span></div><div class="kpi-value">${totalEnv}</div><div class="kpi-sub">En espera / negociación</div></div>
-      <div class="kpi-card"><div class="kpi-top"><span class="kpi-label">Aceptadas</span><span class="kpi-ic" style="background:var(--green-l);color:var(--green)">✅</span></div><div class="kpi-value">${totalAcept}</div><div class="kpi-sub">${formatCLP(valorAcept)} en valor</div></div>
-      <div class="kpi-card"><div class="kpi-top"><span class="kpi-label">Tasa de cierre</span><span class="kpi-ic" style="background:var(--violet-l);color:var(--violet)">🎯</span></div><div class="kpi-value">${tasa}%</div><div class="kpi-sub">Sobre ${todas.length} propuestas</div></div>
+      <div class="kpi-card"><div class="kpi-top"><span class="kpi-label">Abiertas</span><span class="kpi-ic" style="background:var(--primary-l);color:var(--primary)">${window.icon?window.icon('fileText'):''}</span></div><div class="kpi-value">${totalEnv}</div><div class="kpi-sub">En espera / negociación</div></div>
+      <div class="kpi-card"><div class="kpi-top"><span class="kpi-label">Aceptadas</span><span class="kpi-ic" style="background:var(--green-l);color:var(--green)">${window.icon?window.icon('checkCirc'):''}</span></div><div class="kpi-value">${totalAcept}</div><div class="kpi-sub">${formatCLP(valorAcept)} en valor</div></div>
+      <div class="kpi-card"><div class="kpi-top"><span class="kpi-label">Tasa de cierre</span><span class="kpi-ic" style="background:var(--violet-l);color:var(--violet)">${window.icon?window.icon('target'):''}</span></div><div class="kpi-value">${tasa}%</div><div class="kpi-sub">Sobre ${todas.length} propuestas</div></div>
     </div>
 
     ${sorted.length === 0
-      ? `<div class="empty-state"><div class="empty-icon">📋</div><h3>Sin propuestas aún</h3><p>Crea tu primera propuesta cuando tengas un prospecto listo para recibir una oferta.</p><button class="btn btn-primary" onclick="window._app.openPropuestaModal()">+ Nueva propuesta</button></div>`
+      ? `<div class="empty-state"><div class="empty-icon">${window.icon?window.icon('propuesta'):''}</div><h3>Sin propuestas aún</h3><p>Crea tu primera propuesta cuando tengas un prospecto listo para recibir una oferta.</p><button class="btn btn-primary" onclick="window._app.openPropuestaModal()">+ Nueva propuesta</button></div>`
       : `<div class="card" style="overflow:hidden">
           <table class="data-table">
             <thead><tr><th>Correlativo</th><th>Prospecto</th><th>Servicios</th><th>Total</th><th>Fecha</th><th>Estado</th><th>Acciones</th></tr></thead>

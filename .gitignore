@@ -16,6 +16,10 @@ desktop.ini
 _t.txt
 err.txt
 
+# Harness de revisión visual (datos demo, sólo local — no desplegar)
+_preview/
+preview.html
+
 # Secretos / entorno (para la migración a Supabase)
 .env
 .env.local

@@ -158,11 +158,11 @@ export async function openProspectoDetail(id) {
         return `<div style="background:var(--surface2);border-radius:10px;padding:12px;margin-bottom:8px;font-size:13px">
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
             <div style="font-weight:600;color:var(--navy)">${new Date(d.fecha).toLocaleDateString('es-CL')}${d.correlativo?` · <span style="font-size:11px;color:var(--text3);font-weight:700">${escHtml(d.correlativo)}</span>`:''}</div>
-            <button class="btn btn-navy btn-sm" onclick="window._app.openInformeEjecutivo('${d.id}')">📄 Informe 360</button>
+            <button class="btn btn-navy btn-sm" onclick="window._app.openInformeEjecutivo('${d.id}')">${window.icon?window.icon('fileText'):''} Informe 360</button>
           </div>
           <div style="display:flex;gap:14px">
-            ${[{l:'🖥️ Tec',v:scores.tec,c:'#5B6BD6'},{l:'📈 Ventas',v:scores.ventas,c:'#028090'},{l:'💰 Fin',v:scores.finanzas,c:'#4FB286'}].map(a=>
-              `<div style="flex:1;text-align:center"><div style="font-size:11px;color:var(--text3)">${a.l}</div><div style="font-size:18px;font-weight:800;color:${a.c}">${a.v}%</div></div>`).join('')}
+            ${[{l:'Tec',ic:'cpu',v:scores.tec,c:'#5160C0'},{l:'Ventas',ic:'trending',v:scores.ventas,c:'#0C7C88'},{l:'Fin',ic:'coins',v:scores.finanzas,c:'#2E9B73'}].map(a=>
+              `<div style="flex:1;text-align:center"><div style="font-size:11px;color:var(--text3);display:inline-flex;align-items:center;gap:5px">${window.icon?window.icon(a.ic,'',13):''} ${a.l}</div><div style="font-size:18px;font-weight:800;color:${a.c}">${a.v}%</div></div>`).join('')}
           </div>
         </div>`;
       }).join('')}

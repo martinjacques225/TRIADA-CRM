@@ -5,19 +5,19 @@
 
 // ── Niveles de madurez (clasificación 0-100) ──
 export const NIVELES = [
-  { id:'Crítico',    min:0,  max:39,  color:'#E0604F', bg:'#FCEEEC',
+  { id:'Crítico',    min:0,  max:39,  color:'#C04F3F', bg:'#FCEEEC',
     tag:'Requiere atención prioritaria',
     descShort:'La operación presenta fugas relevantes en varias áreas.',
     descLong:'En este nivel, la operación depende fuertemente de esfuerzos manuales y decisiones reactivas. Esto limita el crecimiento y expone al negocio a riesgos evitables que conviene abordar con prontitud.' },
-  { id:'En Riesgo',  min:40, max:59,  color:'#F0B429', bg:'#FEF6E6',
+  { id:'En Riesgo',  min:40, max:59,  color:'#C2871A', bg:'#F8F0DD',
     tag:'Oportunidad de mejora significativa',
     descShort:'Existen bases, pero con brechas que frenan el crecimiento.',
     descLong:'La empresa cuenta con algunos elementos en su lugar, pero las brechas existentes generan ineficiencias y pérdida de oportunidades. Cerrarlas de forma ordenada libera valor en el corto plazo.' },
-  { id:'Funcional',  min:60, max:79,  color:'#028090', bg:'#E6F4F5',
+  { id:'Funcional',  min:60, max:79,  color:'#0C7C88', bg:'#E2F0F1',
     tag:'Base sólida con espacio para optimizar',
     descShort:'La operación funciona; el foco está en optimizar.',
     descLong:'La empresa tiene una operación funcional y ordenada. El siguiente salto proviene de optimizar procesos y profundizar el uso de datos para decidir con mayor precisión.' },
-  { id:'Optimizado', min:80, max:100, color:'#4FB286', bg:'#ECF7F1',
+  { id:'Optimizado', min:80, max:100, color:'#2E9B73', bg:'#E4F2EB',
     tag:'Desempeño destacado',
     descShort:'La empresa muestra madurez y buenas prácticas.',
     descLong:'La empresa opera con prácticas maduras y un buen nivel de control. El desafío es sostener la mejora continua y escalar lo que ya funciona bien.' },
@@ -29,9 +29,9 @@ export function nivelFor(score) {
 
 // ── Definición de áreas del informe ──
 export const AREAS_INFORME = [
-  { key:'tec',      label:'Tecnología y Digitalización',    short:'Tecnología', icon:'🖥️', color:'#5B6BD6', scoreKey:'scoresTec' },
-  { key:'ventas',   label:'Gestión Comercial y Ventas',     short:'Ventas',     icon:'📈', color:'#028090', scoreKey:'scoresVentas' },
-  { key:'finanzas', label:'Finanzas y Gestión Empresarial', short:'Finanzas',   icon:'💰', color:'#4FB286', scoreKey:'scoresFinanzas' },
+  { key:'tec',      label:'Tecnología y Digitalización',    short:'Tecnología', icon:'🖥️', color:'#5160C0', scoreKey:'scoresTec' },
+  { key:'ventas',   label:'Gestión Comercial y Ventas',     short:'Ventas',     icon:'📈', color:'#0C7C88', scoreKey:'scoresVentas' },
+  { key:'finanzas', label:'Finanzas y Gestión Empresarial', short:'Finanzas',   icon:'💰', color:'#2E9B73', scoreKey:'scoresFinanzas' },
 ];
 
 // ── Catálogo de FORTALEZAS (respuesta = Sí) ──
@@ -184,7 +184,7 @@ export function computeInforme(diag, prospecto, evaluador = {}) {
   hallazgos.sort((x, y) => RIESGO_W[y.riesgo] - RIESGO_W[x.riesgo]);
   // sumar hallazgos manuales del consultor si hay espacio
   (diag.hallazgos || []).forEach(h => {
-    if (hallazgos.length < 5) hallazgos.push({ titulo: h, impacto: 'Observación registrada por el consultor durante el diagnóstico.', riesgo: 'Medio', area: 'Transversal', areaColor: '#1E2761', areaIcon: '📌' });
+    if (hallazgos.length < 5) hallazgos.push({ titulo: h, impacto: 'Observación registrada por el consultor durante el diagnóstico.', riesgo: 'Medio', area: 'Transversal', areaColor: '#16234A', areaIcon: '📌' });
   });
   const topHallazgos = hallazgos.slice(0, 5);
 
@@ -201,7 +201,7 @@ export function computeInforme(diag, prospecto, evaluador = {}) {
   });
   oportunidades.sort((x, y) => y.prioridad - x.prioridad);
   (diag.oportunidades || []).forEach(o => {
-    if (oportunidades.length < 5) oportunidades.push({ titulo: o, beneficio: 'Oportunidad identificada por el consultor.', esfuerzo: 'Medio', impacto: 'Medio', area: 'Transversal', areaColor: '#1E2761', prioridad: 0 });
+    if (oportunidades.length < 5) oportunidades.push({ titulo: o, beneficio: 'Oportunidad identificada por el consultor.', esfuerzo: 'Medio', impacto: 'Medio', area: 'Transversal', areaColor: '#16234A', prioridad: 0 });
   });
   const topOportunidades = oportunidades.slice(0, 5);
 
@@ -244,9 +244,9 @@ function _buildPlan(opps) {
     else                             largo.push(item);
   });
   // Rellenos estratégicos si alguna fase queda vacía
-  if (!corto.length)   corto.push({ titulo:'Designar un responsable interno del plan de mejora', beneficio:'Asegurar avance y accountability', area:'Transversal', areaColor:'#1E2761' });
-  if (!mediano.length) mediano.push({ titulo:'Capacitar al equipo en los nuevos procesos y herramientas', beneficio:'Adopción efectiva y sostenida', area:'Transversal', areaColor:'#1E2761' });
-  if (!largo.length)   largo.push({ titulo:'Revisar y ajustar la estrategia según los resultados', beneficio:'Mejora continua basada en evidencia', area:'Transversal', areaColor:'#1E2761' });
+  if (!corto.length)   corto.push({ titulo:'Designar un responsable interno del plan de mejora', beneficio:'Asegurar avance y accountability', area:'Transversal', areaColor:'#16234A' });
+  if (!mediano.length) mediano.push({ titulo:'Capacitar al equipo en los nuevos procesos y herramientas', beneficio:'Adopción efectiva y sostenida', area:'Transversal', areaColor:'#16234A' });
+  if (!largo.length)   largo.push({ titulo:'Revisar y ajustar la estrategia según los resultados', beneficio:'Mejora continua basada en evidencia', area:'Transversal', areaColor:'#16234A' });
   return {
     corto:   corto.slice(0, 4),
     mediano: mediano.slice(0, 4),

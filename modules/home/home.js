@@ -1,6 +1,8 @@
 // modules/home/home.js
 import { prospectos, citas, propuestas, config } from '../../js/db.js';
-import { formatDate, formatCLP, PIPELINE_STAGES, todayStr, stageBadge, escHtml } from '../../js/utils.js';
+import { formatDate, formatCLP, PIPELINE_STAGES, todayStr, stageBadge, stageIcon, escHtml } from '../../js/utils.js';
+
+const _i = (n, s) => (window.icon ? window.icon(n, '', s) : '');
 import { S } from '../../js/state.js';
 
 export async function render() {
@@ -24,7 +26,7 @@ export async function render() {
   center.innerHTML = `<div class="view-animate">
     <div class="home-header">
       <div>
-        <div class="home-greeting">${_saludo()}${userName ? ', ' + escHtml(userName.split(' ')[0]) : ''} 👋</div>
+        <div class="home-greeting">${_saludo()}${userName ? ', ' + escHtml(userName.split(' ')[0]) : ''}</div>
         <h1 class="home-title">Panel de Consultoría</h1>
       </div>
       <button class="btn btn-primary" onclick="window._app.openProspectoModal()">+ Nuevo prospecto</button>
@@ -32,22 +34,22 @@ export async function render() {
 
     <div class="kpi-grid">
       <div class="kpi-card">
-        <div class="kpi-top"><span class="kpi-label">Prospectos activos</span><span class="kpi-ic" style="background:var(--primary-l);color:var(--primary)">👥</span></div>
+        <div class="kpi-top"><span class="kpi-label">Prospectos activos</span><span class="kpi-ic" style="background:var(--primary-l);color:var(--primary)">${_i('users')}</span></div>
         <div class="kpi-value">${todos.filter(p=>p.estado!=='Descartado').length}</div>
         <div class="kpi-sub">${nuevos} nuevos sin contactar</div>
       </div>
       <div class="kpi-card">
-        <div class="kpi-top"><span class="kpi-label">Propuestas abiertas</span><span class="kpi-ic" style="background:var(--amber-l);color:var(--amber)">📄</span></div>
+        <div class="kpi-top"><span class="kpi-label">Propuestas abiertas</span><span class="kpi-ic" style="background:var(--amber-l);color:var(--amber)">${_i('fileText')}</span></div>
         <div class="kpi-value">${propEnv}</div>
         <div class="kpi-sub">En espera o negociación</div>
       </div>
       <div class="kpi-card">
-        <div class="kpi-top"><span class="kpi-label">Clientes activos</span><span class="kpi-ic" style="background:var(--green-l);color:var(--green)">✅</span></div>
+        <div class="kpi-top"><span class="kpi-label">Clientes activos</span><span class="kpi-ic" style="background:var(--green-l);color:var(--green)">${_i('checkCirc')}</span></div>
         <div class="kpi-value">${clientes}</div>
         <div class="kpi-sub">Proyectos en curso</div>
       </div>
       <div class="kpi-card">
-        <div class="kpi-top"><span class="kpi-label">Valor proyectado</span><span class="kpi-ic" style="background:var(--violet-l);color:var(--violet)">💰</span></div>
+        <div class="kpi-top"><span class="kpi-label">Valor proyectado</span><span class="kpi-ic" style="background:var(--violet-l);color:var(--violet)">${_i('coins')}</span></div>
         <div class="kpi-value kpi-value-sm">${formatCLP(valorProyectado)}</div>
         <div class="kpi-sub">Propuestas en negociación</div>
       </div>
@@ -60,7 +62,7 @@ export async function render() {
           ? `<div class="card card-pad" style="text-align:center;color:var(--text3);font-size:14px">Sin citas programadas para hoy.</div>`
           : citasHoy.map(c => `
             <div class="card card-pad" style="margin-bottom:10px;display:flex;gap:12px;align-items:center">
-              <div style="font-size:22px">${_tipoIcon(c.tipo)}</div>
+              <div style="width:40px;height:40px;border-radius:11px;display:flex;align-items:center;justify-content:center;background:var(--teal-l);color:var(--teal);flex-shrink:0">${_i(_tipoIcon(c.tipo),20)}</div>
               <div style="flex:1">
                 <div style="font-size:14px;font-weight:600;color:var(--navy)">${c.titulo || c.tipo || 'Cita'}</div>
                 <div style="font-size:12.5px;color:var(--text3)">${c.hora || ''} · ${c.empresa || ''}</div>
@@ -95,7 +97,7 @@ export async function render() {
         ${PIPELINE_STAGES.filter(s=>s.id!=='Descartado').map(st=>{
           const cnt = todos.filter(p=>p.estado===st.id).length;
           return `<div class="funnel-stage" onclick="window._app.navigate('pipeline')" style="border-top:3px solid ${st.color}">
-            <div class="funnel-icon">${st.icon}</div>
+            <div class="funnel-icon" style="color:${st.color}">${stageIcon(st.id,20)}</div>
             <div class="funnel-label">${st.id}</div>
             <div class="funnel-count" style="color:${st.color}">${cnt}</div>
           </div>`;
@@ -214,11 +216,11 @@ function _calcIvaCard(col) {
 }
 
 function _tipoIcon(tipo) {
-  if (!tipo) return '📅';
-  if (tipo.includes('iagnóstico')) return '🔍';
-  if (tipo.includes('ropuesta') || tipo.includes('resentación')) return '📋';
-  if (tipo.includes('ontacto')) return '📞';
-  return '📅';
+  if (!tipo) return 'calClock';
+  if (tipo.includes('iagnóstico')) return 'search';
+  if (tipo.includes('ropuesta') || tipo.includes('resentación')) return 'fileText';
+  if (tipo.includes('ontacto')) return 'phone';
+  return 'calClock';
 }
 
 function _saludo() {

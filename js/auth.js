@@ -25,12 +25,12 @@ function _showLoginScreen() {
     el.innerHTML = `
       <div class="auth-card">
         <div class="auth-logo">
-          <svg width="44" height="44" viewBox="0 0 120 120" fill="none">
-            <path d="M26 90 L60 62 L94 90" stroke="#1E2761" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>
-            <path d="M26 73 L60 45 L94 73" stroke="#028090" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>
-            <path d="M26 56 L60 28 L94 56" stroke="#4FB286" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>
+          <svg width="46" height="46" viewBox="0 0 120 120" fill="none">
+            <path d="M26 90 L60 62 L94 90" stroke="#16234A" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M26 73 L60 45 L94 73" stroke="#0C7C88" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M26 56 L60 28 L94 56" stroke="#2E9B73" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>
           </svg>
-          <span class="auth-brand">TRÍADA <b>CRM</b></span>
+          <span class="auth-brand"><span class="auth-brand-name">Tríada</span><span class="auth-brand-tag">Diagnóstico CRM</span></span>
         </div>
         <h2 class="auth-title">Iniciar sesión</h2>
         <form id="authForm" autocomplete="on">
@@ -83,16 +83,18 @@ function _injectStyles() {
     }
     .auth-card {
       background:var(--surface,#fff);
-      border-radius:18px;
+      border:1px solid var(--border,#E5E9F0);
+      border-radius:20px;
       padding:2.5rem 2rem;
       width:min(400px,92vw);
-      box-shadow:0 8px 48px rgba(30,39,97,.14);
+      box-shadow:0 18px 48px rgba(20,32,55,.16);
       display:flex;flex-direction:column;gap:1.5rem;
     }
     .auth-logo { display:flex;align-items:center;gap:12px; }
-    .auth-brand { font-size:20px;font-weight:700;color:var(--navy,#1E2761);letter-spacing:.04em; }
-    .auth-brand b { color:var(--primary,#028090); }
-    .auth-title { font-size:22px;font-weight:800;color:var(--navy,#1E2761);margin:0; }
+    .auth-brand { display:flex;flex-direction:column;line-height:1; }
+    .auth-brand-name { font-family:var(--serif,Georgia),serif;font-size:22px;font-weight:600;color:var(--ink,#142037);letter-spacing:.02em; }
+    .auth-brand-tag { font-size:9.5px;font-weight:700;letter-spacing:.22em;text-transform:uppercase;color:var(--primary,#0C7C88);margin-top:3px; }
+    .auth-title { font-family:var(--serif,Georgia),serif;font-size:24px;font-weight:500;color:var(--ink,#142037);margin:0; }
     #authForm { display:flex;flex-direction:column;gap:14px; }
     .auth-field { display:flex;flex-direction:column;gap:5px; }
     .auth-field label { font-size:13px;font-weight:600;color:var(--text2,#5a6484); }
@@ -102,7 +104,7 @@ function _injectStyles() {
       font-size:14px;background:var(--surface,#fff);
       color:var(--text,#1a2035);transition:border-color .15s;
     }
-    .auth-field input:focus { outline:none;border-color:var(--primary,#028090); }
+    .auth-field input:focus { outline:none;border-color:var(--primary,#0C7C88);box-shadow:var(--ring,0 0 0 3px rgba(12,124,136,.16)); }
     .auth-err {
       background:#fff0f0;border:1px solid #e0604f;
       border-radius:8px;padding:9px 12px;

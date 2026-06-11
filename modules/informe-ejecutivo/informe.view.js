@@ -17,9 +17,9 @@ const LOGO = `<svg viewBox="0 0 120 120" fill="none" class="report-logo">
 </svg>`;
 
 const LOGO_TRI = `<svg viewBox="0 0 120 120" fill="none" style="width:38px;height:38px">
-  <path d="M26 90 L60 62 L94 90" stroke="#1E2761" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/>
-  <path d="M26 73 L60 45 L94 73" stroke="#028090" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/>
-  <path d="M26 56 L60 28 L94 56" stroke="#4FB286" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M26 90 L60 62 L94 90" stroke="#16234A" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M26 73 L60 45 L94 73" stroke="#0C7C88" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M26 56 L60 28 L94 56" stroke="#2E9B73" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/>
 </svg>`;
 
 function footer(rep, n) {
@@ -38,9 +38,9 @@ function pageCover(rep) {
     <div class="cover-top">
       <div class="cover-brand">${LOGO}<span>TRÍADA</span></div>
       <div class="cover-areas">
-        <span><i style="background:#5B6BD6"></i>Tecnología</span>
-        <span><i style="background:#028090"></i>Ventas</span>
-        <span><i style="background:#4FB286"></i>Finanzas</span>
+        <span><i style="background:#5160C0"></i>Tecnología</span>
+        <span><i style="background:#0C7C88"></i>Ventas</span>
+        <span><i style="background:#2E9B73"></i>Finanzas</span>
       </div>
     </div>
 
@@ -136,9 +136,9 @@ function pageResultados(rep) {
 }
 
 const RIESGO_STYLE = {
-  Alto:  { color:'#E0604F', bg:'#FCEEEC', label:'Riesgo Alto' },
-  Medio: { color:'#F0B429', bg:'#FEF6E6', label:'Riesgo Medio' },
-  Bajo:  { color:'#5B6BD6', bg:'#EEF0FB', label:'Riesgo Bajo' },
+  Alto:  { color:'#C04F3F', bg:'#FCEEEC', label:'Riesgo Alto' },
+  Medio: { color:'#C2871A', bg:'#F8F0DD', label:'Riesgo Medio' },
+  Bajo:  { color:'#5160C0', bg:'#ECEEFA', label:'Riesgo Bajo' },
 };
 
 function pageHallazgos(rep) {
@@ -168,14 +168,14 @@ function pageHallazgos(rep) {
 }
 
 const DIF_STYLE = {
-  Bajo:  { color:'#4FB286', label:'Esfuerzo bajo' },
-  Medio: { color:'#F0B429', label:'Esfuerzo medio' },
-  Alto:  { color:'#E0604F', label:'Esfuerzo alto' },
+  Bajo:  { color:'#2E9B73', label:'Esfuerzo bajo' },
+  Medio: { color:'#C2871A', label:'Esfuerzo medio' },
+  Alto:  { color:'#C04F3F', label:'Esfuerzo alto' },
 };
 const IMP_STYLE = {
-  Alto:  { color:'#028090', label:'Impacto alto' },
-  Medio: { color:'#5B6BD6', label:'Impacto medio' },
-  Bajo:  { color:'#9aa0b3', label:'Impacto bajo' },
+  Alto:  { color:'#0C7C88', label:'Impacto alto' },
+  Medio: { color:'#5160C0', label:'Impacto medio' },
+  Bajo:  { color:'#94A0B6', label:'Impacto bajo' },
 };
 
 function pageOportunidades(rep) {
@@ -220,17 +220,17 @@ function pageMapa(rep) {
     <div class="mapa-delta">
       <div class="md-box">
         <div class="md-label">Hoy</div>
-        <div class="md-val" style="color:#1E2761">${rep.overall}</div>
+        <div class="md-val" style="color:#16234A">${rep.overall}</div>
         <div class="md-nivel" style="color:${rep.nivel.color}">${rep.nivel.id}</div>
       </div>
       <div class="md-arrow">
         <div class="md-potencial">+${rep.potencial}</div>
-        <svg viewBox="0 0 80 24" width="80" height="24"><path d="M2 12 H70 M62 5 L72 12 L62 19" stroke="#4FB286" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <svg viewBox="0 0 80 24" width="80" height="24"><path d="M2 12 H70 M62 5 L72 12 L62 19" stroke="#2E9B73" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
         <div class="md-potencial-lbl">de mejora potencial</div>
       </div>
       <div class="md-box">
         <div class="md-label">Objetivo</div>
-        <div class="md-val" style="color:#4FB286">${rep.target}</div>
+        <div class="md-val" style="color:#2E9B73">${rep.target}</div>
         <div class="md-nivel" style="color:${rep.nivel.color}">proyectado</div>
       </div>
     </div>
@@ -241,7 +241,7 @@ function pageMapa(rep) {
           <div class="ma-fill-now" style="width:${a.score}%;background:${a.color}"></div>
           <div class="ma-fill-target" style="left:${a.score}%;width:${Math.max(0, a.targetScore - a.score)}%;background:${a.color}"></div>
         </div>
-        <span class="ma-vals"><b style="color:${a.color}">${a.score}</b> → <b style="color:#4FB286">${a.targetScore}</b></span>
+        <span class="ma-vals"><b style="color:${a.color}">${a.score}</b> → <b style="color:#2E9B73">${a.targetScore}</b></span>
       </div>`).join('')}
     </div>
     ${footer(rep, 6)}
@@ -267,9 +267,9 @@ function pagePlan(rep) {
     ${pageHead('06', 'Plan de Acción Recomendado')}
     <p class="page-intro">Hoja de ruta priorizada. Cada acción responde directamente a los hallazgos detectados y avanza de las victorias rápidas hacia los cambios de mayor alcance.</p>
     <div class="plan-grid">
-      ${fase('Corto Plazo', '0 – 30 días', rep.plan.corto, '#4FB286')}
-      ${fase('Mediano Plazo', '30 – 90 días', rep.plan.mediano, '#028090')}
-      ${fase('Largo Plazo', '90 – 180 días', rep.plan.largo, '#1E2761')}
+      ${fase('Corto Plazo', '0 – 30 días', rep.plan.corto, '#2E9B73')}
+      ${fase('Mediano Plazo', '30 – 90 días', rep.plan.mediano, '#0C7C88')}
+      ${fase('Largo Plazo', '90 – 180 días', rep.plan.largo, '#16234A')}
     </div>
     ${footer(rep, 7)}
   </section>`;
@@ -286,10 +286,10 @@ function pageConclusion(rep) {
         <div class="ch-label">Índice actual</div>
         <div class="ch-val" style="color:${rep.nivel.color}">${rep.overall}<small>/100</small></div>
       </div>
-      <svg viewBox="0 0 60 24" width="60" height="24"><path d="M2 12 H48 M40 5 L52 12 L40 19" stroke="#4FB286" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <svg viewBox="0 0 60 24" width="60" height="24"><path d="M2 12 H48 M40 5 L52 12 L40 19" stroke="#2E9B73" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
       <div class="ch-right">
         <div class="ch-label">Potencial proyectado</div>
-        <div class="ch-val" style="color:#4FB286">${rep.target}<small>/100</small></div>
+        <div class="ch-val" style="color:#2E9B73">${rep.target}<small>/100</small></div>
       </div>
     </div>
     <div class="conclusion-sign">
