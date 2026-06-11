@@ -19,10 +19,17 @@ function clean(obj) {
 }
 
 const ORIGEN_TO_DB = {
-  'Landing Web': 'landing', 'Meta Ads': 'meta_ads',
+  'Manual': 'manual', 'Landing Web': 'landing', 'Meta Ads': 'meta_ads',
   'Google Ads': 'google_ads', 'WhatsApp': 'whatsapp', 'Referido': 'referido',
 };
 const ORIGEN_FROM_DB = Object.fromEntries(Object.entries(ORIGEN_TO_DB).map(([k, v]) => [v, k]));
+const VALID_ORIGEN = new Set(Object.values(ORIGEN_TO_DB));
+// Nunca enviar un valor que el enum `lead_origen` no acepte: rompía el INSERT
+// con 22P02 y el guardado fallaba en silencio. Desconocido → 'manual'.
+function toOrigenSlug(v) {
+  const slug = ORIGEN_TO_DB[v] || v || 'manual';
+  return VALID_ORIGEN.has(slug) ? slug : 'manual';
+}
 
 function _throw(error) { if (error) throw error; }
 
@@ -31,7 +38,7 @@ function leadFromSupa(row) {
   if (!row) return null;
   return {
     id:                 row.id,
-    correlativo:        row.correlativo,
+    correlativo:        row.codigo,
     nombre:             row.nombre,
     empresa:            row.empresa,
     rut:                row.rut,
@@ -65,12 +72,11 @@ function leadToSupa(data) {
     region:          data.region,
     facturacion_est: data.facturacionEst,
     dolor_principal: data.dolorPrincipal,
-    origen:          ORIGEN_TO_DB[data.origen] || data.origen || 'manual',
+    origen:          toOrigenSlug(data.origen),
     estado:          data.estado || 'Nuevo',
     scoring:         data.scoring,
     responsable:     data.responsable,
     notas:           data.notas,
-    historial:       data.historial,
   });
 }
 
@@ -103,8 +109,7 @@ export const prospectos = {
     _throw(error); return data.map(leadFromSupa);
   },
   byRubro:  async (rubro)  => {
-    const giro = ORIGEN_TO_DB[rubro] || rubro;
-    const { data, error } = await supabase.from('leads').select('*').eq('giro', giro).order('created_at', { ascending: false });
+    const { data, error } = await supabase.from('leads').select('*').eq('giro', rubro).order('created_at', { ascending: false });
     _throw(error); return data.map(leadFromSupa);
   },
 };

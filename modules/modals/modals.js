@@ -86,10 +86,15 @@ export async function openProspectoModal(id = null) {
       dolorPrincipal: document.getElementById('pDolor').value,
       notas:          document.getElementById('pNotas').value.trim(),
     };
-    if (existing) { await prospectos.update({ ...existing, ...data }); toast('Prospecto actualizado', 'success'); }
-    else          { await prospectos.add(data); toast('Prospecto creado', 'success'); }
-    closeModal();
-    window._app?.refreshView?.();
+    try {
+      if (existing) { await prospectos.update({ ...existing, ...data }); toast('Prospecto actualizado', 'success'); }
+      else          { await prospectos.add(data); toast('Prospecto creado', 'success'); }
+      closeModal();
+      window._app?.refreshView?.();
+    } catch (err) {
+      console.error('Error al guardar prospecto:', err);
+      toast(err?.message || 'No se pudo guardar el prospecto', 'error');
+    }
   };
 }
 

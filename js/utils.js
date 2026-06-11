@@ -67,7 +67,7 @@ export function stageIcon(estado, size = 14) {
 export const RUBROS = ['Comercio / retail','Servicios','Gastronomía','Salud','Construcción','Manufactura','Otro'];
 export const TAMANOS = ['1 a 5','6 a 20','21 a 50','Más de 50'];
 export const DOLORES = ['Vender más','Ordenar procesos','Controlar finanzas','Automatizar / tecnología','No sé por dónde partir'];
-export const ORIGENES = ['Landing Web','Referido','Contacto directo','Red social','Evento','Otro'];
+export const ORIGENES = ['Manual','Landing Web','Meta Ads','Google Ads','WhatsApp','Referido'];
 
 export const DIAG_AREAS = [
   { id: 'tec',      label: 'Tecnología',   icon: '🖥️', iconName: 'cpu',      color: '#5160C0' },
