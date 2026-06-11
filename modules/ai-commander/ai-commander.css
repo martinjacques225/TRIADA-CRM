@@ -1,0 +1,113 @@
+/* modules/ai-commander/ai-commander.css — estilos del módulo AI Commander */
+
+.aic-title { display: flex; align-items: center; gap: 8px; }
+.aic-title svg { width: 22px; height: 22px; color: var(--primary); }
+
+/* ── Tabs ── */
+.aic-tabs {
+  display: flex; gap: 4px; flex-wrap: wrap;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 18px;
+}
+.aic-tab {
+  display: inline-flex; align-items: center; gap: 7px;
+  padding: 9px 14px; border: none; background: transparent;
+  font-family: var(--font); font-size: 13.5px; font-weight: 600;
+  color: var(--text3); cursor: pointer; border-radius: 8px 8px 0 0;
+  border-bottom: 2px solid transparent; margin-bottom: -1px; transition: var(--tr);
+}
+.aic-tab:hover { color: var(--text); background: var(--surface2); }
+.aic-tab.active { color: var(--primary); border-bottom-color: var(--primary); }
+.aic-tab-ico svg { width: 16px; height: 16px; vertical-align: -3px; }
+
+/* ── Grids genéricos ── */
+.aic-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+@media (max-width: 860px) { .aic-grid-2 { grid-template-columns: 1fr; } }
+
+.aic-card-title { font-size: 14px; font-weight: 700; color: var(--navy); }
+
+/* ── Chips ── */
+.aic-chip {
+  display: inline-block; font-size: 11px; font-weight: 600;
+  background: var(--surface2); color: var(--text2);
+  padding: 2px 8px; border-radius: 6px; border: 1px solid var(--border);
+}
+
+/* ── Proyectos (grid de tarjetas) ── */
+.aic-projects {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); gap: 16px;
+}
+.aic-project-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 16px 18px; transition: var(--tr);
+  display: flex; flex-direction: column;
+}
+.aic-project-card:hover { box-shadow: var(--shadow); transform: translateY(-2px); }
+.aic-project-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
+.aic-project-name { font-size: 15px; font-weight: 700; color: var(--navy); line-height: 1.25; }
+.aic-code {
+  display: inline-block; font-size: 10.5px; font-weight: 700; letter-spacing: .04em;
+  color: var(--text3); background: var(--surface2); padding: 1px 6px; border-radius: 5px;
+}
+.aic-project-obj { font-size: 12.5px; color: var(--text2); margin-top: 6px; line-height: 1.45; }
+.aic-project-meta { display: flex; align-items: center; gap: 12px; margin-top: 10px; font-size: 12px; color: var(--text3); }
+.aic-project-meta a { color: var(--text3); display: inline-flex; }
+.aic-project-meta a:hover { color: var(--primary); }
+.aic-project-meta svg { width: 15px; height: 15px; }
+
+.aic-card-actions { display: flex; gap: 5px; margin-top: 12px; border-top: 1px solid var(--border); padding-top: 10px; }
+.aic-card-actions .btn-action {
+  display: inline-flex; align-items: center; justify-content: center; gap: 5px;
+  padding: 6px 9px; border-radius: 6px; font-size: 12px; font-weight: 500;
+  border: 1px solid var(--border); background: transparent; cursor: pointer;
+  color: var(--text2); transition: var(--tr); font-family: var(--font);
+}
+.aic-card-actions .btn-action:first-child { flex: 1; }
+.aic-card-actions .btn-action:hover { background: var(--primary); color: #fff; border-color: var(--primary); }
+.aic-card-actions .btn-action svg { width: 14px; height: 14px; }
+
+/* ── Banner "IA en modo arquitectura" ── */
+.aic-banner {
+  display: flex; align-items: flex-start; gap: 12px;
+  background: var(--amber-l); border: 1px solid var(--amber);
+  border-radius: var(--radius); padding: 14px 16px; font-size: 13px; color: var(--text2);
+}
+.aic-banner svg { width: 22px; height: 22px; color: var(--amber); flex-shrink: 0; margin-top: 1px; }
+.aic-banner strong { color: var(--navy); }
+
+/* ── Prompt Builder ── */
+.aic-label { display: block; font-size: 12px; font-weight: 600; color: var(--text2); margin-bottom: 6px; letter-spacing: .04em; }
+.aic-textarea {
+  width: 100%; padding: 11px 13px; border: 1px solid var(--border); border-radius: var(--radius-sm);
+  font-family: 'Inter', monospace; font-size: 12.5px; line-height: 1.5; color: var(--text);
+  background: var(--surface2); resize: vertical; transition: var(--tr);
+}
+.aic-textarea:focus { outline: none; border-color: var(--primary); background: var(--surface); box-shadow: 0 0 0 3px rgba(2,128,144,.1); }
+
+.aic-template-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 7px; }
+@media (max-width: 600px) { .aic-template-grid { grid-template-columns: repeat(2, 1fr); } }
+.aic-tpl {
+  display: flex; flex-direction: column; align-items: center; gap: 5px;
+  padding: 10px 6px; border: 1.5px solid var(--border); border-radius: var(--radius-sm);
+  background: var(--surface2); cursor: pointer; transition: var(--tr); font-family: var(--font);
+}
+.aic-tpl:hover { border-color: var(--primary); }
+.aic-tpl.active { border-color: var(--primary); background: var(--primary-l); }
+.aic-tpl-ico { font-size: 18px; }
+.aic-tpl-name { font-size: 11px; font-weight: 600; color: var(--text2); text-align: center; line-height: 1.2; }
+.aic-tpl.active .aic-tpl-name { color: var(--primary); }
+
+.aic-vars-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0 12px; }
+@media (max-width: 600px) { .aic-vars-grid { grid-template-columns: 1fr; } }
+.aic-var {
+  width: 100%; padding: 8px 11px; border: 1px solid var(--border); border-radius: var(--radius-sm);
+  font-family: var(--font); font-size: 13px; color: var(--text); background: var(--surface2); resize: vertical;
+}
+.aic-var:focus { outline: none; border-color: var(--primary); background: var(--surface); }
+
+.aic-prompt-list { display: flex; flex-direction: column; gap: 8px; margin-top: 10px; }
+.aic-prompt-item {
+  display: flex; align-items: center; gap: 10px; padding: 10px 12px;
+  border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface2);
+}
+.aic-prompt-item .aic-code { margin-left: 4px; }

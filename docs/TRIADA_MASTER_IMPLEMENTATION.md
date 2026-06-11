@@ -380,6 +380,13 @@ IA genera:
 
 # REGISTRO DE CAMBIOS
 
+### 2026-06-10 · Módulo AI Commander (nuevo)
+- **Módulo:** `modules/ai-commander/` (Clean Architecture: domain/application/infrastructure/presentation) · **DB:** `supabase/ai_commander.sql` · **Doc:** `docs/AI_COMMANDER.md`
+- **Wiring:** `app.js` (nav "Desarrollo" + ruta + icono), `index.html` (CSS), `js/state.js` (aicView/aicProjectId)
+- **Motivo:** gestionar proyectos internos de desarrollo asistido por IA.
+- **Resultado:** proyectos + tareas + Kanban (drag&drop) + Prompt Builder (6 plantillas/roles) + historial de respuestas IA + dashboard de avance. Postgres con UUID + correlativos (`PROJ`/`TASK`/`PRMT`), `org_id` (multiempresa futura), auditoría completa (trigger BD `aic_audit_row` + AuditPort semántico sobre `actividad`), RLS. **IA NO implementada a propósito:** seam listo (AIProviderPort + registry Anthropic/OpenAI/Google, enrutado a una futura Edge Function de Supabase con la clave server-side — Fase 11). Hoy "ejecutar" registra estado `no_conectado` sin llamar a ninguna API.
+- **Pendiente:** correr `supabase/ai_commander.sql` en el SQL Editor (hasta entonces el módulo muestra aviso de migración). Verificación en vivo limitada por el login gate de Supabase; revisión estática + degradación elegante implementadas.
+
 ### 2026-06-09 · Plan de backbone Supabase (diseño)
 - **Archivos:** `docs/SUPABASE_PLAN.md` (nuevo)
 - **Motivo:** analizar impacto antes de migrar (regla #7) — base de Fases 3/4/5/10/12 y fix del funnel.
