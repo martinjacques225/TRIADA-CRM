@@ -120,7 +120,7 @@ function diagFromSupa(row) {
   const sc = row.scores || {};
   return {
     id:             row.id,
-    correlativo:    row.correlativo,
+    correlativo:    row.codigo,
     prospectoId:    row.lead_id,
     scoresTec:      sc.tecnologia  || [],
     scoresVentas:   sc.ventas      || [],
@@ -249,7 +249,7 @@ function propFromSupa(row) {
   if (!row) return null;
   return {
     id:          row.id,
-    correlativo: row.correlativo,
+    correlativo: row.codigo,
     prospectoId: row.lead_id,
     servicios:   row.servicios,
     valor:       row.valor,
@@ -357,7 +357,7 @@ function facturaFromSupa(row) {
   if (!row) return null;
   return {
     id:           row.id,
-    correlativo:  row.correlativo,
+    correlativo:  row.codigo,
     leadId:       row.lead_id,
     propuestaId:  row.propuesta_id,
     monto:        row.monto,
