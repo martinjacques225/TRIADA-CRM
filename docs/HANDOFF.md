@@ -39,7 +39,7 @@
 - **Agenda → calendario completo** 🟡 — `modules/agenda/agenda.js` reescrito: vistas **Mes / Semana / Lista** (conmutador persiste en localStorage), navegación mes/semana + botón Hoy, leyenda-filtro por tipo (clic oculta/muestra), clic en día/celda crea reunión, clic en evento abre detalle. Verificado en preview (3 vistas, claro/oscuro, 0 errores de consola); **falta verificar en producción con datos reales**.
 - **Modelo de reunión** 🟡 — 7 tipos slug en `citas.tipo` (`emergencia/rutina/negocio/diagnostico/seguimiento/propuesta/interna`, constantes en `utils.js` con mapeo de labels legacy), participantes (UUIDs de `profiles`), recordatorios (minutos), recurrencia (daily/weekly/monthly expandida client-side), duración, vínculo a prospecto, estado (se mantiene Pendiente/Confirmada/Realizada/Cancelada; Cancelada no se pinta).
 - **Recordatorios + alertas** 🟡 — `modules/agenda/reminders.js`: dock flotante en todos los módulos (avisos activos + próximas con cuenta regresiva), campana del topbar con badge de no-leídos (inyectada en `#topbarActions`), notificaciones push in-app que se disparan solas (timers re-programados cada 60 s). Leídos persisten en localStorage.
-- ⬜ **PENDIENTE — correr `supabase/calendar.sql`**: agrega `duracion_min, participantes, recordatorios, recurrencia` a `citas` y migra los `tipo` legacy a slugs. **Sin correrlo el CRM no se rompe** (fallback 42703 en `db.js` guarda la cita base y avisa en consola), pero participantes/recordatorios/recurrencia no persisten.
+- ✅ **`supabase/calendar.sql` ejecutado y verificado (2026-06-12)**: probe en vivo confirma que `citas` ya tiene `duracion_min, participantes, recordatorios, recurrencia` (las 4 devuelven `200 []` en vez de `42703`). Persistencia completa del calendario habilitada. El fallback 42703 de `db.js` queda como red de seguridad pero ya no se dispara.
 - **Modal de cita viejo eliminado** — `openCitaModal/openCitaModalForProspecto` (modals.js) redirigen al modal de reunión nuevo. El filtro "Mis citas" de la agenda vieja fue reemplazado por el modelo de participantes.
 - **Equipo** — se lee de `profiles` (`profiles.getAll()` en db.js, sólo `activo`); colores estables por índice. Con 1 solo usuario el picker muestra 1 persona (ver P1: crear consultores).
 
@@ -109,8 +109,8 @@ index.html
 
 ## 4. Próximos pasos (por prioridad)
 
-### ⬜ P0 — correr `supabase/calendar.sql` (SQL Editor de Supabase)
-Agrega las columnas del calendario a `citas` y migra los tipos legacy. Idempotente. Mientras no se corra, el calendario funciona pero participantes/recordatorios/recurrencia/duración no persisten (fallback defensivo en `db.js`).
+### ✅ P0 — `supabase/calendar.sql` ejecutado (2026-06-12)
+Columnas del calendario agregadas a `citas` y verificadas en vivo. Persistencia completa.
 
 ### ✅ P0 auditoría — todo resuelto 2026-06-11 (ver §1). `supabase/autodiagnosticos.sql` ya ejecutado.
 
@@ -163,6 +163,9 @@ Agrega las columnas del calendario a `citas` y migra los tipos legacy. Idempoten
 ---
 
 ## 7. Bitácora de sesiones (más reciente arriba)
+
+### 2026-06-12 (cont.) — calendar.sql ejecutado y verificado
+- El usuario corrió `supabase/calendar.sql`. Probe en vivo (GET con key publishable) confirma que `citas` tiene `duracion_min/participantes/recordatorios/recurrencia` (200 [] en vez de 42703). Calendario con persistencia completa. (RLS impide leer filas anon, así que la migración de `tipo` legacy no se inspeccionó por valor, pero el ALTER quedó confirmado.)
 
 ### 2026-06-12 — Calendario de reuniones con recordatorios (handoff Claude Design)
 - Implementado el design bundle `on9CJtUqVoBeYzpevwHLNw` ("Calendario con Recordatorios y Reuniones"). La parte de re-skin del bundle ya estaba implementada (2026-06-11).
