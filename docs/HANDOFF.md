@@ -55,8 +55,8 @@
 - **Notas del diagnóstico** ✅ — campo eliminado del modal y del engine del informe (decisión del usuario: sin función real aún).
 - **Formulario público 360** ✅ (rediseñado por decisión del usuario) — el formulario que llena el cliente es **autoevaluación de referencia**, NO el diagnóstico oficial. Nueva tabla `autodiagnosticos` (lead_id, scores) con RLS anon-insert-only; `diagnostico-publico.html` inserta ahí; el CRM la muestra como chip "📋 Autodiag." en la tarjeta del pipeline y como panel de referencia en la ficha del prospecto. El Diagnóstico 360 del CRM sigue siendo el oficial (genera el Informe Ejecutivo). Lecturas fail-soft si la tabla no existe.
 
-### ⚠️ SETUP PENDIENTE (usuario)
-- **Correr `supabase/autodiagnosticos.sql`** en Supabase → SQL Editor (tabla + policies). Hasta entonces: el CRM funciona normal (lecturas fail-soft), pero el formulario público seguirá fallando al enviar.
+### ✅ Setup completo
+- `supabase/autodiagnosticos.sql` ejecutado por el usuario (2026-06-11). Verificado contra la base: tabla existe, anon no lee (200 []), anon-insert pasa RLS y solo topa FK con lead inexistente (23503). **Formulario público 360 operativo end-to-end.**
 
 ---
 
@@ -152,6 +152,9 @@ index.html
 ---
 
 ## 7. Bitácora de sesiones (más reciente arriba)
+
+### 2026-06-11 (cont. 4) — SQL de autodiagnósticos ejecutado y verificado
+- Usuario corrió `supabase/autodiagnosticos.sql`. Verificado en vivo: anon sin lectura, anon-insert pasa RLS (23503 con lead falso = policy OK). Pipeline completo del CRM operativo: prospecto→cita→diagnóstico→propuesta→cliente→factura + autodiagnóstico público de referencia.
 
 ### 2026-06-11 (cont. 3) — Fixes de la auditoría aplicados (lote completo)
 - Decisiones del usuario: (a) quitar notas del diagnóstico; (b) el formulario público es autoevaluación de REFERENCIA adjunta al lead (pipeline), el Diagnóstico 360 del CRM es el oficial; (c) continuar con todo lo demás.
