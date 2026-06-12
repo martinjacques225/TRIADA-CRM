@@ -104,14 +104,6 @@ export const prospectos = {
     const { error } = await supabase.from('leads').delete().eq('id', id);
     _throw(error);
   },
-  byEstado: async (estado) => {
-    const { data, error } = await supabase.from('leads').select('*').eq('estado', estado).order('created_at', { ascending: false });
-    _throw(error); return data.map(leadFromSupa);
-  },
-  byRubro:  async (rubro)  => {
-    const { data, error } = await supabase.from('leads').select('*').eq('giro', rubro).order('created_at', { ascending: false });
-    _throw(error); return data.map(leadFromSupa);
-  },
 };
 
 // ─── DIAGNÓSTICOS ─────────────────────────────────────────────
@@ -238,10 +230,6 @@ export const citas = {
     const { data, error } = await supabase.from('citas').select('*').eq('lead_id', pid).order('fecha', { ascending: true });
     _throw(error); return data.map(citaFromSupa);
   },
-  byEstado:    async (est) => {
-    const { data, error } = await supabase.from('citas').select('*').eq('estado', est).order('fecha', { ascending: true });
-    _throw(error); return data.map(citaFromSupa);
-  },
 };
 
 // ─── PROPUESTAS ──────────────────────────────────────────────
@@ -297,10 +285,6 @@ export const propuestas = {
     const { data, error } = await supabase.from('propuestas').select('*').eq('lead_id', pid).order('created_at', { ascending: false });
     _throw(error); return data.map(propFromSupa);
   },
-  byEstado:    async (est) => {
-    const { data, error } = await supabase.from('propuestas').select('*').eq('estado', est).order('created_at', { ascending: false });
-    _throw(error); return data.map(propFromSupa);
-  },
 };
 
 // ─── CLIENTES ────────────────────────────────────────────────
@@ -320,14 +304,16 @@ function clienteFromSupa(row) {
   };
 }
 
+// La tabla clientes NO tiene nombre/empresa/email/telefono: la razón social
+// es el identificador (mandar columnas inexistentes rompía el INSERT con 42703).
 function clienteToSupa(data) {
   return clean({
-    lead_id:  data.leadId,
-    nombre:   data.nombre,
-    empresa:  data.empresa,
-    rut:      data.rut,
-    email:    data.email,
-    telefono: data.telefono,
+    lead_id:      data.leadId,
+    razon_social: data.razonSocial || data.empresa || data.nombre,
+    rut:          data.rut,
+    giro:         data.giro,
+    direccion:    data.direccion,
+    responsable:  data.responsable,
   });
 }
 
@@ -345,11 +331,46 @@ export const clientes = {
     _throw(error); return data.map(clienteFromSupa);
   },
   add: async (data) => {
-    const { data: row, error } = await supabase.from('clientes').insert(clienteToSupa(data)).select('id').single();
+    const payload = clienteToSupa(data);
+    if (!payload.responsable && _uid) payload.responsable = _uid;
+    const { data: row, error } = await supabase.from('clientes').insert(payload).select('id').single();
     _throw(error); return row.id;
   },
   delete: async (id) => {
     const { error } = await supabase.from('clientes').delete().eq('id', id);
+    _throw(error);
+  },
+};
+
+// ─── AUTODIAGNÓSTICOS (referencia del cliente, formulario público) ─────────
+// El cliente llena el 360 público como autoevaluación: NO es el diagnóstico
+// oficial (tabla diagnosticos); es referencia adjunta al lead en el pipeline.
+// Requiere supabase/autodiagnosticos.sql. Las lecturas del CRM deben fallar
+// suave si la tabla aún no existe (llamar dentro de try/catch).
+function autodiagFromSupa(row) {
+  if (!row) return null;
+  const sc = row.scores || {};
+  return {
+    id:           row.id,
+    prospectoId:  row.lead_id,
+    scoresTec:    sc.tecnologia || [],
+    scoresVentas: sc.ventas     || [],
+    scoresFinanzas: sc.finanzas || [],
+    fecha:        row.created_at,
+  };
+}
+
+export const autodiags = {
+  getAll: async () => {
+    const { data, error } = await supabase.from('autodiagnosticos').select('*').order('created_at', { ascending: false });
+    _throw(error); return data.map(autodiagFromSupa);
+  },
+  byProspecto: async (pid) => {
+    const { data, error } = await supabase.from('autodiagnosticos').select('*').eq('lead_id', pid).order('created_at', { ascending: false });
+    _throw(error); return data.map(autodiagFromSupa);
+  },
+  delete: async (id) => {
+    const { error } = await supabase.from('autodiagnosticos').delete().eq('id', id);
     _throw(error);
   },
 };

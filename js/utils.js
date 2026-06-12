@@ -64,6 +64,17 @@ export function stageIcon(estado, size = 14) {
   return (typeof window !== 'undefined' && window.icon) ? window.icon(st.iconName, '', size) : st.icon;
 }
 
+// Estados de propuesta: el enum prop_estado de la DB usa slugs en minúscula.
+// Guardar SIEMPRE el slug; mostrar el label. ('Borrador' capitalizado → 22P02)
+export const PROP_ESTADOS = [
+  { v: 'borrador',   label: 'Borrador'   },
+  { v: 'enviada',    label: 'Enviada'    },
+  { v: 'negociando', label: 'Negociando' },
+  { v: 'aceptada',   label: 'Aceptada'   },
+  { v: 'rechazada',  label: 'Rechazada'  },
+];
+export const propEstadoLabel = (v) => (PROP_ESTADOS.find(e => e.v === v)?.label) || v || '—';
+
 export const RUBROS = ['Comercio / retail','Servicios','Gastronomía','Salud','Construcción','Manufactura','Otro'];
 export const TAMANOS = ['1 a 5','6 a 20','21 a 50','Más de 50'];
 export const DOLORES = ['Vender más','Ordenar procesos','Controlar finanzas','Automatizar / tecnología','No sé por dónde partir'];

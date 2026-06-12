@@ -46,14 +46,17 @@
 - **Landing → Supabase** 🟡 — `01-WEB/Triada_Landing_Conversion.html` + `diagnostico-publico.html` insertan leads vía REST con `origen='landing'` (permitido a anon por RLS).
 - **Facturación** 🟡 — **arreglado hoy** (decisión del usuario: facturas → `cliente_id`). Módulo reescrito a cliente-céntrico: `facturaToSupa/FromSupa` mapean columnas reales (`cliente_id, monto, pagado, estado, emision, vencimiento`); estados al enum real (`pendiente/parcial/pagado/vencido`, antes mandaba `Pendiente/Enviada` → 22P02); `toFactEstado()` blinda el valor; modal/tabla seleccionan y muestran **cliente**; guardado en try/catch. **Depende de que existan clientes** (ver 🔴 abajo) para ser usable.
 
-### 🔴 Roto / bloqueado (auditoría completa 2026-06-11, verificado contra base en vivo)
-- **Propuestas NO se guardan** 🔴 — `ESTADOS_PROP` capitalizado (`'Borrador'`) vs enum `prop_estado` minúscula → 22P02 (verificado). Segundo bloqueo: `vigencia: ''` → 22007 date (verificado). Sin try/catch → fallo silencioso. Afecta `propuestas.js` (modal, KPIs, colores) y los filtros capitalizados en `home.js`, `informes.js`, `modals.js:200` (botón "Crear factura" con `=== 'Aceptada'`).
-- **Citas sin hora NO se guardan** 🔴 — `hora: ''` → 22007 time (verificado). Sin try/catch → silencioso. Fix: `|| null` en hora (y fecha) en `agenda.js`.
-- **Formulario público 360 roto (doble)** 🔴 — `diagnostico-publico.html` inserta como **anon** en `diagnosticos` pero RLS solo permite anon→leads (42501 siempre), y además manda `estado:'cliente'` que no existe en `diag_estado` (22P02). El botón "🔗 Compartir 360" manda al cliente a un formulario que SIEMPRE falla al enviar. Fix: policy RLS para anon-insert en diagnosticos (con condición) o edge function; y estado `'borrador'`.
-- **Área activa nunca persiste** 🔴 — `_setArea` (app.js) escribe `'Tecnología'` en `profiles.area`, enum `area_t` espera `'tecnologia'` (verificado 22P02); el error se traga con `.then(()=>{})`. Funciona en memoria, se pierde al recargar. Fix: mapa label→slug y al leer, slug→label.
-- **Crear cliente (clientes-write)** 🔴 — `clienteToSupa` escribe `nombre, empresa, email, telefono` (no existen; tabla real: `razon_social, rut, giro, direccion, lead_id`) → 42703. `convertirACliente` roto. Lectura ya corregida. Fix: mapear `razon_social ← empresa||nombre`. **Bloquea facturación usable.**
-- **deleteProspecto / limpiarDatos revientan con FK** 🔴 — `leads` es referenciado por diagnosticos/citas/propuestas/clientes **sin ON DELETE CASCADE**; eliminar un prospecto con hijos → 23503 silencioso (el usuario cree que eliminó). `limpiarDatos` borra prospectos ANTES que los hijos y no borra clientes/facturas. Fix: borrar hijos primero (o ALTER con cascade) + try/catch.
-- **Notas del diagnóstico se pierden** 🟠 — la UI las captura (`diagnosticos.js`), el informe ejecutivo las lee (`informe.engine.js:233`), pero NO hay columna en la tabla y `diagToSupa` no las manda. Decisión: agregar columna `notas` o quitar el campo.
+### ✅ Resueltos en la sesión de auditoría (2026-06-11 tarde) — TODOS los 🔴 de la auditoría
+- **Propuestas** ✅ — `PROP_ESTADOS` (slug enum + label) en `utils.js`; modal guarda slug; `vigencia || null`; try/catch; filtros/colores alineados en `propuestas.js`, `home.js`, `informes.js`, `modals.js` (botón "Crear factura" con `'aceptada'`).
+- **Citas** ✅ — `fecha/hora || null` + fecha obligatoria + try/catch en `agenda.js`.
+- **Clientes-write** ✅ — `clienteToSupa` escribe `razon_social ← empresa||nombre, rut, giro, direccion, lead_id` + responsable auto; `convertirACliente` corregido con try/catch. **Facturación queda usable end-to-end.**
+- **deleteProspecto / limpiarDatos** ✅ — borrado en orden FK-seguro (facturas→propuestas→diagnosticos→citas→clientes→autodiags→lead) + try/catch; export incluye clientes y facturas.
+- **Área activa** ✅ — mapa `AREA_TO_DB/FROM_DB` (label UI ↔ slug enum `area_t`) en `app.js`; persiste y se restaura al recargar.
+- **Notas del diagnóstico** ✅ — campo eliminado del modal y del engine del informe (decisión del usuario: sin función real aún).
+- **Formulario público 360** ✅ (rediseñado por decisión del usuario) — el formulario que llena el cliente es **autoevaluación de referencia**, NO el diagnóstico oficial. Nueva tabla `autodiagnosticos` (lead_id, scores) con RLS anon-insert-only; `diagnostico-publico.html` inserta ahí; el CRM la muestra como chip "📋 Autodiag." en la tarjeta del pipeline y como panel de referencia en la ficha del prospecto. El Diagnóstico 360 del CRM sigue siendo el oficial (genera el Informe Ejecutivo). Lecturas fail-soft si la tabla no existe.
+
+### ⚠️ SETUP PENDIENTE (usuario)
+- **Correr `supabase/autodiagnosticos.sql`** en Supabase → SQL Editor (tabla + policies). Hasta entonces: el CRM funciona normal (lecturas fail-soft), pero el formulario público seguirá fallando al enviar.
 
 ---
 
@@ -98,23 +101,13 @@ index.html
 
 ## 4. Próximos pasos (por prioridad)
 
-### 🔴 P0 — lo roto, en orden de impacto (auditoría 2026-06-11; ver §1)
-1. Propuestas (estados minúscula + vigencia null + try/catch + filtros en home/informes/modals).
-2. Citas (hora/fecha `|| null` + try/catch).
-3. Clientes-write (`razon_social ← empresa||nombre`) → desbloquea facturación.
-4. deleteProspecto/limpiarDatos (orden de borrado FK + try/catch).
-5. Área activa (mapa label↔slug `area_t`).
-6. Formulario público 360 (RLS para anon o estado validado; decisión de seguridad).
-7. Notas de diagnóstico (decisión: columna nueva vs quitar campo).
+### ✅ P0 auditoría — todo resuelto 2026-06-11 (ver §1). Único pendiente: correr `supabase/autodiagnosticos.sql`.
 
-### 🧹 P1.5 — gaps menores y redundancias (auditoría)
-- `exportarDatos` no incluye clientes ni facturas.
-- `home.js` cita de hoy muestra `c.empresa` (no existe en citas) → resolver prospecto.
-- Campos del esquema sin UI: `leads.region`, `leads.facturacion_est`, `leads.scoring`.
+### 🧹 P1.5 — gaps menores restantes
+- Campos del esquema sin UI: `leads.region`, `leads.facturacion_est`, `leads.scoring` (decisión de producto si se capturan en el modal).
 - Doble fuente del nombre: `config userName` (localStorage, lo edita Configuración) vs `profiles.nombre` (Supabase, lo usa el nav). Unificar hacia `profiles`.
-- Código muerto en `db.js`: `prospectos.byEstado/byRubro`, `citas.byEstado`, `propuestas.byEstado`, `clientes.get` (sin usos). `facturas.byCliente` aún sin consumidor (lo usará la ficha de cliente).
-- `renderNav` hace `prospectos.getAll()` en cada navegación solo para el badge → 2-3 getAll por vista.
-- try/catch faltante en modales de cita/propuesta/diagnóstico (prospecto y factura ya lo tienen).
+- `renderNav` hace `prospectos.getAll()` en cada navegación solo para el badge → 2-3 getAll por vista (perf menor).
+- ~~exportarDatos sin clientes/facturas~~ ✅ · ~~cita c.empresa~~ ✅ · ~~código muerto db.js~~ ✅ (eliminados byEstado×3 y byRubro) · ~~try/catch modales~~ ✅
 
 ### 🟠 P1
 - Crear 2 usuarios consultores en Supabase (Auth → Add user ×2), copiar UUID y:
@@ -160,9 +153,14 @@ index.html
 
 ## 7. Bitácora de sesiones (más reciente arriba)
 
+### 2026-06-11 (cont. 3) — Fixes de la auditoría aplicados (lote completo)
+- Decisiones del usuario: (a) quitar notas del diagnóstico; (b) el formulario público es autoevaluación de REFERENCIA adjunta al lead (pipeline), el Diagnóstico 360 del CRM es el oficial; (c) continuar con todo lo demás.
+- Aplicado: propuestas (slugs+vigencia+try/catch+filtros), citas (null+try/catch), clientes-write, deletes FK-seguros, área activa (slug area_t), export completo, cita-empresa en home, código muerto fuera, tabla `autodiagnosticos` (SQL nuevo) + chip pipeline + panel en ficha + form público apuntando ahí (fail-soft hasta correr el SQL).
+- Verificado: sintaxis node --check (11 archivos), app bootea sin errores de consola (preview), form público carga y `submitDiag` definido. ⚠️ Falta que el usuario corra `supabase/autodiagnosticos.sql`.
+
 ### 2026-06-11 (cont. 2) — Auditoría completa funciones/bugs/redundancias
 - Auditados los 11 módulos + app.js + db.js + formulario público contra el esquema real (probes en vivo: 22P02/22007/42501).
-- 7 hallazgos rotos (propuestas, citas-hora, form público 360, área activa, clientes-write, FK deletes, notas diag) + gaps menores y código muerto. Todo volcado a §1 y §4. Sin fixes aplicados aún (pendiente decisión del usuario sobre orden/alcance).
+- 7 hallazgos rotos (propuestas, citas-hora, form público 360, área activa, clientes-write, FK deletes, notas diag) + gaps menores y código muerto. Todo volcado a §1 y §4.
 
 ### 2026-06-11 (cont.) — Facturación arreglada + continuidad entre sesiones
 - Decisión del usuario: facturas → `cliente_id`. Módulo facturación reescrito a cliente-céntrico (`db.js` + `facturacion.js` + `modals.js`); estados al enum; verificado contra la base (42501 RLS = columnas/enum válidos). `clienteFromSupa` (lectura) corregido para mostrar/seleccionar cliente.

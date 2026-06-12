@@ -1,16 +1,24 @@
 // app.js — Tríada Diagnóstico CRM orchestrator
-import { initDB, config, prospectos, diagnosticos, propuestas, citas, importLandingLeads, setCurrentUser, getCurrentUserId } from './js/db.js';
+import { initDB, config, prospectos, diagnosticos, propuestas, citas, clientes, facturas, autodiags, importLandingLeads, setCurrentUser, getCurrentUserId } from './js/db.js';
 import { requireAuth, signOut } from './js/auth.js';
 import { supabase } from './js/supabase.js';
 
 let _profile = null;
+
+// El enum area_t guarda slugs ('tecnologia'); la UI usa labels ('Tecnología').
+// Mandar el label rompía el UPDATE con 22P02 y el área nunca persistía.
+const AREA_TO_DB   = { 'Tecnología': 'tecnologia', 'Ventas': 'ventas', 'Finanzas': 'finanzas' };
+const AREA_FROM_DB = Object.fromEntries(Object.entries(AREA_TO_DB).map(([k, v]) => [v, k]));
 
 async function _setArea(area) {
   _profile = { ..._profile, area };
   S.profile = _profile;
   await renderNav();
   const uid = getCurrentUserId();
-  if (uid) supabase.from('profiles').update({ area }).eq('id', uid).then(() => {});
+  if (uid) {
+    const { error } = await supabase.from('profiles').update({ area: AREA_TO_DB[area] || null }).eq('id', uid);
+    if (error) console.error('No se pudo persistir el área activa:', error);
+  }
 }
 import { S } from './js/state.js';
 import { toast, escHtml, PIPELINE_STAGES, DIAG_AREAS, DIAG_PREGUNTAS } from './js/utils.js';
@@ -148,6 +156,7 @@ async function init() {
   setCurrentUser(user.id);
   try {
     const { data } = await supabase.from('profiles').select('nombre, role, area').eq('id', user.id).single();
+    if (data) data.area = AREA_FROM_DB[data.area] || data.area; // slug DB → label UI
     _profile = data;
     S.profile = data;
   } catch (_) {}
@@ -302,18 +311,35 @@ async function init() {
       else toast('No hay leads nuevos del landing', 'info');
     },
     exportarDatos: async () => {
-      const data = { prospectos: await prospectos.getAll(), diagnosticos: await diagnosticos.getAll(), propuestas: await propuestas.getAll(), citas: await citas.getAll() };
+      const data = {
+        prospectos:   await prospectos.getAll(),
+        diagnosticos: await diagnosticos.getAll(),
+        propuestas:   await propuestas.getAll(),
+        citas:        await citas.getAll(),
+        clientes:     await clientes.getAll(),
+        facturas:     await facturas.getAll(),
+      };
       const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
       const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
       a.download = `triada-crm-${new Date().toISOString().slice(0,10)}.json`; a.click();
     },
     limpiarDatos: async () => {
       if (!confirm('¿Seguro? Se eliminarán TODOS los datos del CRM.')) return;
-      const all_p = await prospectos.getAll(); for (const p of all_p) await prospectos.delete(p.id);
-      const all_d = await diagnosticos.getAll(); for (const d of all_d) await diagnosticos.delete(d.id);
-      const all_c = await citas.getAll(); for (const c of all_c) await citas.delete(c.id);
-      const all_pr = await propuestas.getAll(); for (const p of all_pr) await propuestas.delete(p.id);
-      toast('Datos eliminados', 'info'); await refreshView();
+      try {
+        // Orden FK-seguro: hijos antes que padres (facturas→clientes, todo→leads)
+        for (const f of await facturas.getAll())     await facturas.delete(f.id);
+        for (const p of await propuestas.getAll())   await propuestas.delete(p.id);
+        for (const d of await diagnosticos.getAll()) await diagnosticos.delete(d.id);
+        for (const c of await citas.getAll())        await citas.delete(c.id);
+        for (const c of await clientes.getAll())     await clientes.delete(c.id);
+        try { for (const a of await autodiags.getAll()) await autodiags.delete(a.id); } catch (_) {}
+        for (const p of await prospectos.getAll())   await prospectos.delete(p.id);
+        toast('Datos eliminados', 'info');
+      } catch (err) {
+        console.error('Error al limpiar datos:', err);
+        toast(err?.message || 'No se pudieron eliminar todos los datos', 'error');
+      }
+      await refreshView();
     },
   };
 

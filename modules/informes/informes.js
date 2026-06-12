@@ -34,8 +34,8 @@ export async function render() {
   const avgFinanzas= avgScore(todosD, 'Finanzas');
 
   // Valor propuestas
-  const valorTotal   = todasP.filter(p=>p.estado==='Aceptada').reduce((s,p)=>s+(+p.valor||0),0);
-  const valorAbierto = todasP.filter(p=>p.estado==='Enviada'||p.estado==='Negociando').reduce((s,p)=>s+(+p.valor||0),0);
+  const valorTotal   = todasP.filter(p=>p.estado==='aceptada').reduce((s,p)=>s+(+p.valor||0),0);
+  const valorAbierto = todasP.filter(p=>p.estado==='enviada'||p.estado==='negociando').reduce((s,p)=>s+(+p.valor||0),0);
 
   // Orígenes
   const origenMap = {};

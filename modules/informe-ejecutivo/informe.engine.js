@@ -230,7 +230,6 @@ export function computeInforme(diag, prospecto, evaluador = {}) {
     plan,
     resumenEjecutivo,
     conclusion,
-    notasDiagnostico: diag.notasDiagnostico || '',
   };
 }
 

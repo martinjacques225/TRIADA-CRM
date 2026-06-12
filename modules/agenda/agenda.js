@@ -1,6 +1,6 @@
 // modules/agenda/agenda.js
 import { citas, prospectos, getCurrentUserId } from '../../js/db.js';
-import { escHtml, formatDate, todayStr } from '../../js/utils.js';
+import { escHtml, formatDate, todayStr, toast } from '../../js/utils.js';
 
 const TIPOS = ['Primer contacto','Diagnóstico 360','Presentación propuesta','Seguimiento','Otro'];
 const ESTADOS_CITA = ['Pendiente','Confirmada','Realizada','Cancelada'];
@@ -137,13 +137,20 @@ export function renderCitaModal(prospectosAll, onSave, existing = null) {
       titulo:  document.getElementById('citaTitulo').value.trim(),
       tipo:    document.getElementById('citaTipo').value,
       estado:  document.getElementById('citaEstado').value,
-      fecha:   document.getElementById('citaFecha').value,
-      hora:    document.getElementById('citaHora').value,
+      // fecha/hora vacías deben ir como null: '' rompe las columnas date/time (22007)
+      fecha:   document.getElementById('citaFecha').value || null,
+      hora:    document.getElementById('citaHora').value || null,
       lugar:   document.getElementById('citaLugar').value.trim(),
       notas:   document.getElementById('citaNotas').value.trim(),
     };
-    if (c.id) await citas.update({ ...c, ...data });
-    else      await citas.add(data);
-    if (onSave) onSave();
+    if (!data.fecha) { toast('Selecciona la fecha de la cita', 'error'); return; }
+    try {
+      if (c.id) await citas.update({ ...c, ...data });
+      else      await citas.add(data);
+      if (onSave) onSave();
+    } catch (err) {
+      console.error('Error al guardar cita:', err);
+      toast(err?.message || 'No se pudo guardar la cita', 'error');
+    }
   };
 }

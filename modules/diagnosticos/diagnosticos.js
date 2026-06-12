@@ -145,10 +145,6 @@ export function renderDiagnosticoModal(prospectoId, onSave) {
     <div class="form-group">
       <label>Oportunidades detectadas (uno por línea)</label>
       <textarea id="diagOportunidades" rows="3" placeholder="Ej: Implementar seguimiento de cotizaciones&#10;Automatizar reportes financieros"></textarea>
-    </div>
-    <div class="form-group">
-      <label>Notas del diagnóstico</label>
-      <textarea id="diagNotas" rows="3" placeholder="Observaciones generales del consultor…"></textarea>
     </div>`;
 
   _renderAnswers();
@@ -158,12 +154,16 @@ export function renderDiagnosticoModal(prospectoId, onSave) {
     if (respondidas === 0) { toast('Responde al menos una pregunta antes de guardar', 'error'); return; }
     const hallazgos    = (document.getElementById('diagHallazgos')?.value    || '').split('\n').map(s=>s.trim()).filter(Boolean);
     const oportunidades= (document.getElementById('diagOportunidades')?.value || '').split('\n').map(s=>s.trim()).filter(Boolean);
-    const notas        =  document.getElementById('diagNotas')?.value || '';
-    const newId = await diagnosticos.add({
-      prospectoId, fecha: new Date().toISOString(),
-      scoresTec: answers.tec, scoresVentas: answers.ventas, scoresFinanzas: answers.finanzas,
-      hallazgos, oportunidades, notasDiagnostico: notas,
-    });
-    if (onSave) onSave(newId);
+    try {
+      const newId = await diagnosticos.add({
+        prospectoId,
+        scoresTec: answers.tec, scoresVentas: answers.ventas, scoresFinanzas: answers.finanzas,
+        hallazgos, oportunidades,
+      });
+      if (onSave) onSave(newId);
+    } catch (err) {
+      console.error('Error al guardar diagnóstico:', err);
+      toast(err?.message || 'No se pudo guardar el diagnóstico', 'error');
+    }
   };
 }

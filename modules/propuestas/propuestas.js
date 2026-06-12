@@ -1,12 +1,10 @@
 // modules/propuestas/propuestas.js
 import { propuestas, prospectos } from '../../js/db.js';
-import { escHtml, formatDate, formatCLP, toast } from '../../js/utils.js';
+import { escHtml, formatDate, formatCLP, toast, PROP_ESTADOS, propEstadoLabel } from '../../js/utils.js';
 import { parseCLP } from '../../js/format.js';
 
-const ESTADOS_PROP = ['Borrador','Enviada','Negociando','Aceptada','Rechazada'];
-
-const stColors = { Borrador:'var(--text3)', Enviada:'var(--primary)', Negociando:'var(--amber)', Aceptada:'var(--green)', Rechazada:'var(--danger)' };
-const stBgs    = { Borrador:'var(--surface3)', Enviada:'var(--primary-l)', Negociando:'var(--amber-l)', Aceptada:'var(--green-l)', Rechazada:'var(--danger-l)' };
+const stColors = { borrador:'var(--text3)', enviada:'var(--primary)', negociando:'var(--amber)', aceptada:'var(--green)', rechazada:'var(--danger)' };
+const stBgs    = { borrador:'var(--surface3)', enviada:'var(--primary-l)', negociando:'var(--amber-l)', aceptada:'var(--green-l)', rechazada:'var(--danger-l)' };
 
 // ── Items state ───────────────────────────────────────────────
 let _items = [];
@@ -93,9 +91,9 @@ export async function render() {
   const pMap = Object.fromEntries(todosP.map(p => [p.id, p]));
   const sorted = [...todas].sort((a, b) => (b.fecha || '').localeCompare(a.fecha || ''));
 
-  const totalEnv   = todas.filter(p => p.estado === 'Enviada' || p.estado === 'Negociando').length;
-  const totalAcept = todas.filter(p => p.estado === 'Aceptada').length;
-  const valorAcept = todas.filter(p => p.estado === 'Aceptada').reduce((s, p) => s + (+p.valor || 0), 0);
+  const totalEnv   = todas.filter(p => p.estado === 'enviada' || p.estado === 'negociando').length;
+  const totalAcept = todas.filter(p => p.estado === 'aceptada').length;
+  const valorAcept = todas.filter(p => p.estado === 'aceptada').reduce((s, p) => s + (+p.valor || 0), 0);
   const tasa       = todas.length ? Math.round(totalAcept / todas.length * 100) : 0;
 
   const center = document.getElementById('center');
@@ -125,7 +123,7 @@ export async function render() {
                   <td style="font-size:12.5px">${_renderServiciosCell(p.servicios)}</td>
                   <td><strong style="font-size:15px;color:var(--navy)">${formatCLP(p.valor)}</strong></td>
                   <td style="font-size:12.5px;color:var(--text3)">${formatDate(p.fecha)}</td>
-                  <td><span class="badge" style="color:${stColors[p.estado]};background:${stBgs[p.estado]};border-color:${stColors[p.estado]}">${escHtml(p.estado)}</span></td>
+                  <td><span class="badge" style="color:${stColors[p.estado]||'var(--text3)'};background:${stBgs[p.estado]||'var(--surface3)'};border-color:${stColors[p.estado]||'var(--border)'}">${escHtml(propEstadoLabel(p.estado))}</span></td>
                   <td>
                     <div style="display:flex;gap:4px">
                       <button class="btn btn-ghost btn-sm" onclick="window._app.editPropuesta('${p.id}')">Editar</button>
@@ -186,7 +184,7 @@ export function renderPropuestaModal(prospectosAll, onSave, existing = null) {
       <div class="form-group">
         <label>Estado</label>
         <select id="propEstado">
-          ${ESTADOS_PROP.map(e => `<option${(p.estado || 'Borrador') === e ? ' selected' : ''}>${e}</option>`).join('')}
+          ${PROP_ESTADOS.map(e => `<option value="${e.v}"${(p.estado || 'borrador') === e.v ? ' selected' : ''}>${e.label}</option>`).join('')}
         </select>
       </div>
       <div class="form-group">
@@ -218,12 +216,16 @@ export function renderPropuestaModal(prospectosAll, onSave, existing = null) {
       servicios: validItems,
       valor:     total,
       estado:    document.getElementById('propEstado').value,
-      vigencia:  document.getElementById('propVigencia').value,
+      vigencia:  document.getElementById('propVigencia').value || null,
       notas:     document.getElementById('propNotas').value.trim(),
-      fecha:     p.fecha || new Date().toISOString(),
     };
-    if (p.id) await propuestas.update({ ...p, ...data });
-    else      await propuestas.add(data);
-    if (onSave) onSave();
+    try {
+      if (p.id) await propuestas.update({ ...p, ...data });
+      else      await propuestas.add(data);
+      if (onSave) onSave();
+    } catch (err) {
+      console.error('Error al guardar propuesta:', err);
+      toast(err?.message || 'No se pudo guardar la propuesta', 'error');
+    }
   };
 }

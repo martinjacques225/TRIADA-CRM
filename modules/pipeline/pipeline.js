@@ -1,10 +1,11 @@
 // modules/pipeline/pipeline.js
-import { prospectos, diagnosticos } from '../../js/db.js';
+import { prospectos, diagnosticos, autodiags } from '../../js/db.js';
 import { S } from '../../js/state.js';
 import { escHtml, formatDate, PIPELINE_STAGES, stageBadge, stageIcon, RUBROS } from '../../js/utils.js';
 
 let _all = [];
 let _prosConDiag = new Set();
+let _prosConAuto = new Set();
 
 const _BADGE_STAGES = new Set(['Diagnóstico Agendado','Diagnóstico Realizado','Propuesta Enviada','Negociando','Cliente']);
 
@@ -22,6 +23,8 @@ const _ico = {
 export async function render() {
   const [allProsp, allDiags] = await Promise.all([prospectos.getAll(), diagnosticos.getAll()]);
   _prosConDiag = new Set(allDiags.map(d => d.prospectoId).filter(Boolean));
+  // Autodiagnósticos del cliente (referencia): falla suave si la tabla no existe
+  try { _prosConAuto = new Set((await autodiags.getAll()).map(a => a.prospectoId).filter(Boolean)); } catch (_) { _prosConAuto = new Set(); }
   const all = _all = allProsp;
   const filtered = _filter(all);
 
@@ -157,6 +160,7 @@ function _prospectCard(p, st) {
       ${p.tamano ? `<span class="prospect-meta-chip">${escHtml(p.tamano)} trabaj.</span>` : ''}
       ${dolorChip}
       ${_BADGE_STAGES.has(p.estado) && !_prosConDiag.has(p.id) ? `<span class="prospect-meta-chip" style="background:var(--amber-l);color:var(--amber);border:1px solid var(--amber);display:inline-flex;align-items:center;gap:4px">${window.icon?window.icon('clipCheck','',12):''} 360 pendiente</span>` : ''}
+      ${_prosConAuto.has(p.id) ? `<span class="prospect-meta-chip" style="background:var(--teal-l);color:var(--teal);border:1px solid var(--teal)" title="El cliente respondió el formulario público (referencia)">📋 Autodiag.</span>` : ''}
     </div>
     <div class="prospect-actions">
       ${p.telefono ? `<button class="btn-action" onclick="window._app.callProspecto('${p.id}')" title="Llamar">${_ico.phone}</button>` : ''}

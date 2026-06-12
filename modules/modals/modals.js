@@ -1,6 +1,6 @@
 // modules/modals/modals.js
-import { prospectos, diagnosticos, citas, propuestas, clientes, facturas } from '../../js/db.js';
-import { escHtml, PIPELINE_STAGES, RUBROS, TAMANOS, DOLORES, ORIGENES, todayStr, toast, formatCLP } from '../../js/utils.js';
+import { prospectos, diagnosticos, citas, propuestas, clientes, facturas, autodiags } from '../../js/db.js';
+import { escHtml, PIPELINE_STAGES, RUBROS, TAMANOS, DOLORES, ORIGENES, DIAG_AREAS, todayStr, toast, formatCLP, propEstadoLabel } from '../../js/utils.js';
 import { attachFormatting, validateRut, validateEmail } from '../../js/format.js';
 import { renderCitaModal } from '../agenda/agenda.js';
 import { renderPropuestaModal } from '../propuestas/propuestas.js';
@@ -105,6 +105,9 @@ export async function openProspectoDetail(id) {
     diagnosticos.byProspecto(id), citas.byProspecto(id),
     propuestas.byProspecto(id), clientes.getByLead(id),
   ]);
+  // Autodiagnóstico del cliente (referencia): falla suave si la tabla no existe aún
+  let autos = [];
+  try { autos = await autodiags.byProspecto(id); } catch (_) {}
 
   _openModal(`Ficha: ${p.nombre}`, 'lg');
   document.getElementById('modalSave').style.display = 'none';
@@ -152,6 +155,25 @@ export async function openProspectoDetail(id) {
         : ''}
     </div>
 
+    ${autos.length ? (() => {
+      const a = autos[0]; // el más reciente
+      const sc = {
+        tec:     Math.round(((a.scoresTec     ||[]).filter(x=>x===true).length/5)*100),
+        ventas:  Math.round(((a.scoresVentas  ||[]).filter(x=>x===true).length/5)*100),
+        finanzas:Math.round(((a.scoresFinanzas||[]).filter(x=>x===true).length/5)*100),
+      };
+      return `<div style="background:var(--amber-l);border:1px solid var(--amber);border-radius:10px;padding:12px;margin-bottom:16px;font-size:13px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+          <span style="font-weight:700;color:var(--amber)">📋 Autodiagnóstico del cliente <span style="font-weight:500;font-size:11.5px">(referencia, no oficial)</span></span>
+          <span style="font-size:11.5px;color:var(--text3)">${new Date(a.fecha).toLocaleDateString('es-CL')}</span>
+        </div>
+        <div style="display:flex;gap:14px">
+          ${DIAG_AREAS.map(ar => `<div style="flex:1;text-align:center"><div style="font-size:11px;color:var(--text3)">${ar.label}</div><div style="font-size:17px;font-weight:800;color:${ar.color}">${sc[ar.id]}%</div></div>`).join('')}
+        </div>
+        <div style="font-size:11.5px;color:var(--text3);margin-top:8px">El diagnóstico oficial se realiza desde el CRM (botón "+ Diagnóstico") y genera el Informe Ejecutivo 360.</div>
+      </div>`;
+    })() : ''}
+
     <h4 style="font-size:14px;font-weight:700;color:var(--navy);margin-bottom:10px">Diagnósticos (${diags.length})</h4>
     ${diags.length===0?`<p style="font-size:13px;color:var(--text3)">Sin diagnósticos aún.</p>`:
       diags.map(d=>{
@@ -194,11 +216,11 @@ export async function openProspectoDetail(id) {
             </div>
             <div style="text-align:right;flex-shrink:0">
               <div style="font-weight:700;color:var(--navy)">${prop.valor ? formatCLP(prop.valor) : '—'}</div>
-              <div style="font-size:12px;color:var(--text3)">${escHtml(prop.estado)}</div>
+              <div style="font-size:12px;color:var(--text3)">${escHtml(propEstadoLabel(prop.estado))}</div>
             </div>
           </div>
-          ${prop.estado === 'Aceptada'
-            ? `<button class="btn btn-ghost btn-sm" style="margin-top:6px;font-size:12px" onclick="window._app.openFacturaModal('${p.id}','${prop.id}')">🧾 Crear factura</button>`
+          ${prop.estado === 'aceptada'
+            ? `<button class="btn btn-ghost btn-sm" style="margin-top:6px;font-size:12px" onclick="window._app.openFacturaModal('${p.id}')">🧾 Crear factura</button>`
             : ''}
         </div>`;
       }).join('')}
@@ -283,23 +305,46 @@ export async function convertirACliente(leadId) {
     toast('Este prospecto ya tiene ficha de cliente', 'info');
     return;
   }
-  await clientes.add({
-    leadId,
-    nombre:   p.nombre,
-    empresa:  p.empresa,
-    rut:      p.rut,
-    email:    p.email,
-    telefono: p.telefono,
-  });
-  toast(`Cliente "${p.nombre}" creado exitosamente`, 'success');
-  window._app?.refreshView?.();
+  try {
+    // La tabla clientes guarda razon_social/rut/giro (email/telefono viven en el lead)
+    await clientes.add({
+      leadId,
+      razonSocial: p.empresa || p.nombre,
+      rut:         p.rut,
+      giro:        p.rubro,
+    });
+    toast(`Cliente "${p.empresa || p.nombre}" creado exitosamente`, 'success');
+    window._app?.refreshView?.();
+  } catch (err) {
+    console.error('Error al crear cliente:', err);
+    toast(err?.message || 'No se pudo crear la ficha de cliente', 'error');
+  }
 }
 
 export async function deleteProspecto(id) {
-  if (!confirm('¿Eliminar este prospecto? Esta acción no se puede deshacer.')) return;
-  await prospectos.delete(id);
-  toast('Prospecto eliminado', 'info');
-  window._app?.refreshView?.();
+  if (!confirm('¿Eliminar este prospecto? Se eliminarán también sus diagnósticos, citas, propuestas, ficha de cliente y facturas. Esta acción no se puede deshacer.')) return;
+  try {
+    // Sin ON DELETE CASCADE en la DB: borrar hijos antes que el lead (si no, 23503)
+    const [diags, cits, props, clis] = await Promise.all([
+      diagnosticos.byProspecto(id), citas.byProspecto(id),
+      propuestas.byProspecto(id), clientes.getByLead(id),
+    ]);
+    for (const c of clis) {
+      const facts = await facturas.byCliente(c.id);
+      for (const f of facts) await facturas.delete(f.id);
+    }
+    for (const x of props) await propuestas.delete(x.id);
+    for (const x of diags) await diagnosticos.delete(x.id);
+    for (const x of cits)  await citas.delete(x.id);
+    for (const x of clis)  await clientes.delete(x.id);
+    try { for (const a of await autodiags.byProspecto(id)) await autodiags.delete(a.id); } catch (_) {}
+    await prospectos.delete(id);
+    toast('Prospecto eliminado', 'info');
+    window._app?.refreshView?.();
+  } catch (err) {
+    console.error('Error al eliminar prospecto:', err);
+    toast(err?.message || 'No se pudo eliminar el prospecto', 'error');
+  }
 }
 
 export async function deleteCita(id) {

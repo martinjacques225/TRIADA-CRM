@@ -11,12 +11,13 @@ export async function render() {
   ]);
 
   const today = todayStr();
+  const pMap = Object.fromEntries(todos.map(p => [p.id, p]));
   const citasHoy = todasCitas.filter(c => c.fecha && c.fecha.slice(0,10) === today && c.estado !== 'Cancelada');
   const nuevos   = todos.filter(p => p.estado === 'Nuevo').length;
   const clientes = todos.filter(p => p.estado === 'Cliente').length;
-  const propEnv  = todasPropuestas.filter(p => p.estado === 'Enviada' || p.estado === 'Negociando').length;
+  const propEnv  = todasPropuestas.filter(p => p.estado === 'enviada' || p.estado === 'negociando').length;
   const valorProyectado = todasPropuestas
-    .filter(p => p.estado === 'Negociando' || p.estado === 'Aceptada')
+    .filter(p => p.estado === 'negociando' || p.estado === 'aceptada')
     .reduce((sum, p) => sum + (Number(p.valor) || 0), 0);
 
   const recientes = [...todos].sort((a,b) => (b.fechaCreacion||'').localeCompare(a.fechaCreacion||'')).slice(0, 5);
@@ -65,7 +66,7 @@ export async function render() {
               <div style="width:40px;height:40px;border-radius:11px;display:flex;align-items:center;justify-content:center;background:var(--teal-l);color:var(--teal);flex-shrink:0">${_i(_tipoIcon(c.tipo),20)}</div>
               <div style="flex:1">
                 <div style="font-size:14px;font-weight:600;color:var(--navy)">${c.titulo || c.tipo || 'Cita'}</div>
-                <div style="font-size:12.5px;color:var(--text3)">${c.hora || ''} · ${c.empresa || ''}</div>
+                <div style="font-size:12.5px;color:var(--text3)">${[c.hora, pMap[c.prospectoId]?.empresa || pMap[c.prospectoId]?.nombre].filter(Boolean).join(' · ')}</div>
               </div>
               <span class="badge" style="font-size:11px;color:var(--primary);background:var(--primary-l);border-color:var(--primary)">${c.estado || 'Pendiente'}</span>
             </div>`).join('')}
