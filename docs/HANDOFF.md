@@ -46,8 +46,14 @@
 - **Landing → Supabase** 🟡 — `01-WEB/Triada_Landing_Conversion.html` + `diagnostico-publico.html` insertan leads vía REST con `origen='landing'` (permitido a anon por RLS).
 - **Facturación** 🟡 — **arreglado hoy** (decisión del usuario: facturas → `cliente_id`). Módulo reescrito a cliente-céntrico: `facturaToSupa/FromSupa` mapean columnas reales (`cliente_id, monto, pagado, estado, emision, vencimiento`); estados al enum real (`pendiente/parcial/pagado/vencido`, antes mandaba `Pendiente/Enviada` → 22P02); `toFactEstado()` blinda el valor; modal/tabla seleccionan y muestran **cliente**; guardado en try/catch. **Depende de que existan clientes** (ver 🔴 abajo) para ser usable.
 
-### 🔴 Roto / bloqueado (NO usar hasta arreglar)
-- **Crear cliente (clientes-write)** 🔴 — `clienteToSupa` aún escribe `nombre, empresa, email, telefono`, columnas que NO existen (la tabla real tiene `razon_social, rut, giro, direccion, lead_id`). El INSERT falla con 42703, y `convertirACliente` (botón "Crear ficha de cliente") no funciona. **La lectura (`clienteFromSupa`) ya quedó corregida hoy** (lee `razon_social/giro/...`), por eso el selector de cliente de Facturación ya muestra clientes que existan. Pendiente: corregir `clienteToSupa` (mapear `razon_social ← empresa||nombre`; `email/telefono` no tienen columna) + `convertirACliente`. Diferido por el usuario ("las demás cosas para después"). **Sin esto, no se pueden crear clientes y por tanto no hay a quién facturar salvo insertando clientes directo en Supabase.**
+### 🔴 Roto / bloqueado (auditoría completa 2026-06-11, verificado contra base en vivo)
+- **Propuestas NO se guardan** 🔴 — `ESTADOS_PROP` capitalizado (`'Borrador'`) vs enum `prop_estado` minúscula → 22P02 (verificado). Segundo bloqueo: `vigencia: ''` → 22007 date (verificado). Sin try/catch → fallo silencioso. Afecta `propuestas.js` (modal, KPIs, colores) y los filtros capitalizados en `home.js`, `informes.js`, `modals.js:200` (botón "Crear factura" con `=== 'Aceptada'`).
+- **Citas sin hora NO se guardan** 🔴 — `hora: ''` → 22007 time (verificado). Sin try/catch → silencioso. Fix: `|| null` en hora (y fecha) en `agenda.js`.
+- **Formulario público 360 roto (doble)** 🔴 — `diagnostico-publico.html` inserta como **anon** en `diagnosticos` pero RLS solo permite anon→leads (42501 siempre), y además manda `estado:'cliente'` que no existe en `diag_estado` (22P02). El botón "🔗 Compartir 360" manda al cliente a un formulario que SIEMPRE falla al enviar. Fix: policy RLS para anon-insert en diagnosticos (con condición) o edge function; y estado `'borrador'`.
+- **Área activa nunca persiste** 🔴 — `_setArea` (app.js) escribe `'Tecnología'` en `profiles.area`, enum `area_t` espera `'tecnologia'` (verificado 22P02); el error se traga con `.then(()=>{})`. Funciona en memoria, se pierde al recargar. Fix: mapa label→slug y al leer, slug→label.
+- **Crear cliente (clientes-write)** 🔴 — `clienteToSupa` escribe `nombre, empresa, email, telefono` (no existen; tabla real: `razon_social, rut, giro, direccion, lead_id`) → 42703. `convertirACliente` roto. Lectura ya corregida. Fix: mapear `razon_social ← empresa||nombre`. **Bloquea facturación usable.**
+- **deleteProspecto / limpiarDatos revientan con FK** 🔴 — `leads` es referenciado por diagnosticos/citas/propuestas/clientes **sin ON DELETE CASCADE**; eliminar un prospecto con hijos → 23503 silencioso (el usuario cree que eliminó). `limpiarDatos` borra prospectos ANTES que los hijos y no borra clientes/facturas. Fix: borrar hijos primero (o ALTER con cascade) + try/catch.
+- **Notas del diagnóstico se pierden** 🟠 — la UI las captura (`diagnosticos.js`), el informe ejecutivo las lee (`informe.engine.js:233`), pero NO hay columna en la tabla y `diagToSupa` no las manda. Decisión: agregar columna `notas` o quitar el campo.
 
 ---
 
@@ -92,9 +98,23 @@ index.html
 
 ## 4. Próximos pasos (por prioridad)
 
-### 🔴 P0 — arreglar lo roto (diferido por el usuario)
-- **Crear cliente (clientes-write):** corregir `clienteToSupa` → escribir `razon_social ← empresa||nombre`, `rut`, `giro`, `direccion`, `lead_id` (NO `nombre/empresa/email/telefono`; email/telefono no tienen columna). Ajustar `convertirACliente` en `modals.js`. Es el desbloqueo directo para que Facturación sea usable.
-- ~~Facturación~~ ✅ resuelto 2026-06-11 (facturas → `cliente_id`).
+### 🔴 P0 — lo roto, en orden de impacto (auditoría 2026-06-11; ver §1)
+1. Propuestas (estados minúscula + vigencia null + try/catch + filtros en home/informes/modals).
+2. Citas (hora/fecha `|| null` + try/catch).
+3. Clientes-write (`razon_social ← empresa||nombre`) → desbloquea facturación.
+4. deleteProspecto/limpiarDatos (orden de borrado FK + try/catch).
+5. Área activa (mapa label↔slug `area_t`).
+6. Formulario público 360 (RLS para anon o estado validado; decisión de seguridad).
+7. Notas de diagnóstico (decisión: columna nueva vs quitar campo).
+
+### 🧹 P1.5 — gaps menores y redundancias (auditoría)
+- `exportarDatos` no incluye clientes ni facturas.
+- `home.js` cita de hoy muestra `c.empresa` (no existe en citas) → resolver prospecto.
+- Campos del esquema sin UI: `leads.region`, `leads.facturacion_est`, `leads.scoring`.
+- Doble fuente del nombre: `config userName` (localStorage, lo edita Configuración) vs `profiles.nombre` (Supabase, lo usa el nav). Unificar hacia `profiles`.
+- Código muerto en `db.js`: `prospectos.byEstado/byRubro`, `citas.byEstado`, `propuestas.byEstado`, `clientes.get` (sin usos). `facturas.byCliente` aún sin consumidor (lo usará la ficha de cliente).
+- `renderNav` hace `prospectos.getAll()` en cada navegación solo para el badge → 2-3 getAll por vista.
+- try/catch faltante en modales de cita/propuesta/diagnóstico (prospecto y factura ya lo tienen).
 
 ### 🟠 P1
 - Crear 2 usuarios consultores en Supabase (Auth → Add user ×2), copiar UUID y:
@@ -139,6 +159,10 @@ index.html
 ---
 
 ## 7. Bitácora de sesiones (más reciente arriba)
+
+### 2026-06-11 (cont. 2) — Auditoría completa funciones/bugs/redundancias
+- Auditados los 11 módulos + app.js + db.js + formulario público contra el esquema real (probes en vivo: 22P02/22007/42501).
+- 7 hallazgos rotos (propuestas, citas-hora, form público 360, área activa, clientes-write, FK deletes, notas diag) + gaps menores y código muerto. Todo volcado a §1 y §4. Sin fixes aplicados aún (pendiente decisión del usuario sobre orden/alcance).
 
 ### 2026-06-11 (cont.) — Facturación arreglada + continuidad entre sesiones
 - Decisión del usuario: facturas → `cliente_id`. Módulo facturación reescrito a cliente-céntrico (`db.js` + `facturacion.js` + `modals.js`); estados al enum; verificado contra la base (42501 RLS = columnas/enum válidos). `clienteFromSupa` (lectura) corregido para mostrar/seleccionar cliente.
