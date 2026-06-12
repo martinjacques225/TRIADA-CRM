@@ -43,6 +43,8 @@ import {
   convertirACliente,
   deleteProspecto, deleteCita, deletePropuesta,
 } from './modules/modals/modals.js';
+import { openMeetingDetail } from './modules/agenda/agenda.js';
+import { initReminders } from './modules/agenda/reminders.js';
 import { openInformeViewer } from './modules/informe-ejecutivo/informe.view.js';
 
 // ════ NAV ════
@@ -197,6 +199,7 @@ async function init() {
       });
     },
     openCitaModal, openCitaModalForProspecto,
+    openCitaDetail: (id) => openMeetingDetail(id),
     openPropuestaModal, openPropuestaModalForProspecto,
     editCita:      (id) => openCitaModal(id),
     editPropuesta: (id) => openPropuestaModal(id),
@@ -349,6 +352,9 @@ async function init() {
 
   await renderNav();
   await navigate('home');
+
+  // Dock de recordatorios + campana del topbar (vive en todos los módulos)
+  try { await initReminders(); } catch (err) { console.error('No se pudo iniciar el motor de recordatorios:', err); }
 }
 
 function _openSimpleModal(title, bodyHtml, onSave) {

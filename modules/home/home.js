@@ -1,6 +1,6 @@
 // modules/home/home.js
 import { prospectos, citas, propuestas, config } from '../../js/db.js';
-import { formatDate, formatCLP, PIPELINE_STAGES, todayStr, stageBadge, stageIcon, escHtml } from '../../js/utils.js';
+import { formatDate, formatCLP, PIPELINE_STAGES, todayStr, stageBadge, stageIcon, escHtml, meetingType } from '../../js/utils.js';
 
 const _i = (n, s) => (window.icon ? window.icon(n, '', s) : '');
 import { S } from '../../js/state.js';
@@ -61,15 +61,15 @@ export async function render() {
         <div class="section-head"><h2>Citas de hoy</h2><span class="text-muted" style="font-size:13px">${today}</span></div>
         ${citasHoy.length === 0
           ? `<div class="card card-pad" style="text-align:center;color:var(--text3);font-size:14px">Sin citas programadas para hoy.</div>`
-          : citasHoy.map(c => `
-            <div class="card card-pad" style="margin-bottom:10px;display:flex;gap:12px;align-items:center">
-              <div style="width:40px;height:40px;border-radius:11px;display:flex;align-items:center;justify-content:center;background:var(--teal-l);color:var(--teal);flex-shrink:0">${_i(_tipoIcon(c.tipo),20)}</div>
+          : citasHoy.map(c => { const t = meetingType(c.tipo); return `
+            <div class="card card-pad" onclick="window._app.openCitaDetail('${c.id}')" style="margin-bottom:10px;display:flex;gap:12px;align-items:center;cursor:pointer">
+              <div style="width:40px;height:40px;border-radius:11px;display:flex;align-items:center;justify-content:center;background:color-mix(in srgb, ${t.color} 14%, var(--surface));color:${t.color};flex-shrink:0">${_i(t.icon,20)}</div>
               <div style="flex:1">
-                <div style="font-size:14px;font-weight:600;color:var(--navy)">${c.titulo || c.tipo || 'Cita'}</div>
-                <div style="font-size:12.5px;color:var(--text3)">${[c.hora, pMap[c.prospectoId]?.empresa || pMap[c.prospectoId]?.nombre].filter(Boolean).join(' · ')}</div>
+                <div style="font-size:14px;font-weight:600;color:var(--navy)">${escHtml(c.titulo || t.label)}</div>
+                <div style="font-size:12.5px;color:var(--text3)">${[(c.hora||'').slice(0,5), pMap[c.prospectoId]?.empresa || pMap[c.prospectoId]?.nombre || 'Tríada · Equipo'].filter(Boolean).join(' · ')}</div>
               </div>
               <span class="badge" style="font-size:11px;color:var(--primary);background:var(--primary-l);border-color:var(--primary)">${c.estado || 'Pendiente'}</span>
-            </div>`).join('')}
+            </div>`; }).join('')}
       </div>
 
       <div>
@@ -214,14 +214,6 @@ function _calcIvaCard(col) {
       <div id="calcTotalr" style="color:var(--navy);font-weight:800;font-size:14px">—</div>
     </div>
   </div>`;
-}
-
-function _tipoIcon(tipo) {
-  if (!tipo) return 'calClock';
-  if (tipo.includes('iagnóstico')) return 'search';
-  if (tipo.includes('ropuesta') || tipo.includes('resentación')) return 'fileText';
-  if (tipo.includes('ontacto')) return 'phone';
-  return 'calClock';
 }
 
 function _saludo() {

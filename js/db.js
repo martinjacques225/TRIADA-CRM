@@ -170,7 +170,10 @@ export const diagnosticos = {
   },
 };
 
-// ─── CITAS ───────────────────────────────────────────────────
+// ─── CITAS (reuniones del calendario) ────────────────────────
+// Las columnas extendidas (duracion_min, participantes, recordatorios,
+// recurrencia) requieren supabase/calendar.sql. Si aún no se corrió,
+// el INSERT/UPDATE cae al payload base (42703) y avisa en consola.
 function citaFromSupa(row) {
   if (!row) return null;
   return {
@@ -184,11 +187,15 @@ function citaFromSupa(row) {
     lugar:        row.lugar,
     notas:        row.notas,
     responsable:  row.responsable,
+    durMin:        row.duracion_min || 60,
+    participantes: row.participantes || [],
+    recordatorios: row.recordatorios || [],
+    recurrencia:   row.recurrencia || 'none',
     fechaCreacion: row.created_at,
   };
 }
 
-function citaToSupa(data) {
+function citaToSupaBase(data) {
   return clean({
     lead_id:     data.prospectoId,
     titulo:      data.titulo,
@@ -200,6 +207,21 @@ function citaToSupa(data) {
     notas:       data.notas,
     responsable: data.responsable,
   });
+}
+
+function citaToSupa(data) {
+  return clean({
+    ...citaToSupaBase(data),
+    duracion_min:  data.durMin,
+    participantes: data.participantes,
+    recordatorios: data.recordatorios,
+    recurrencia:   data.recurrencia,
+  });
+}
+
+const _isMissingCol = (err) => err?.code === '42703' || /column .* does not exist/i.test(err?.message || '');
+function _warnCalendarSql() {
+  console.warn('citas: faltan columnas del calendario — ejecuta supabase/calendar.sql para persistir participantes/recordatorios/recurrencia.');
 }
 
 export const citas = {
@@ -214,12 +236,20 @@ export const citas = {
   add:         async (data) => {
     const payload = citaToSupa(data);
     if (!payload.responsable && _uid) payload.responsable = _uid;
-    const { data: row, error } = await supabase.from('citas').insert(payload).select('id').single();
+    let { data: row, error } = await supabase.from('citas').insert(payload).select('id').single();
+    if (error && _isMissingCol(error)) {
+      _warnCalendarSql();
+      ({ data: row, error } = await supabase.from('citas').insert(citaToSupaBase({ ...data, responsable: payload.responsable })).select('id').single());
+    }
     _throw(error); return row.id;
   },
   update:      async (data) => {
     const { id, ...rest } = data;
-    const { error } = await supabase.from('citas').update(citaToSupa(rest)).eq('id', id);
+    let { error } = await supabase.from('citas').update(citaToSupa(rest)).eq('id', id);
+    if (error && _isMissingCol(error)) {
+      _warnCalendarSql();
+      ({ error } = await supabase.from('citas').update(citaToSupaBase(rest)).eq('id', id));
+    }
     _throw(error);
   },
   delete:      async (id)  => {
@@ -229,6 +259,21 @@ export const citas = {
   byProspecto: async (pid) => {
     const { data, error } = await supabase.from('citas').select('*').eq('lead_id', pid).order('fecha', { ascending: true });
     _throw(error); return data.map(citaFromSupa);
+  },
+};
+
+// ─── PROFILES (equipo de consultores) ────────────────────────
+export const profiles = {
+  getAll: async () => {
+    const { data, error } = await supabase.from('profiles')
+      .select('id, nombre, email, role, area, activo').order('nombre');
+    _throw(error);
+    return data.filter(p => p.activo !== false).map(p => ({
+      id:     p.id,
+      nombre: p.nombre || p.email || 'Consultor',
+      rol:    p.role || 'Consultor',
+      area:   p.area || '',
+    }));
   },
 };
 

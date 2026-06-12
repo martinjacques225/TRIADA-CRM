@@ -117,6 +117,64 @@ export const DIAG_PREGUNTAS = {
   ],
 };
 
+// ─── Calendario de reuniones (Agenda) ────────────────────────
+// El tipo se guarda como slug en citas.tipo (text). Los labels legacy
+// ('Diagnóstico 360', 'Seguimiento'…) se mapean al leer (toMeetingType).
+export const MEETING_TYPES = [
+  { id: 'emergencia',  label: 'Emergencia',         color: '#C04F3F', icon: 'alert',     desc: 'Atención inmediata' },
+  { id: 'rutina',      label: 'Rutina',             color: '#2E9B73', icon: 'refresh',   desc: 'Operación periódica' },
+  { id: 'negocio',     label: 'Negocio',            color: '#16234A', icon: 'handshake', desc: 'Oportunidad comercial' },
+  { id: 'diagnostico', label: 'Diagnóstico 360',    color: '#0C7C88', icon: 'clipCheck', desc: 'Levantamiento 360' },
+  { id: 'seguimiento', label: 'Seguimiento',        color: '#C2871A', icon: 'phone',     desc: 'Contacto de avance' },
+  { id: 'propuesta',   label: 'Propuesta / cierre', color: '#5160C0', icon: 'propuesta', desc: 'Presentación o cierre' },
+  { id: 'interna',     label: 'Interna de equipo',  color: '#B8893B', icon: 'users',     desc: 'Coordinación interna' },
+];
+
+const LEGACY_TIPO = {
+  'Diagnóstico 360': 'diagnostico',
+  'Presentación propuesta': 'propuesta',
+  'Presentación de propuesta': 'propuesta',
+  'Seguimiento': 'seguimiento',
+  'Primer contacto': 'seguimiento',
+  'Contacto': 'seguimiento',
+  'Otro': 'rutina',
+};
+
+export function toMeetingTipo(tipo) {
+  if (MEETING_TYPES.some(t => t.id === tipo)) return tipo;
+  return LEGACY_TIPO[tipo] || tipo;
+}
+
+// Tipo de reunión (con fallback para valores desconocidos)
+export function meetingType(tipo) {
+  const id = toMeetingTipo(tipo);
+  return MEETING_TYPES.find(t => t.id === id)
+      || { id, label: tipo || 'Reunión', color: '#5E6A85', icon: 'agenda', desc: '' };
+}
+
+export const REMINDER_OPTS = [
+  { min: 0,    label: 'Al momento' },
+  { min: 10,   label: '10 min antes' },
+  { min: 30,   label: '30 min antes' },
+  { min: 60,   label: '1 hora antes' },
+  { min: 1440, label: '1 día antes' },
+];
+
+export const RECUR_OPTS = [
+  { id: 'none',    label: 'No se repite' },
+  { id: 'daily',   label: 'Cada día' },
+  { id: 'weekly',  label: 'Cada semana' },
+  { id: 'monthly', label: 'Cada mes' },
+];
+
+export const DUR_OPTS = [15, 30, 45, 60, 90, 120];
+
+export const ESTADOS_CITA = ['Pendiente', 'Confirmada', 'Realizada', 'Cancelada'];
+
+// Color estable para un miembro del equipo (por índice)
+const MEMBER_COLORS = ['#5160C0', '#0C7C88', '#2E9B73', '#7C6FD0', '#2BA9B2', '#46B488', '#C2871A', '#B8893B'];
+export function memberColor(i) { return MEMBER_COLORS[i % MEMBER_COLORS.length]; }
+
 export function stageBadge(estado) {
   const st = PIPELINE_STAGES.find(s => s.id === estado);
   if (!st) return `<span class="badge">${escHtml(estado)}</span>`;

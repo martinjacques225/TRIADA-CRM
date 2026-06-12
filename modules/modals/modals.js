@@ -2,7 +2,7 @@
 import { prospectos, diagnosticos, citas, propuestas, clientes, facturas, autodiags } from '../../js/db.js';
 import { escHtml, PIPELINE_STAGES, RUBROS, TAMANOS, DOLORES, ORIGENES, DIAG_AREAS, todayStr, toast, formatCLP, propEstadoLabel } from '../../js/utils.js';
 import { attachFormatting, validateRut, validateEmail } from '../../js/format.js';
-import { renderCitaModal } from '../agenda/agenda.js';
+import { openMeetingModal } from '../agenda/agenda.js';
 import { renderPropuestaModal } from '../propuestas/propuestas.js';
 import { renderDiagnosticoModal } from '../diagnosticos/diagnosticos.js';
 import { renderFacturaModal } from '../facturacion/facturacion.js';
@@ -18,6 +18,9 @@ function _openModal(title, size = '') {
 
 export function closeModal() {
   document.getElementById('modalOverlay').classList.remove('open');
+  // El modal de reunión personaliza el botón de guardar; restaurar defaults.
+  document.getElementById('modalSave').textContent = 'Guardar';
+  document.getElementById('modalCancel').textContent = 'Cancelar';
 }
 
 export async function openProspectoModal(id = null) {
@@ -243,18 +246,13 @@ export async function openDiagnosticoModal(prospectoId) {
   });
 }
 
+// Las citas ahora son reuniones del calendario (modules/agenda/agenda.js).
 export async function openCitaModal(id = null) {
-  const existing = id ? await citas.get(id) : null;
-  const allP = await prospectos.getAll();
-  _openModal(existing ? 'Editar cita' : 'Nueva cita');
-  renderCitaModal(allP, () => { closeModal(); toast(existing?'Cita actualizada':'Cita creada','success'); window._app?.refreshView?.(); }, existing);
+  await openMeetingModal(id ? { edit: id } : {});
 }
 
 export async function openCitaModalForProspecto(prospectoId) {
-  const allP = await prospectos.getAll();
-  const p = allP.find(x=>x.id===prospectoId);
-  _openModal(`Nueva cita — ${p?.nombre||''}`);
-  renderCitaModal(allP, () => { closeModal(); toast('Cita creada','success'); window._app?.refreshView?.(); }, { prospectoId });
+  await openMeetingModal({ prospectoId });
 }
 
 export async function openPropuestaModal(id = null) {

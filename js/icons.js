@@ -61,6 +61,13 @@
     rocket:   '<path d="M5 14c-1.5 1.5-2 5-2 5s3.5-.5 5-2c.9-.9.9-2.3 0-3.2a2.3 2.3 0 0 0-3 .2z"/><path d="M9 12a13 13 0 0 1 9-9c1.7 0 2.2.5 2 2a13 13 0 0 1-9 9z"/><path d="M9 12 7 10M12 15l2-2"/>',
     dot:      '<circle cx="12" cy="12" r="3.5"/>',
     upload:   '<path d="M12 16V4M7 9l5-5 5 5M4 20h16"/>',
+    chevL:    '<path d="m15 6-6 6 6 6"/>',
+    video:    '<rect x="2.5" y="6" width="13" height="12" rx="2"/><path d="m15.5 10 6-3.5v11l-6-3.5z"/>',
+    bellRing: '<path d="M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M10.5 21a2 2 0 0 0 3 0"/><path d="M2.5 5.5A6 6 0 0 1 5 2M21.5 5.5A6 6 0 0 0 19 2"/>',
+    grid:     '<rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M3 15h18M9 3v18M15 3v18"/>',
+    columns:  '<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M9 4v16M15 4v16"/>',
+    x:        '<path d="M18 6 6 18M6 6l12 12"/>',
+    repeat:   '<path d="M17 2l4 4-4 4"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><path d="M7 22l-4-4 4-4"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/>',
   };
   function icon(name, cls, size) {
     const inner = P[name] || P.dot;

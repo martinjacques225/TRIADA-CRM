@@ -1,6 +1,6 @@
 # HANDOFF — TRIADA CRM
 > **Documento vivo. Fuente de verdad del estado del proyecto.**
-> Última actualización: **2026-06-11**
+> Última actualización: **2026-06-12**
 
 ---
 
@@ -33,13 +33,21 @@
 
 ---
 
-## 1. Estado actual (al 2026-06-11)
+## 1. Estado actual (al 2026-06-12)
+
+### Nuevo: Calendario de reuniones (2026-06-12) — handoff Claude Design implementado
+- **Agenda → calendario completo** 🟡 — `modules/agenda/agenda.js` reescrito: vistas **Mes / Semana / Lista** (conmutador persiste en localStorage), navegación mes/semana + botón Hoy, leyenda-filtro por tipo (clic oculta/muestra), clic en día/celda crea reunión, clic en evento abre detalle. Verificado en preview (3 vistas, claro/oscuro, 0 errores de consola); **falta verificar en producción con datos reales**.
+- **Modelo de reunión** 🟡 — 7 tipos slug en `citas.tipo` (`emergencia/rutina/negocio/diagnostico/seguimiento/propuesta/interna`, constantes en `utils.js` con mapeo de labels legacy), participantes (UUIDs de `profiles`), recordatorios (minutos), recurrencia (daily/weekly/monthly expandida client-side), duración, vínculo a prospecto, estado (se mantiene Pendiente/Confirmada/Realizada/Cancelada; Cancelada no se pinta).
+- **Recordatorios + alertas** 🟡 — `modules/agenda/reminders.js`: dock flotante en todos los módulos (avisos activos + próximas con cuenta regresiva), campana del topbar con badge de no-leídos (inyectada en `#topbarActions`), notificaciones push in-app que se disparan solas (timers re-programados cada 60 s). Leídos persisten en localStorage.
+- ⬜ **PENDIENTE — correr `supabase/calendar.sql`**: agrega `duracion_min, participantes, recordatorios, recurrencia` a `citas` y migra los `tipo` legacy a slugs. **Sin correrlo el CRM no se rompe** (fallback 42703 en `db.js` guarda la cita base y avisa en consola), pero participantes/recordatorios/recurrencia no persisten.
+- **Modal de cita viejo eliminado** — `openCitaModal/openCitaModalForProspecto` (modals.js) redirigen al modal de reunión nuevo. El filtro "Mis citas" de la agenda vieja fue reemplazado por el modelo de participantes.
+- **Equipo** — se lee de `profiles` (`profiles.getAll()` en db.js, sólo `activo`); colores estables por índice. Con 1 solo usuario el picker muestra 1 persona (ver P1: crear consultores).
 
 ### Funcionando
 - **Auth / login** ✅ — `js/auth.js` bloquea el CRM hasta autenticar (Supabase Auth). Usuario admin creado y login en producción funcionando.
 - **Pipeline de prospectos** ✅ — kanban + lista, filtros, drag & drop entre etapas. Crear/editar prospecto **arreglado hoy** (ver §6/§7).
 - **Diagnósticos** 🟡 — CRUD conectado; columnas (`lead_id, scores, hallazgos, oportunidades, estado`) coinciden con el esquema real.
-- **Agenda / citas** 🟡 — CRUD conectado; columnas coinciden con el esquema real.
+- **Agenda / citas** 🟡 — CRUD conectado; **reescrita como calendario el 2026-06-12** (ver arriba).
 - **Propuestas con ítems + IVA** 🟡 — tabla dinámica de servicios {descripcion, cantidad, precioUnit}; subtotal + IVA 19% + total; guarda en `servicios` (jsonb) y `valor`. Retrocompatible con formato viejo (string[]).
 - **Correlativos en UI** ✅ — `LEAD-/DIA-/PROP-/FAC-000001` ahora se leen de la columna real `codigo` (arreglado hoy; antes leía `row.correlativo` inexistente → nunca aparecían).
 - **Informes / informe ejecutivo (PDF)** 🟡 — motor de reporte; no re-verificado esta sesión.
@@ -101,7 +109,10 @@ index.html
 
 ## 4. Próximos pasos (por prioridad)
 
-### ✅ P0 auditoría — todo resuelto 2026-06-11 (ver §1). Único pendiente: correr `supabase/autodiagnosticos.sql`.
+### ⬜ P0 — correr `supabase/calendar.sql` (SQL Editor de Supabase)
+Agrega las columnas del calendario a `citas` y migra los tipos legacy. Idempotente. Mientras no se corra, el calendario funciona pero participantes/recordatorios/recurrencia/duración no persisten (fallback defensivo en `db.js`).
+
+### ✅ P0 auditoría — todo resuelto 2026-06-11 (ver §1). `supabase/autodiagnosticos.sql` ya ejecutado.
 
 ### 🧹 P1.5 — gaps menores restantes
 - Campos del esquema sin UI: `leads.region`, `leads.facturacion_est`, `leads.scoring` (decisión de producto si se capturan en el modal).
@@ -153,7 +164,15 @@ index.html
 
 ## 7. Bitácora de sesiones (más reciente arriba)
 
-### 2026-06-11 (cont. 4) — SQL de autodiagnósticos ejecutado y verificado
+### 2026-06-12 — Calendario de reuniones con recordatorios (handoff Claude Design)
+- Implementado el design bundle `on9CJtUqVoBeYzpevwHLNw` ("Calendario con Recordatorios y Reuniones"). La parte de re-skin del bundle ya estaba implementada (2026-06-11).
+- **Agenda reescrita** como calendario Mes/Semana/Lista (`modules/agenda/agenda.js` + `agenda.css` nuevo); modal de reunión con 7 tipos, participantes (de `profiles`), recordatorios, recurrencia, duración, estado; detalle con "Alerta activa" por participante; modal "+N más" por día.
+- **`modules/agenda/reminders.js` nuevo**: dock flotante global + campana topbar con badge + push in-app con timers.
+- **db.js**: citas extendidas (durMin/participantes/recordatorios/recurrencia) con fallback 42703 si falta `supabase/calendar.sql` (⬜ pendiente de correr); export `profiles.getAll()`.
+- **utils.js**: `MEETING_TYPES` (slugs + mapeo legacy), `REMINDER_OPTS`, `RECUR_OPTS`, `ESTADOS_CITA`, `meetingType()`. **icons.js**: chevL, video, bellRing, grid, columns, x, repeat.
+- **home.js**: "Citas de hoy" con color/ícono por tipo y clic→detalle. **modals.js**: openCitaModal→modal de reunión; closeModal restaura labels del botón guardar.
+- **Preview harness arreglado**: a mock-db.js le faltaban los exports `autodiags`/`profiles` (rompía el import de app.js desde la sesión cont. 3); citas demo enriquecidas con el modelo nuevo.
+- Verificado en preview (puerto 5174): 3 vistas del calendario, crear/editar/eliminar reunión E2E, dock con cuenta regresiva, filtros, navegación, dark mode, "+ Cita" desde ficha de prospecto, pipeline intacto — 0 errores de consola. ⚠️ No verificado contra Supabase real (requiere login + correr calendar.sql).
 - Usuario corrió `supabase/autodiagnosticos.sql`. Verificado en vivo: anon sin lectura, anon-insert pasa RLS (23503 con lead falso = policy OK). Pipeline completo del CRM operativo: prospecto→cita→diagnóstico→propuesta→cliente→factura + autodiagnóstico público de referencia.
 
 ### 2026-06-11 (cont. 3) — Fixes de la auditoría aplicados (lote completo)
