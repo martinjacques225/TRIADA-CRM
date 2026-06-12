@@ -44,10 +44,10 @@
 - **Correlativos en UI** ✅ — `LEAD-/DIA-/PROP-/FAC-000001` ahora se leen de la columna real `codigo` (arreglado hoy; antes leía `row.correlativo` inexistente → nunca aparecían).
 - **Informes / informe ejecutivo (PDF)** 🟡 — motor de reporte; no re-verificado esta sesión.
 - **Landing → Supabase** 🟡 — `01-WEB/Triada_Landing_Conversion.html` + `diagnostico-publico.html` insertan leads vía REST con `origen='landing'` (permitido a anon por RLS).
+- **Facturación** 🟡 — **arreglado hoy** (decisión del usuario: facturas → `cliente_id`). Módulo reescrito a cliente-céntrico: `facturaToSupa/FromSupa` mapean columnas reales (`cliente_id, monto, pagado, estado, emision, vencimiento`); estados al enum real (`pendiente/parcial/pagado/vencido`, antes mandaba `Pendiente/Enviada` → 22P02); `toFactEstado()` blinda el valor; modal/tabla seleccionan y muestran **cliente**; guardado en try/catch. **Depende de que existan clientes** (ver 🔴 abajo) para ser usable.
 
 ### 🔴 Roto / bloqueado (NO usar hasta arreglar)
-- **Crear cliente** 🔴 — `clienteToSupa`/`clienteFromSupa` usan `nombre, empresa, email, telefono`, pero la tabla real `clientes` tiene `razon_social, giro, direccion, rut, codigo` (no existen nombre/empresa/email/telefono). El INSERT falla con 42703. **Requiere decisión de modelo de datos** (ver §4).
-- **Facturación** 🔴 — `facturaToSupa`/`facturaFromSupa` usan `lead_id, propuesta_id, fecha_emision, notas`, pero la tabla real `facturas` tiene `cliente_id, monto, pagado, emision, vencimiento, estado, codigo`. INSERT falla con 42703. **Requiere decisión de modelo de datos** (ver §4). (El correlativo es `FAC-`, no `FACT-` como decía el handoff viejo.)
+- **Crear cliente (clientes-write)** 🔴 — `clienteToSupa` aún escribe `nombre, empresa, email, telefono`, columnas que NO existen (la tabla real tiene `razon_social, rut, giro, direccion, lead_id`). El INSERT falla con 42703, y `convertirACliente` (botón "Crear ficha de cliente") no funciona. **La lectura (`clienteFromSupa`) ya quedó corregida hoy** (lee `razon_social/giro/...`), por eso el selector de cliente de Facturación ya muestra clientes que existan. Pendiente: corregir `clienteToSupa` (mapear `razon_social ← empresa||nombre`; `email/telefono` no tienen columna) + `convertirACliente`. Diferido por el usuario ("las demás cosas para después"). **Sin esto, no se pueden crear clientes y por tanto no hay a quién facturar salvo insertando clientes directo en Supabase.**
 
 ---
 
@@ -92,9 +92,9 @@ index.html
 
 ## 4. Próximos pasos (por prioridad)
 
-### 🔴 P0 — arreglar lo roto (necesita decisión de modelo de datos)
-- **Crear cliente:** decidir → (A) `ALTER TABLE clientes` para añadir nombre/empresa/email/telefono, o (B) remapear `db.js` a las columnas reales (`razon_social` ← nombre/empresa, y aceptar que email/telefono no se guardan, o añadir solo esos). Luego corregir `clienteToSupa`/`clienteFromSupa`.
-- **Facturación:** decidir si las facturas cuelgan de `cliente_id` (modelo actual de la tabla) o de `lead_id`/`propuesta_id` (lo que asume el código). Luego corregir `facturaToSupa`/`facturaFromSupa` y el correlativo (`FAC-`).
+### 🔴 P0 — arreglar lo roto (diferido por el usuario)
+- **Crear cliente (clientes-write):** corregir `clienteToSupa` → escribir `razon_social ← empresa||nombre`, `rut`, `giro`, `direccion`, `lead_id` (NO `nombre/empresa/email/telefono`; email/telefono no tienen columna). Ajustar `convertirACliente` en `modals.js`. Es el desbloqueo directo para que Facturación sea usable.
+- ~~Facturación~~ ✅ resuelto 2026-06-11 (facturas → `cliente_id`).
 
 ### 🟠 P1
 - Crear 2 usuarios consultores en Supabase (Auth → Add user ×2), copiar UUID y:
@@ -122,6 +122,8 @@ index.html
 - **Guardado defensivo:** los handlers de guardar deben ir en try/catch con toast de error (hecho en `modals.js` para prospecto; replicar en otros modales).
 - **Probar el esquema real sin login:** `GET /rest/v1/<tabla>?select=<col>&limit=1` con la key publishable → si la columna no existe devuelve `42703` nombrándola. Útil para auditar drift código↔DB.
 - **No existe columna `historial`** en `leads` (se removió del INSERT).
+- **Estados de factura:** enum `fact_estado` = `pendiente/parcial/pagado/vencido` (minúscula). `toFactEstado()` en `db.js` blinda el valor; la UI guarda el slug y muestra la etiqueta capitalizada. Facturas cuelgan de `cliente_id` (decisión del usuario).
+- **Continuidad entre sesiones:** un hook `SessionStart` en `…/PROYECTO CONSULTORIA/.claude/settings.local.json` inyecta este HANDOFF automáticamente al arrancar. Si mueves el doc o cambias la ruta, actualiza el hook (revisar/editar con `/hooks`). Solo dispara si la sesión arranca en esa carpeta.
 
 ---
 
@@ -131,11 +133,17 @@ index.html
 2. **Correlativos "visibles"** (era falso) 🔴→✅ — `leadFromSupa/diagFromSupa/propFromSupa/facturaFromSupa` leían `row.correlativo` (no existe); corregido a `row.codigo`.
 3. **Columna fantasma `historial`** — removida de `leadToSupa` (rompía el import del landing).
 4. **`byRubro`** — ya no mapea el rubro por el diccionario de orígenes.
-5. **Descubierto (no arreglado, requiere decisión):** `clientes` y `facturas` rotos por mismatch de columnas (ver §1/§4).
+5. **Facturación** 🔴→🟡 — reescrita a cliente-céntrico (decisión del usuario: `cliente_id`); estados al enum real (`toFactEstado`); `clienteFromSupa` (lectura) corregido; verificado contra la base (42501 = columnas/enum OK).
+6. **Pendiente diferido por el usuario:** `clientes-write` (crear cliente) sigue 🔴 (ver §4 P0).
 
 ---
 
 ## 7. Bitácora de sesiones (más reciente arriba)
+
+### 2026-06-11 (cont.) — Facturación arreglada + continuidad entre sesiones
+- Decisión del usuario: facturas → `cliente_id`. Módulo facturación reescrito a cliente-céntrico (`db.js` + `facturacion.js` + `modals.js`); estados al enum; verificado contra la base (42501 RLS = columnas/enum válidos). `clienteFromSupa` (lectura) corregido para mostrar/seleccionar cliente.
+- Continuidad: hook `SessionStart` que auto-inyecta este HANDOFF + memoria de protocolo (leer al inicio / actualizar al final).
+- Diferido por el usuario: `clientes-write` (crear cliente) y "las demás cosas del CRM".
 
 ### 2026-06-11 — Fix guardado de prospecto + auditoría esquema↔código
 - Reportado: "creé un prospecto y no se guarda". Causa: enum `lead_origen`. Arreglado y pusheado (commit `763716b`).
@@ -145,4 +153,3 @@ index.html
 ### 2026-06-10 — Supabase + correlativos + IVA + facturación + cliente
 - Migración a Supabase: schema ejecutado, RLS, triggers, auth/login en producción.
 - Propuestas con ítems + IVA; módulos facturación y "crear cliente" agregados a la UI (resultaron 🔴, ver arriba). P0 de UUID (`+id`→`id`) y DnD corregidos.
-```

@@ -307,14 +307,16 @@ export const propuestas = {
 function clienteFromSupa(row) {
   if (!row) return null;
   return {
-    id:        row.id,
-    leadId:    row.lead_id,
-    nombre:    row.nombre,
-    empresa:   row.empresa,
-    rut:       row.rut,
-    email:     row.email,
-    telefono:  row.telefono,
-    fechaAlta: row.created_at,
+    id:          row.id,
+    correlativo: row.codigo,
+    leadId:      row.lead_id,
+    razonSocial: row.razon_social,
+    nombre:      row.razon_social,   // alias para UI que lee .nombre
+    empresa:     row.razon_social,
+    rut:         row.rut,
+    giro:        row.giro,
+    direccion:   row.direccion,
+    fechaAlta:   row.created_at,
   };
 }
 
@@ -356,26 +358,34 @@ export const clientes = {
 function facturaFromSupa(row) {
   if (!row) return null;
   return {
-    id:           row.id,
-    correlativo:  row.codigo,
-    leadId:       row.lead_id,
-    propuestaId:  row.propuesta_id,
-    monto:        row.monto,
-    estado:       row.estado,
-    fechaEmision: row.fecha_emision,
-    notas:        row.notas,
+    id:            row.id,
+    correlativo:   row.codigo,
+    clienteId:     row.cliente_id,
+    monto:         row.monto,
+    pagado:        row.pagado,
+    estado:        row.estado,
+    emision:       row.emision,
+    vencimiento:   row.vencimiento,
     fechaCreacion: row.created_at,
   };
 }
 
+// El enum fact_estado solo acepta estos valores (minúscula). Antes se enviaban
+// 'Pendiente'/'Enviada'… → 22P02 y la factura no se guardaba.
+const VALID_FACT_ESTADO = new Set(['pendiente', 'parcial', 'pagado', 'vencido']);
+function toFactEstado(v) {
+  const s = (v || 'pendiente').toString().toLowerCase();
+  return VALID_FACT_ESTADO.has(s) ? s : 'pendiente';
+}
+
 function facturaToSupa(data) {
   return clean({
-    lead_id:      data.leadId,
-    propuesta_id: data.propuestaId,
-    monto:        data.monto,
-    estado:       data.estado || 'Pendiente',
-    fecha_emision: data.fechaEmision,
-    notas:        data.notas,
+    cliente_id:  data.clienteId,
+    monto:       data.monto,
+    pagado:      data.pagado,
+    estado:      toFactEstado(data.estado),
+    emision:     data.emision,
+    vencimiento: data.vencimiento,
   });
 }
 
@@ -401,8 +411,8 @@ export const facturas = {
     const { error } = await supabase.from('facturas').delete().eq('id', id);
     _throw(error);
   },
-  byLead: async (leadId) => {
-    const { data, error } = await supabase.from('facturas').select('*').eq('lead_id', leadId).order('created_at', { ascending: false });
+  byCliente: async (clienteId) => {
+    const { data, error } = await supabase.from('facturas').select('*').eq('cliente_id', clienteId).order('created_at', { ascending: false });
     _throw(error); return data.map(facturaFromSupa);
   },
 };

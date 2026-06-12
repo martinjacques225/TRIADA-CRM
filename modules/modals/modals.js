@@ -249,24 +249,26 @@ export async function openPropuestaModalForProspecto(prospectoId) {
   renderPropuestaModal(allP, () => { closeModal(); toast('Propuesta creada','success'); window._app?.refreshView?.(); }, { prospectoId });
 }
 
-export async function openFacturaModal(leadId = null, propuestaId = null) {
-  const [allP, allProp] = await Promise.all([prospectos.getAll(), propuestas.getAll()]);
+export async function openFacturaModal(leadId = null) {
+  const todosCli = await clientes.getAll();
+  // Si se abre desde la ficha de un prospecto, preselecciona su cliente (si existe)
+  let preselClienteId = null;
+  if (leadId) {
+    const delLead = await clientes.getByLead(leadId);
+    if (delLead && delLead.length) preselClienteId = delLead[0].id;
+  }
   _openModal('Nueva factura');
-  const fakeFact = {};
-  if (leadId)     fakeFact.leadId     = leadId;
-  if (propuestaId) fakeFact.propuestaId = propuestaId;
-  renderFacturaModal(allP, allProp, () => {
+  renderFacturaModal(todosCli, () => {
     closeModal();
     toast('Factura creada', 'success');
     window._app?.refreshView?.();
-  }, Object.keys(fakeFact).length ? fakeFact : null);
+  }, null, preselClienteId);
 }
 
 export async function editFactura(id) {
-  const existing = await facturas.get(id);
-  const [allP, allProp] = await Promise.all([prospectos.getAll(), propuestas.getAll()]);
+  const [existing, todosCli] = await Promise.all([facturas.get(id), clientes.getAll()]);
   _openModal('Editar factura');
-  renderFacturaModal(allP, allProp, () => {
+  renderFacturaModal(todosCli, () => {
     closeModal();
     toast('Factura actualizada', 'success');
     window._app?.refreshView?.();
