@@ -6,6 +6,7 @@ import { openMeetingModal } from '../agenda/agenda.js';
 import { renderPropuestaModal } from '../propuestas/propuestas.js';
 import { renderDiagnosticoModal } from '../diagnosticos/diagnosticos.js';
 import { renderFacturaModal } from '../facturacion/facturacion.js';
+import { renderAddClienteModal } from '../clientes/clientes.js';
 
 function _openModal(title, size = '') {
   document.getElementById('modalTitle').textContent = title;
@@ -283,6 +284,45 @@ export async function openFacturaModal(leadId = null) {
     toast('Factura creada', 'success');
     window._app?.refreshView?.();
   }, null, preselClienteId);
+}
+
+// Crear factura preseleccionando directamente un cliente (desde el módulo Clientes)
+export async function openFacturaModalForCliente(clienteId) {
+  const todosCli = await clientes.getAll();
+  _openModal('Nueva factura');
+  renderFacturaModal(todosCli, () => {
+    closeModal();
+    toast('Factura creada', 'success');
+    window._app?.refreshView?.();
+  }, null, clienteId);
+}
+
+// Añadir cliente tomando cualquier prospecto (cualquier etapa) o ficha manual
+export async function openAddClienteModal(preselLeadId = null) {
+  const allP = await prospectos.getAll();
+  _openModal('Añadir cliente');
+  renderAddClienteModal(allP, () => {
+    closeModal();
+    toast('Cliente creado', 'success');
+    window._app?.refreshView?.();
+  }, preselLeadId);
+}
+
+export async function deleteCliente(id) {
+  const facts = await facturas.byCliente(id);
+  if (facts.length) {
+    toast(`No se puede eliminar: el cliente tiene ${facts.length} factura(s). Elimínalas primero.`, 'error');
+    return;
+  }
+  if (!confirm('¿Eliminar esta ficha de cliente?')) return;
+  try {
+    await clientes.delete(id);
+    toast('Cliente eliminado', 'info');
+    window._app?.refreshView?.();
+  } catch (err) {
+    console.error('Error al eliminar cliente:', err);
+    toast(err?.message || 'No se pudo eliminar el cliente', 'error');
+  }
 }
 
 export async function editFactura(id) {

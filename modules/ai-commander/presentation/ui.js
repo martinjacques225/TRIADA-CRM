@@ -63,6 +63,6 @@ export function aiArchitectureBanner(message) {
 export function setupNotice() {
   return `<div class="view-animate">${emptyState('🗄️',
     'Falta preparar la base de datos',
-    'El módulo AI Commander necesita sus tablas. Corre supabase/ai_commander.sql en el SQL Editor de Supabase y recarga.',
+    'El módulo Director de Orquesta necesita sus tablas. Corre supabase/ai_commander.sql en el SQL Editor de Supabase y recarga.',
     '')}</div>`;
 }

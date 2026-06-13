@@ -32,6 +32,10 @@ import * as ModInformes      from './modules/informes/informes.js';
 import * as ModConfig        from './modules/configuracion/configuracion.js';
 import * as ModFacturacion   from './modules/facturacion/facturacion.js';
 import * as ModAiCommander   from './modules/ai-commander/ai-commander.js';
+import * as ModLeads         from './modules/leads/leads.js';
+import * as ModProspectos    from './modules/prospectos/prospectos.js';
+import * as ModClientes      from './modules/clientes/clientes.js';
+import * as ModPresupuestos  from './modules/presupuestos/presupuestos.js';
 
 import {
   closeModal,
@@ -39,8 +43,8 @@ import {
   openDiagnosticoModal,
   openCitaModal, openCitaModalForProspecto,
   openPropuestaModal, openPropuestaModalForProspecto,
-  openFacturaModal, editFactura, deleteFactura,
-  convertirACliente,
+  openFacturaModal, openFacturaModalForCliente, editFactura, deleteFactura,
+  convertirACliente, openAddClienteModal, deleteCliente,
   deleteProspecto, deleteCita, deletePropuesta,
 } from './modules/modals/modals.js';
 import { openMeetingDetail } from './modules/agenda/agenda.js';
@@ -48,16 +52,28 @@ import { initReminders } from './modules/agenda/reminders.js';
 import { openInformeViewer } from './modules/informe-ejecutivo/informe.view.js';
 
 // ════ NAV ════
-const NAV_ITEMS = [
-  { id: 'home',         icon: _icoHome(),    label: 'Inicio' },
-  { id: 'pipeline',     icon: _icoPipe(),    label: 'Pipeline' },
-  { id: 'diagnosticos', icon: _icoDiag(),    label: 'Diagnósticos' },
-  { id: 'agenda',       icon: _icoAgenda(),  label: 'Agenda' },
-  { id: 'propuestas',   icon: _icoProp(),     label: 'Propuestas' },
-  { id: 'facturacion',  icon: _icoFactura(), label: 'Facturación' },
-  { id: 'ai-commander', icon: _icoAi(),      label: 'AI Commander' },
-  { id: 'informes',     icon: _icoChart(),   label: 'Informes' },
-  { id: 'config',       icon: _icoConfig(),  label: 'Configuración' },
+// Orden que sigue la presentación comercial: Principal → Gestión → Desarrollo → Análisis.
+const NAV_SECTIONS = [
+  { label: 'Principal', items: [
+    { id: 'home',         icon: _icoHome(),       label: 'Inicio' },
+    { id: 'leads',        icon: _icoLeads(),      label: 'Leads' },
+    { id: 'pipeline',     icon: _icoPipe(),       label: 'Pipeline' },
+    { id: 'agenda',       icon: _icoAgenda(),     label: 'Agenda' },
+  ]},
+  { label: 'Gestión', items: [
+    { id: 'prospectos',   icon: _icoProspectos(), label: 'Prospectos' },
+    { id: 'diagnosticos', icon: _icoDiag(),       label: 'Diagnóstico' },
+    { id: 'propuestas',   icon: _icoProp(),       label: 'Propuesta' },
+    { id: 'presupuestos', icon: _icoPresup(),     label: 'Presupuesto' },
+    { id: 'clientes',     icon: _icoClientes(),   label: 'Clientes' },
+    { id: 'facturacion',  icon: _icoFactura(),    label: 'Facturación' },
+  ]},
+  { label: 'Desarrollo', items: [
+    { id: 'ai-commander', icon: _icoAi(),         label: 'Director de Orquesta' },
+  ]},
+  { label: 'Análisis', items: [
+    { id: 'informes',     icon: _icoChart(),      label: 'Informes' },
+  ]},
 ];
 
 export async function navigate(view) {
@@ -71,10 +87,14 @@ export async function navigate(view) {
 async function refreshCenter() {
   const map = {
     home:         ModHome.render,
+    leads:        ModLeads.render,
     pipeline:     ModPipeline.render,
-    diagnosticos: ModDiagnosticos.render,
     agenda:       ModAgenda.render,
+    prospectos:   ModProspectos.render,
+    diagnosticos: ModDiagnosticos.render,
     propuestas:   ModPropuestas.render,
+    presupuestos: ModPresupuestos.render,
+    clientes:     ModClientes.render,
     facturacion:  ModFacturacion.render,
     'ai-commander': ModAiCommander.render,
     informes:     ModInformes.render,
@@ -93,32 +113,31 @@ export async function renderNav() {
   const cargo   = _profile?.role   || await config.get('cargo')    || 'Tríada';
   let nuevos = 0;
   try { nuevos = (await prospectos.getAll()).filter(p => p.estado === 'Nuevo').length; } catch (_) {}
-  const badges = { pipeline: nuevos };
+  const badges = { leads: nuevos };
   const nav = document.getElementById('nav');
   nav.innerHTML = `
-    <a class="nav-brand" href="#" onclick="navigate('home');return false">
-      <svg class="brand-mark" width="30" height="30" viewBox="0 0 120 120" fill="none">
-        <path d="M26 90 L60 62 L94 90" stroke="var(--navy)"  stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>
-        <path d="M26 73 L60 45 L94 73" stroke="var(--teal)"  stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>
-        <path d="M26 56 L60 28 L94 56" stroke="var(--green)" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>
-      </svg>
+    <a class="nav-brand nav-brand-hero" href="#" onclick="navigate('home');return false" title="Tríada Consultoría">
+      <span class="brand-mark-wrap">
+        <svg class="brand-mark" width="38" height="38" viewBox="0 0 120 120" fill="none" aria-hidden="true">
+          <defs>
+            <linearGradient id="bm1" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0" stop-color="var(--green)"/><stop offset="1" stop-color="var(--teal)"/>
+            </linearGradient>
+          </defs>
+          <path class="bm-a3" d="M26 90 L60 62 L94 90" stroke="var(--navy)" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>
+          <path class="bm-a2" d="M26 73 L60 45 L94 73" stroke="var(--teal)" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>
+          <path class="bm-a1" d="M26 56 L60 28 L94 56" stroke="url(#bm1)" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </span>
       <span class="brand-text">
-        <span class="brand-name">Tríada</span>
-        <span class="brand-tag">Diagnóstico CRM</span>
+        <span class="brand-name">Tríada<span class="brand-dot">·</span></span>
+        <span class="brand-tag">Consultoría 360</span>
       </span>
     </a>
-    <button class="nav-create" onclick="window._app.openProspectoModal()">
-      ${_ln('<path d="M12 5v14M5 12h14"/>')}
-      Nuevo prospecto
-    </button>
-    <div class="nav-section-label">Principal</div>
-    ${NAV_ITEMS.slice(0,2).map(i=>_navItem(i,badges)).join('')}
-    <div class="nav-section-label">Gestión</div>
-    ${NAV_ITEMS.slice(2,6).map(i=>_navItem(i,badges)).join('')}
-    <div class="nav-section-label">Desarrollo</div>
-    ${_navItem(NAV_ITEMS[6],badges)}
-    <div class="nav-section-label">Análisis</div>
-    ${NAV_ITEMS.slice(7).map(i=>_navItem(i,badges)).join('')}
+    ${NAV_SECTIONS.map(sec => `
+      <div class="nav-section-label">${escHtml(sec.label)}</div>
+      ${sec.items.map(i => _navItem(i, badges)).join('')}
+    `).join('')}
     <div style="padding:8px 14px 6px;border-top:1px solid var(--border);margin-top:4px">
       <div style="font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--text3);margin-bottom:6px">Área activa</div>
       <div style="display:flex;gap:6px">
@@ -203,8 +222,8 @@ async function init() {
     openPropuestaModal, openPropuestaModalForProspecto,
     editCita:      (id) => openCitaModal(id),
     editPropuesta: (id) => openPropuestaModal(id),
-    openFacturaModal, editFactura, deleteFactura,
-    convertirACliente,
+    openFacturaModal, openFacturaModalForCliente, editFactura, deleteFactura,
+    convertirACliente, openAddClienteModal, deleteCliente,
     deleteProspecto, deleteCita, deletePropuesta,
     openInformeEjecutivo: async (diagId) => {
       const diag = await diagnosticos.get(diagId);
@@ -226,6 +245,21 @@ async function init() {
     callProspecto: async (id) => {
       const p = await prospectos.get(id);
       if (p?.telefono) window.open(`tel:${p.telefono}`);
+      else toast('Sin teléfono registrado', 'info');
+    },
+    contactWhatsApp: async (id) => {
+      const p = await prospectos.get(id);
+      const digits = String(p?.telefono || '').replace(/\D/g, '');
+      if (!digits) { toast('Sin teléfono registrado', 'info'); return; }
+      // Normaliza a formato internacional Chile (+56) si no trae código de país
+      const phone = digits.startsWith('56') ? digits : '56' + digits.replace(/^0+/, '');
+      const nombre = (p?.nombre || '').split(' ')[0];
+      const msg = `Hola ${nombre} 👋, te contacto desde Tríada Consultoría.`;
+      window.open(`https://wa.me/${phone}?text=${encodeURIComponent(msg)}`, '_blank');
+    },
+    contactZoom: async (id) => {
+      // Inicia una reunión Zoom instantánea; el anfitrión comparte el enlace con el lead.
+      window.open('https://zoom.us/start/videomeeting', '_blank');
     },
     setArea: _setArea,
     setDensity: async (d) => {
@@ -376,6 +410,10 @@ function _icoProp()   { return _ln('<path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 
 function _icoChart()  { return _ln('<path d="M4 20V4M4 20h16"/><rect x="7" y="11" width="3" height="6"/><rect x="12" y="7" width="3" height="10"/><rect x="17" y="13" width="3" height="4"/>'); }
 function _icoConfig() { return _ln('<path d="M4 6h10M18 6h2M4 12h2M10 12h10M4 18h7M15 18h5"/><circle cx="16" cy="6" r="2"/><circle cx="8" cy="12" r="2"/><circle cx="13" cy="18" r="2"/>'); }
 function _icoFactura(){ return _ln('<path d="M6 2h12v20l-3-2-3 2-3-2-3 2z"/><path d="M9 7h6M9 11h6M9 15h3"/>'); }
-function _icoAi()     { return _ln('<rect x="6" y="6" width="12" height="12" rx="2"/><rect x="9.5" y="9.5" width="5" height="5" rx="1"/><path d="M9 2v2.5M15 2v2.5M9 19.5V22M15 19.5V22M2 9h2.5M2 15h2.5M19.5 9H22M19.5 15H22"/>'); }
+function _icoAi()     { return _ln('<path d="M12 3v3M5.5 6.5l2 2M18.5 6.5l-2 2"/><rect x="6" y="8" width="12" height="11" rx="3"/><circle cx="9.5" cy="13" r="1.2"/><circle cx="14.5" cy="13" r="1.2"/><path d="M9.5 16h5"/>'); }
+function _icoLeads()  { return _ln('<path d="M3 5h18M3 5v6a9 9 0 0 0 18 0V5"/><path d="M12 14v6M8 20h8"/>'); }
+function _icoProspectos(){ return _ln('<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c0-3.5 3-5.5 6.5-5.5s6.5 2 6.5 5.5"/><path d="M17 8h4M19 6v4"/>'); }
+function _icoClientes(){ return _ln('<circle cx="12" cy="8" r="3.5"/><path d="M5 20c0-3.9 3.1-6.5 7-6.5s7 2.6 7 6.5"/><path d="m15.5 9 1.4 1.4 2.6-2.6"/>'); }
+function _icoPresup() { return _ln('<rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 7h8M8 11h8M8 15h5"/><path d="M16.5 16.5 18 18l3-3"/>'); }
 
 document.addEventListener('DOMContentLoaded', init);

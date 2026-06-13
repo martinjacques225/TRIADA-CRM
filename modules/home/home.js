@@ -86,7 +86,12 @@ export async function render() {
                   <div style="font-size:13.5px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${p.nombre || '—'}</div>
                   <div style="font-size:12px;color:var(--text3)">${p.empresa || p.rubro || '—'}</div>
                 </div>
-                <div>${stageBadge(p.estado)}</div>
+                <div style="display:flex;gap:3px;align-items:center" onclick="event.stopPropagation()">
+                  <button class="btn-icon btn-sm" style="color:#25D366" title="WhatsApp" onclick="window._app.contactWhatsApp('${p.id}')">${_i('phone',15)}</button>
+                  <button class="btn-icon btn-sm" style="color:#2D8CFF" title="Iniciar Zoom" onclick="window._app.contactZoom('${p.id}')">${_i('video',15)}</button>
+                  <button class="btn-icon btn-sm" title="Llamar" onclick="window._app.callProspecto('${p.id}')">${_i('phone',15)}</button>
+                  <span style="margin-left:4px">${stageBadge(p.estado)}</span>
+                </div>
               </div>`).join('')}
         </div>
       </div>

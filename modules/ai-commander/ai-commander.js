@@ -73,7 +73,7 @@ export async function render() {
   const center = document.getElementById('center');
   center.innerHTML = `<div class="view-animate">
     <div class="section-head">
-      <h2 class="aic-title">${ICONS.robot} AI Commander</h2>
+      <h2 class="aic-title">${ICONS.robot} Director de Orquesta</h2>
     </div>
     <div class="aic-tabs">
       ${TABS.map(t => `<button class="aic-tab${t.id === view ? ' active' : ''}" data-tab="${t.id}">
