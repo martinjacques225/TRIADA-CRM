@@ -1,7 +1,17 @@
 // modules/propuestas/propuestas.js
-import { propuestas, prospectos } from '../../js/db.js';
+// La Propuesta presenta SOLO el programa a ofrecer (valores netos, sin IVA): es
+// la cotización preliminar que se envía al cliente. El IVA, la mano de obra y el
+// plan de servicio se formalizan después en el módulo Presupuesto.
+import { propuestas, prospectos, config } from '../../js/db.js';
 import { escHtml, formatDate, formatCLP, toast, PROP_ESTADOS, propEstadoLabel } from '../../js/utils.js';
 import { parseCLP } from '../../js/format.js';
+import { openCorporateDoc } from '../../js/pdf.js';
+
+function _normItems(servicios) {
+  if (!Array.isArray(servicios) || !servicios.length) return [];
+  if (typeof servicios[0] === 'string') return servicios.map(s => ({ descripcion: s, cantidad: 1, precioUnit: 0 }));
+  return servicios.map(it => ({ descripcion: it.descripcion || '', cantidad: it.cantidad || 1, precioUnit: it.precioUnit || 0 }));
+}
 
 const stColors = { borrador:'var(--text3)', enviada:'var(--primary)', negociando:'var(--amber)', aceptada:'var(--green)', rechazada:'var(--danger)' };
 const stBgs    = { borrador:'var(--surface3)', enviada:'var(--primary-l)', negociando:'var(--amber-l)', aceptada:'var(--green-l)', rechazada:'var(--danger-l)' };
@@ -19,16 +29,14 @@ function _initItems(p) {
 }
 
 function _calcTotals() {
+  // Propuesta = solo el programa: total neto, sin IVA (el IVA va en Presupuesto).
   const sub = _items.reduce((s, it) => s + (it.cantidad * it.precioUnit), 0);
-  const iva = Math.round(sub * 0.19);
-  return { subtotal: sub, iva, total: sub + iva };
+  return { subtotal: sub, total: sub };
 }
 
 function _updateTotalsUI() {
-  const { subtotal, iva, total } = _calcTotals();
-  const s = document.getElementById('propSubtotal'); if (s) s.textContent = formatCLP(subtotal);
-  const v = document.getElementById('propIva');      if (v) v.textContent = formatCLP(iva);
-  const t = document.getElementById('propTotal');    if (t) t.textContent = formatCLP(total);
+  const { total } = _calcTotals();
+  const t = document.getElementById('propTotal'); if (t) t.textContent = formatCLP(total);
   return total;
 }
 
@@ -126,6 +134,7 @@ export async function render() {
                   <td><span class="badge" style="color:${stColors[p.estado]||'var(--text3)'};background:${stBgs[p.estado]||'var(--surface3)'};border-color:${stColors[p.estado]||'var(--border)'}">${escHtml(propEstadoLabel(p.estado))}</span></td>
                   <td>
                     <div style="display:flex;gap:4px">
+                      <button class="btn btn-ghost btn-sm" onclick="window._app.propuestaPDF('${p.id}')" title="Generar cotización PDF">${window.icon?window.icon('fileText','',14):''} PDF</button>
                       <button class="btn btn-ghost btn-sm" onclick="window._app.editPropuesta('${p.id}')">Editar</button>
                       <button class="btn btn-ghost btn-sm" onclick="window._app.deletePropuesta('${p.id}')" style="color:var(--danger)">Eliminar</button>
                     </div>
@@ -175,9 +184,8 @@ export function renderPropuestaModal(prospectosAll, onSave, existing = null) {
     </div>
 
     <div style="background:var(--surface2);border-radius:8px;padding:12px 16px;margin-top:4px;font-size:13.5px">
-      <div style="display:flex;justify-content:space-between;margin-bottom:6px"><span style="color:var(--text3)">Subtotal neto</span><span id="propSubtotal" style="font-weight:600">—</span></div>
-      <div style="display:flex;justify-content:space-between;margin-bottom:8px"><span style="color:var(--text3)">IVA 19%</span><span id="propIva" style="font-weight:600">—</span></div>
-      <div style="display:flex;justify-content:space-between;border-top:1px solid var(--border);padding-top:8px"><span style="font-weight:700;color:var(--navy)">Total</span><span id="propTotal" style="font-weight:800;font-size:16px;color:var(--navy)">—</span></div>
+      <div style="font-size:12px;color:var(--text3);margin-bottom:8px">La propuesta presenta solo el programa, en valores netos. El IVA, la mano de obra y el plan de servicio se detallan en el Presupuesto.</div>
+      <div style="display:flex;justify-content:space-between;border-top:1px solid var(--border);padding-top:8px"><span style="font-weight:700;color:var(--navy)">Total del programa (neto)</span><span id="propTotal" style="font-weight:800;font-size:16px;color:var(--navy)">—</span></div>
     </div>
 
     <div class="form-row" style="margin-top:14px">
@@ -228,4 +236,40 @@ export function renderPropuestaModal(prospectosAll, onSave, existing = null) {
       toast(err?.message || 'No se pudo guardar la propuesta', 'error');
     }
   };
+}
+
+// Genera la cotización PDF corporativa (solo el programa, sin IVA)
+export async function propuestaPDF(id) {
+  const p = await propuestas.get(id);
+  if (!p) { toast('Propuesta no encontrada', 'error'); return; }
+  const pr = p.prospectoId ? await prospectos.get(p.prospectoId) : null;
+  const empresa = await config.get('empresa') || 'Tríada Consultoría';
+  const autor   = await config.get('userName') || '';
+  const items   = _normItems(p.servicios);
+  const neto    = items.reduce((s, it) => s + it.cantidad * it.precioUnit, 0);
+
+  const bodyHtml = `
+    <table class="items">
+      <thead><tr><th>Programa / Servicio</th><th class="num">Cant.</th><th class="num">Valor unit.</th><th class="num">Subtotal</th></tr></thead>
+      <tbody>
+        ${items.length ? items.map(it => `<tr>
+          <td>${escHtml(it.descripcion)}</td>
+          <td class="num">${it.cantidad}</td>
+          <td class="num">${formatCLP(it.precioUnit)}</td>
+          <td class="num">${formatCLP(it.cantidad * it.precioUnit)}</td>
+        </tr>`).join('') : `<tr><td colspan="4" style="color:#94A0B6">Sin ítems</td></tr>`}
+      </tbody>
+    </table>
+    <div class="totals">
+      <div class="row grand"><span class="lbl" style="color:inherit">Total del programa (neto)</span><span>${formatCLP(neto)}</span></div>
+    </div>
+    ${p.notas ? `<div class="notes"><strong>Notas:</strong> ${escHtml(p.notas)}</div>` : ''}
+    <div class="notes">Valores netos, sin IVA. Este documento presenta el programa propuesto; el presupuesto detallado —con IVA, mano de obra y plan de servicio— se entrega por separado.</div>`;
+
+  const ok = openCorporateDoc({
+    tipo: 'Cotización', titulo: 'Propuesta de programa', empresa, autor,
+    clienteNombre: pr?.empresa || pr?.nombre || '', clienteRut: pr?.rut || '',
+    correlativo: p.correlativo, fecha: p.fecha, vigencia: p.vigencia, bodyHtml,
+  });
+  if (!ok) toast('Permite ventanas emergentes para generar el PDF', 'error');
 }

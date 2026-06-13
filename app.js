@@ -45,6 +45,7 @@ import {
   openPropuestaModal, openPropuestaModalForProspecto,
   openFacturaModal, openFacturaModalForCliente, editFactura, deleteFactura,
   convertirACliente, openAddClienteModal, deleteCliente,
+  openPresupuestoModal, deletePresupuesto,
   deleteProspecto, deleteCita, deletePropuesta,
 } from './modules/modals/modals.js';
 import { openMeetingDetail } from './modules/agenda/agenda.js';
@@ -226,6 +227,10 @@ async function init() {
     editPropuesta: (id) => openPropuestaModal(id),
     openFacturaModal, openFacturaModalForCliente, editFactura, deleteFactura,
     convertirACliente, openAddClienteModal, deleteCliente,
+    openPresupuestoModal, deletePresupuesto,
+    editPresupuesto: (id) => openPresupuestoModal(id),
+    propuestaPDF:    (id) => ModPropuestas.propuestaPDF(id),
+    presupuestoPDF:  (id) => ModPresupuestos.presupuestoPDF(id),
     deleteProspecto, deleteCita, deletePropuesta,
     openInformeEjecutivo: async (diagId) => {
       const diag = await diagnosticos.get(diagId);

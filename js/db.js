@@ -483,6 +483,86 @@ export const facturas = {
   },
 };
 
+// ─── PRESUPUESTOS ─────────────────────────────────────────────
+// Documento de cierre (programa + mano de obra + IVA + plan de servicio).
+// Requiere supabase/presupuestos.sql. Si la tabla no existe, las lecturas
+// lanzan un error que el módulo detecta con isMissingTable() para mostrar el
+// aviso de "corre el SQL" (patrón de ai-commander/autodiagnosticos).
+export function isMissingTable(err) {
+  return err?.code === '42P01' || err?.code === 'PGRST205'
+    || /Could not find the table|relation .* does not exist/i.test(err?.message || '');
+}
+
+function presupFromSupa(row) {
+  if (!row) return null;
+  return {
+    id:           row.id,
+    correlativo:  row.codigo,
+    clienteId:    row.cliente_id,
+    leadId:       row.lead_id,
+    propuestaId:  row.propuesta_id,
+    servicios:    row.servicios || [],
+    manoObra:     row.mano_obra || 0,
+    planServicio: row.plan_servicio || '',
+    planMensual:  row.plan_mensual || 0,
+    neto:         row.neto || 0,
+    iva:          row.iva || 0,
+    total:        row.total || 0,
+    estado:       row.estado || 'borrador',
+    vigencia:     row.vigencia,
+    notas:        row.notas,
+    fecha:        row.created_at,
+  };
+}
+
+function presupToSupa(data) {
+  return clean({
+    cliente_id:    data.clienteId,
+    lead_id:       data.leadId,
+    propuesta_id:  data.propuestaId,
+    servicios:     data.servicios,
+    mano_obra:     data.manoObra,
+    plan_servicio: data.planServicio,
+    plan_mensual:  data.planMensual,
+    neto:          data.neto,
+    iva:           data.iva,
+    total:         data.total,
+    estado:        data.estado || 'borrador',
+    vigencia:      data.vigencia,
+    notas:         data.notas,
+  });
+}
+
+export const presupuestos = {
+  getAll: async () => {
+    const { data, error } = await supabase.from('presupuestos').select('*').order('created_at', { ascending: false });
+    _throw(error); return data.map(presupFromSupa);
+  },
+  get: async (id) => {
+    const { data, error } = await supabase.from('presupuestos').select('*').eq('id', id).single();
+    _throw(error); return presupFromSupa(data);
+  },
+  add: async (data) => {
+    const payload = presupToSupa(data);
+    if (!payload.responsable && _uid) payload.responsable = _uid;
+    const { data: row, error } = await supabase.from('presupuestos').insert(payload).select('id').single();
+    _throw(error); return row.id;
+  },
+  update: async (data) => {
+    const { id, ...rest } = data;
+    const { error } = await supabase.from('presupuestos').update(presupToSupa(rest)).eq('id', id);
+    _throw(error);
+  },
+  delete: async (id) => {
+    const { error } = await supabase.from('presupuestos').delete().eq('id', id);
+    _throw(error);
+  },
+  byCliente: async (clienteId) => {
+    const { data, error } = await supabase.from('presupuestos').select('*').eq('cliente_id', clienteId).order('created_at', { ascending: false });
+    _throw(error); return data.map(presupFromSupa);
+  },
+};
+
 // ─── Landing leads import ─────────────────────────────────────
 export async function importLandingLeads() {
   try {

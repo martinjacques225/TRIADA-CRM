@@ -1,5 +1,5 @@
 // modules/modals/modals.js
-import { prospectos, diagnosticos, citas, propuestas, clientes, facturas, autodiags } from '../../js/db.js';
+import { prospectos, diagnosticos, citas, propuestas, clientes, facturas, autodiags, presupuestos } from '../../js/db.js';
 import { escHtml, PIPELINE_STAGES, RUBROS, TAMANOS, DOLORES, ORIGENES, DIAG_AREAS, todayStr, toast, formatCLP, propEstadoLabel } from '../../js/utils.js';
 import { attachFormatting, validateRut, validateEmail } from '../../js/format.js';
 import { openMeetingModal } from '../agenda/agenda.js';
@@ -7,6 +7,7 @@ import { renderPropuestaModal } from '../propuestas/propuestas.js';
 import { renderDiagnosticoModal } from '../diagnosticos/diagnosticos.js';
 import { renderFacturaModal } from '../facturacion/facturacion.js';
 import { renderAddClienteModal } from '../clientes/clientes.js';
+import { renderPresupuestoModal } from '../presupuestos/presupuestos.js';
 
 function _openModal(title, size = '') {
   document.getElementById('modalTitle').textContent = title;
@@ -306,6 +307,36 @@ export async function openAddClienteModal(preselLeadId = null) {
     toast('Cliente creado', 'success');
     window._app?.refreshView?.();
   }, preselLeadId);
+}
+
+export async function openPresupuestoModal(id = null) {
+  const [existing, cli, props, pros] = await Promise.all([
+    id ? presupuestos.get(id) : Promise.resolve(null),
+    clientes.getAll(), propuestas.getAll(), prospectos.getAll(),
+  ]);
+  if (!cli.length) {
+    toast('Primero crea un cliente (módulo Clientes) para presupuestar', 'info');
+    window._app?.navigate?.('clientes');
+    return;
+  }
+  _openModal(existing ? 'Editar presupuesto' : 'Nuevo presupuesto', 'lg');
+  renderPresupuestoModal(cli, props, pros, () => {
+    closeModal();
+    toast(existing ? 'Presupuesto actualizado' : 'Presupuesto creado', 'success');
+    window._app?.refreshView?.();
+  }, existing);
+}
+
+export async function deletePresupuesto(id) {
+  if (!confirm('¿Eliminar este presupuesto?')) return;
+  try {
+    await presupuestos.delete(id);
+    toast('Presupuesto eliminado', 'info');
+    window._app?.refreshView?.();
+  } catch (err) {
+    console.error('Error al eliminar presupuesto:', err);
+    toast(err?.message || 'No se pudo eliminar el presupuesto', 'error');
+  }
 }
 
 export async function deleteCliente(id) {
