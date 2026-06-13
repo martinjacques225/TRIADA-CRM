@@ -1,9 +1,8 @@
 // modules/configuracion/configuracion.js
-import { config, prospectos, diagnosticos, propuestas, citas, clientes, facturas } from '../../js/db.js';
-import { toast, formatCLP, formatDate } from '../../js/utils.js';
+import { config, citas, clientes } from '../../js/db.js';
+import { toast } from '../../js/utils.js';
 import { mascotaEnabled, mascotaTipo, mascotasDisponibles } from '../mascota/mascota.js';
-
-const DAY = 86400000;
+import { exportInformePDF } from '../informes/informes.js';
 
 const THEMES = [
   { id: 'light',  label: 'Claro',  ico: 'sun'   },
@@ -146,12 +145,7 @@ export async function render() {
     toast(`Cartera exportada (${cl.length} clientes)`, 'success');
   };
 
-  window._exportInformePDF = async () => {
-    const [pros, dgs, prs, cli, fac] = await Promise.all([
-      prospectos.getAll(), diagnosticos.getAll(), propuestas.getAll(), clientes.getAll(), facturas.getAll(),
-    ]);
-    _printInforme({ pros, dgs, prs, cli, fac, empresa: empresa || 'Tríada Consultoría', autor: nombre || '' });
-  };
+  window._exportInformePDF = () => exportInformePDF();
 }
 
 // ── Helpers ────────────────────────────────────────────────────────────────
@@ -166,65 +160,3 @@ function _downloadCSV(baseName, headers, rows) {
   setTimeout(() => URL.revokeObjectURL(a.href), 1000);
 }
 
-function _printInforme({ pros, dgs, prs, cli, fac, empresa, autor }) {
-  const now = Date.now();
-  const today = new Date(); today.setHours(0, 0, 0, 0);
-  const within = (iso, d) => iso && (now - new Date(iso).getTime()) <= d * DAY && new Date(iso).getTime() <= now;
-  const overdue = (f) => f.estado === 'vencido' || (['pendiente', 'parcial'].includes(f.estado) && f.vencimiento && new Date(f.vencimiento + 'T00:00:00') < today);
-  const mora = (f) => f.vencimiento ? Math.max(0, Math.floor((today - new Date(f.vencimiento + 'T00:00:00')) / DAY)) : 0;
-  const sum = (arr) => arr.reduce((s, f) => s + (+f.monto || 0), 0);
-
-  const pagadas  = fac.filter(f => f.estado === 'pagado');
-  const enPlazo  = fac.filter(f => ['pendiente', 'parcial'].includes(f.estado) && !overdue(f));
-  const vencidas = fac.filter(overdue).map(f => ({ ...f, m: mora(f) })).sort((a, b) => b.m - a.m);
-
-  const row = (l, v) => `<tr><td>${l}</td><td style="text-align:right;font-weight:700">${v}</td></tr>`;
-  const html = `<!doctype html><html lang="es"><head><meta charset="utf-8"><title>Informe Tríada</title>
-    <style>
-      *{font-family:'Segoe UI',Arial,sans-serif;color:#16234A}
-      body{margin:36px;font-size:13px}
-      h1{font-size:22px;margin:0 0 2px} .sub{color:#5E6A85;font-size:12px;margin-bottom:22px}
-      h2{font-size:14px;border-bottom:2px solid #0C7C88;padding-bottom:4px;margin:22px 0 8px;color:#0C7C88}
-      table{width:100%;border-collapse:collapse;margin-bottom:8px}
-      td{padding:6px 8px;border-bottom:1px solid #E5E9F0}
-      .foot{margin-top:30px;color:#94A0B6;font-size:11px;border-top:1px solid #E5E9F0;padding-top:8px}
-      @media print{body{margin:0}}
-    </style></head><body>
-    <h1>Informe ejecutivo — ${empresa}</h1>
-    <div class="sub">Generado el ${formatDate(new Date().toISOString())}${autor ? ' · ' + autor : ''}</div>
-
-    <h2>Flujo de entrada de leads</h2>
-    <table>
-      ${row('Últimas 24 horas', pros.filter(p => within(p.fechaCreacion, 1)).length)}
-      ${row('Últimos 7 días', pros.filter(p => within(p.fechaCreacion, 7)).length)}
-      ${row('Últimos 30 días', pros.filter(p => within(p.fechaCreacion, 30)).length)}
-      ${row('Total histórico', pros.length)}
-    </table>
-
-    <h2>Actividad</h2>
-    <table>
-      ${row('Diagnósticos realizados', dgs.length)}
-      ${row('Propuestas', `${prs.length} (${prs.filter(p => p.estado === 'aceptada').length} aceptadas)`)}
-      ${row('Clientes en cartera', cli.length)}
-    </table>
-
-    <h2>Facturación y cobranza</h2>
-    <table>
-      ${row('Facturas emitidas', `${fac.length} · ${formatCLP(sum(fac))}`)}
-      ${row('Pagadas', `${pagadas.length} · ${formatCLP(sum(pagadas))}`)}
-      ${row('Por cobrar (en plazo)', `${enPlazo.length} · ${formatCLP(sum(enPlazo))}`)}
-      ${row('Vencidas', `${vencidas.length} · ${formatCLP(sum(vencidas))}`)}
-    </table>
-    ${vencidas.length ? `<table><tr><td colspan="2" style="font-weight:700;color:#C04F3F;border:none">Detalle de vencidas</td></tr>
-      ${vencidas.map(f => { const c = cli.find(x => x.id === f.clienteId); return row(`${f.correlativo || '—'} · ${(c && (c.razonSocial || c.nombre)) || 'Cliente'}`, `${formatCLP(f.monto)} · ${f.m} días`); }).join('')}
-    </table>` : ''}
-
-    <div class="foot">Documento generado por TRIADA CRM. Usa "Guardar como PDF" en el diálogo de impresión.</div>
-    <script>window.onload=function(){setTimeout(function(){window.print()},250)}<\/script>
-    </body></html>`;
-
-  const w = window.open('', '_blank');
-  if (!w) { toast('Permite las ventanas emergentes para exportar el PDF', 'error'); return; }
-  w.document.write(html);
-  w.document.close();
-}

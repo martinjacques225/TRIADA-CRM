@@ -47,6 +47,11 @@ const _reduced = () => window.matchMedia && window.matchMedia('(prefers-reduced-
 const now = () => Date.now();
 const clampX = (x) => Math.max(6, Math.min(window.innerWidth - W - 2, x));
 const clampY = (y) => Math.max(6, Math.min(window.innerHeight - W - 2, y));
+// Esquina inferior derecha ocupada por el dock de recordatorios: la mascota la evita al pasear.
+function _avoidDock(x, y) {
+  if (x > window.innerWidth - 240 && y > window.innerHeight - 150) return clampX(window.innerWidth - 270);
+  return x;
+}
 
 function _injectStyle() {
   if (document.getElementById('mascota-style')) return;
@@ -147,7 +152,8 @@ function _apply() {
   _cat    = _el.querySelector('.mascota-cat');
   _bubble = _el.querySelector('#mBubble');
 
-  _S.x = clampX(window.innerWidth - 130);
+  // Nace abajo-izquierda (el dock de recordatorios vive abajo-derecha)
+  _S.x = clampX(24);
   _S.y = clampY(window.innerHeight - 130);
   _S.mode = 'sit'; _S.modeSince = now();
   _mx = _S.x + W / 2; _my = _S.y;
@@ -228,8 +234,8 @@ function _brain() {
     if (!idleMouse && Math.hypot(_mx - (_S.x + W / 2), _my - (_S.y + W / 2)) < 160) {
       _setMode('chase');
     } else if (r < 0.42) {                      // pasear a un punto al azar
-      _S.tx = clampX(40 + Math.random() * (window.innerWidth - 160));
       _S.ty = clampY(40 + Math.random() * (window.innerHeight - 160));
+      _S.tx = _avoidDock(clampX(40 + Math.random() * (window.innerWidth - 160)), _S.ty);
       _setMode('walk');
     } else if (r < 0.7) {                        // colgarse de una card
       const c = _pickCard();

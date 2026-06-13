@@ -85,7 +85,7 @@ function _renderResults() {
           <td style="color:var(--text3);font-size:12.5px">${formatDate(p.fechaCreacion)}</td>
           <td>
             <div style="display:flex;gap:3px">
-              <button class="btn-icon btn-sm" style="color:#25D366" onclick="window._app.contactWhatsApp('${p.id}')" title="WhatsApp">${_i('phone', 15)}</button>
+              <button class="btn-icon btn-sm" style="color:#25D366" onclick="window._app.contactWhatsApp('${p.id}')" title="WhatsApp">${_i('whatsapp', 16)}</button>
               <button class="btn-icon btn-sm" style="color:#2D8CFF" onclick="window._app.contactZoom('${p.id}')" title="Zoom">${_i('video', 15)}</button>
               <button class="btn-icon btn-sm" onclick="window._app.callProspecto('${p.id}')" title="Llamar">${_i('phone', 15)}</button>
             </div>

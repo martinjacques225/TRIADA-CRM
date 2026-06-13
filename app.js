@@ -231,6 +231,7 @@ async function init() {
     editPresupuesto: (id) => openPresupuestoModal(id),
     propuestaPDF:    (id) => ModPropuestas.propuestaPDF(id),
     presupuestoPDF:  (id) => ModPresupuestos.presupuestoPDF(id),
+    exportInformePDF: () => ModInformes.exportInformePDF(),
     deleteProspecto, deleteCita, deletePropuesta,
     openInformeEjecutivo: async (diagId) => {
       const diag = await diagnosticos.get(diagId);

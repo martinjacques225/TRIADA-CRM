@@ -124,7 +124,7 @@ function _leadCard(p) {
     </div>` : ''}
 
     <div style="display:flex;gap:6px;flex-wrap:wrap;border-top:1px solid var(--border);padding-top:11px;margin-top:auto">
-      <button class="btn btn-sm" style="background:#25D366;color:#fff;border:none;${tieneTel ? '' : 'opacity:.45;'}" onclick="window._app.contactWhatsApp('${p.id}')" title="WhatsApp">${_i('phone', 14)} WhatsApp</button>
+      <button class="btn btn-sm" style="background:#25D366;color:#fff;border:none;${tieneTel ? '' : 'opacity:.45;'}" onclick="window._app.contactWhatsApp('${p.id}')" title="WhatsApp">${_i('whatsapp', 15)} WhatsApp</button>
       <button class="btn btn-sm" style="background:#2D8CFF;color:#fff;border:none" onclick="window._app.contactZoom('${p.id}')" title="Iniciar Zoom">${_i('video', 14)} Zoom</button>
       <button class="btn btn-ghost btn-sm" style="${tieneTel ? '' : 'opacity:.45;'}" onclick="window._app.callProspecto('${p.id}')" title="Llamar">${_i('phone', 14)} Llamar</button>
       <button class="btn btn-ghost btn-sm" onclick="window._app.openCitaModalForProspecto('${p.id}')" title="Agendar">${_i('agenda', 14)}</button>

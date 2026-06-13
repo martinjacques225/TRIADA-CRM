@@ -104,11 +104,18 @@
 .type-opt .to-lbl { font-size: 12.5px; font-weight: 600; color: var(--ink); line-height: 1.2; }
 
 /* ═══════════════ DOCK DE RECORDATORIOS (flotante) ═══════════════ */
-.rdock { position: fixed; left: 20px; bottom: 20px; z-index: 290; display: flex; flex-direction: column; align-items: flex-start; gap: 12px; }
+.rdock { position: fixed; right: 20px; left: auto; bottom: 20px; z-index: 290; display: flex; flex-direction: column; align-items: flex-end; gap: 12px; }
 .rdock-fab { display: inline-flex; align-items: center; gap: 9px; padding: 11px 16px 11px 13px; border-radius: 980px; background: var(--navy); color: #fff; border: none; cursor: pointer; box-shadow: var(--shadow-lg); transition: var(--tr); font-family: var(--font); font-size: 13px; font-weight: 600; }
 .rdock-fab:hover { transform: translateY(-2px); box-shadow: 0 22px 50px rgba(20,32,55,.3); }
 .rdock-fab svg { width: 19px; height: 19px; }
 .rdock-fab .rcount { background: var(--danger); color: #fff; font-size: 11px; font-weight: 700; min-width: 19px; height: 19px; padding: 0 5px; border-radius: 980px; display: inline-flex; align-items: center; justify-content: center; }
+/* Con notificaciones: color de alerta + halo pulsante + campana que se sacude */
+.rdock-fab.has { background: var(--danger); box-shadow: 0 10px 30px rgba(192,79,63,.45); animation: rfabPulse 1.8s ease-in-out infinite; }
+.rdock-fab.has svg { animation: rbell 1.8s ease-in-out infinite; transform-origin: 50% 12%; }
+.rdock-fab.has .rcount { background: #fff; color: var(--danger); box-shadow: 0 0 0 2px rgba(255,255,255,.45); }
+@keyframes rfabPulse { 0%,100% { box-shadow: 0 10px 30px rgba(192,79,63,.45), 0 0 0 0 rgba(192,79,63,.5); } 50% { box-shadow: 0 12px 34px rgba(192,79,63,.55), 0 0 0 13px rgba(192,79,63,0); } }
+@keyframes rbell { 0%,55%,100% { transform: rotate(0); } 65% { transform: rotate(15deg); } 75% { transform: rotate(-12deg); } 85% { transform: rotate(7deg); } }
+@media (prefers-reduced-motion: reduce) { .rdock-fab.has, .rdock-fab.has svg { animation: none; } }
 .rdock-panel { width: 332px; max-width: calc(100vw - 40px); background: var(--surface); border: 1px solid var(--border2); border-radius: var(--radius-lg); box-shadow: var(--shadow-lg); overflow: hidden; animation: fadeUp .2s var(--ease); display: none; }
 .rdock.open .rdock-panel { display: block; }
 .rdock-head { padding: 15px 17px 13px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 10px; }
@@ -142,8 +149,8 @@
 .tb-bellwrap.has .bell-badge { display: inline-flex; }
 
 /* Notificación push (esquina) */
-.push-wrap { position: fixed; left: 20px; bottom: 84px; z-index: 320; display: flex; flex-direction: column; gap: 10px; pointer-events: none; }
-.push-card { width: 320px; max-width: calc(100vw - 40px); background: var(--surface); border: 1px solid var(--border2); border-left: 4px solid var(--pc, var(--teal)); border-radius: var(--radius); box-shadow: var(--shadow-lg); padding: 13px 14px; display: flex; gap: 11px; pointer-events: auto; transform: translateX(-120%); opacity: 0; transition: .32s var(--ease); cursor: pointer; }
+.push-wrap { position: fixed; right: 20px; left: auto; bottom: 84px; z-index: 320; display: flex; flex-direction: column; align-items: flex-end; gap: 10px; pointer-events: none; }
+.push-card { width: 320px; max-width: calc(100vw - 40px); background: var(--surface); border: 1px solid var(--border2); border-left: 4px solid var(--pc, var(--teal)); border-radius: var(--radius); box-shadow: var(--shadow-lg); padding: 13px 14px; display: flex; gap: 11px; pointer-events: auto; transform: translateX(120%); opacity: 0; transition: .32s var(--ease); cursor: pointer; }
 .push-card.show { transform: none; opacity: 1; }
 .push-ic { width: 36px; height: 36px; border-radius: 10px; background: var(--pc, var(--teal)); color: #fff; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
 .push-ic svg { width: 19px; height: 19px; }
@@ -158,5 +165,5 @@
   .cal-cell { min-height: 78px; }
   .cal-ev .evname { display: none; }
   .mt-meta-grid { grid-template-columns: 1fr; }
-  .rdock { left: 12px; bottom: 12px; }
+  .rdock { right: 12px; left: auto; bottom: 12px; }
 }

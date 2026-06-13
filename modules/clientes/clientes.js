@@ -62,7 +62,7 @@ export async function render() {
       : `<div class="card" style="overflow:hidden">
           <table class="data-table">
             <thead>
-              <tr><th>Código</th><th>Razón social</th><th>RUT</th><th>Giro</th><th>Facturación</th><th>Alta</th><th>Acciones</th></tr>
+              <tr><th>Código</th><th>Razón social</th><th>RUT</th><th>Giro</th><th>Facturación</th><th>Contacto</th><th>Acciones</th></tr>
             </thead>
             <tbody>
               ${todos.map(c => {
@@ -77,7 +77,13 @@ export async function render() {
                       ? `<strong style="color:var(--navy)">${formatCLP(fx.total)}</strong><div style="font-size:12px;color:var(--text3)">${fx.n} factura${fx.n !== 1 ? 's' : ''} · ${formatCLP(fx.cobrado)} cobrado</div>`
                       : `<span style="font-size:12.5px;color:var(--text3)">Sin facturas</span>`}
                   </td>
-                  <td style="font-size:12.5px;color:var(--text3)">${formatDate(c.fechaAlta)}</td>
+                  <td>
+                    <div style="display:flex;gap:3px">
+                      <button class="btn-icon btn-sm" style="color:#25D366${c.leadId ? '' : ';opacity:.4'}" ${c.leadId ? `onclick="window._app.contactWhatsApp('${c.leadId}')"` : 'disabled'} title="${c.leadId ? 'WhatsApp' : 'Sin prospecto vinculado'}">${_i('whatsapp', 16)}</button>
+                      <button class="btn-icon btn-sm" style="color:#2D8CFF${c.leadId ? '' : ';opacity:.4'}" ${c.leadId ? `onclick="window._app.contactZoom('${c.leadId}')"` : 'disabled'} title="Zoom">${_i('video', 15)}</button>
+                      <button class="btn-icon btn-sm" ${c.leadId ? `onclick="window._app.callProspecto('${c.leadId}')"` : 'disabled style="opacity:.4"'} title="Llamar">${_i('phone', 15)}</button>
+                    </div>
+                  </td>
                   <td>
                     <div style="display:flex;gap:4px">
                       <button class="btn btn-ghost btn-sm" onclick="window._app.openFacturaModalForCliente('${c.id}')" title="Crear factura para este cliente">${_i('factura', 14)} Facturar</button>

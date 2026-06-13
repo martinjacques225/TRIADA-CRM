@@ -140,7 +140,7 @@ const Rem = {
           <button class="btn btn-primary btn-sm" id="rdNew" style="flex:1">${_i('plus',14)} Nueva</button>
         </div>
       </div>
-      <button class="rdock-fab" id="rdFab">${_i('bell',18)} Recordatorios${badge?`<span class="rcount">${badge}</span>`:''}</button>`;
+      <button class="rdock-fab${badge?' has':''}" id="rdFab">${_i(badge?'bellRing':'bell',18)} Recordatorios${badge?`<span class="rcount">${badge}</span>`:''}</button>`;
 
     $('#rdFab', this.host).onclick = () => { this.toggle(); if (this.host.classList.contains('open')) this.markAllRead(); };
     $('#rdClose', this.host).onclick = () => this.toggle(false);
