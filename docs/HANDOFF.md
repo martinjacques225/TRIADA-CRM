@@ -35,9 +35,25 @@
 
 ## 1. Estado actual (al 2026-06-12)
 
-### Nuevo: Rectificaciones del usuario — Batch 1 (2026-06-12) 🟡 verificado en preview, falta en prod
-> Tanda de 8 rectificaciones pedidas por el usuario. Batch 1 (estructura + núcleo
-> funcional) **hecho y pusheado**; batches 2-3 pendientes (ver §4 "Rectificaciones").
+### Nuevo: Rectificaciones del usuario — Batches 1-3 (2026-06-12) 🟡 verificado en preview, falta en prod
+> Tanda de 8 rectificaciones pedidas por el usuario. **Los 3 batches hechos y
+> pusheados.** Único pendiente operativo: correr `supabase/presupuestos.sql`.
+>
+> **Batch 2 (Análisis + Configuración):** Informes reescritos (flujo de leads
+> 24h/7d/30d, actividad, y cobranza: pagadas / por cobrar en plazo / vencidas +
+> días de mora con tabla); Configuración con tamaño de fuente (zoom raíz, 4
+> niveles), 3 temas (Claro/Oscuro/**Matrix** verde franquicia), **mascota** gato
+> (sigue cursor, parpadea, duerme, reacciona al clic — opt-in), y export Agenda/
+> Cartera (CSV) + Informe (PDF) en vez del export JSON. Mascota en
+> `modules/mascota/mascota.js`; tema Matrix en `styles.css`.
+>
+> **Batch 3 (Propuesta/Presupuesto):** Propuesta = solo programa neto **sin IVA**
+> + botón Cotización PDF. Módulo **Presupuesto** real (programa + mano de obra +
+> IVA + plan de servicio) sobre tabla nueva `presupuestos` (capa en `db.js`,
+> fail-soft con `isMissingTable`). Helper compartido `js/pdf.js`
+> (`openCorporateDoc`) para ambos PDF corporativos. **⬜ Falta correr
+> `supabase/presupuestos.sql`** (idempotente); hasta entonces el módulo muestra el
+> aviso de setup. Mascota avanzada (colgarse de cards / jugar) queda para después.
 - **NAV reorganizado** ✅ (preview) — `app.js`: estructura `NAV_SECTIONS` (reemplaza el
   slice de `NAV_ITEMS`). Orden de presentación: **Principal** (Inicio·Leads·Pipeline·Agenda)
   · **Gestión** (Prospectos·Diagnóstico·Propuesta·Presupuesto·Clientes·Facturación)
@@ -139,9 +155,10 @@ index.html
     ├── js/state.js      → estado UI (S.*)
     ├── js/utils.js      → constantes (PIPELINE_STAGES, RUBROS, ORIGENES…) + helpers
     ├── js/format.js     → RUT/teléfono/email
+    ├── js/pdf.js        → documento corporativo imprimible (cotización/presupuesto)
     └── modules/ home · leads · pipeline · agenda · prospectos · diagnosticos ·
                  propuestas · presupuestos · clientes · facturacion · informes ·
-                 configuracion · modals · informe-ejecutivo · ai-commander
+                 configuracion · mascota · modals · informe-ejecutivo · ai-commander
 ```
 **NAV (2026-06-12):** Principal (Inicio, Leads, Pipeline, Agenda) · Gestión (Prospectos, Diagnóstico, Propuesta, Presupuesto, Clientes, Facturación) · Desarrollo (Director de Orquesta) · Análisis (Informes). Configuración accesible por el footer.
 
@@ -149,25 +166,15 @@ index.html
 
 ## 4. Próximos pasos (por prioridad)
 
-### 🟠 Rectificaciones del usuario — batches pendientes (2026-06-12)
-Decisiones tomadas con defaults (el usuario no respondió la encuesta; puede corregir):
-nueva tabla `presupuestos`; Leads=bandeja / Prospectos=gestión; mascota base ahora.
-- **Batch 2 — Análisis + Configuración:**
-  - Reescribir **Informes** (`modules/informes/informes.js`): leads en últimas 24 h / semana /
-    mes, # diagnósticos, # propuestas, # clientes nuevos, # facturas y su estado (pagadas /
-    por vencer dentro de plazo / vencidas + días de mora). Subdividir si hace falta.
-  - **Configuración**: control de **tamaño de fuente** (var CSS `--font-ui` o escala en `html`),
-    **temas** nuevos (incl. **Matrix** con verde de la franquicia), **mascota gato** simple
-    (sigue el mouse / reacciona al ocio; estética mascota Claude Code). Reemplazar
-    **"Exportar JSON"** por: carga masiva de leads (ya en Leads), exportar agenda, exportar
-    cartera de clientes, exportar PDF de informes.
-- **Batch 3 — Propuesta/Presupuesto:**
-  - **Propuesta → PDF corporativo** tipo cotización (solo el programa, sin IVA). Reusar el
-    patrón de impresión de `informe-ejecutivo`. Es el documento preliminar al cliente.
-  - **Presupuesto**: módulo real (IVA + mano de obra + plan de servicio) sobre nueva tabla
-    `presupuestos`. Crear `supabase/presupuestos.sql` (el usuario lo corre) y lecturas
-    fail-soft hasta entonces (patrón `autodiagnosticos`).
-- **Mascota avanzada (después):** colgarse de cards, jugar con el mouse, fondos interactivos.
+### 🟠 Rectificaciones del usuario — batches 1-3 hechos; falta correr 1 SQL (2026-06-12)
+Las 8 rectificaciones están implementadas y pusheadas (ver §1). **Acción del usuario:**
+- ⬜ **Correr `supabase/presupuestos.sql`** en el SQL Editor de Supabase (idempotente). Crea la
+  tabla `presupuestos` (correlativo PRES-, trigger, RLS). Hasta entonces el módulo Presupuesto
+  muestra el aviso de setup. Verificar luego en prod que el alta/PDF funcionan con datos reales.
+- Verificar en producción (con login) el resto: Clientes/Leads/Prospectos, contacto WhatsApp/
+  Zoom, Informes, temas/fuente/mascota, export CSV/PDF. (Todo verificado solo en preview/mocks.)
+- **Mascota avanzada (etapa futura):** colgarse de las cards, jugar con el mouse, fondos
+  interactivos. La base (sigue cursor / parpadea / duerme / reacciona) ya está.
 
 ### ✅ P0 — `supabase/calendar.sql` ejecutado (2026-06-12)
 Columnas del calendario agregadas a `citas` y verificadas en vivo. Persistencia completa.
@@ -223,6 +230,19 @@ Columnas del calendario agregadas a `citas` y verificadas en vivo. Persistencia 
 ---
 
 ## 7. Bitácora de sesiones (más reciente arriba)
+
+### 2026-06-12 (cont. 3) — Rectificaciones Batches 2-3 (Informes, Config/mascota, Propuesta-PDF/Presupuesto)
+- **Batch 2:** Informes reescritos (flujo de leads 24h/7d/30d, actividad, cobranza con vencidas
+  + días de mora). Configuración: tamaño de fuente (zoom raíz), 3 temas (+Matrix), mascota gato
+  (`modules/mascota/mascota.js`, opt-in), export Agenda/Cartera CSV + Informe PDF (reemplaza JSON).
+- **Batch 3:** Propuesta sin IVA + Cotización PDF; módulo Presupuesto real (programa + mano de
+  obra + IVA + plan de servicio) sobre tabla `presupuestos`; `js/pdf.js` (openCorporateDoc)
+  compartido; `js/db.js` capa presupuestos + isMissingTable; `supabase/presupuestos.sql` nuevo.
+- Verificado en preview (mocks): 0 errores; Matrix + mascota OK; Informes con métricas; Propuesta
+  sin IVA; import propuesta→presupuesto con cálculo correcto; ambos PDF generan. Pusheado a `main`.
+- **Pendiente del usuario:** correr `supabase/presupuestos.sql`. Nota: el screenshot del preview
+  quedó inestable (un gradiente teselado pesado degradó el renderer; se reinició el server y se
+  aligeró el fondo Matrix a un vignette).
 
 ### 2026-06-12 (cont. 2) — Rectificaciones Batch 1 (nav + Clientes + Leads + contacto)
 - El usuario pidió 8 rectificaciones (botones de contacto en leads; Propuesta→PDF vs
