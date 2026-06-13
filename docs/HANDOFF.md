@@ -53,7 +53,14 @@
 > fail-soft con `isMissingTable`). Helper compartido `js/pdf.js`
 > (`openCorporateDoc`) para ambos PDF corporativos. **⬜ Falta correr
 > `supabase/presupuestos.sql`** (idempotente); hasta entonces el módulo muestra el
-> aviso de setup. Mascota avanzada (colgarse de cards / jugar) queda para después.
+> aviso de setup.
+>
+> **Batch 4 (Mascota avanzada):** motor de comportamiento del gato (sit/walk/chase/
+> hang/sleep): pasea por el CRM, persigue y juega con el cursor (pounce), se cuelga
+> del borde superior de tarjetas, parpadea, duerme y reacciona al clic. rAF +
+> steering, pointer-events:none, cleanup completo, prefers-reduced-motion. Verificado
+> avanzando frames a mano (el preview headless pausa rAF). Pendiente futuro: fondos
+> de pantalla interactivos.
 - **NAV reorganizado** ✅ (preview) — `app.js`: estructura `NAV_SECTIONS` (reemplaza el
   slice de `NAV_ITEMS`). Orden de presentación: **Principal** (Inicio·Leads·Pipeline·Agenda)
   · **Gestión** (Prospectos·Diagnóstico·Propuesta·Presupuesto·Clientes·Facturación)
@@ -173,8 +180,8 @@ Las 8 rectificaciones están implementadas y pusheadas (ver §1). **Acción del 
   muestra el aviso de setup. Verificar luego en prod que el alta/PDF funcionan con datos reales.
 - Verificar en producción (con login) el resto: Clientes/Leads/Prospectos, contacto WhatsApp/
   Zoom, Informes, temas/fuente/mascota, export CSV/PDF. (Todo verificado solo en preview/mocks.)
-- **Mascota avanzada (etapa futura):** colgarse de las cards, jugar con el mouse, fondos
-  interactivos. La base (sigue cursor / parpadea / duerme / reacciona) ya está.
+- **Mascota:** base + avanzada hechas (pasea, se cuelga de cards, juega con el cursor, pounce,
+  reacciona). Pendiente futuro opcional: **fondos de pantalla interactivos**.
 
 ### ✅ P0 — `supabase/calendar.sql` ejecutado (2026-06-12)
 Columnas del calendario agregadas a `citas` y verificadas en vivo. Persistencia completa.
@@ -230,6 +237,15 @@ Columnas del calendario agregadas a `citas` y verificadas en vivo. Persistencia 
 ---
 
 ## 7. Bitácora de sesiones (más reciente arriba)
+
+### 2026-06-12 (cont. 4) — Mascota avanzada (Batch 4)
+- Reescrito `modules/mascota/mascota.js` con motor de comportamiento: sit/walk/chase/hang/sleep.
+  Pasea por el CRM, persigue/juega con el cursor (pounce), se cuelga del borde de tarjetas
+  visibles, parpadea, duerme y reacciona al clic. rAF + steering + cleanup completo.
+- Verificado en preview: 0 errores; walk mueve la posición; chase alcanza el cursor y hace
+  pounce; clic → burbuja. El preview headless **pausa rAF** (0 frames/600 ms), así que el
+  desplazamiento se validó avanzando los callbacks de rAF a mano. En navegador real corre a 60fps.
+- El usuario reportó que estaba corriendo `supabase/presupuestos.sql` (verificar en prod).
 
 ### 2026-06-12 (cont. 3) — Rectificaciones Batches 2-3 (Informes, Config/mascota, Propuesta-PDF/Presupuesto)
 - **Batch 2:** Informes reescritos (flujo de leads 24h/7d/30d, actividad, cobranza con vencidas
