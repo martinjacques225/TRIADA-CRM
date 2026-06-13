@@ -239,6 +239,20 @@ Columnas del calendario agregadas a `citas` y verificadas en vivo. Persistencia 
 
 ## 7. Bitácora de sesiones (más reciente arriba)
 
+### 2026-06-12 (cont. 5) — Mejoras UX (dock, WhatsApp, dashboards, contacto en Clientes)
+- `supabase/presupuestos.sql` confirmado en vivo (probe REST: tabla + 16 columnas OK, RLS).
+- **Dock de recordatorios** movido a abajo-derecha (`agenda.css`) y, con notificaciones, fab en
+  color de alerta + halo pulsante + campana que se sacude + contador (clase `.has` en
+  `reminders.js`). Push notifications entran desde la derecha.
+- **Ícono WhatsApp** real (glyph relleno) reemplaza el teléfono en los botones de contacto de
+  Leads/Prospectos/Inicio/Clientes; `js/icons.js` ahora soporta íconos rellenos (set `FILLED`).
+- **Informes**: botón "Descargar informe (PDF)" + sección "Tableros" con gráficos SVG/CSS
+  (barras leads 14d, dona de cartera de facturas, barras de propuestas por estado).
+  `exportInformePDF()` exportada y reutilizada por Configuración (se borró `_printInforme`).
+- **Clientes**: botones de contacto por fila (vía `leadId`; deshabilitados si ficha manual).
+- **Mascota**: nace abajo-izquierda y evita la esquina del dock al pasear.
+- Verificado en preview: 0 errores; dock `right:20px`+`.has`; charts; export PDF; glyph WhatsApp.
+
 ### 2026-06-12 (cont. 4) — Mascota avanzada (Batch 4)
 - Reescrito `modules/mascota/mascota.js` con motor de comportamiento: sit/walk/chase/hang/sleep.
   Pasea por el CRM, persigue/juega con el cursor (pounce), se cuelga del borde de tarjetas
