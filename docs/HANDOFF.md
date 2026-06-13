@@ -35,6 +35,45 @@
 
 ## 1. Estado actual (al 2026-06-12)
 
+### Nuevo: Rectificaciones del usuario — Batch 1 (2026-06-12) 🟡 verificado en preview, falta en prod
+> Tanda de 8 rectificaciones pedidas por el usuario. Batch 1 (estructura + núcleo
+> funcional) **hecho y pusheado**; batches 2-3 pendientes (ver §4 "Rectificaciones").
+- **NAV reorganizado** ✅ (preview) — `app.js`: estructura `NAV_SECTIONS` (reemplaza el
+  slice de `NAV_ITEMS`). Orden de presentación: **Principal** (Inicio·Leads·Pipeline·Agenda)
+  · **Gestión** (Prospectos·Diagnóstico·Propuesta·Presupuesto·Clientes·Facturación)
+  · **Desarrollo** (Director de Orquesta) · **Análisis** (Informes). Configuración sale del
+  nav (sigue accesible por el footer/engranaje).
+- **AI Commander → "Director de Orquesta"** ✅ — renombrado en nav, título del módulo
+  (`ai-commander.js`) y aviso de setup (`presentation/ui.js`). IDs internos (`ai-commander`,
+  `window._aic`) sin cambios.
+- **Marca + dedup** ✅ — quitado el botón "Nuevo prospecto" duplicado bajo el logo. Marca
+  con más personalidad (badge con gradiente, animación sutil de la flecha superior con
+  `prefers-reduced-motion`, wordmark "Tríada· / Consultoría 360") en `styles.css`.
+- **Módulo Clientes** ✅ (preview) `modules/clientes/clientes.js` — cartera (KPIs + tabla con
+  resumen de facturación por cliente) + **"Añadir cliente"** tomando CUALQUIER prospecto
+  (cualquier etapa, incl. Descartado) o ficha manual. **Resuelve "Factura no detecta cliente"**:
+  ahora hay forma de crear la ficha desde aquí. Modal en `modals.js`
+  (`openAddClienteModal`/`deleteCliente`/`openFacturaModalForCliente`). Verificado E2E en
+  preview: alta desde prospecto Descartado crea fila; valida RUT módulo-11 (consistente con
+  el modal de prospecto, por eso un RUT inválido aborta el alta).
+- **Módulo Leads (bandeja)** ✅ (preview) `modules/leads/leads.js` — inbox con KPIs (por
+  contactar / contactados / últimas 24 h / 7 días), filtros, búsqueda, **contacto rápido
+  WhatsApp/Zoom/Llamar** por tarjeta, y **carga masiva** (pegar `Nombre; Empresa; Email;
+  Teléfono; Rubro` por línea → `prospectos.add`).
+- **Módulo Prospectos (gestión)** ✅ (preview) `modules/prospectos/prospectos.js` — tabla
+  completa de todos los estados con búsqueda, filtro por etapa, stat-chips y contacto.
+- **Botones de contacto en Inicio** ✅ — `home.js` recientes con WhatsApp/Zoom/Llamar
+  (`event.stopPropagation` para no abrir la ficha).
+- **Handlers** `contactWhatsApp` (arma `wa.me/56…` con saludo) y `contactZoom`
+  (`zoom.us/start/videomeeting`) en `window._app`.
+- **Presupuesto** 🟡 vista de transición (`modules/presupuestos/presupuestos.js`) que explica
+  el rol Propuesta vs Presupuesto. **Módulo real + `supabase/presupuestos.sql` + Propuesta→PDF
+  pendientes (Batch 3).**
+- Verificado: `node --check` (10 archivos), boot del harness con mocks, recorrido de las 4
+  vistas nuevas con **0 errores de consola**, alta de cliente E2E, link WhatsApp correcto.
+  `_preview/mock-db.js` actualizado (gitignored) con shape real de clientes/facturas para
+  que el preview sea representativo. **No verificado contra Supabase real (requiere login).**
+
 ### Nuevo: Calendario de reuniones (2026-06-12) — handoff Claude Design implementado
 - **Agenda → calendario completo** 🟡 — `modules/agenda/agenda.js` reescrito: vistas **Mes / Semana / Lista** (conmutador persiste en localStorage), navegación mes/semana + botón Hoy, leyenda-filtro por tipo (clic oculta/muestra), clic en día/celda crea reunión, clic en evento abre detalle. Verificado en preview (3 vistas, claro/oscuro, 0 errores de consola); **falta verificar en producción con datos reales**.
 - **Modelo de reunión** 🟡 — 7 tipos slug en `citas.tipo` (`emergencia/rutina/negocio/diagnostico/seguimiento/propuesta/interna`, constantes en `utils.js` con mapeo de labels legacy), participantes (UUIDs de `profiles`), recordatorios (minutos), recurrencia (daily/weekly/monthly expandida client-side), duración, vínculo a prospecto, estado (se mantiene Pendiente/Confirmada/Realizada/Cancelada; Cancelada no se pinta).
@@ -100,14 +139,35 @@ index.html
     ├── js/state.js      → estado UI (S.*)
     ├── js/utils.js      → constantes (PIPELINE_STAGES, RUBROS, ORIGENES…) + helpers
     ├── js/format.js     → RUT/teléfono/email
-    └── modules/ home · pipeline · diagnosticos · agenda · propuestas ·
-                 facturacion · informes · configuracion · modals · informe-ejecutivo · ai-commander
+    └── modules/ home · leads · pipeline · agenda · prospectos · diagnosticos ·
+                 propuestas · presupuestos · clientes · facturacion · informes ·
+                 configuracion · modals · informe-ejecutivo · ai-commander
 ```
-**NAV:** Principal (Home, Pipeline) · Gestión (Diagnósticos, Agenda, Propuestas, Facturación) · Análisis (Informes, Configuración)
+**NAV (2026-06-12):** Principal (Inicio, Leads, Pipeline, Agenda) · Gestión (Prospectos, Diagnóstico, Propuesta, Presupuesto, Clientes, Facturación) · Desarrollo (Director de Orquesta) · Análisis (Informes). Configuración accesible por el footer.
 
 ---
 
 ## 4. Próximos pasos (por prioridad)
+
+### 🟠 Rectificaciones del usuario — batches pendientes (2026-06-12)
+Decisiones tomadas con defaults (el usuario no respondió la encuesta; puede corregir):
+nueva tabla `presupuestos`; Leads=bandeja / Prospectos=gestión; mascota base ahora.
+- **Batch 2 — Análisis + Configuración:**
+  - Reescribir **Informes** (`modules/informes/informes.js`): leads en últimas 24 h / semana /
+    mes, # diagnósticos, # propuestas, # clientes nuevos, # facturas y su estado (pagadas /
+    por vencer dentro de plazo / vencidas + días de mora). Subdividir si hace falta.
+  - **Configuración**: control de **tamaño de fuente** (var CSS `--font-ui` o escala en `html`),
+    **temas** nuevos (incl. **Matrix** con verde de la franquicia), **mascota gato** simple
+    (sigue el mouse / reacciona al ocio; estética mascota Claude Code). Reemplazar
+    **"Exportar JSON"** por: carga masiva de leads (ya en Leads), exportar agenda, exportar
+    cartera de clientes, exportar PDF de informes.
+- **Batch 3 — Propuesta/Presupuesto:**
+  - **Propuesta → PDF corporativo** tipo cotización (solo el programa, sin IVA). Reusar el
+    patrón de impresión de `informe-ejecutivo`. Es el documento preliminar al cliente.
+  - **Presupuesto**: módulo real (IVA + mano de obra + plan de servicio) sobre nueva tabla
+    `presupuestos`. Crear `supabase/presupuestos.sql` (el usuario lo corre) y lecturas
+    fail-soft hasta entonces (patrón `autodiagnosticos`).
+- **Mascota avanzada (después):** colgarse de cards, jugar con el mouse, fondos interactivos.
 
 ### ✅ P0 — `supabase/calendar.sql` ejecutado (2026-06-12)
 Columnas del calendario agregadas a `citas` y verificadas en vivo. Persistencia completa.
@@ -163,6 +223,19 @@ Columnas del calendario agregadas a `citas` y verificadas en vivo. Persistencia 
 ---
 
 ## 7. Bitácora de sesiones (más reciente arriba)
+
+### 2026-06-12 (cont. 2) — Rectificaciones Batch 1 (nav + Clientes + Leads + contacto)
+- El usuario pidió 8 rectificaciones (botones de contacto en leads; Propuesta→PDF vs
+  Presupuesto; módulo Clientes para arreglar factura; Informes con métricas útiles; reorg de
+  nav al orden de presentación; rename a Director de Orquesta; personalización/mascota;
+  reemplazar export JSON; quitar botón duplicado + marca con personalidad).
+- Se ofreció encuesta de 3 decisiones (modelo Presupuesto, Leads vs Prospectos, alcance
+  mascota); el usuario no respondió → se siguió con defaults recomendados.
+- **Batch 1 hecho y pusheado** (`main`): nav en 5 secciones, rename, dedup logo + marca,
+  módulos Clientes/Leads/Prospectos, botones de contacto en Inicio, placeholder Presupuesto.
+  Verificado en preview (mocks): 0 errores de consola, alta de cliente E2E, links de contacto.
+- **Pendiente:** Batch 2 (Informes + Configuración/mascota/export) y Batch 3 (Propuesta→PDF +
+  Presupuesto + `supabase/presupuestos.sql`). Ver §4 "Rectificaciones".
 
 ### 2026-06-12 (cont.) — calendar.sql ejecutado y verificado
 - El usuario corrió `supabase/calendar.sql`. Probe en vivo (GET con key publishable) confirma que `citas` tiene `duracion_min/participantes/recordatorios/recurrencia` (200 [] en vez de 42703). Calendario con persistencia completa. (RLS impide leer filas anon, así que la migración de `tipo` legacy no se inspeccionó por valor, pero el ALTER quedó confirmado.)
