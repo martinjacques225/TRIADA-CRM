@@ -1,6 +1,6 @@
 # HANDOFF — TRIADA CRM
 > **Documento vivo. Fuente de verdad del estado del proyecto.**
-> Última actualización: **2026-06-12**
+> Última actualización: **2026-06-13**
 
 ---
 
@@ -238,6 +238,20 @@ Columnas del calendario agregadas a `citas` y verificadas en vivo. Persistencia 
 ---
 
 ## 7. Bitácora de sesiones (más reciente arriba)
+
+### 2026-06-13 — Mascota: perseguir el cursor ahora es raro (queja "no se suelta")
+- El usuario sentía la persecución demasiado pegajosa: el gato entraba en `chase` con
+  cualquier mousemove cercano y solo soltaba tras 2.6 s de cursor quieto → glued al cursor.
+- Decisión del usuario: **"perseguir es raro"**. Cambios en `modules/mascota/mascota.js`:
+  - Mover el mouse ya NO dispara `chase` (se quitó el trigger de `_onMove`); los ojos
+    siguen siguiendo el cursor siempre (vía `_draw`).
+  - El "cerebro" (`_brain`) elige `chase` solo ~12% de las veces y con gating (cursor
+    activo + cooldown cumplido); el resto: pasea / se cuelga de cards / dormita.
+  - `chase` se cansa solo a los 3–5.5 s (aunque sigas moviendo) o si el cursor se queda
+    quieto 1.6 s, y luego hay cooldown de 12–22 s antes de poder volver a perseguir
+    (`_S.chaseUntil` / `_S.noChaseBefore`).
+- Verificado: `node --check` OK. Comportamiento (raro/estocástico) no probado en vivo por
+  diseño — se siente al usar. 🟡
 
 ### 2026-06-12 (cont. 5) — Mejoras UX (dock, WhatsApp, dashboards, contacto en Clientes)
 - `supabase/presupuestos.sql` confirmado en vivo (probe REST: tabla + 16 columnas OK, RLS).

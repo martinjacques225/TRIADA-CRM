@@ -13,7 +13,7 @@ let _onMove = null, _onClick = null, _onResize = null;
 
 // Cursor + estado del "cerebro"
 let _mx = 0, _my = 0, _mMovedAt = 0;
-const _S = { x: 0, y: 0, mode: 'sit', tx: 0, ty: 0, facing: 1, hopUntil: 0, hangUntil: 0, modeSince: 0 };
+const _S = { x: 0, y: 0, mode: 'sit', tx: 0, ty: 0, facing: 1, hopUntil: 0, hangUntil: 0, modeSince: 0, chaseUntil: 0, noChaseBefore: 0 };
 
 const W = 92; // tamaño del sprite
 
@@ -161,12 +161,10 @@ function _apply() {
 
   _onMove = (e) => {
     _mx = e.clientX; _my = e.clientY; _mMovedAt = now();
-    if (_S.mode === 'sleep') _setMode('sit');
-    // Si el cursor pasa cerca y la mascota está tranquila, se pone a jugar
-    if ((_S.mode === 'sit' || _S.mode === 'walk')) {
-      const d = Math.hypot(_mx - (_S.x + W / 2), _my - (_S.y + W / 2));
-      if (d < 150) _setMode('chase');
-    }
+    if (_S.mode === 'sleep') _setMode('sit');   // si dormía, lo despiertas
+    // Nota: mover el mouse ya NO dispara la persecución. Los ojos siguen el
+    // cursor (ver _draw), pero el cuerpo solo persigue cuando el "cerebro" lo
+    // decide, y rara vez (ver _brain) — así no queda pegado al cursor.
   };
   _onClick = (e) => {
     const d = Math.hypot(e.clientX - (_S.x + W / 2), e.clientY - (_S.y + W / 2));
@@ -187,6 +185,8 @@ function _setMode(mode) {
   _S.mode = mode; _S.modeSince = now();
   _el.className = 'mascota m-' + mode;
   if (mode === 'hang') _S.hangUntil = now() + 6000 + Math.random() * 5000;
+  // El gato se cansa de perseguir: la cacería dura solo unos segundos.
+  if (mode === 'chase') _S.chaseUntil = now() + 3000 + Math.random() * 2500;
 }
 
 const _frases = ['miau 🐾', '¡prr! 😸', '¿jugamos?', 'miiiau', '😺', '¡atrápame!'];
@@ -227,20 +227,24 @@ function _pickCard() {
 function _brain() {
   const reschedule = () => { _brainT = setTimeout(_brain, 3500 + Math.random() * 4000); };
   if (!_el) return;
-  const idleMouse = now() - _mMovedAt > 2600;
+  const t = now();
+  const idleMouse = t - _mMovedAt > 2600;
 
   if (_S.mode === 'sit') {
     const r = Math.random();
-    if (!idleMouse && Math.hypot(_mx - (_S.x + W / 2), _my - (_S.y + W / 2)) < 160) {
+    // Perseguir es RARO: ~12% de las veces que el gato lo piensa, y solo si el
+    // cursor está activo y ya pasó el cooldown de la última cacería. El resto
+    // del tiempo hace su vida (pasea, se cuelga de cards, dormita).
+    if (r < 0.12 && !idleMouse && t > _S.noChaseBefore) {
       _setMode('chase');
-    } else if (r < 0.42) {                      // pasear a un punto al azar
+    } else if (r < 0.5) {                        // pasear a un punto al azar
       _S.ty = clampY(40 + Math.random() * (window.innerHeight - 160));
       _S.tx = _avoidDock(clampX(40 + Math.random() * (window.innerWidth - 160)), _S.ty);
       _setMode('walk');
-    } else if (r < 0.7) {                        // colgarse de una card
+    } else if (r < 0.78) {                        // colgarse de una card
       const c = _pickCard();
       if (c) { _S.tx = c.x; _S.ty = c.y; _setMode('walk'); _S._thenHang = true; }
-    } else if (r < 0.85 && idleMouse) {          // dormitar
+    } else if (r < 0.9 && idleMouse) {            // dormitar
       _setMode('sleep');
     }
   }
@@ -273,7 +277,12 @@ function _tick() {
       setTimeout(() => _el && _el.classList.remove('m-hop'), 500);
       if (Math.random() < 0.5) _say('😼');
     }
-    if (t - _mMovedAt > 2600) _setMode('sit');     // el cursor se quedó quieto → descansa
+    // Se suelta: se cansa tras unos segundos (aunque sigas moviendo el mouse) o
+    // si el cursor se queda quieto. Luego no vuelve a perseguir por un buen rato.
+    if (t > _S.chaseUntil || t - _mMovedAt > 1600) {
+      _S.noChaseBefore = t + 12000 + Math.random() * 10000;   // cooldown 12–22 s
+      _setMode('sit');
+    }
   } else if (_S.mode === 'walk') {
     if (_steer(0.06)) {
       if (_S._thenHang) { _S._thenHang = false; _setMode('hang'); }
