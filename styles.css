@@ -115,6 +115,47 @@
   --ring:      0 0 0 3px rgba(43,188,196,.22);
 }
 
+/* ─── Tema Matrix — verde de la franquicia sobre negro ─── */
+[data-theme="matrix"] {
+  --bg:        #04080A;
+  --surface:   #07110E;
+  --surface2:  #0A1813;
+  --surface3:  #0F231A;
+  --border:    #16382A;
+  --border2:   #1F4E39;
+  --ink:       #C6FBD7;
+  --text:      #7CE6A2;
+  --text2:     #4FB87C;
+  --text3:     #2F7A50;
+  --primary:   #2EE66B;
+  --primary-d: #1FB851;
+  --primary-l: #0B2616;
+  --teal:      #2EE66B;
+  --teal-d:    #1FB851;
+  --teal-l:    #0B2616;
+  --navy:      #3DF07A;
+  --navy-d:    #1FB851;
+  --navy-l:    #0B2616;
+  --green:     #39FF6A;
+  --green-l:   #0B2616;
+  --violet:    #4FE0A0;
+  --violet-l:  #0A2218;
+  --amber:     #A8E04F;
+  --amber-l:   #1A2410;
+  --danger:    #FF6B5C;
+  --danger-l:  #2A1310;
+  --brass:     #6FE6A0;
+  --muted:     #2F7A50;
+  --shadow-sm: 0 1px 2px rgba(0,0,0,.5);
+  --shadow:    0 4px 18px rgba(0,40,15,.55);
+  --shadow-lg: 0 18px 50px rgba(0,0,0,.7);
+  --ring:      0 0 0 3px rgba(46,230,107,.30);
+}
+[data-theme="matrix"] body { background-image: radial-gradient(120% 80% at 50% 0%, rgba(46,230,107,.06), transparent 60%); }
+[data-theme="matrix"] .brand-name,
+[data-theme="matrix"] .kpi-value { text-shadow: 0 0 9px rgba(46,230,107,.45); }
+[data-theme="matrix"] .brand-mark-wrap { background: linear-gradient(150deg, #0B2616, #07110E); }
+
 /* ─── Layout ─── */
 html, body { height: 100%; }
 body {

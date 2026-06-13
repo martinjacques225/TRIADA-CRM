@@ -1,1 +1,20 @@
-/* configuracion — inherits all from styles.css */
+/* configuracion — inherits base from styles.css */
+.cfg-h {
+  font-family: var(--serif);
+  font-size: 18px; font-weight: 500; color: var(--ink);
+  margin-bottom: 16px;
+}
+.cfg-row {
+  display: flex; align-items: center; gap: 14px;
+  margin-bottom: 14px; flex-wrap: wrap;
+}
+.cfg-row:last-child { margin-bottom: 0; }
+.cfg-row-lbl {
+  font-size: 13px; font-weight: 600; color: var(--text2);
+  width: 120px; flex-shrink: 0;
+}
+.cfg-switch {
+  display: inline-flex; align-items: center; gap: 9px;
+  font-size: 13px; color: var(--text2); cursor: pointer;
+}
+.cfg-switch input { width: 17px; height: 17px; accent-color: var(--primary); cursor: pointer; }

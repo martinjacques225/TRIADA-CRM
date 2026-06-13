@@ -50,6 +50,7 @@ import {
 import { openMeetingDetail } from './modules/agenda/agenda.js';
 import { initReminders } from './modules/agenda/reminders.js';
 import { openInformeViewer } from './modules/informe-ejecutivo/informe.view.js';
+import { initMascota, setMascotaEnabled, setMascota } from './modules/mascota/mascota.js';
 
 // ════ NAV ════
 // Orden que sigue la presentación comercial: Principal → Gestión → Desarrollo → Análisis.
@@ -187,6 +188,7 @@ async function init() {
   document.documentElement.setAttribute('data-theme', theme);
   const density = await config.get('density') || 'comfortable';
   document.documentElement.setAttribute('data-density', density);
+  _applyFontScale(await config.get('fontScale') || '1');
 
   // Modal close
   document.getElementById('modalClose').addEventListener('click', closeModal);
@@ -270,6 +272,12 @@ async function init() {
       document.documentElement.setAttribute('data-theme', t);
       await config.set('theme', t);
     },
+    setFontScale: async (s) => {
+      _applyFontScale(s);
+      await config.set('fontScale', String(s));
+    },
+    setMascotaEnabled: (on) => setMascotaEnabled(on),
+    setMascota: (t) => setMascota(t),
     compartirDiagPorArea: async (diagId) => {
       const diag = await diagnosticos.get(diagId);
       if (!diag) { toast('Diagnóstico no encontrado', 'error'); return; }
@@ -389,6 +397,14 @@ async function init() {
 
   // Dock de recordatorios + campana del topbar (vive en todos los módulos)
   try { await initReminders(); } catch (err) { console.error('No se pudo iniciar el motor de recordatorios:', err); }
+  // Mascota de la compañía (opt-in; se controla desde Configuración)
+  try { await initMascota(); } catch (err) { console.error('No se pudo iniciar la mascota:', err); }
+}
+
+// Escala global de tipografía/UI (zoom en la raíz). Valores: 0.9 / 1 / 1.1 / 1.25
+function _applyFontScale(scale) {
+  const s = Number(scale) || 1;
+  document.documentElement.style.zoom = s === 1 ? '' : String(s);
 }
 
 function _openSimpleModal(title, bodyHtml, onSave) {

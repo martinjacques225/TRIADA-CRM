@@ -1,128 +1,163 @@
 // modules/informes/informes.js
-import { prospectos, diagnosticos, propuestas, citas } from '../../js/db.js';
-import { PIPELINE_STAGES, RUBROS, DIAG_AREAS, formatCLP, stageIcon, areaIcon } from '../../js/utils.js';
+// Informes operativos: foco en lo accionable —
+//  · Flujo de entrada de leads (24 h / 7 días / 30 días)
+//  · Actividad (diagnósticos, propuestas, clientes nuevos)
+//  · Facturación y cobranza (pagadas, por cobrar en plazo, vencidas + días de mora)
+// + embudo de conversión y madurez por área como análisis de fondo.
+import { prospectos, diagnosticos, propuestas, citas, clientes, facturas } from '../../js/db.js';
+import { PIPELINE_STAGES, DIAG_AREAS, formatCLP, formatDate, stageIcon, areaIcon } from '../../js/utils.js';
 
 const _i = (n, s) => (window.icon ? window.icon(n, '', s) : '');
+const DAY = 86400000;
 
 export async function render() {
-  const [todos, todosD, todasP, todasC] = await Promise.all([
-    prospectos.getAll(), diagnosticos.getAll(), propuestas.getAll(), citas.getAll()
+  const [todos, todosD, todasP, todasC, todosCli, todasF] = await Promise.all([
+    prospectos.getAll(), diagnosticos.getAll(), propuestas.getAll(),
+    citas.getAll(), clientes.getAll(), facturas.getAll(),
   ]);
 
-  // Conversión por etapa
-  const byStage = PIPELINE_STAGES.map(st => ({ ...st, cnt: todos.filter(p=>p.estado===st.id).length }));
-  const clientes  = todos.filter(p=>p.estado==='Cliente').length;
-  const total     = todos.length || 1;
-  const tasa      = Math.round(clientes/total*100);
+  const now = Date.now();
+  const today = new Date(); today.setHours(0, 0, 0, 0);
+  const within = (iso, days) => iso && (now - new Date(iso).getTime()) <= days * DAY && new Date(iso).getTime() <= now;
 
-  // Por rubro
-  const rubroMap = {};
-  todos.forEach(p=>{ const r=p.rubro||'Otro'; rubroMap[r]=(rubroMap[r]||0)+1; });
-  const rubros = Object.entries(rubroMap).sort((a,b)=>b[1]-a[1]);
+  // ── Flujo de entrada de leads ──
+  const leads24 = todos.filter(p => within(p.fechaCreacion, 1)).length;
+  const leads7  = todos.filter(p => within(p.fechaCreacion, 7)).length;
+  const leads30 = todos.filter(p => within(p.fechaCreacion, 30)).length;
 
-  // Diagnósticos promedio por área
-  function avgScore(diagList, areaKey) {
-    if (!diagList.length) return 0;
-    const vals = diagList.map(d=>{
-      const arr = d[`scores${areaKey.charAt(0).toUpperCase()+areaKey.slice(1)}`] || [];
-      return Math.round((arr.filter(x=>x===true).length/5)*100);
+  // ── Actividad ──
+  const diag30  = todosD.filter(d => within(d.fecha, 30)).length;
+  const propAbiertas = todasP.filter(p => p.estado === 'enviada' || p.estado === 'negociando').length;
+  const propAcept    = todasP.filter(p => p.estado === 'aceptada').length;
+  const cliNuevos30  = todosCli.filter(c => within(c.fechaAlta, 30)).length;
+
+  // ── Facturación y cobranza ──
+  const daysOverdue = (f) => {
+    if (!f.vencimiento) return 0;
+    const v = new Date(f.vencimiento + 'T00:00:00');
+    return Math.max(0, Math.floor((today - v) / DAY));
+  };
+  const esVencida = (f) => f.estado === 'vencido'
+    || (['pendiente', 'parcial'].includes(f.estado) && f.vencimiento && new Date(f.vencimiento + 'T00:00:00') < today);
+  const esEnPlazo = (f) => ['pendiente', 'parcial'].includes(f.estado) && !esVencida(f);
+
+  const pagadas  = todasF.filter(f => f.estado === 'pagado');
+  const enPlazo  = todasF.filter(esEnPlazo);
+  const vencidas = todasF.filter(esVencida).map(f => ({ ...f, mora: daysOverdue(f) })).sort((a, b) => b.mora - a.mora);
+  const sum = (arr) => arr.reduce((s, f) => s + (+f.monto || 0), 0);
+  const totalFacturado = sum(todasF);
+
+  // ── Conversión + madurez (análisis de fondo) ──
+  const total = todos.length || 1;
+  const byStage = PIPELINE_STAGES.map(st => ({ ...st, cnt: todos.filter(p => p.estado === st.id).length }));
+  const clientesTot = todos.filter(p => p.estado === 'Cliente').length;
+  const tasa = Math.round(clientesTot / total * 100);
+  const avgScore = (areaKey) => {
+    if (!todosD.length) return 0;
+    const vals = todosD.map(d => {
+      const arr = d[`scores${areaKey}`] || [];
+      return Math.round((arr.filter(x => x === true).length / 5) * 100);
     });
-    return Math.round(vals.reduce((s,v)=>s+v,0)/vals.length);
-  }
-  const avgTec     = avgScore(todosD, 'Tec');
-  const avgVentas  = avgScore(todosD, 'Ventas');
-  const avgFinanzas= avgScore(todosD, 'Finanzas');
+    return Math.round(vals.reduce((s, v) => s + v, 0) / vals.length);
+  };
+  const madurez = [
+    { l: 'Tecnología', id: 'tec', v: avgScore('Tec'),      c: '#5160C0' },
+    { l: 'Ventas',     id: 'ventas', v: avgScore('Ventas'), c: '#0C7C88' },
+    { l: 'Finanzas',   id: 'finanzas', v: avgScore('Finanzas'), c: '#2E9B73' },
+  ];
 
-  // Valor propuestas
-  const valorTotal   = todasP.filter(p=>p.estado==='aceptada').reduce((s,p)=>s+(+p.valor||0),0);
-  const valorAbierto = todasP.filter(p=>p.estado==='enviada'||p.estado==='negociando').reduce((s,p)=>s+(+p.valor||0),0);
-
-  // Orígenes
-  const origenMap = {};
-  todos.forEach(p=>{ const o=p.origen||'Otro'; origenMap[o]=(origenMap[o]||0)+1; });
+  const kpi = (label, value, sub, icon, color) => `
+    <div class="kpi-card">
+      <div class="kpi-top"><span class="kpi-label">${label}</span><span class="kpi-ic" style="background:var(--${color}-l);color:var(--${color})">${_i(icon)}</span></div>
+      <div class="kpi-value${String(value).length > 6 ? ' kpi-value-sm' : ''}">${value}</div>
+      ${sub ? `<div class="kpi-sub">${sub}</div>` : ''}
+    </div>`;
 
   const center = document.getElementById('center');
   center.innerHTML = `<div class="view-animate">
     <div class="section-head"><h2>Informes y Analítica</h2></div>
 
-    <div class="kpi-grid" style="margin-bottom:28px">
-      <div class="kpi-card"><div class="kpi-top"><span class="kpi-label">Total prospectos</span><span class="kpi-ic" style="background:var(--primary-l);color:var(--primary)">${_i('users')}</span></div><div class="kpi-value">${todos.length}</div></div>
-      <div class="kpi-card"><div class="kpi-top"><span class="kpi-label">Tasa de conversión</span><span class="kpi-ic" style="background:var(--green-l);color:var(--green)">${_i('target')}</span></div><div class="kpi-value">${tasa}%</div><div class="kpi-sub">${clientes} clientes / ${todos.length} prospectos</div></div>
-      <div class="kpi-card"><div class="kpi-top"><span class="kpi-label">Valor cerrado</span><span class="kpi-ic" style="background:var(--amber-l);color:var(--amber)">${_i('coins')}</span></div><div class="kpi-value kpi-value-sm">${formatCLP(valorTotal)}</div></div>
-      <div class="kpi-card"><div class="kpi-top"><span class="kpi-label">Valor en pipeline</span><span class="kpi-ic" style="background:var(--violet-l);color:var(--violet)">${_i('informes')}</span></div><div class="kpi-value kpi-value-sm">${formatCLP(valorAbierto)}</div></div>
-      <div class="kpi-card"><div class="kpi-top"><span class="kpi-label">Diagnósticos realizados</span><span class="kpi-ic" style="background:var(--primary-l);color:var(--primary)">${_i('search')}</span></div><div class="kpi-value">${todosD.length}</div></div>
-      <div class="kpi-card"><div class="kpi-top"><span class="kpi-label">Citas realizadas</span><span class="kpi-ic" style="background:var(--navy-l);color:var(--navy)">${_i('calClock')}</span></div><div class="kpi-value">${todasC.filter(c=>c.estado==='Realizada').length}</div></div>
+    <!-- ── FLUJO DE ENTRADA ── -->
+    <h3 class="inf-section-title">Flujo de entrada de leads</h3>
+    <div class="kpi-grid" style="margin-bottom:26px">
+      ${kpi('Últimas 24 horas', leads24, 'Leads ingresados', 'sparkle', 'primary')}
+      ${kpi('Últimos 7 días', leads7, 'Esta semana', 'trending', 'violet')}
+      ${kpi('Últimos 30 días', leads30, 'Este mes', 'calClock', 'amber')}
+      ${kpi('Total histórico', todos.length, `${todos.filter(p => p.estado !== 'Descartado').length} activos`, 'users', 'green')}
     </div>
 
+    <!-- ── ACTIVIDAD ── -->
+    <h3 class="inf-section-title">Actividad</h3>
+    <div class="kpi-grid" style="margin-bottom:26px">
+      ${kpi('Diagnósticos', todosD.length, `${diag30} en los últimos 30 días`, 'search', 'primary')}
+      ${kpi('Propuestas', todasP.length, `${propAbiertas} abiertas · ${propAcept} aceptadas`, 'fileText', 'violet')}
+      ${kpi('Clientes en cartera', todosCli.length, `${cliNuevos30} nuevos (30 días)`, 'checkCirc', 'green')}
+      ${kpi('Citas realizadas', todasC.filter(c => c.estado === 'Realizada').length, `${todasC.length} agendadas en total`, 'calClock', 'amber')}
+    </div>
+
+    <!-- ── FACTURACIÓN Y COBRANZA ── -->
+    <h3 class="inf-section-title">Facturación y cobranza</h3>
+    <div class="kpi-grid" style="margin-bottom:18px">
+      ${kpi('Facturas emitidas', todasF.length, `${formatCLP(totalFacturado)} en total`, 'factura', 'primary')}
+      ${kpi('Pagadas', pagadas.length, `${formatCLP(sum(pagadas))} cobrado`, 'checkCirc', 'green')}
+      ${kpi('Por cobrar (en plazo)', enPlazo.length, `${formatCLP(sum(enPlazo))} dentro de plazo`, 'clock', 'amber')}
+      ${kpi('Vencidas', vencidas.length, `${formatCLP(sum(vencidas))} en mora`, 'alert', 'danger')}
+    </div>
+
+    ${vencidas.length ? `
+      <div class="card" style="overflow:hidden;margin-bottom:28px">
+        <div style="padding:12px 16px;border-bottom:1px solid var(--border);font-weight:700;color:var(--danger);font-size:13.5px;display:flex;align-items:center;gap:8px">
+          ${_i('alert', 16)} Facturas vencidas — requieren gestión de cobranza
+        </div>
+        <table class="data-table">
+          <thead><tr><th>Factura</th><th>Cliente</th><th>Monto</th><th>Vencimiento</th><th>Días de mora</th></tr></thead>
+          <tbody>
+            ${vencidas.map(f => {
+              const cli = todosCli.find(c => c.id === f.clienteId);
+              const sev = f.mora >= 30 ? 'var(--danger)' : f.mora >= 8 ? 'var(--amber)' : 'var(--text2)';
+              return `<tr>
+                <td style="font-size:12px;font-weight:700;color:var(--text3);white-space:nowrap">${f.correlativo || '—'}</td>
+                <td><strong>${(cli && (cli.razonSocial || cli.nombre)) || '—'}</strong></td>
+                <td><strong style="color:var(--navy)">${formatCLP(f.monto)}</strong></td>
+                <td style="font-size:12.5px;color:var(--text3)">${f.vencimiento ? formatDate(f.vencimiento) : '—'}</td>
+                <td><span style="font-weight:800;color:${sev}">${f.mora}</span> <span style="font-size:12px;color:var(--text3)">día${f.mora !== 1 ? 's' : ''}</span></td>
+              </tr>`;
+            }).join('')}
+          </tbody>
+        </table>
+      </div>` : `<div class="card card-pad" style="margin-bottom:28px;color:var(--green);font-size:13.5px;display:flex;align-items:center;gap:8px">${_i('checkCirc', 16)} Sin facturas vencidas. Cobranza al día.</div>`}
+
+    <!-- ── ANÁLISIS DE FONDO ── -->
+    <h3 class="inf-section-title">Conversión y madurez</h3>
     <div class="inf-grid">
-      <!-- FUNNEL -->
       <div class="card card-pad">
-        <h3 class="inf-title">Embudo de conversión</h3>
+        <h3 class="inf-title">Embudo de conversión <span style="font-size:12px;font-weight:400;color:var(--text3)">(tasa ${tasa}%)</span></h3>
         <div class="inf-funnel">
-          ${byStage.filter(s=>s.id!=='Descartado').map((s,i,arr)=>{
-            const w = total > 0 ? Math.max(30, Math.round(s.cnt/total*100)) : 30;
+          ${byStage.filter(s => s.id !== 'Descartado').map(s => {
+            const w = Math.max(30, Math.round(s.cnt / total * 100));
             return `<div class="inf-funnel-stage" style="background:${s.bg};border:1px solid ${s.color}22;width:${w}%">
-              <span style="font-size:12px;color:${s.color};font-weight:600;display:inline-flex;align-items:center;gap:6px">${stageIcon(s.id,14)} ${s.id}</span>
+              <span style="font-size:12px;color:${s.color};font-weight:600;display:inline-flex;align-items:center;gap:6px">${stageIcon(s.id, 14)} ${s.id}</span>
               <span style="font-size:18px;font-weight:800;color:${s.color}">${s.cnt}</span>
             </div>`;
           }).join('')}
         </div>
       </div>
 
-      <!-- SCORES DIAGNÓSTICO -->
       <div class="card card-pad">
         <h3 class="inf-title">Madurez promedio por área <span style="font-size:12px;font-weight:400;color:var(--text3)">(${todosD.length} diagnósticos)</span></h3>
         ${todosD.length === 0
           ? `<p style="color:var(--text3);font-size:13.5px;margin-top:12px">Realiza diagnósticos para ver estadísticas.</p>`
           : `<div style="margin-top:16px">
-              ${[{id:'tec',l:'Tecnología',v:avgTec,c:'#5160C0'},{id:'ventas',l:'Ventas',v:avgVentas,c:'#0C7C88'},{id:'finanzas',l:'Finanzas',v:avgFinanzas,c:'#2E9B73'}].map(a=>`
+              ${madurez.map(a => `
                 <div style="margin-bottom:16px">
                   <div style="display:flex;justify-content:space-between;margin-bottom:6px">
-                    <span style="font-size:13.5px;font-weight:600;color:var(--text);display:inline-flex;align-items:center;gap:7px">${areaIcon(a.id,15)} ${a.l}</span>
+                    <span style="font-size:13.5px;font-weight:600;color:var(--text);display:inline-flex;align-items:center;gap:7px">${areaIcon(a.id, 15)} ${a.l}</span>
                     <span style="font-size:15px;font-weight:700;color:${a.c}">${a.v}%</span>
                   </div>
                   <div class="score-bar"><div class="score-fill" style="width:${a.v}%;background:${a.c}"></div></div>
-                  <div style="font-size:11.5px;color:var(--text3);margin-top:3px">${a.v>=80?'Maduro':a.v>=50?'En desarrollo':'Crítico'}</div>
+                  <div style="font-size:11.5px;color:var(--text3);margin-top:3px">${a.v >= 80 ? 'Maduro' : a.v >= 50 ? 'En desarrollo' : 'Crítico'}</div>
                 </div>`).join('')}
             </div>`}
-      </div>
-
-      <!-- RUBROS -->
-      <div class="card card-pad">
-        <h3 class="inf-title">Prospectos por rubro</h3>
-        <div style="margin-top:14px">
-          ${rubros.length === 0
-            ? `<p style="color:var(--text3);font-size:13.5px">Sin datos aún.</p>`
-            : rubros.map(([r,cnt])=>{
-                const pct = Math.round(cnt/todos.length*100);
-                return `<div style="margin-bottom:12px">
-                  <div style="display:flex;justify-content:space-between;margin-bottom:5px">
-                    <span style="font-size:13px;color:var(--text)">${r}</span>
-                    <span style="font-size:13px;font-weight:600;color:var(--navy)">${cnt} (${pct}%)</span>
-                  </div>
-                  <div class="score-bar" style="height:8px"><div class="score-fill" style="width:${pct}%;background:var(--primary)"></div></div>
-                </div>`;
-              }).join('')}
-        </div>
-      </div>
-
-      <!-- ORIGENES -->
-      <div class="card card-pad">
-        <h3 class="inf-title">Fuente de prospectos</h3>
-        <div style="margin-top:14px">
-          ${Object.entries(origenMap).length === 0
-            ? `<p style="color:var(--text3);font-size:13.5px">Sin datos aún.</p>`
-            : Object.entries(origenMap).sort((a,b)=>b[1]-a[1]).map(([o,cnt])=>{
-                const pct = Math.round(cnt/todos.length*100);
-                return `<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border)">
-                  <span style="font-size:13.5px;color:var(--text)">${o}</span>
-                  <div style="display:flex;align-items:center;gap:10px">
-                    <div style="width:80px;height:6px;background:var(--surface3);border-radius:4px;overflow:hidden"><div style="width:${pct}%;height:100%;background:var(--violet);border-radius:4px"></div></div>
-                    <span style="font-size:13px;font-weight:600;color:var(--navy);min-width:30px;text-align:right">${cnt}</span>
-                  </div>
-                </div>`;
-              }).join('')}
-        </div>
       </div>
     </div>
   </div>`;
