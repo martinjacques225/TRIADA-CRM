@@ -51,9 +51,10 @@
 > + botón Cotización PDF. Módulo **Presupuesto** real (programa + mano de obra +
 > IVA + plan de servicio) sobre tabla nueva `presupuestos` (capa en `db.js`,
 > fail-soft con `isMissingTable`). Helper compartido `js/pdf.js`
-> (`openCorporateDoc`) para ambos PDF corporativos. **⬜ Falta correr
-> `supabase/presupuestos.sql`** (idempotente); hasta entonces el módulo muestra el
-> aviso de setup.
+> (`openCorporateDoc`) para ambos PDF corporativos. ✅ **`supabase/presupuestos.sql`
+> ejecutado y verificado en vivo (2026-06-12)**: probe REST con key publishable →
+> `presupuestos` devuelve `200 []` para las 16 columnas (tabla + columnas OK, sin
+> 42703) y RLS activa. El módulo ya está operativo en prod.
 >
 > **Batch 4 (Mascota avanzada):** motor de comportamiento del gato (sit/walk/chase/
 > hang/sleep): pasea por el CRM, persigue y juega con el cursor (pounce), se cuelga
@@ -173,13 +174,13 @@ index.html
 
 ## 4. Próximos pasos (por prioridad)
 
-### 🟠 Rectificaciones del usuario — batches 1-3 hechos; falta correr 1 SQL (2026-06-12)
-Las 8 rectificaciones están implementadas y pusheadas (ver §1). **Acción del usuario:**
-- ⬜ **Correr `supabase/presupuestos.sql`** en el SQL Editor de Supabase (idempotente). Crea la
-  tabla `presupuestos` (correlativo PRES-, trigger, RLS). Hasta entonces el módulo Presupuesto
-  muestra el aviso de setup. Verificar luego en prod que el alta/PDF funcionan con datos reales.
-- Verificar en producción (con login) el resto: Clientes/Leads/Prospectos, contacto WhatsApp/
-  Zoom, Informes, temas/fuente/mascota, export CSV/PDF. (Todo verificado solo en preview/mocks.)
+### 🟢 Rectificaciones del usuario — 8/8 hechas y pusheadas (2026-06-12)
+Las 8 rectificaciones (batches 1-4) están implementadas, pusheadas y en vivo.
+- ✅ **`supabase/presupuestos.sql` ejecutado y verificado en vivo** (probe REST: tabla + 16
+  columnas OK, RLS activa). Módulo Presupuesto operativo en prod.
+- ⬜ Repaso recomendado en producción **con login** (todo lo demás se verificó en preview/mocks):
+  Clientes/Leads/Prospectos, contacto WhatsApp/Zoom, Informes, temas/fuente/mascota, export
+  CSV/PDF, y un alta real de Presupuesto + su PDF.
 - **Mascota:** base + avanzada hechas (pasea, se cuelga de cards, juega con el cursor, pounce,
   reacciona). Pendiente futuro opcional: **fondos de pantalla interactivos**.
 
