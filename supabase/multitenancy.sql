@@ -65,10 +65,23 @@ language sql stable security definer set search_path = public as $$
 $$;
 
 -- ===== 4. Stamping automático de org_id en cada INSERT (front intacto) =====
+-- · Autenticado: si no manda org_id, se asigna su org. (Mandar otra org la bloquea
+--   la RLS `with check (org_id = auth_org_id())`.)
+-- · Anónimo (vía pública leads_public_ins / landing): se FUERZA la org por defecto,
+--   ignorando cualquier org_id del cliente → evita (a) leads huérfanos invisibles y
+--   (b) inyección cross-tenant mandando el org_id de otra empresa.
+--   MULTI-TENANT REAL (futuro): reemplazar el branch anónimo por la resolución de la
+--   org desde el contexto del landing (slug/subdominio), no "org por defecto".
 create or replace function set_org_id() returns trigger
 language plpgsql security definer set search_path = public as $$
+declare v_uid uuid := auth.uid(); v_org uuid;
 begin
-  if new.org_id is null then new.org_id := auth_org_id(); end if;
+  if v_uid is null then
+    select id into v_org from public.orgs order by created_at limit 1;
+    new.org_id := v_org;                       -- anónimo: org forzada
+  elsif new.org_id is null then
+    new.org_id := auth_org_id();               -- autenticado: su org
+  end if;
   return new;
 end $$;
 
