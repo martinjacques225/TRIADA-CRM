@@ -4,7 +4,7 @@
 // (bandeja de entrada) y a Pipeline (kanban de flujo).
 import { prospectos } from '../../js/db.js';
 import { S } from '../../js/state.js';
-import { escHtml, formatDate, PIPELINE_STAGES, stageBadge, toast } from '../../js/utils.js';
+import { escHtml, formatDate, PIPELINE_STAGES, stageBadge } from '../../js/utils.js';
 
 const _i = (n, s) => (window.icon ? window.icon(n, '', s) : '');
 let _all = [];

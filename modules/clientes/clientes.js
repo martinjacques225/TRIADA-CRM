@@ -4,8 +4,8 @@
 // una ficha manual. Es la fuente que Facturación lee para asociar facturas a un
 // cliente (clientes.getAll()), de modo que aquí se resuelve el "Factura no
 // detecta cliente": basta crear la ficha desde este módulo.
-import { clientes, facturas, prospectos } from '../../js/db.js';
-import { escHtml, formatDate, formatCLP, toast } from '../../js/utils.js';
+import { clientes, facturas } from '../../js/db.js';
+import { escHtml, formatCLP, toast } from '../../js/utils.js';
 import { attachFormatting, validateRut } from '../../js/format.js';
 
 const _i = (n, s) => (window.icon ? window.icon(n, '', s) : '');

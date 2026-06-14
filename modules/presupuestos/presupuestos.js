@@ -3,7 +3,7 @@
 // le agrega mano de obra, IVA (19%) y el plan de servicio (si se contrata).
 // Cuelga del cliente y puede referenciar la propuesta de origen.
 // Requiere supabase/presupuestos.sql; si falta la tabla, muestra el aviso.
-import { presupuestos, clientes, propuestas, prospectos, config, isMissingTable } from '../../js/db.js';
+import { presupuestos, clientes, config, isMissingTable } from '../../js/db.js';
 import { escHtml, formatDate, formatCLP, toast } from '../../js/utils.js';
 import { parseCLP } from '../../js/format.js';
 import { openCorporateDoc } from '../../js/pdf.js';

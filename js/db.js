@@ -56,7 +56,6 @@ async function _cachedAll(table, fetcher) {
   return p;
 }
 function _invalidate(table) { _readCache.delete(table); _readInflight.delete(table); }
-export function clearReadCache() { _readCache.clear(); _readInflight.clear(); }
 
 // ─── PROSPECTOS → leads ───────────────────────────────────────
 function leadFromSupa(row) {
@@ -79,7 +78,6 @@ function leadFromSupa(row) {
     scoring:            row.scoring,
     responsable:        row.responsable,
     notas:              row.notas,
-    historial:          row.historial || [],
     fechaCreacion:      row.created_at,
     fechaActualizacion: row.updated_at,
   };
@@ -609,7 +607,7 @@ export async function importLandingLeads() {
         nombre: l.nombre, empresa: l.empresa, email: l.email,
         telefono: l.telefono, rubro: l.rubro, tamano: l.tamano,
         dolorPrincipal: l.interes, origen: 'landing',
-        estado: 'Nuevo', historial: l.historial || [],
+        estado: 'Nuevo',
       });
       count++;
     }

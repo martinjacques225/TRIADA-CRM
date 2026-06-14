@@ -47,20 +47,10 @@ export function validateEmail(v) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(v || '').trim());
 }
 
-// ── Moneda CLP ──
-export function formatCLP(n) {
-  if (n === '' || n == null || isNaN(Number(n))) return '—';
-  return '$' + Number(n).toLocaleString('es-CL');
-}
+// ── Moneda CLP (parseo; el formateo vive en js/utils.js) ──
 export function parseCLP(v) {
   const d = String(v || '').replace(/\D/g, '');
   return d ? Number(d) : 0;
-}
-
-// ── Porcentaje ──
-export function formatPercent(n, decimals = 0) {
-  if (n === '' || n == null || isNaN(Number(n))) return '—';
-  return Number(n).toFixed(decimals) + '%';
 }
 
 // ── Texto ──

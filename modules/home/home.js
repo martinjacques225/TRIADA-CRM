@@ -1,6 +1,6 @@
 // modules/home/home.js
 import { prospectos, citas, propuestas, config } from '../../js/db.js';
-import { formatDate, formatCLP, PIPELINE_STAGES, todayStr, stageBadge, stageIcon, escHtml, meetingType } from '../../js/utils.js';
+import { formatCLP, PIPELINE_STAGES, todayStr, stageBadge, stageIcon, escHtml, meetingType } from '../../js/utils.js';
 
 const _i = (n, s) => (window.icon ? window.icon(n, '', s) : '');
 import { S } from '../../js/state.js';

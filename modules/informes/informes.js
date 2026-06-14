@@ -5,7 +5,7 @@
 //    propuestas por estado (barras), embudo de conversión, madurez por área.
 //  · Descarga del informe en PDF corporativo.
 import { prospectos, diagnosticos, propuestas, citas, clientes, facturas } from '../../js/db.js';
-import { PIPELINE_STAGES, DIAG_AREAS, formatCLP, formatDate, toast, stageIcon, areaIcon, propEstadoLabel, PROP_ESTADOS, escHtml } from '../../js/utils.js';
+import { PIPELINE_STAGES, formatCLP, formatDate, toast, stageIcon, areaIcon, PROP_ESTADOS, escHtml } from '../../js/utils.js';
 import { openCorporateDoc } from '../../js/pdf.js';
 
 const _i = (n, s) => (window.icon ? window.icon(n, '', s) : '');

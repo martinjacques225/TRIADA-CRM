@@ -1,7 +1,7 @@
 // modules/pipeline/pipeline.js
 import { prospectos, diagnosticos, autodiags } from '../../js/db.js';
 import { S } from '../../js/state.js';
-import { escHtml, formatDate, PIPELINE_STAGES, stageBadge, stageIcon, RUBROS } from '../../js/utils.js';
+import { escHtml, formatDate, PIPELINE_STAGES, stageBadge, stageIcon } from '../../js/utils.js';
 
 let _all = [];
 let _prosConDiag = new Set();

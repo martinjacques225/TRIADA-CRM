@@ -35,6 +35,14 @@
 
 ## 1. Estado actual (al 2026-06-14)
 
+### 🧹 Nuevo: Limpieza P0/P1 (2026-06-14 cont. 3) — código muerto/duplicado/innecesario
+> Alcance "Solo lo seguro": **−979 líneas, 0 cambio de comportamiento.** Eliminada carpeta `tools/`
+> (dead weight), `formatCLP` duplicada en `format.js`, `formatPercent`/`avatarHtml`/`initials`/
+> `clearReadCache` muertas, campo muerto `historial`, y 10 imports sin usar en 7 módulos. Verificado
+> por `node --check` + resolución de imports cross-module. Informe: **`docs/LIMPIEZA_P0_P1.md`** (incluye
+> el P0/P1 excluido por chocar con "mismo comportamiento": paginación, bundling, correlativos, RPC,
+> rate-limit, observabilidad). ⬜ Sin commitear — pendiente decidir el push.
+
 ### 🛡️ Nuevo: Auditoría de Ingeniería Empresarial (2026-06-14) — informe + fixes críticos
 > Auditoría integral de 12 fases (ver **`docs/AUDITORIA_EMPRESARIAL.md`**). Veredicto:
 > MVP competente pero **NO vendible como SaaS multi-empresa tal cual** — es single-tenant
@@ -265,6 +273,27 @@ Columnas del calendario agregadas a `citas` y verificadas en vivo. Persistencia 
 ---
 
 ## 7. Bitácora de sesiones (más reciente arriba)
+
+### 2026-06-14 (cont. 3) — Limpieza P0/P1: código muerto/duplicado/innecesario
+- El usuario pidió implementar **solo P0/P1**, sin features nuevas, **mismo comportamiento**, y
+  eliminar código muerto/duplicado/innecesario. Tras mapear el estado real (casi todo el P0/P1 de
+  rendimiento seguro ya estaba commiteado en `d513f7c`; el resto choca con "mismo comportamiento"),
+  el usuario eligió el alcance **"Solo lo seguro"**.
+- **Aplicado (−979 líneas netas, 0 cambio de comportamiento):**
+  - Eliminada la carpeta `tools/` completa (`informe.standalone.html` 856 líneas + generador + JSON):
+    artefacto/dev-tool sin referencias en la app; la capacidad de informe PDF ya vive in-app.
+  - `js/format.js`: eliminada `formatCLP()` **duplicada** (los 7 módulos importan la de `js/utils.js`)
+    + `formatPercent()` muerta. Se conserva `parseCLP()`.
+  - `js/utils.js`: eliminadas `avatarHtml()` + `initials()` (sin consumidores).
+  - `js/db.js`: eliminado export `clearReadCache()` (sin usos; logout ya hace reload) + campo muerto
+    `historial` en `leadFromSupa`/`importLandingLeads` (la columna no existe en `leads`).
+  - 10 imports sin usar en 7 módulos (clientes, home, informes, modals, pipeline, presupuestos, prospectos).
+- **Verificado:** `node --check` (todos los .js), resolución de imports cross-module (script ad-hoc, 0
+  rotos), `grep` de referencias residuales (0), re-chequeo de imports sin usar (0). No verificado en
+  navegador (es eliminación de código sin consumidores; el preview usa mocks).
+- **Informe:** `docs/LIMPIEZA_P0_P1.md` (detalle + P0/P1 excluido con razón: paginación/bundling/
+  correlativos/RPC/rate-limit/observabilidad chocan con "mismo comportamiento / sin build / sin SQL").
+- ⬜ **Pendiente del usuario:** decidir el push (cambios en working tree, sin commitear).
 
 ### 2026-06-14 (cont. 2) — Rediseño de la pantalla de login + aclaración preview.html
 - El usuario pensaba que `preview.html` era "la pantalla antes de entrar al CRM". Aclarado:

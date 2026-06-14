@@ -45,18 +45,6 @@ export function toast(msg, type = 'info', duration = 3000) {
   setTimeout(() => { t.classList.remove('show'); setTimeout(() => t.remove(), 320); }, duration);
 }
 
-export function initials(nombre, empresa) {
-  const src = nombre || empresa || '?';
-  return src.trim().split(/\s+/).slice(0, 2).map(w => w[0]?.toUpperCase() || '').join('');
-}
-
-export function avatarHtml(nombre, empresa, size = 36) {
-  const ini = initials(nombre, empresa);
-  const colors = ['#0C7C88','#16234A','#2E9B73','#5160C0','#C2871A','#C04F3F'];
-  const ci = (ini.charCodeAt(0) || 0) % colors.length;
-  return `<div class="avatar" style="width:${size}px;height:${size}px;background:${colors[ci]};font-size:${Math.round(size*0.38)}px">${ini}</div>`;
-}
-
 export const PIPELINE_STAGES = [
   { id: 'Nuevo',                 color: '#94A0B6', bg: '#F0F2F6',   icon: '🆕', iconName: 'sparkle' },
   { id: 'Contactado',            color: '#5160C0', bg: '#ECEEFA',   icon: '📞', iconName: 'phone' },
