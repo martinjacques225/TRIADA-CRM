@@ -224,7 +224,7 @@ index.html
 ## 4. Próximos pasos (por prioridad)
 
 ### ✅ P0 SEGURIDAD — 3 críticos de la Auditoría Profunda CERRADOS (2026-06-14 cont. 4)
-1. **C-1 ✅ Signup público CERRADO por el usuario (2026-06-14).** (Confirmar opcional: en consola del CRM `await supabase.auth.signUp({email:'x@x.com',password:'12345678'})` debe dar **error**.) Cómo se hizo: Supabase →
+1. **C-1 ✅ Signup público CERRADO y VERIFICADO EN VIVO (2026-06-14)** — `POST /auth/v1/signup` con la key publishable → `HTTP 422 {"error_code":"signup_disabled","msg":"Signups not allowed for this instance"}`. Cómo se hizo: Supabase →
    Authentication → Sign In / Providers → Email → **"Allow new users to sign up" = OFF**.
    Mientras esté ON, cualquiera entra a la org compartida y lee TODO. Crear usuarios a mano
    (Auth → Add user) + `update profiles set role/area where id='UUID'`.
