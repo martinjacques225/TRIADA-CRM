@@ -35,6 +35,30 @@
 
 ## 1. Estado actual (al 2026-06-14)
 
+### 🔴 Nuevo: Auditoría Profunda (2026-06-14 cont. 4) — 3 CRÍTICOS NUEVOS, 2 fixes de código aplicados
+> Auditoría enterprise de segunda generación (arquitectura, seguridad, DB, escalabilidad, perf,
+> calidad). Confirma que los cimientos son sólidos (RLS multitenant, audit, escaping con disciplina,
+> AI-Commander en Clean Architecture) pero encuentra **3 huecos que invalidan parte de esa fortaleza**:
+> - **C-1 🔴 Signup público = bypass total del acceso** — el modelo es *single-org real* (todos caen en
+>   la org por defecto vía `handle_new_user`), así que el ÚNICO límite de acceso es quién puede
+>   autenticarse. El `anon key` es público. **Si Supabase tiene "Enable signups" activo (default),
+>   cualquiera hace `supabase.auth.signUp()` y entra a leer/escribir TODO el CRM.** ⬜ **SOLO EL USUARIO
+>   puede cerrarlo:** Supabase → Authentication → "Allow new users to sign up" = OFF. Es la
+>   "verificación auth pendiente" que arrastra el handoff. **Lo más urgente de todo.**
+> - **C-2 🔴 Tabla `correlativos` sin RLS** — escribible/legible por anónimos vía PostgREST; sobrescribir
+>   `ultimo` fuerza colisión de `codigo` único → se rompen TODAS las altas (DoS). ✅ **Fix entregado:**
+>   `supabase/correlativos_rls.sql` (RLS deny-all + `next_correlativo` SECURITY DEFINER). ⬜ Correr.
+> - **C-3 🟠 XSS almacenado por comilla simple** — `escHtml()` no escapaba `'`; en `modals.js:155` el
+>   campo `empresa` (controlable desde el insert anónimo del landing) caía en un string JS dentro de un
+>   `onclick` → XSS al pulsar "Compartir 360" en sesión autenticada. ✅ **Aplicado en código:**
+>   `escHtml()` ahora escapa `'`→`&#39;` (`js/utils.js`) + el dato sale del onclick a un `data-share`
+>   (`modules/modals/modals.js`). `node --check` OK.
+> - **Backlog priorizado del informe:** P1 (CSP meta, SRI/pin de Supabase, CAPTCHA en form público,
+>   audit de `profiles.role`), P2 (paginación/columnas selectivas, KPIs server-side, Realtime vs
+>   polling, FK on delete cascade, retención de PII en audit), P3 (tests+CI, event delegation,
+>   coherencia arquitectónica, correlativos por-org para multi-tenant real).
+> - Scores: Arq 6.5 · **Seg 5.0** (→~7 al cerrar C-1/C-2/C-3) · Escala 4.5 · Perf 6.0 · Mant 6.0 · UX 7.5.
+
 ### 🧹 Nuevo: Limpieza P0/P1 (2026-06-14 cont. 3) — código muerto/duplicado/innecesario
 > Alcance "Solo lo seguro": **−979 líneas, 0 cambio de comportamiento.** Eliminada carpeta `tools/`
 > (dead weight), `formatCLP` duplicada en `format.js`, `formatPercent`/`avatarHtml`/`initials`/
@@ -199,6 +223,17 @@ index.html
 
 ## 4. Próximos pasos (por prioridad)
 
+### 🔴 P0 SEGURIDAD — 3 críticos de la Auditoría Profunda (2026-06-14 cont. 4)
+1. **C-1 — Cerrar el signup público (SOLO el usuario, en el dashboard).** Supabase →
+   Authentication → Sign In / Providers → Email → **"Allow new users to sign up" = OFF**.
+   Mientras esté ON, cualquiera entra a la org compartida y lee TODO. Crear usuarios a mano
+   (Auth → Add user) + `update profiles set role/area where id='UUID'`.
+   **Prueba de cierre:** en consola, `await supabase.auth.signUp({email:'x@x.com',password:'12345678'})`
+   debe devolver error. Hasta entonces, el CRM está abierto a internet.
+2. **C-2 — Correr `supabase/correlativos_rls.sql`** (idempotente). Cierra la escritura anónima a
+   `correlativos`. Incluye su propia verificación al pie (GET debe dar 401; alta landing debe seguir 201).
+3. **C-3 — XSS** ✅ ya aplicado en código (`escHtml` escapa `'` + `modals.js` usa `data-share`). Pushear.
+
 ### ✅ P0 SEGURIDAD — `supabase/multitenancy.sql` CORRIDO y verificado en vivo (2026-06-14)
 Cierra C-1 (fuga entre empresas), C-2 (privesc), C-3 (RBAC), C-5 (audit). Verificado por REST anon
 (org_id en 8 tablas, anon sin lectura ni escritura). **Pendiente verificar con login admin:** privesc
@@ -273,6 +308,28 @@ Columnas del calendario agregadas a `citas` y verificadas en vivo. Persistencia 
 ---
 
 ## 7. Bitácora de sesiones (más reciente arriba)
+
+### 2026-06-14 (cont. 4) — Auditoría Profunda enterprise + fixes P0 de código
+- El usuario pidió "MODO AUDITORÍA PROFUNDA" (arquitecto principal/staff/SRE/security/DBA/perf/SaaS):
+  recorrer todo el proyecto, cuestionar todo, dos pasadas, scores y hoja de ruta a Enterprise SaaS.
+- Auditado el codebase canónico completo en dos pasadas (capa de datos, SQL+RLS, todos los `js/*`,
+  módulos de render representativos, form público, AI-Commander). Veredicto: cimientos sólidos pero
+  **3 críticos abiertos** que dependen de bordes (auth config, RLS faltante, escaping de contexto).
+- **3 CRÍTICOS nuevos** (no estaban en las auditorías previas):
+  - **C-1 Signup público abre la org compartida** — el modelo es single-org real → el límite de acceso
+    es la config de Auth, no la RLS. ⬜ Solo el usuario lo cierra (toggle en Supabase). Lo #1.
+  - **C-2 `correlativos` sin RLS** → write anónimo vía PostgREST → DoS de altas por colisión de `codigo`.
+  - **C-3 XSS almacenado** por `'` sin escapar en `onclick` de `modals.js:155` (empresa controlable
+    desde el insert anónimo del landing).
+- **Aplicado en código (deploy-safe, `node --check` OK):**
+  - `js/utils.js` — `escHtml()` ahora escapa `'`→`&#39;` (cierra C-3 sistémicamente para todo el código).
+  - `modules/modals/modals.js:155` — el dato sale del handler inline a `data-share` (event delegation
+    parcial; `compartirDiag` lee `this.dataset.share`).
+- **Entregado (correr en Supabase, idempotente):** `supabase/correlativos_rls.sql` (C-2).
+- ⚠️ No verificado en navegador real (los fixes tocan render con datos Supabase + auth; el preview usa
+  mocks). Verificado por `node --check` y revisión del flujo del `data-attr`. **Pendiente del usuario:**
+  (a) cerrar el signup público y probar que `signUp` falla; (b) correr `correlativos_rls.sql`; (c) push.
+- **Backlog priorizado (P1→P3) e informe de scores** quedan en §1 (bloque "Auditoría Profunda").
 
 ### 2026-06-14 (cont. 3) — Limpieza P0/P1: código muerto/duplicado/innecesario
 - El usuario pidió implementar **solo P0/P1**, sin features nuevas, **mismo comportamiento**, y
