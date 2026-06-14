@@ -330,6 +330,11 @@ Columnas del calendario agregadas a `citas` y verificadas en vivo. Persistencia 
   mocks). Verificado por `node --check` y revisión del flujo del `data-attr`. **Pendiente del usuario:**
   (a) cerrar el signup público y probar que `signUp` falla; (b) correr `correlativos_rls.sql`; (c) push.
 - **Backlog priorizado (P1→P3) e informe de scores** quedan en §1 (bloque "Auditoría Profunda").
+- **Seguimiento:** usuario corrió `correlativos_rls.sql` (C-2 ✅). Luego **P1/S-5 aplicado y pusheado**
+  (`a3ae2f5`): `js/supabase.js` pinea Supabase JS a `2.108.1` exacta (no `@2` flotante; byte-idéntico
+  a lo que servía → 0 cambio). **Pendiente del usuario:** C-1 (cerrar signup público — lo más urgente).
+  **P1 restante (otra sesión):** CSP meta (riesgo de romper la app por handlers/estilos inline → requiere
+  verificar con login, no autónomo) + CAPTCHA en form público (necesita las keys de Turnstile del usuario).
 
 ### 2026-06-14 (cont. 3) — Limpieza P0/P1: código muerto/duplicado/innecesario
 - El usuario pidió implementar **solo P0/P1**, sin features nuevas, **mismo comportamiento**, y
