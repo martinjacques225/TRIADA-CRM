@@ -196,7 +196,8 @@ Cierra C-1 (fuga entre empresas), C-2 (privesc), C-3 (RBAC), C-5 (audit). Verifi
 (org_id en 8 tablas, anon sin lectura ni escritura). **Pendiente verificar con login admin:** privesc
 falla para consultor, `actividad` registra+inmutable, backfill `org_id` no-null. Probe sugerido:
 `select count(*) filter (where org_id is null) from leads;` → 0 (correr en SQL Editor, autenticado).
-**Siguiente (backlog ALTO):** índices core + paginación (`makeRepo.page`), rate-limit anónimo, capa API.
+**Backlog ALTO:** índices core ⬜ **`supabase/indices.sql` entregado — PENDIENTE correr** (bajo
+riesgo, no toca el front). Luego: paginación (`makeRepo.page`, toca el front), rate-limit anónimo, capa API.
 
 ### 🟢 Rectificaciones del usuario — 8/8 hechas y pusheadas (2026-06-12)
 Las 8 rectificaciones (batches 1-4) están implementadas, pusheadas y en vivo.
