@@ -4,6 +4,17 @@ export function escHtml(str) {
   return String(str ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
+// Tagged template que escapa TODA interpolación por defecto (anti-XSS, defensa
+// sistémica contra C-4). Uso: html`<div>${userInput}</div>` → userInput siempre
+// escapado, imposible olvidarlo. Para inyectar HTML ya-confiable a propósito
+// (íconos SVG, fragmentos generados internamente), envolver con raw():
+//   html`<span>${raw(window.icon('phone'))}</span>`
+export function html(strings, ...vals) {
+  return strings.reduce((out, s, i) =>
+    out + s + (i < vals.length ? (vals[i] && vals[i].__raw !== undefined ? vals[i].__raw : escHtml(vals[i])) : ''), '');
+}
+export function raw(s) { return { __raw: String(s ?? '') }; }
+
 export function todayStr() {
   return new Date().toISOString().slice(0, 10);
 }

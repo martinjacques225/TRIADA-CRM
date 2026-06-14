@@ -5,7 +5,7 @@
 //    propuestas por estado (barras), embudo de conversión, madurez por área.
 //  · Descarga del informe en PDF corporativo.
 import { prospectos, diagnosticos, propuestas, citas, clientes, facturas } from '../../js/db.js';
-import { PIPELINE_STAGES, DIAG_AREAS, formatCLP, formatDate, toast, stageIcon, areaIcon, propEstadoLabel, PROP_ESTADOS } from '../../js/utils.js';
+import { PIPELINE_STAGES, DIAG_AREAS, formatCLP, formatDate, toast, stageIcon, areaIcon, propEstadoLabel, PROP_ESTADOS, escHtml } from '../../js/utils.js';
 import { openCorporateDoc } from '../../js/pdf.js';
 
 const _i = (n, s) => (window.icon ? window.icon(n, '', s) : '');
@@ -214,7 +214,7 @@ export async function exportInformePDF() {
       ${row('Por cobrar (en plazo)', `${M.enPlazo.length} · ${formatCLP(M.sum(M.enPlazo))}`)}
       ${row('Vencidas', `${M.vencidas.length} · ${formatCLP(M.sum(M.vencidas))}`)}
     </tbody></table>
-    ${M.vencidas.length ? `<div class="block"><h4>Facturas vencidas</h4><p>${M.vencidas.map(f => { const c = M.todosCli.find(x => x.id === f.clienteId); return `${f.correlativo || '—'} · ${(c && (c.razonSocial || c.nombre)) || 'Cliente'} — ${formatCLP(f.monto)} (${f.mora} días)`; }).join('\n')}</p></div>` : ''}`;
+    ${M.vencidas.length ? `<div class="block"><h4>Facturas vencidas</h4><p>${M.vencidas.map(f => { const c = M.todosCli.find(x => x.id === f.clienteId); return `${escHtml(f.correlativo || '—')} · ${escHtml((c && (c.razonSocial || c.nombre)) || 'Cliente')} — ${formatCLP(f.monto)} (${f.mora} días)`; }).join('\n')}</p></div>` : ''}`;
 
   const ok = openCorporateDoc({ tipo: 'Informe', titulo: 'Informe ejecutivo de gestión', empresa: 'Tríada Consultoría', bodyHtml });
   if (!ok) toast('Permite ventanas emergentes para descargar el informe', 'error');

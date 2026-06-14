@@ -1,6 +1,6 @@
 # HANDOFF — TRIADA CRM
 > **Documento vivo. Fuente de verdad del estado del proyecto.**
-> Última actualización: **2026-06-13**
+> Última actualización: **2026-06-14**
 
 ---
 
@@ -33,7 +33,23 @@
 
 ---
 
-## 1. Estado actual (al 2026-06-12)
+## 1. Estado actual (al 2026-06-14)
+
+### 🛡️ Nuevo: Auditoría de Ingeniería Empresarial (2026-06-14) — informe + fixes críticos
+> Auditoría integral de 12 fases (ver **`docs/AUDITORIA_EMPRESARIAL.md`**). Veredicto:
+> MVP competente pero **NO vendible como SaaS multi-empresa tal cual** — es single-tenant
+> con DB global compartida. 5 bloqueadores CRÍTICOS, mayormente capa Supabase.
+> - **C-4 XSS** ✅ **aplicado en código** — `escHtml()` en `home.js` (líneas 69, 86-87) e
+>   `informes.js:217` (facturas vencidas) + helper `html\`\`` auto-escape en `js/utils.js`
+>   (`node --check` OK en los 3). Cerraba robo de sesión vía lead con `<img onerror>`.
+> - **C-1 multitenancy + C-2 anti-privesc + C-3 RBAC + C-5 audit inmutable** 🟡 **entregados
+>   como `supabase/multitenancy.sql`** — ⬜ **PENDIENTE: correr en Supabase → SQL Editor.**
+>   Migración **idempotente y NO-destructiva**: agrega `org_id` a todas las tablas, backfill
+>   a una "org por defecto", RLS `org_id = auth_org_id()`, stamping por trigger (front intacto),
+>   trigger anti-escalada de privilegios, delete de facturas solo admin, audit log inmutable.
+>   El deployment actual (1 equipo) sigue igual tras correrla.
+> - Notas/scores y backlog CRÍTICO/ALTO/MEDIO/BAJO en el informe. Próximo de seguridad:
+>   índices core + paginación + rate-limit en insert anónimo + capa API (Edge Functions).
 
 ### Nuevo: Rectificaciones del usuario — Batches 1-3 (2026-06-12) 🟡 verificado en preview, falta en prod
 > Tanda de 8 rectificaciones pedidas por el usuario. **Los 3 batches hechos y
@@ -174,6 +190,12 @@ index.html
 
 ## 4. Próximos pasos (por prioridad)
 
+### 🔴 P0 SEGURIDAD — correr `supabase/multitenancy.sql` (de la auditoría 2026-06-14)
+**Acción del usuario:** Supabase → SQL Editor → New query → pegar `supabase/multitenancy.sql` → Run.
+Cierra C-1 (fuga entre empresas), C-2 (privesc a admin), C-3 (RBAC), C-5 (audit alterable).
+Es idempotente y no-destructivo; tras correrla, verificar: `select count(*) filter (where org_id is null) from leads;` → 0.
+Luego (backlog ALTO): índices core + paginación (`makeRepo.page`), rate-limit anónimo, capa API.
+
 ### 🟢 Rectificaciones del usuario — 8/8 hechas y pusheadas (2026-06-12)
 Las 8 rectificaciones (batches 1-4) están implementadas, pusheadas y en vivo.
 - ✅ **`supabase/presupuestos.sql` ejecutado y verificado en vivo** (probe REST: tabla + 16
@@ -238,6 +260,23 @@ Columnas del calendario agregadas a `citas` y verificadas en vivo. Persistencia 
 ---
 
 ## 7. Bitácora de sesiones (más reciente arriba)
+
+### 2026-06-14 — Auditoría de Ingeniería Empresarial (12 fases) + fixes críticos
+- El usuario pidió auditoría integral (arquitectura, calidad, complejidad, seguridad, DB, API,
+  rendimiento, escalabilidad, multitenancy, mantenibilidad, estándar empresarial, plan). Decisión
+  del usuario: **aplicar fixes CRÍTICOS + guardar informe en /docs**.
+- Auditado todo el codebase canónico contra el esquema real. Hallazgo central: **es single-tenant
+  con DB global compartida** (`schema.sql` RLS `using(true)` en todo) → fuga total entre empresas.
+- **Aplicado en código (deploy-safe):** C-4 XSS — `escHtml()` en `home.js` (69, 86-87) e
+  `informes.js:217` + helper `html\`\`/raw()` en `js/utils.js`. `node --check` OK ×3.
+- **Entregado (pendiente correr):** `supabase/multitenancy.sql` — C-1 (org_id + RLS por tenant
+  + stamping por trigger, front intacto), C-2 (trigger anti-privesc role/org/activo), C-3 (delete
+  facturas solo admin), C-5 (audit_row triggers + actividad solo-lectura por org). Idempotente,
+  no-destructivo, backfill a org por defecto. Guarda AI Commander/autodiagnosticos/presupuestos si existen.
+- **Informe completo:** `docs/AUDITORIA_EMPRESARIAL.md` (12 fases, notas, comparación
+  Salesforce/HubSpot/Zoho, backlog CRÍTICO/ALTO/MEDIO/BAJO).
+- ⚠️ La migración Supabase **no se pudo verificar en vivo** (requiere correrla en el dashboard).
+  Verificación post-run sugerida en §4 P0.
 
 ### 2026-06-13 — Mascota: perseguir el cursor ahora es raro (queja "no se suelta")
 - El usuario sentía la persecución demasiado pegajosa: el gato entraba en `chase` con

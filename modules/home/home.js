@@ -66,7 +66,7 @@ export async function render() {
               <div style="width:40px;height:40px;border-radius:11px;display:flex;align-items:center;justify-content:center;background:color-mix(in srgb, ${t.color} 14%, var(--surface));color:${t.color};flex-shrink:0">${_i(t.icon,20)}</div>
               <div style="flex:1">
                 <div style="font-size:14px;font-weight:600;color:var(--navy)">${escHtml(c.titulo || t.label)}</div>
-                <div style="font-size:12.5px;color:var(--text3)">${[(c.hora||'').slice(0,5), pMap[c.prospectoId]?.empresa || pMap[c.prospectoId]?.nombre || 'Tríada · Equipo'].filter(Boolean).join(' · ')}</div>
+                <div style="font-size:12.5px;color:var(--text3)">${[(c.hora||'').slice(0,5), escHtml(pMap[c.prospectoId]?.empresa || pMap[c.prospectoId]?.nombre || 'Tríada · Equipo')].filter(Boolean).join(' · ')}</div>
               </div>
               <span class="badge" style="font-size:11px;color:var(--primary);background:var(--primary-l);border-color:var(--primary)">${c.estado || 'Pendiente'}</span>
             </div>`; }).join('')}
@@ -83,8 +83,8 @@ export async function render() {
               <div class="prospect-row" onclick="window._app.openProspectoDetail('${p.id}')" style="display:flex;align-items:center;gap:12px;padding:12px 16px;border-bottom:1px solid var(--border);cursor:pointer;transition:var(--tr)" onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background=''">
                 <div style="width:36px;height:36px;border-radius:50%;background:var(--primary);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;flex-shrink:0">${(p.nombre||'?')[0].toUpperCase()}</div>
                 <div style="flex:1;min-width:0">
-                  <div style="font-size:13.5px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${p.nombre || '—'}</div>
-                  <div style="font-size:12px;color:var(--text3)">${p.empresa || p.rubro || '—'}</div>
+                  <div style="font-size:13.5px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escHtml(p.nombre || '—')}</div>
+                  <div style="font-size:12px;color:var(--text3)">${escHtml(p.empresa || p.rubro || '—')}</div>
                 </div>
                 <div style="display:flex;gap:3px;align-items:center" onclick="event.stopPropagation()">
                   <button class="btn-icon btn-sm" style="color:#25D366" title="WhatsApp" onclick="window._app.contactWhatsApp('${p.id}')">${_i('whatsapp',16)}</button>
