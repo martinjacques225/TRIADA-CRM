@@ -114,7 +114,9 @@ export async function renderNav() {
   const nombre  = _profile?.nombre || await config.get('userName') || 'Consultor';
   const cargo   = _profile?.role   || await config.get('cargo')    || 'Tríada';
   let nuevos = 0;
-  try { nuevos = (await prospectos.getAll()).filter(p => p.estado === 'Nuevo').length; } catch (_) {}
+  // Conteo server-side: antes traía TODA la tabla leads en cada navegación solo
+  // para contar los 'Nuevo' del badge. Ahora es un count head (0 filas).
+  try { nuevos = await prospectos.countByEstado('Nuevo'); } catch (_) {}
   const badges = { leads: nuevos };
   const nav = document.getElementById('nav');
   nav.innerHTML = `

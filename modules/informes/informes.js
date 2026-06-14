@@ -39,6 +39,9 @@ async function _compute() {
 
   return {
     todos, todosD, todasP, todasC, todosCli, todasF,
+    // Índice por id para cruzar factura→cliente en O(1) (antes .find() dentro de
+    // .map() = O(facturas × clientes) en la tabla de vencidas y en el PDF).
+    cliById: new Map(todosCli.map(c => [c.id, c])),
     within, sum: (arr) => arr.reduce((s, f) => s + (+f.monto || 0), 0),
     leads24: todos.filter(p => within(p.fechaCreacion, 1)).length,
     leads7:  todos.filter(p => within(p.fechaCreacion, 7)).length,
@@ -171,7 +174,7 @@ export async function render() {
       <div class="card" style="overflow:hidden;margin-bottom:28px">
         <div style="padding:12px 16px;border-bottom:1px solid var(--border);font-weight:700;color:var(--danger);font-size:13.5px;display:flex;align-items:center;gap:8px">${_i('alert', 16)} Facturas vencidas — gestión de cobranza</div>
         <table class="data-table"><thead><tr><th>Factura</th><th>Cliente</th><th>Monto</th><th>Vencimiento</th><th>Días de mora</th></tr></thead><tbody>
-          ${M.vencidas.map(f => { const c = M.todosCli.find(x => x.id === f.clienteId); const sev = f.mora >= 30 ? 'var(--danger)' : f.mora >= 8 ? 'var(--amber)' : 'var(--text2)';
+          ${M.vencidas.map(f => { const c = M.cliById.get(f.clienteId); const sev = f.mora >= 30 ? 'var(--danger)' : f.mora >= 8 ? 'var(--amber)' : 'var(--text2)';
             return `<tr><td style="font-size:12px;font-weight:700;color:var(--text3);white-space:nowrap">${f.correlativo || '—'}</td><td><strong>${(c && (c.razonSocial || c.nombre)) || '—'}</strong></td><td><strong style="color:var(--navy)">${formatCLP(f.monto)}</strong></td><td style="font-size:12.5px;color:var(--text3)">${f.vencimiento ? formatDate(f.vencimiento) : '—'}</td><td><span style="font-weight:800;color:${sev}">${f.mora}</span> <span style="font-size:12px;color:var(--text3)">día${f.mora !== 1 ? 's' : ''}</span></td></tr>`;
           }).join('')}
         </tbody></table>
@@ -214,7 +217,7 @@ export async function exportInformePDF() {
       ${row('Por cobrar (en plazo)', `${M.enPlazo.length} · ${formatCLP(M.sum(M.enPlazo))}`)}
       ${row('Vencidas', `${M.vencidas.length} · ${formatCLP(M.sum(M.vencidas))}`)}
     </tbody></table>
-    ${M.vencidas.length ? `<div class="block"><h4>Facturas vencidas</h4><p>${M.vencidas.map(f => { const c = M.todosCli.find(x => x.id === f.clienteId); return `${escHtml(f.correlativo || '—')} · ${escHtml((c && (c.razonSocial || c.nombre)) || 'Cliente')} — ${formatCLP(f.monto)} (${f.mora} días)`; }).join('\n')}</p></div>` : ''}`;
+    ${M.vencidas.length ? `<div class="block"><h4>Facturas vencidas</h4><p>${M.vencidas.map(f => { const c = M.cliById.get(f.clienteId); return `${escHtml(f.correlativo || '—')} · ${escHtml((c && (c.razonSocial || c.nombre)) || 'Cliente')} — ${formatCLP(f.monto)} (${f.mora} días)`; }).join('\n')}</p></div>` : ''}`;
 
   const ok = openCorporateDoc({ tipo: 'Informe', titulo: 'Informe ejecutivo de gestión', empresa: 'Tríada Consultoría', bodyHtml });
   if (!ok) toast('Permite ventanas emergentes para descargar el informe', 'error');

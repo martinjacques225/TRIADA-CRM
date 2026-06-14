@@ -266,6 +266,37 @@ Columnas del calendario agregadas a `citas` y verificadas en vivo. Persistencia 
 
 ## 7. Bitácora de sesiones (más reciente arriba)
 
+### 2026-06-14 (cont.) — Auditoría de RENDIMIENTO/escalabilidad + fixes seguros
+- El usuario pidió auditoría exhaustiva de rendimiento (frontend, backend, DB, arquitectura,
+  caching, seguridad∩perf, escalabilidad 100/1k/10k) y aplicar las mejoras seguras.
+- Informe completo: **`docs/AUDITORIA_RENDIMIENTO.md`** (10 secciones, tabla P0-P3, scores).
+- **Aplicado en código (seguro, sin cambio funcional, `node --check` OK):**
+  - `js/db.js` — `prospectos.countByEstado()` (count head, 0 filas).
+  - `app.js:117` — `renderNav` usa el count en vez de `getAll().filter` (antes traía TODA
+    la tabla leads en CADA navegación solo para el badge "Nuevo").
+  - `modules/informes/informes.js` — `Map cliById` (O(n²)→O(1)) en tabla de vencidas + PDF.
+  - `index.html` — `preconnect`/`dns-prefetch` (Supabase + jsDelivr) → cold-load más corto.
+  - `modules/pipeline/pipeline.js` — debounce 140 ms del buscador.
+- **Aplicado tras aprobación del usuario (caché + pipeline; el usuario eligió este alcance):**
+  - `js/db.js` — **caché de lecturas en memoria**: `_cachedAll(table, fetcher)` envuelve los 9
+    `getAll` (TTL 15 s + dedupe de requests concurrentes → mata el "boot storm" donde leads/citas
+    se traían 3-4 veces). Cada add/update/delete llama `_invalidate(table)` (21 mutaciones) →
+    próxima lectura fresca. Export `clearReadCache()`. **Caveat documentado:** arrays cacheados se
+    comparten por referencia; verificado que NINGÚN módulo los muta en sitio (sorts son sobre
+    `.filter()`/`[...spread]`/`expand()`, siempre arrays nuevos).
+  - `modules/pipeline/pipeline.js` — separado `render()` (trae datos) de `_paint()` (repinta de
+    `_all` SIN red). Filtro por etapa y toggle kanban/lista ahora repintan de memoria; el drop de
+    DnD sigue en `render()` (mutación → refresca, la caché ya se invalidó en el update).
+- **Entregado (correr en Supabase, idempotente):** `supabase/rls_perf.sql` — envuelve
+  `auth_org_id()/is_admin()/auth.uid()` en `(select …)` → RLS se evalúa 1×/consulta (InitPlan),
+  no por fila. Funcionalmente idéntico a multitenancy.sql.
+- **Backlog NO hecho (el usuario lo dejó fuera de este alcance):** paginación (repository factory
+  `makeRepo.page`), RPC de agregados para Informes, bundling (esbuild/Vite), Realtime en vez de
+  polling 60 s, rediseño del contador `correlativos` (contención). Código esbozado en el informe.
+- ⚠️ No verificado en navegador real (los cambios de capa de datos requieren sesión Supabase
+  logueada; el preview usa mocks y no ejercita el `db.js` real). Verificado por `node --check`.
+  **Pendiente del usuario:** correr `rls_perf.sql` + decidir el push.
+
 ### 2026-06-14 — Auditoría de Ingeniería Empresarial (12 fases) + fixes críticos
 - El usuario pidió auditoría integral (arquitectura, calidad, complejidad, seguridad, DB, API,
   rendimiento, escalabilidad, multitenancy, mantenibilidad, estándar empresarial, plan). Decisión

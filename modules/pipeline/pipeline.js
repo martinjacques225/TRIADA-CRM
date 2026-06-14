@@ -6,6 +6,7 @@ import { escHtml, formatDate, PIPELINE_STAGES, stageBadge, stageIcon, RUBROS } f
 let _all = [];
 let _prosConDiag = new Set();
 let _prosConAuto = new Set();
+let _searchT = null;   // debounce del buscador (evita rebuild del DOM por tecla)
 
 const _BADGE_STAGES = new Set(['Diagnóstico Agendado','Diagnóstico Realizado','Propuesta Enviada','Negociando','Cliente']);
 
@@ -25,7 +26,16 @@ export async function render() {
   _prosConDiag = new Set(allDiags.map(d => d.prospectoId).filter(Boolean));
   // Autodiagnósticos del cliente (referencia): falla suave si la tabla no existe
   try { _prosConAuto = new Set((await autodiags.getAll()).map(a => a.prospectoId).filter(Boolean)); } catch (_) { _prosConAuto = new Set(); }
-  const all = _all = allProsp;
+  _all = allProsp;
+  _paint();
+}
+
+// Repinta desde el estado en memoria (_all) SIN ir a la red. Lo usan el filtro por
+// etapa y el toggle kanban/lista (interacciones frecuentes y no-mutantes): antes
+// cada clic llamaba render() = 2-3 getAll. La caché de db.js ya amortigua, pero
+// repintar de memoria evita incluso esa ida y la reconstrucción de los Sets.
+function _paint() {
+  const all = _all;
   const filtered = _filter(all);
 
   const center = document.getElementById('center');
@@ -64,14 +74,14 @@ export async function render() {
   </div>`;
 
   // Buscar: actualización PARCIAL para no perder el foco del input
-  document.getElementById('pSearch').addEventListener('input', e => { S.searchQ = e.target.value; _renderResults(); });
+  document.getElementById('pSearch').addEventListener('input', e => { S.searchQ = e.target.value; clearTimeout(_searchT); _searchT = setTimeout(_renderResults, 140); });
   document.getElementById('pEstado').addEventListener('change', e => { S.searchEstado = e.target.value; _renderResults(); });
-  document.getElementById('btnKanban').addEventListener('click', () => { S.pipelineView = 'kanban'; render(); });
-  document.getElementById('btnList').addEventListener('click', () => { S.pipelineView = 'list'; render(); });
+  document.getElementById('btnKanban').addEventListener('click', () => { S.pipelineView = 'kanban'; _paint(); });
+  document.getElementById('btnList').addEventListener('click', () => { S.pipelineView = 'list'; _paint(); });
   // Click en una estadística → filtra el tablero por esa etapa (toggle)
   document.querySelectorAll('.pipe-stat').forEach(el => el.addEventListener('click', () => {
     S.searchEstado = (S.searchEstado === el.dataset.stage) ? '' : el.dataset.stage;
-    render();
+    _paint();
   }));
 
   _attachKanbanDnD();

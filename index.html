@@ -9,6 +9,11 @@
   <meta name="apple-mobile-web-app-title" content="Tríada Diagnóstico CRM">
   <title>Tríada · Diagnóstico CRM</title>
   <link rel="manifest" href="./manifest.json">
+  <!-- Adelanta DNS+TLS de los orígenes externos del camino crítico: el cliente
+       Supabase se importa de jsDelivr y luego todas las queries van a Supabase. -->
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+  <link rel="preconnect" href="https://pqrjndirqtucoumijben.supabase.co" crossorigin>
+  <link rel="dns-prefetch" href="https://pqrjndirqtucoumijben.supabase.co">
   <link rel="icon" type="image/svg+xml" href="./icon.svg">
   <link rel="apple-touch-icon" href="./icon.svg">
   <link rel="stylesheet" href="./styles.css">
