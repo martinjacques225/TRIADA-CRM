@@ -266,6 +266,20 @@ Columnas del calendario agregadas a `citas` y verificadas en vivo. Persistencia 
 
 ## 7. Bitácora de sesiones (más reciente arriba)
 
+### 2026-06-14 (cont. 2) — Rediseño de la pantalla de login + aclaración preview.html
+- El usuario pensaba que `preview.html` era "la pantalla antes de entrar al CRM". Aclarado:
+  `preview.html` + `_preview/` = **harness de desarrollo** (datos mock, sin login, no user-facing);
+  la pantalla real previa al CRM es el **login** en `js/auth.js`.
+- **`js/auth.js` rediseñado** (pusheado, commit `3e99832`): logo de marca grande y centrado en
+  mosaico redondeado (gradiente teal-l→surface, igual que el nav), wordmark "Tríada·" en serif
+  (Newsreader) + bajada "Consultoría 360 · Diagnóstico CRM", tarjeta más aireada, divisor, botón
+  Entrar en teal, línea de confianza, entrada animada. **Theme-aware** (usa variables CSS del tema
+  → respeta Claro/Oscuro/Matrix) y responsive (`@media max-width:420px`). El handler de submit no
+  cambió (mismos ids authForm/authEmail/authPw/authBtn/authErr). `node --check` OK.
+- ⚠️ No verificado en navegador (el login muestra siempre el tema claro porque `init()` aplica el
+  tema *después* de `requireAuth()`; si se quiere login con el tema guardado, mover el seteo de
+  `data-theme` antes de `requireAuth` en `app.js` — mejora opcional, no hecha).
+
 ### 2026-06-14 (cont.) — Auditoría de RENDIMIENTO/escalabilidad + fixes seguros
 - El usuario pidió auditoría exhaustiva de rendimiento (frontend, backend, DB, arquitectura,
   caching, seguridad∩perf, escalabilidad 100/1k/10k) y aplicar las mejoras seguras.
