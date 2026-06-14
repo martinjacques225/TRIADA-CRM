@@ -42,12 +42,13 @@
 > - **C-4 XSS** ✅ **aplicado en código** — `escHtml()` en `home.js` (líneas 69, 86-87) e
 >   `informes.js:217` (facturas vencidas) + helper `html\`\`` auto-escape en `js/utils.js`
 >   (`node --check` OK en los 3). Cerraba robo de sesión vía lead con `<img onerror>`.
-> - **C-1 multitenancy + C-2 anti-privesc + C-3 RBAC + C-5 audit inmutable** 🟡 **entregados
->   como `supabase/multitenancy.sql`** — ⬜ **PENDIENTE: correr en Supabase → SQL Editor.**
->   Migración **idempotente y NO-destructiva**: agrega `org_id` a todas las tablas, backfill
->   a una "org por defecto", RLS `org_id = auth_org_id()`, stamping por trigger (front intacto),
->   trigger anti-escalada de privilegios, delete de facturas solo admin, audit log inmutable.
->   El deployment actual (1 equipo) sigue igual tras correrla.
+> - **C-1 multitenancy + C-2 anti-privesc + C-3 RBAC + C-5 audit inmutable** ✅ **corrido**
+>   (`supabase/multitenancy.sql`, idempotente/no-destructivo) + **hardening del trigger anónimo
+>   re-aplicado**. **Verificado en vivo (REST anon):** tabla `orgs` existe; `org_id` en las 8
+>   tablas (200 [] = columna OK + RLS); anon NO lee `leads`; anon NO escribe en leads(manual)/
+>   facturas/clientes/profiles (401/42501). 🟡 **Falta verificar CON sesión auth:** que el
+>   privesc falle para un consultor, que `actividad` registre y sea inmutable, y que el backfill
+>   dejara `org_id` no-null en filas viejas. El deployment actual (1 equipo) sigue funcionando.
 > - Notas/scores y backlog CRÍTICO/ALTO/MEDIO/BAJO en el informe. Próximo de seguridad:
 >   índices core + paginación + rate-limit en insert anónimo + capa API (Edge Functions).
 
@@ -190,11 +191,12 @@ index.html
 
 ## 4. Próximos pasos (por prioridad)
 
-### 🔴 P0 SEGURIDAD — correr `supabase/multitenancy.sql` (de la auditoría 2026-06-14)
-**Acción del usuario:** Supabase → SQL Editor → New query → pegar `supabase/multitenancy.sql` → Run.
-Cierra C-1 (fuga entre empresas), C-2 (privesc a admin), C-3 (RBAC), C-5 (audit alterable).
-Es idempotente y no-destructivo; tras correrla, verificar: `select count(*) filter (where org_id is null) from leads;` → 0.
-Luego (backlog ALTO): índices core + paginación (`makeRepo.page`), rate-limit anónimo, capa API.
+### ✅ P0 SEGURIDAD — `supabase/multitenancy.sql` CORRIDO y verificado en vivo (2026-06-14)
+Cierra C-1 (fuga entre empresas), C-2 (privesc), C-3 (RBAC), C-5 (audit). Verificado por REST anon
+(org_id en 8 tablas, anon sin lectura ni escritura). **Pendiente verificar con login admin:** privesc
+falla para consultor, `actividad` registra+inmutable, backfill `org_id` no-null. Probe sugerido:
+`select count(*) filter (where org_id is null) from leads;` → 0 (correr en SQL Editor, autenticado).
+**Siguiente (backlog ALTO):** índices core + paginación (`makeRepo.page`), rate-limit anónimo, capa API.
 
 ### 🟢 Rectificaciones del usuario — 8/8 hechas y pusheadas (2026-06-12)
 Las 8 rectificaciones (batches 1-4) están implementadas, pusheadas y en vivo.
