@@ -1,6 +1,7 @@
 // modules/configuracion/configuracion.js
 import { config, citas, clientes } from '../../js/db.js';
-import { toast } from '../../js/utils.js';
+import { toast, escHtml } from '../../js/utils.js';
+import { supabase } from '../../js/supabase.js';
 import { mascotaEnabled, mascotaTipo, mascotasDisponibles } from '../mascota/mascota.js';
 import { exportInformePDF } from '../informes/informes.js';
 
@@ -21,6 +22,8 @@ export async function render() {
     config.get('userName'), config.get('cargo'), config.get('empresa'),
     config.get('theme'), config.get('density'), config.get('fontScale'),
   ]);
+  let acctEmail = '';
+  try { acctEmail = (await supabase.auth.getUser())?.data?.user?.email || ''; } catch (_) {}
   const dens = densidad || 'comfortable';
   const th   = tema || 'light';
   const fs   = fontScale || '1';
@@ -38,6 +41,22 @@ export async function render() {
       </div>
       <div class="form-group"><label>Empresa / Filial</label><input id="cfgEmpresa" value="${(empresa || '')}" placeholder="Ej: Tríada Consultoría"></div>
       <button class="btn btn-primary" onclick="_saveProfile()">Guardar perfil</button>
+    </div>
+
+    <div class="card card-pad" style="margin-bottom:18px">
+      <h3 class="cfg-h">Mi cuenta</h3>
+      <p style="font-size:13px;color:var(--text3);margin-bottom:14px">Tu acceso al CRM. Estos cambios afectan tu inicio de sesión.</p>
+      <div class="form-group">
+        <label>Correo de acceso</label>
+        <input id="acctEmail" type="email" value="${escHtml(acctEmail)}" placeholder="tu@email.com">
+        <small style="font-size:12px;color:var(--text3);display:block;margin-top:4px">Al cambiarlo, recibirás un correo de confirmación en la dirección nueva.</small>
+      </div>
+      <button class="btn btn-ghost btn-sm" onclick="_changeEmail()" style="margin-bottom:18px">Actualizar correo</button>
+      <div class="form-row">
+        <div class="form-group"><label>Nueva contraseña</label><input id="acctPw1" type="password" autocomplete="new-password" placeholder="Mínimo 8 caracteres"></div>
+        <div class="form-group"><label>Repetir contraseña</label><input id="acctPw2" type="password" autocomplete="new-password" placeholder="••••••••"></div>
+      </div>
+      <button class="btn btn-primary btn-sm" onclick="_changePassword()">Cambiar contraseña</button>
     </div>
 
     <div class="card card-pad" style="margin-bottom:18px">
@@ -119,6 +138,28 @@ export async function render() {
     ]);
     toast('Perfil guardado', 'success');
     window._app?.renderNav?.();
+  };
+
+  // ── Mi cuenta (Supabase Auth) ──
+  window._changeEmail = async () => {
+    const nuevo = document.getElementById('acctEmail').value.trim();
+    if (!nuevo) { toast('Escribe un correo válido', 'error'); return; }
+    if (nuevo === acctEmail) { toast('Ese ya es tu correo actual', 'info'); return; }
+    const { error } = await supabase.auth.updateUser({ email: nuevo });
+    if (error) { toast('No se pudo actualizar el correo: ' + error.message, 'error'); return; }
+    toast('Revisa tu correo nuevo para confirmar el cambio', 'success');
+  };
+
+  window._changePassword = async () => {
+    const p1 = document.getElementById('acctPw1').value;
+    const p2 = document.getElementById('acctPw2').value;
+    if (p1.length < 8) { toast('La contraseña debe tener al menos 8 caracteres', 'error'); return; }
+    if (p1 !== p2)     { toast('Las contraseñas no coinciden', 'error'); return; }
+    const { error } = await supabase.auth.updateUser({ password: p1 });
+    if (error) { toast('No se pudo cambiar la contraseña: ' + error.message, 'error'); return; }
+    document.getElementById('acctPw1').value = '';
+    document.getElementById('acctPw2').value = '';
+    toast('Contraseña actualizada', 'success');
   };
 
   window._setTheme    = async (t) => { await (window._app?.setTheme?.(t) ?? config.set('theme', t)); window._app?.navigate?.('config'); };

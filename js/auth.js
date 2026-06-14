@@ -1,9 +1,26 @@
 import { supabase } from './supabase.js';
 
 export async function requireAuth() {
+  // Llegada por enlace de invitación o recuperación de contraseña: Supabase ya
+  // creó una sesión a partir del token del correo, pero el usuario todavía debe
+  // FIJAR su contraseña antes de entrar. (__authFlow lo captura index.html del
+  // hash de la URL, antes de que el cliente Supabase lo consuma y lo limpie.)
+  const flow = window.__authFlow;
+  if (flow === 'invite' || flow === 'recovery') {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session) return _showSetPasswordScreen(session.user, flow);
+  }
   const { data: { session } } = await supabase.auth.getSession();
   if (session) return session.user;
   return _showLoginScreen();
+}
+
+function _logoSvg() {
+  return `<svg width="44" height="44" viewBox="0 0 120 120" fill="none" aria-hidden="true">
+      <path d="M26 90 L60 62 L94 90" stroke="#16234A" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M26 73 L60 45 L94 73" stroke="#0C7C88" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M26 56 L60 28 L94 56" stroke="#2E9B73" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>`;
 }
 
 export async function getUser() {
@@ -25,13 +42,7 @@ function _showLoginScreen() {
     el.innerHTML = `
       <div class="auth-card">
         <div class="auth-brandblock">
-          <div class="auth-logo-tile">
-            <svg width="44" height="44" viewBox="0 0 120 120" fill="none" aria-hidden="true">
-              <path d="M26 90 L60 62 L94 90" stroke="#16234A" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>
-              <path d="M26 73 L60 45 L94 73" stroke="#0C7C88" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>
-              <path d="M26 56 L60 28 L94 56" stroke="#2E9B73" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
-          </div>
+          <div class="auth-logo-tile">${_logoSvg()}</div>
           <div class="auth-wordmark">
             <span class="auth-brand-name">Tríada<span class="auth-brand-dot">·</span></span>
             <span class="auth-brand-tag">Consultoría 360 · Diagnóstico CRM</span>
@@ -49,7 +60,9 @@ function _showLoginScreen() {
             <input id="authPw" type="password" name="password" autocomplete="current-password" required placeholder="••••••••">
           </div>
           <div id="authErr" class="auth-err" hidden></div>
+          <div id="authMsg" class="auth-ok" hidden></div>
           <button type="submit" id="authBtn" class="btn btn-primary auth-submit">Entrar</button>
+          <button type="button" id="authForgot" class="auth-link">¿Olvidaste tu contraseña?</button>
         </form>
         <span class="auth-foot">Acceso reservado al equipo de Tríada Consultoría</span>
       </div>`;
@@ -73,6 +86,95 @@ function _showLoginScreen() {
       } else {
         el.remove();
         resolve(data.user);
+      }
+    });
+
+    // ¿Olvidaste tu contraseña? → envía correo de recuperación al email escrito.
+    document.getElementById('authForgot').addEventListener('click', async () => {
+      const email = document.getElementById('authEmail').value.trim();
+      const err   = document.getElementById('authErr');
+      const msg   = document.getElementById('authMsg');
+      err.hidden = true; msg.hidden = true;
+      if (!email) {
+        err.textContent = 'Escribe tu email arriba y vuelve a tocar este enlace.';
+        err.hidden = false;
+        return;
+      }
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: window.location.origin + window.location.pathname,
+      });
+      if (error) {
+        err.textContent = 'No se pudo enviar el correo. Verifica el email.';
+        err.hidden = false;
+      } else {
+        msg.textContent = 'Te enviamos un correo para restablecer tu contraseña. Revisa tu bandeja (y la carpeta de spam).';
+        msg.hidden = false;
+      }
+    });
+  });
+}
+
+// Pantalla para FIJAR contraseña tras una invitación (cuenta nueva) o una
+// recuperación. Supabase ya dejó una sesión activa con el token del correo; aquí
+// el usuario define su contraseña y recién entra al CRM.
+function _showSetPasswordScreen(user, flow) {
+  return new Promise((resolve) => {
+    _injectStyles();
+    const isInvite = flow === 'invite';
+
+    const el = document.createElement('div');
+    el.id = 'authOverlay';
+    el.innerHTML = `
+      <div class="auth-card">
+        <div class="auth-brandblock">
+          <div class="auth-logo-tile">${_logoSvg()}</div>
+          <div class="auth-wordmark">
+            <span class="auth-brand-name">Tríada<span class="auth-brand-dot">·</span></span>
+            <span class="auth-brand-tag">Consultoría 360 · Diagnóstico CRM</span>
+          </div>
+        </div>
+        <div class="auth-divider"></div>
+        <form id="pwForm" autocomplete="on" class="auth-form">
+          <h2 class="auth-title">${isInvite ? 'Crea tu contraseña' : 'Restablecer contraseña'}</h2>
+          <p class="auth-hello">${isInvite ? 'Activando tu cuenta' : 'Restableciendo la cuenta'} <strong>${user.email || ''}</strong></p>
+          <div class="auth-field">
+            <label for="pw1">Nueva contraseña</label>
+            <input id="pw1" type="password" autocomplete="new-password" required minlength="8" placeholder="Mínimo 8 caracteres">
+          </div>
+          <div class="auth-field">
+            <label for="pw2">Repetir contraseña</label>
+            <input id="pw2" type="password" autocomplete="new-password" required minlength="8" placeholder="••••••••">
+          </div>
+          <div id="pwErr" class="auth-err" hidden></div>
+          <button type="submit" id="pwBtn" class="btn btn-primary auth-submit">${isInvite ? 'Activar mi cuenta' : 'Guardar contraseña'}</button>
+        </form>
+        <span class="auth-foot">Tríada Consultoría · acceso del equipo</span>
+      </div>`;
+    document.body.appendChild(el);
+
+    document.getElementById('pwForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const pw1 = document.getElementById('pw1').value;
+      const pw2 = document.getElementById('pw2').value;
+      const btn = document.getElementById('pwBtn');
+      const err = document.getElementById('pwErr');
+      err.hidden = true;
+      if (pw1.length < 8) { err.textContent = 'La contraseña debe tener al menos 8 caracteres.'; err.hidden = false; return; }
+      if (pw1 !== pw2)    { err.textContent = 'Las contraseñas no coinciden.'; err.hidden = false; return; }
+      btn.textContent = 'Guardando…';
+      btn.disabled = true;
+      const { error } = await supabase.auth.updateUser({ password: pw1 });
+      if (error) {
+        err.textContent = 'No se pudo guardar la contraseña. Intenta de nuevo o pide una nueva invitación.';
+        err.hidden = false;
+        btn.textContent = isInvite ? 'Activar mi cuenta' : 'Guardar contraseña';
+        btn.disabled = false;
+      } else {
+        window.__authFlow = null;
+        // Limpia el token del hash de la URL para que un refresh no reabra esta pantalla.
+        history.replaceState(null, '', window.location.pathname + window.location.search);
+        el.remove();
+        resolve(user);
       }
     });
   });
@@ -132,6 +234,19 @@ function _injectStyles() {
       font-size:13px;color:var(--danger,#C04F3F);
     }
     .auth-foot { font-size:12px;color:var(--text3,#94A0B6);text-align:center; }
+    .auth-link {
+      background:none;border:none;cursor:pointer;font-family:inherit;
+      font-size:13px;font-weight:600;color:var(--primary,#0C7C88);
+      text-align:center;padding:2px;align-self:center;
+    }
+    .auth-link:hover { text-decoration:underline; }
+    .auth-hello { font-size:13px;color:var(--text2,#5E6A85);text-align:center;margin:-4px 0 2px; }
+    .auth-ok {
+      background:color-mix(in srgb,var(--success,#2E9B73) 12%,var(--surface,#fff));
+      border:1px solid var(--success,#2E9B73);
+      border-radius:9px;padding:10px 12px;
+      font-size:13px;color:var(--success,#2E9B73);
+    }
     @media (max-width:420px){ .auth-card{ padding:2rem 1.5rem;border-radius:18px; } }
   `;
   document.head.appendChild(s);

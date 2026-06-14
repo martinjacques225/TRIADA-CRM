@@ -35,6 +35,25 @@
 
 ## 1. Estado actual (al 2026-06-14)
 
+### 🟡 Nuevo: Alta de socios por INVITACIÓN (2026-06-14 cont. 5) — código pusheado, faltan pasos del usuario en Supabase
+> El usuario quiere sumar a sus 3 socios sin pedirles correo/contraseña: invitarlos por email,
+> que se registren solos y luego cambien sus propios datos. Implementado con **invitaciones de
+> Supabase Auth** (funcionan aunque el signup público esté OFF — las invita el admin, no el público).
+> - **`index.html`** — script en `<head>` captura `window.__authFlow` del hash (`type=invite|recovery|...`)
+>   ANTES de que el cliente Supabase consuma el token.
+> - **`js/auth.js`** — `requireAuth()` detecta el flujo de invitación/recuperación y muestra
+>   `_showSetPasswordScreen()` (crear/restablecer contraseña con `supabase.auth.updateUser`). Login
+>   ahora tiene **"¿Olvidaste tu contraseña?"** (`resetPasswordForEmail` con `redirectTo` a la app).
+>   Logo factorizado a `_logoSvg()`. El login normal queda **idéntico** (el branch nuevo solo corre con token).
+> - **`modules/configuracion/configuracion.js`** — tarjeta **"Mi cuenta"**: cambiar correo
+>   (`updateUser({email})`) y contraseña (`updateUser({password})`) del usuario logueado.
+> - Verificado por `node --check` (auth.js, configuracion.js OK). **No verificable en preview** (los
+>   tokens de invite/recovery y `updateUser` requieren sesión Supabase real; el harness usa mocks).
+> - ⬜ **PENDIENTE DEL USUARIO en Supabase** (ver §4): (1) Authentication → URL Configuration →
+>   Site URL + Redirect URLs = `https://martinjacques225.github.io/TRIADA-CRM/`; (2) Authentication →
+>   Users → invitar los 3 emails (dejar "Allow new users to sign up" en OFF); (3) SQL Editor:
+>   `update profiles set role='admin', nombre='...' where email='...';` ×3 (decisión del usuario: los 3 = **admin**).
+
 ### 🔴 Nuevo: Auditoría Profunda (2026-06-14 cont. 4) — 3 CRÍTICOS NUEVOS, 2 fixes de código aplicados
 > Auditoría enterprise de segunda generación (arquitectura, seguridad, DB, escalabilidad, perf,
 > calidad). Confirma que los cimientos son sólidos (RLS multitenant, audit, escaping con disciplina,
@@ -308,6 +327,24 @@ Columnas del calendario agregadas a `citas` y verificadas en vivo. Persistencia 
 ---
 
 ## 7. Bitácora de sesiones (más reciente arriba)
+
+### 2026-06-14 (cont. 5) — Alta de socios por invitación (self-service de contraseña + Mi cuenta)
+- El usuario pidió sumar a sus 3 socios sin pedirles correo/contraseña: invitarlos por email, que se
+  registren solos y luego puedan cambiar su propio correo/contraseña.
+- Solución: **invitaciones de Supabase Auth** (sin tocar el candado del signup público C-1; las
+  invitaciones de admin lo saltan). Decisión del usuario: los 3 socios = **administrador**.
+- **Código (pusheado):**
+  - `index.html`: script en `<head>` captura `window.__authFlow` del hash de la URL antes de que el
+    cliente Supabase lo limpie.
+  - `js/auth.js`: `requireAuth()` intercepta `invite`/`recovery` → `_showSetPasswordScreen()`
+    (`updateUser({password})`); enlace "¿Olvidaste tu contraseña?" en el login
+    (`resetPasswordForEmail`); helper `_logoSvg()` compartido. Login normal sin cambios.
+  - `modules/configuracion/configuracion.js`: tarjeta "Mi cuenta" (cambiar email/contraseña).
+- Verificado `node --check` (auth.js, configuracion.js). No verificable en preview (mocks; el flujo
+  real necesita tokens de email + sesión Supabase).
+- ⬜ **Pendiente del usuario (Supabase):** URL Configuration (Site URL + Redirect URLs a la app),
+  invitar los 3 emails (Authentication → Users), y `update profiles set role='admin', nombre=...`
+  por cada socio. Guía paso a paso entregada en el chat.
 
 ### 2026-06-14 (cont. 4) — Auditoría Profunda enterprise + fixes P0 de código
 - El usuario pidió "MODO AUDITORÍA PROFUNDA" (arquitecto principal/staff/SRE/security/DBA/perf/SaaS):

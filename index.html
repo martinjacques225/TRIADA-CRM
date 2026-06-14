@@ -8,6 +8,16 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="Tríada Diagnóstico CRM">
   <title>Tríada · Diagnóstico CRM</title>
+  <!-- Captura el tipo de enlace de autenticación (invitación / recuperación) ANTES
+       de que el cliente de Supabase consuma y limpie el hash de la URL. Lo usa
+       js/auth.js para mostrar la pantalla de "crear contraseña". -->
+  <script>
+    (function () {
+      var h = window.location.hash || '';
+      var m = h.match(/[#&]type=(invite|recovery|signup|email_change)/);
+      window.__authFlow = m ? m[1] : null;
+    })();
+  </script>
   <link rel="manifest" href="./manifest.json">
   <!-- Adelanta DNS+TLS de los orígenes externos del camino crítico: el cliente
        Supabase se importa de jsDelivr y luego todas las queries van a Supabase. -->
