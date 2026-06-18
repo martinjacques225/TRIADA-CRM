@@ -1,12 +1,12 @@
 # HANDOFF — TRIADA CRM
 > **Documento vivo. Fuente de verdad del estado del proyecto.**
-> Última actualización: **2026-06-14**
+> Última actualización: **2026-06-17**
 
 ---
 
 ## 📖 Cómo usar este documento (protocolo para Claude)
 
-1. **Al INICIO de cada sesión:** lee este archivo completo *antes* de actuar. Es tu contexto base.
+1. **Al INICIO de cada sesión:** lee **`AGENTS.md`** y **`SECURITY.md`** en la raíz, luego este archivo completo *antes* de actuar. Es tu contexto base.
 2. **Antes de afirmar que algo "funciona":** verifícalo. Este handoff ya tuvo 3 ✅ falsos
    (ver §6). No confíes en un ✅ viejo sin contrastar código ↔ esquema real.
 3. **Al FINAL de cada sesión:** actualiza §1 (estado), §4 (próximos pasos) y agrega una
@@ -33,7 +33,17 @@
 
 ---
 
-## 1. Estado actual (al 2026-06-14)
+## 1. Estado actual (al 2026-06-17)
+
+### 🔎 Nuevo: Auditoría 360 (2026-06-17) — informe + plan-checklist vivo
+> Revisión profunda multi-disciplina (seguridad/OWASP · arquitectura · backend · DB · escalabilidad ·
+> calidad · UX/UI/accesibilidad · costos). Informe completo en **`docs/AUDITORIA_360_2026-06-17.md`**;
+> **plan accionable con checkboxes en §4.0** (tachar al completar, para retomar entre sesiones).
+> Veredicto: seguridad **~7/10** (buen diseño, falta *verificar con login* + hardening de superficie
+> pública/cabeceras), ingeniería **~6/10** (deuda raíz = god-object `window._app` + `onclick` inline
+> que bloquea la CSP). 1 crítico-de-verificación (CR-1/A1), 4 ALTOS, varios MEDIO/BAJO. Nada nuevo
+> roto: es deuda, no regresión.
+
 
 ### 🟡 Nuevo: Alta de socios por INVITACIÓN (2026-06-14 cont. 5) — código pusheado, faltan pasos del usuario en Supabase
 > El usuario quiere sumar a sus 3 socios sin pedirles correo/contraseña: invitarlos por email,
@@ -242,6 +252,57 @@ index.html
 
 ## 4. Próximos pasos (por prioridad)
 
+### 4.0 · PLAN DE AUDITORÍA 360 (2026-06-17) — checklist vivo entre sesiones
+
+> **Fuente:** `docs/AUDITORIA_360_2026-06-17.md` (el *porqué* de cada ítem está ahí).
+> **Cómo se usa:** cada vez que termines un ítem, **marca su checkbox `[x]` y tacha el texto con
+> `~~...~~`**, agrega `✅ (fecha)` y, si lo verificaste en vivo, una línea de prueba. Así cualquier
+> sesión futura retoma sin estar en este hilo. NO borres ítems hechos: tacharlos es la memoria.
+> Orden recomendado: Bloque A (seguridad) → B (arquitectura/calidad) → C (UX) → D (escala/backlog).
+
+#### Bloque A — Seguridad y verificación (máxima prioridad)
+- [ ] **A1 · CR-1 — Verificar la RLS multitenant CON login (no asumir).** En el SQL Editor (sesión
+      admin) y/o consola con sesión de consultor, probar:
+      `select count(*) filter (where org_id is null) from leads;` → **0** (repetir en clientes,
+      diagnosticos, propuestas, citas, facturas);
+      un consultor: `update profiles set role='admin' where id=auth.uid()` → **debe fallar**;
+      insert/update/delete sobre `actividad` desde el cliente → **denegado** (inmutable).
+      Registrar el resultado real aquí.
+- [ ] **A2 · SEG-2 — Rate-limit + validación del formulario público** (`diagnostico-publico.html` →
+      `autodiagnosticos`). Mínimo: validar que `lead_id` exista antes de aceptar; añadir throttle por
+      IP (Edge Function o trigger `pg` con ventana) para frenar spam/DoS.
+- [ ] **A3 · SEG-2/backlog — CAPTCHA** en el formulario público (hCaptcha/Turnstile) antes del POST.
+- [ ] **A4 · SEG-3 — Endurecer password policy** en Supabase (Auth → Policies): longitud + chequeo de
+      contraseñas filtradas (HaveIBeenPwned), si el plan lo permite.
+
+#### Bloque B — Arquitectura y calidad (habilita el hardening)
+- [ ] **B1 · AR-1 — Migrar de `onclick=` inline a event delegation** (`data-action`/`data-id` + un
+      listener raíz). Es el prerrequisito que **desbloquea la CSP**. Hacer por módulo, incremental.
+- [ ] **B2 · SEG-1 — Activar CSP + cabeceras** (`<meta http-equiv="Content-Security-Policy">`,
+      `Referrer-Policy`, `X-Content-Type-Options`) **una vez hecho B1**. Probar que nada inline rompa.
+- [ ] **B3 · CA-1 — Subir cobertura de tests:** mapeadores de `db.js` (`leadToSupa`/`FromSupa`, enums
+      `toOrigenSlug`/`toFactEstado`), helpers de `utils.js` (fechas, `formatCLP`, meeting types).
+- [ ] **B4 · BK-1 — Eliminar `catch (_) {}` silenciosos:** loguear + `toast` cuando afecte al usuario.
+- [ ] **B5 · AR-2 — Partir `app.js`** (god-file 444 líneas): extraer `nav.js`, `share.js`,
+      `data-export.js`; dejar `app.js` solo como orquestador.
+- [ ] **B6 · CA-2 — Mover estilos inline de `renderNav` a clases en `styles.css`.**
+- [ ] **B7 · BK-3 — Unificar el nombre de usuario** hacia `profiles.nombre` (quitar `config.userName`).
+
+#### Bloque C — UX / UI / Accesibilidad
+- [ ] **C1 · UX-1 — Focus-trap + cierre con `Esc` + retorno de foco en el modal global.**
+- [ ] **C2 · UX-3 — Reemplazar `style.zoom` por escala con `font-size`/`rem`** (compatibilidad Firefox).
+- [ ] **C3 · UX-2 — Accesibilidad del formulario público:** `<fieldset>/<legend>` + `aria` en toggles.
+- [ ] **C4 · CA-4 — Nav: usar `<button>` en vez de `<a href="#" onclick>`** (se hace junto con B1).
+
+#### Bloque D — Escalabilidad y observabilidad (backlog medido)
+- [ ] **D1 · ES-1 — Paginación** (`repo.page(offset, limit)`) en las vistas con tablas grandes.
+- [ ] **D2 · BK-2 — Observabilidad:** captura de errores en producción (Sentry u similar).
+- [ ] **D3 · AR-3 — Evaluar bundler ligero** (esbuild/vite) para minificar y dejar de mantener los
+      `<link>` CSS a mano en `index.html`.
+- [ ] **D4 · DB-1 — Batch insert en `importLandingLeads`** (hoy N+1 secuencial).
+
+---
+
 ### ✅ P0 SEGURIDAD — 3 críticos de la Auditoría Profunda CERRADOS (2026-06-14 cont. 4)
 1. **C-1 ✅ Signup público CERRADO y VERIFICADO EN VIVO (2026-06-14)** — `POST /auth/v1/signup` con la key publishable → `HTTP 422 {"error_code":"signup_disabled","msg":"Signups not allowed for this instance"}`. Cómo se hizo: Supabase →
    Authentication → Sign In / Providers → Email → **"Allow new users to sign up" = OFF**.
@@ -327,6 +388,23 @@ Columnas del calendario agregadas a `citas` y verificadas en vivo. Persistencia 
 ---
 
 ## 7. Bitácora de sesiones (más reciente arriba)
+
+### 2026-06-17 — Auditoría 360 multi-disciplina + plan-checklist vivo
+- Revisión profunda con el panel enterprise (Principal/Architect/DevSecOps/Backend/DBA/FAANG/CTO/
+  Product) sobre el código real (no se asumió nada): leídos `app.js`, `js/db.js`, `js/auth.js`,
+  `js/utils.js`, `js/supabase.js`, `index.html`, `diagnostico-publico.html`, `supabase/multitenancy.sql`,
+  `tests/`, CI (`.github/workflows/ci.yml`), `package.json`.
+- **Hallazgos clave:** (1) CR-1 — la RLS multitenant/privesc/audit está **escrita pero no verificada
+  con login** (solo por REST anon) → crítico de verificación; (2) AR-1 — god-object `window._app` +
+  `onclick` inline en todo el front → **bloquea la CSP** y el testing; (3) SEG-2 — formulario público
+  de autodiagnóstico **sin rate-limit/CAPTCHA**; (4) CA-1 — tests casi inexistentes (solo `utils`).
+  Fortalezas confirmadas: RLS por tenant bien diseñada, audit inmutable, `supabase-js` pineado,
+  XSS almacenado cerrado, signup deshabilitado.
+- **Entregables:** `docs/AUDITORIA_360_2026-06-17.md` (informe) + **§4.0 plan-checklist** con 4 bloques
+  (A seguridad · B arquitectura/calidad · C UX · D escala). Convención: marcar `[x]` + `~~tachar~~` +
+  `✅ (fecha)` al completar, para continuidad entre sesiones.
+- ⬜ **Nada ejecutado aún:** el plan está listo para empezar por el Bloque A (A1 = verificar RLS con login).
+- Cambios solo en docs (working tree). ⬜ Pendiente decidir el push.
 
 ### 2026-06-14 (cont. 5) — Alta de socios por invitación (self-service de contraseña + Mi cuenta)
 - El usuario pidió sumar a sus 3 socios sin pedirles correo/contraseña: invitarlos por email, que se

@@ -1,0 +1,27 @@
+---
+description: Estándar vibe engineering — leer AGENTS.md y SECURITY.md siempre
+alwaysApply: true
+---
+
+# Estándar de ingeniería (obligatorio)
+
+Lee `AGENTS.md` y `SECURITY.md` al inicio de la sesión.
+
+## No negociable
+
+1. **CI + tests:** no añadir features sin pipeline (`.github/workflows/ci.yml`) y tests para lógica crítica.
+2. **Sin onclick inline** con IDs o texto de usuario — usar `data-*` + event delegation.
+3. **Sin `catch (_) {}`** salvo comentario `// intentional:` en la misma línea.
+4. **Escape HTML:** en TRIADA usar `html\`\`` / `escHtml()` para datos externos.
+5. **README factual** — sin emojis decorativos; actualizar si cambia stack o comandos.
+6. **Verificación honesta** — no marcar "funciona" sin prueba real; documentar lo no verificado.
+7. **Secretos** — nunca commitear service role ni API keys LLM; IA solo vía backend/Edge Function.
+8. **Arquitectura** — módulos nuevos siguen patrón `modules/ai-commander/` (domain/application/infrastructure/presentation).
+
+## Demo vs producción
+
+Demo desechable: estándar relajado si el usuario lo declara. TRIADA-CRM y repos de producto: DoD completo en `AGENTS.md` §4.
+
+## Al terminar sesión
+
+Ejecutar `npm test`, actualizar HANDOFF si existe, listar pendientes Supabase/ops en el resumen.

@@ -3,5 +3,9 @@
   "version": "1.0.0",
   "description": "CRM de gestión de diagnósticos empresariales 360 para Tríada Consultoría",
   "type": "module",
-  "private": true
+  "private": true,
+  "scripts": {
+    "test": "node --test tests/**/*.test.js",
+    "check": "node --test tests/**/*.test.js"
+  }
 }

@@ -47,9 +47,18 @@ tools/                 Utilidades de build del informe (standalone)
 ```bash
 npx serve -l 5174 .
 # abrir http://localhost:5174
+npm test          # tests unitarios (Node test runner)
 ```
 
-No requiere instalación de dependencias (sin build).
+Sin build step. Backend: Supabase (Postgres + Auth + RLS). Ver `docs/HANDOFF.md` para estado y pendientes.
+
+## Gobernanza (agentes IA y equipo)
+
+| Archivo | Contenido |
+|---------|-----------|
+| [`AGENTS.md`](AGENTS.md) | Estándar de ingeniería: DoD, anti-patrones, CI, remediación TRIADA |
+| [`SECURITY.md`](SECURITY.md) | Threat model, RLS, XSS, secretos, checklist pre-deploy |
+| [`docs/HANDOFF.md`](docs/HANDOFF.md) | Estado vivo del proyecto |
 
 ## Áreas de diagnóstico
 
