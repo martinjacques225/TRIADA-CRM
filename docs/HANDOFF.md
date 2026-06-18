@@ -268,10 +268,11 @@ index.html
       ⬜ **Falta:** correr query de `sin_org` (debe dar 0 en todas) + la prueba de privesc desde una
       sesión **consultor real** (`update profiles set role='admin' where id=auth.uid()` debe FALLAR).
       Hoy solo existe el usuario admin → falta crear un consultor de prueba (Auth → Add user).
-- [ ] **A1.5 · FIX RLS — correr `supabase/fix_rls_autodiag_2026-06-17.sql`** (idempotente). Cierra:
-      H1 `autodiag_auth_all` (ALL/`using(true)` → fuga cross-tenant en autodiagnosticos) y
-      H2 `diagnosticos_public_ins` (anon insertaba diagnósticos OFICIALES falsos). Incluye su
-      verificación al pie. **Pendiente del usuario en Supabase.**
+- [x] ~~**A1.5 · FIX RLS — correr `supabase/fix_rls_autodiag_2026-06-17.sql`**~~ ✅ **(2026-06-17)**.
+      H1 `autodiag_auth_all` ELIMINADA (fin fuga cross-tenant); H2 `diagnosticos_public_ins` ELIMINADA
+      (anon ya no inserta diagnósticos oficiales). **Verificado en vivo:** `autodiagnosticos` queda con
+      `autodiag_del_org`+`autodiag_public_ins`+`autodiagnosticos_read_org`; `diagnosticos` solo
+      `diagnosticos_org` (ningún `{anon}`).
 - [ ] **A2 · SEG-2 — Rate-limit + validación del formulario público** (`diagnostico-publico.html` →
       `autodiagnosticos`). Mínimo: validar que `lead_id` exista antes de aceptar; añadir throttle por
       IP (Edge Function o trigger `pg` con ventana) para frenar spam/DoS.
