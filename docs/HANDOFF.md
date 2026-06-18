@@ -265,9 +265,11 @@ index.html
       ✅ Verificado por admin (SQL Editor): `actividad` solo SELECT (audit inmutable OK); tablas de
       negocio con su policy `*_org`; `facturas` partida (del solo admin).
       🔴 **2 HUECOS HALLADOS** (las policies viejas no se borraron en la migración) → ver A1.5.
-      ⬜ **Falta:** correr query de `sin_org` (debe dar 0 en todas) + la prueba de privesc desde una
-      sesión **consultor real** (`update profiles set role='admin' where id=auth.uid()` debe FALLAR).
-      Hoy solo existe el usuario admin → falta crear un consultor de prueba (Auth → Add user).
+      ✅ **`sin_org` = 0** en leads/clientes/diagnosticos/propuestas/citas/facturas (2026-06-17) → backfill
+      `org_id` completo, sin huérfanos.
+      ⬜ **Solo falta:** la prueba de privesc desde una sesión **consultor real**
+      (`update profiles set role='admin' where id=auth.uid()` debe FALLAR). Hoy solo existe el usuario
+      admin → crear un consultor de prueba (Auth → Add user) y probar desde la consola logueado como él.
 - [x] ~~**A1.5 · FIX RLS — correr `supabase/fix_rls_autodiag_2026-06-17.sql`**~~ ✅ **(2026-06-17)**.
       H1 `autodiag_auth_all` ELIMINADA (fin fuga cross-tenant); H2 `diagnosticos_public_ins` ELIMINADA
       (anon ya no inserta diagnósticos oficiales). **Verificado en vivo:** `autodiagnosticos` queda con
@@ -285,14 +287,14 @@ index.html
       listener raíz). Es el prerrequisito que **desbloquea la CSP**. Hacer por módulo, incremental.
 - [ ] **B2 · SEG-1 — Activar CSP + cabeceras** (`<meta http-equiv="Content-Security-Policy">`,
       `Referrer-Policy`, `X-Content-Type-Options`) **una vez hecho B1**. Probar que nada inline rompa.
-- [~] **B3 · CA-1 — Subir cobertura de tests.** EN CURSO (2026-06-17).
-      ✅ Helpers de `utils.js` cubiertos: `tests/utils.helpers.test.js` (formatCLP, formatDate,
-      propEstadoLabel, toMeetingTipo, meetingType, memberColor, areaIcon) → suite 18/18 verde.
-      ⬜ **Falta** los mapeadores de `db.js` (`toOrigenSlug`/`toFactEstado`/`leadToSupa`…): hoy NO
-      son testeables porque `db.js` importa `supabase.js`, que a su vez importa del CDN
-      (`https://cdn.jsdelivr.net/...`) → node no resuelve ese import. **Decisión pendiente:** extraer
-      las funciones puras a `js/mappers.js` (sin import de supabase) y que `db.js` las reexporte
-      → así se testean sin tocar la lógica. Refactor mecánico seguro, pero toca código de producción.
+- [x] ~~**B3 · CA-1 — Subir cobertura de tests.**~~ ✅ **(2026-06-17)**. Suite **35/35 verde** + syntax-check
+      del CI OK. (1) `tests/utils.helpers.test.js` (formatCLP, formatDate, propEstadoLabel, toMeetingTipo,
+      meetingType, memberColor, areaIcon). (2) **Extracción `js/mappers.js`**: las funciones puras
+      (mapeadores + guards `toOrigenSlug`/`toFactEstado` + `clean`/`isMissingTable`/`isMissingCol`)
+      salieron de `db.js` a un módulo sin dependencias de red; `db.js` las importa y **reexporta
+      `isMissingTable`** (superficie pública intacta). (3) `tests/db.mappers.test.js` cubre los enums que
+      causaban los `22P02`/`42703` históricos, el scores anidado de diagnósticos, el fallback base/extendido
+      de citas y la cadena de razón social de clientes. Refactor mecánico, lógica sin cambios.
 - [ ] **B4 · BK-1 — Eliminar `catch (_) {}` silenciosos:** loguear + `toast` cuando afecte al usuario.
 - [ ] **B5 · AR-2 — Partir `app.js`** (god-file 444 líneas): extraer `nav.js`, `share.js`,
       `data-export.js`; dejar `app.js` solo como orquestador.
