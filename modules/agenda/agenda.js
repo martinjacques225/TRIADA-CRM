@@ -47,7 +47,8 @@ let _citas = [], _pros = [], _equipo = [], _pMap = {};
 async function _load() {
   const uid = getCurrentUserId();
   let equipo = [];
-  try { equipo = await profiles.getAll(); } catch (_) {}
+  try { equipo = await profiles.getAll(); }
+  catch (err) { console.warn('No se pudo cargar el equipo (profiles); se usa el fallback:', err); }
   if (!equipo.length) equipo = [{ id: uid || 'u0', nombre: 'Consultor', rol: 'Consultor', area: '' }];
   const [todas, todosP] = await Promise.all([citas.getAll(), prospectos.getAll()]);
   _citas  = todas;

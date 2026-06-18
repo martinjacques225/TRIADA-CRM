@@ -16,8 +16,10 @@ export class SupabaseAudit extends AuditPort {
         entidad, entidad_id: entidadId, accion,
         usuario: getCurrentUserId(), payload,
       });
-    } catch (_) {
-      // La auditoría no debe romper el flujo de negocio si falla.
+    } catch (err) {
+      // La auditoría no debe romper el flujo de negocio si falla, pero el fallo
+      // sí debe ser visible (no tragarlo en silencio): es relevante de seguridad.
+      console.warn('Auditoría semántica: no se pudo registrar el evento:', err);
     }
   }
 

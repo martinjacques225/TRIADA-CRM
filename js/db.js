@@ -339,5 +339,5 @@ export async function importLandingLeads() {
     }
     if (count) localStorage.removeItem('triada_leads');
     return count;
-  } catch { return 0; }
+  } catch (err) { console.error('importLandingLeads falló (leads del landing no importados):', err); return 0; }
 }

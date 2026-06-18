@@ -295,7 +295,12 @@ index.html
       `isMissingTable`** (superficie pública intacta). (3) `tests/db.mappers.test.js` cubre los enums que
       causaban los `22P02`/`42703` históricos, el scores anidado de diagnósticos, el fallback base/extendido
       de citas y la cadena de razón social de clientes. Refactor mecánico, lógica sin cambios.
-- [ ] **B4 · BK-1 — Eliminar `catch (_) {}` silenciosos:** loguear + `toast` cuando afecte al usuario.
+- [x] ~~**B4 · BK-1 — Eliminar `catch (_) {}` silenciosos.**~~ ✅ **(2026-06-17)**. Se hicieron visibles
+      con log los que escondían fallas reales: carga de perfil (`app.js`), badge de leads, import del
+      landing (`db.js`), email de cuenta (`configuracion`), equipo (`agenda`), auditoría semántica
+      (`supabase.audit.js` — relevante de seguridad), autodiagnósticos opcionales (`modals`). Se dejaron
+      a propósito los benignos con fallback real (clipboard+`window.open`, refresh opcional de
+      recordatorios, `setSelectionRange`, `new Set()` de pipeline). Syntax-check OK, suite 35/35.
 - [ ] **B5 · AR-2 — Partir `app.js`** (god-file 444 líneas): extraer `nav.js`, `share.js`,
       `data-export.js`; dejar `app.js` solo como orquestador.
 - [ ] **B6 · CA-2 — Mover estilos inline de `renderNav` a clases en `styles.css`.**

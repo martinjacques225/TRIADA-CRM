@@ -112,7 +112,8 @@ export async function openProspectoDetail(id) {
   ]);
   // Autodiagnóstico del cliente (referencia): falla suave si la tabla no existe aún
   let autos = [];
-  try { autos = await autodiags.byProspecto(id); } catch (_) {}
+  try { autos = await autodiags.byProspecto(id); }
+  catch (err) { console.debug('autodiagnosticos no disponibles para este lead (tabla opcional):', err?.message || err); }
 
   _openModal(`Ficha: ${p.nombre}`, 'lg');
   document.getElementById('modalSave').style.display = 'none';

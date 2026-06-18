@@ -23,7 +23,8 @@ export async function render() {
     config.get('theme'), config.get('density'), config.get('fontScale'),
   ]);
   let acctEmail = '';
-  try { acctEmail = (await supabase.auth.getUser())?.data?.user?.email || ''; } catch (_) {}
+  try { acctEmail = (await supabase.auth.getUser())?.data?.user?.email || ''; }
+  catch (err) { console.warn('No se pudo leer el email de la cuenta:', err); }
   const dens = densidad || 'comfortable';
   const th   = tema || 'light';
   const fs   = fontScale || '1';

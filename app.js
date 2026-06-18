@@ -116,7 +116,8 @@ export async function renderNav() {
   let nuevos = 0;
   // Conteo server-side: antes traía TODA la tabla leads en cada navegación solo
   // para contar los 'Nuevo' del badge. Ahora es un count head (0 filas).
-  try { nuevos = await prospectos.countByEstado('Nuevo'); } catch (_) {}
+  try { nuevos = await prospectos.countByEstado('Nuevo'); }
+  catch (err) { console.warn('No se pudo contar leads "Nuevo" para el badge:', err); }
   const badges = { leads: nuevos };
   const nav = document.getElementById('nav');
   nav.innerHTML = `
@@ -184,7 +185,7 @@ async function init() {
     if (data) data.area = AREA_FROM_DB[data.area] || data.area; // slug DB → label UI
     _profile = data;
     S.profile = data;
-  } catch (_) {}
+  } catch (err) { console.error('No se pudo cargar el perfil del usuario:', err); }
   await initDB();
 
   const theme = await config.get('theme') || 'light';
@@ -385,7 +386,9 @@ async function init() {
         for (const d of await diagnosticos.getAll()) await diagnosticos.delete(d.id);
         for (const c of await citas.getAll())        await citas.delete(c.id);
         for (const c of await clientes.getAll())     await clientes.delete(c.id);
-        try { for (const a of await autodiags.getAll()) await autodiags.delete(a.id); } catch (_) {}
+        // autodiagnosticos es tabla opcional: falla suave si no se corrió su SQL.
+        try { for (const a of await autodiags.getAll()) await autodiags.delete(a.id); }
+        catch (err) { console.warn('Limpieza: no se pudieron borrar autodiagnósticos (¿tabla ausente?):', err?.message || err); }
         for (const p of await prospectos.getAll())   await prospectos.delete(p.id);
         toast('Datos eliminados', 'info');
       } catch (err) {
