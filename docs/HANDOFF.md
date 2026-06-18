@@ -261,13 +261,17 @@ index.html
 > Orden recomendado: Bloque A (seguridad) → B (arquitectura/calidad) → C (UX) → D (escala/backlog).
 
 #### Bloque A — Seguridad y verificación (máxima prioridad)
-- [ ] **A1 · CR-1 — Verificar la RLS multitenant CON login (no asumir).** En el SQL Editor (sesión
-      admin) y/o consola con sesión de consultor, probar:
-      `select count(*) filter (where org_id is null) from leads;` → **0** (repetir en clientes,
-      diagnosticos, propuestas, citas, facturas);
-      un consultor: `update profiles set role='admin' where id=auth.uid()` → **debe fallar**;
-      insert/update/delete sobre `actividad` desde el cliente → **denegado** (inmutable).
-      Registrar el resultado real aquí.
+- [~] **A1 · CR-1 — Verificar la RLS multitenant CON login (no asumir).** EN CURSO (2026-06-17).
+      ✅ Verificado por admin (SQL Editor): `actividad` solo SELECT (audit inmutable OK); tablas de
+      negocio con su policy `*_org`; `facturas` partida (del solo admin).
+      🔴 **2 HUECOS HALLADOS** (las policies viejas no se borraron en la migración) → ver A1.5.
+      ⬜ **Falta:** correr query de `sin_org` (debe dar 0 en todas) + la prueba de privesc desde una
+      sesión **consultor real** (`update profiles set role='admin' where id=auth.uid()` debe FALLAR).
+      Hoy solo existe el usuario admin → falta crear un consultor de prueba (Auth → Add user).
+- [ ] **A1.5 · FIX RLS — correr `supabase/fix_rls_autodiag_2026-06-17.sql`** (idempotente). Cierra:
+      H1 `autodiag_auth_all` (ALL/`using(true)` → fuga cross-tenant en autodiagnosticos) y
+      H2 `diagnosticos_public_ins` (anon insertaba diagnósticos OFICIALES falsos). Incluye su
+      verificación al pie. **Pendiente del usuario en Supabase.**
 - [ ] **A2 · SEG-2 — Rate-limit + validación del formulario público** (`diagnostico-publico.html` →
       `autodiagnosticos`). Mínimo: validar que `lead_id` exista antes de aceptar; añadir throttle por
       IP (Edge Function o trigger `pg` con ventana) para frenar spam/DoS.
@@ -405,6 +409,16 @@ Columnas del calendario agregadas a `citas` y verificadas en vivo. Persistencia 
   `✅ (fecha)` al completar, para continuidad entre sesiones.
 - ⬜ **Nada ejecutado aún:** el plan está listo para empezar por el Bloque A (A1 = verificar RLS con login).
 - Cambios solo en docs (working tree). ⬜ Pendiente decidir el push.
+
+> **Cont. (2026-06-17) — A1 en curso: la verificación con login YA encontró 2 huecos reales.**
+> Al listar `pg_policies` (admin) aparecieron 2 policies viejas que la migración no borró:
+> **H1** `autodiagnosticos.autodiag_auth_all` (`ALL` / `using(true)` para `authenticated`) → anula por
+> OR el filtro por org = **fuga cross-tenant** (latente hoy, single-org; real con 2+ orgs).
+> **H2** `diagnosticos.diagnosticos_public_ins` (`INSERT` para `anon`, `with_check lead_id is not null`)
+> → cualquier anónimo inserta **diagnósticos oficiales falsos**; el form público solo usa
+> `autodiagnosticos`, así que la policy sobra. **Fix:** `supabase/fix_rls_autodiag_2026-06-17.sql`
+> (A1.5). Esto valida el valor de la auditoría: "no asumir, verificar con login" destapó lo que el
+> chequeo anon no veía.
 
 ### 2026-06-14 (cont. 5) — Alta de socios por invitación (self-service de contraseña + Mi cuenta)
 - El usuario pidió sumar a sus 3 socios sin pedirles correo/contraseña: invitarlos por email, que se
