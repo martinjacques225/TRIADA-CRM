@@ -317,7 +317,12 @@ index.html
       Firefox ≥126) y, si falta, cae a `transform: scale()` estándar con compensación de ancho/alto
       (`width: 100/s %`, origen top-left). **Verificado en vivo:** camino `zoom` aplica/limpia y persiste;
       el fallback produce `scale(1.25)` + ancho 80% y resetea limpio. 0 errores de consola.
-- [ ] **C3 · UX-2 — Accesibilidad del formulario público:** `<fieldset>/<legend>` + `aria` en toggles.
+- [x] ~~**C3 · UX-2 — Accesibilidad del formulario público.**~~ ✅ **(2026-06-17)**, `diagnostico-publico.html`.
+      Cada sección es un `<fieldset>` con `<legend class="sr-only">` (área+subtítulo; `sec-head` queda
+      `aria-hidden` para no duplicar). Cada toggle Sí/No es un `role="radiogroup"` con `aria-labelledby`
+      a la pregunta y botones `role="radio"` + `aria-checked` (actualizado en `setA`) + `type="button"` +
+      `:focus-visible`. **Verificado en vivo:** 3 fieldsets/legends, 15 radiogroups/30 radios, aria-checked
+      alterna correcto, layout intacto, 0 errores de consola.
 - [ ] **C4 · CA-4 — Nav: usar `<button>` en vez de `<a href="#" onclick>`** (se hace junto con B1).
 
 #### Bloque D — Escalabilidad y observabilidad (backlog medido)
