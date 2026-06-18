@@ -285,8 +285,14 @@ index.html
       listener raíz). Es el prerrequisito que **desbloquea la CSP**. Hacer por módulo, incremental.
 - [ ] **B2 · SEG-1 — Activar CSP + cabeceras** (`<meta http-equiv="Content-Security-Policy">`,
       `Referrer-Policy`, `X-Content-Type-Options`) **una vez hecho B1**. Probar que nada inline rompa.
-- [ ] **B3 · CA-1 — Subir cobertura de tests:** mapeadores de `db.js` (`leadToSupa`/`FromSupa`, enums
-      `toOrigenSlug`/`toFactEstado`), helpers de `utils.js` (fechas, `formatCLP`, meeting types).
+- [~] **B3 · CA-1 — Subir cobertura de tests.** EN CURSO (2026-06-17).
+      ✅ Helpers de `utils.js` cubiertos: `tests/utils.helpers.test.js` (formatCLP, formatDate,
+      propEstadoLabel, toMeetingTipo, meetingType, memberColor, areaIcon) → suite 18/18 verde.
+      ⬜ **Falta** los mapeadores de `db.js` (`toOrigenSlug`/`toFactEstado`/`leadToSupa`…): hoy NO
+      son testeables porque `db.js` importa `supabase.js`, que a su vez importa del CDN
+      (`https://cdn.jsdelivr.net/...`) → node no resuelve ese import. **Decisión pendiente:** extraer
+      las funciones puras a `js/mappers.js` (sin import de supabase) y que `db.js` las reexporte
+      → así se testean sin tocar la lógica. Refactor mecánico seguro, pero toca código de producción.
 - [ ] **B4 · BK-1 — Eliminar `catch (_) {}` silenciosos:** loguear + `toast` cuando afecte al usuario.
 - [ ] **B5 · AR-2 — Partir `app.js`** (god-file 444 líneas): extraer `nav.js`, `share.js`,
       `data-export.js`; dejar `app.js` solo como orquestador.
