@@ -307,7 +307,11 @@ index.html
 - [ ] **B7 · BK-3 — Unificar el nombre de usuario** hacia `profiles.nombre` (quitar `config.userName`).
 
 #### Bloque C — UX / UI / Accesibilidad
-- [ ] **C1 · UX-1 — Focus-trap + cierre con `Esc` + retorno de foco en el modal global.**
+- [x] ~~**C1 · UX-1 — Focus-trap + cierre con `Esc` + retorno de foco en el modal global.**~~ ✅ **(2026-06-17)**.
+      `js/modal-a11y.js` (`initModalA11y`, llamado en `app.js`): se engancha vía MutationObserver sobre la
+      clase `open` del overlay → cubre TODOS los openers sin tocarlos. **Verificado en vivo** (preview.html
+      con mocks): al abrir, el foco salta al 1er campo (`pNombre`); Tab/Shift+Tab quedan atrapados (14
+      focusables, ciclan first↔last); `Esc` cierra y devuelve el foco al disparador; 0 errores de consola.
 - [ ] **C2 · UX-3 — Reemplazar `style.zoom` por escala con `font-size`/`rem`** (compatibilidad Firefox).
 - [ ] **C3 · UX-2 — Accesibilidad del formulario público:** `<fieldset>/<legend>` + `aria` en toggles.
 - [ ] **C4 · CA-4 — Nav: usar `<button>` en vez de `<a href="#" onclick>`** (se hace junto con B1).

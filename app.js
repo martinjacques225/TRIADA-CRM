@@ -52,6 +52,7 @@ import { openMeetingDetail } from './modules/agenda/agenda.js';
 import { initReminders } from './modules/agenda/reminders.js';
 import { openInformeViewer } from './modules/informe-ejecutivo/informe.view.js';
 import { initMascota, setMascotaEnabled, setMascota } from './modules/mascota/mascota.js';
+import { initModalA11y } from './js/modal-a11y.js';
 
 // ════ NAV ════
 // Orden que sigue la presentación comercial: Principal → Gestión → Desarrollo → Análisis.
@@ -200,6 +201,8 @@ async function init() {
   document.getElementById('modalOverlay').addEventListener('click', e => {
     if (e.target === document.getElementById('modalOverlay')) closeModal();
   });
+  // Accesibilidad del modal: focus-trap + Esc + retorno de foco (C1/UX-1).
+  initModalA11y();
 
   // Register global app API
   window._app = {
