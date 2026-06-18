@@ -415,10 +415,29 @@ async function init() {
   try { await initMascota(); } catch (err) { console.error('No se pudo iniciar la mascota:', err); }
 }
 
-// Escala global de tipografía/UI (zoom en la raíz). Valores: 0.9 / 1 / 1.1 / 1.25
+// Escala global de tipografía/UI. Valores: 0.9 / 1 / 1.1 / 1.25
+// `zoom` escala toda la UI y hoy lo soportan Chrome/Edge/Safari y Firefox ≥126.
+// Para motores SIN `zoom` (Firefox viejo), se cae a `transform: scale()` estándar
+// con compensación de tamaño (UX-3 de la Auditoría 360).
+const _ZOOM_OK = typeof CSS !== 'undefined' && CSS.supports && CSS.supports('zoom', '1');
 function _applyFontScale(scale) {
   const s = Number(scale) || 1;
-  document.documentElement.style.zoom = s === 1 ? '' : String(s);
+  const root = document.documentElement;
+  if (_ZOOM_OK) {
+    root.style.zoom = s === 1 ? '' : String(s);
+    return;
+  }
+  // Fallback: escalar desde la esquina superior izquierda y compensar el ancho/alto
+  // para que el contenido siga ocupando el viewport completo.
+  const b = document.body;
+  if (s === 1) {
+    b.style.transform = b.style.transformOrigin = b.style.width = b.style.height = '';
+  } else {
+    b.style.transformOrigin = 'top left';
+    b.style.transform = `scale(${s})`;
+    b.style.width = `${100 / s}%`;
+    b.style.height = `${100 / s}%`;
+  }
 }
 
 function _openSimpleModal(title, bodyHtml, onSave) {

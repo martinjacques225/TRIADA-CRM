@@ -312,7 +312,11 @@ index.html
       clase `open` del overlay → cubre TODOS los openers sin tocarlos. **Verificado en vivo** (preview.html
       con mocks): al abrir, el foco salta al 1er campo (`pNombre`); Tab/Shift+Tab quedan atrapados (14
       focusables, ciclan first↔last); `Esc` cierra y devuelve el foco al disparador; 0 errores de consola.
-- [ ] **C2 · UX-3 — Reemplazar `style.zoom` por escala con `font-size`/`rem`** (compatibilidad Firefox).
+- [x] ~~**C2 · UX-3 — Escala de UI compatible con Firefox.**~~ ✅ **(2026-06-17)**. `_applyFontScale` en
+      `app.js` ahora **detecta soporte de `zoom`** (`CSS.supports('zoom','1')`: Chrome/Edge/Safari y
+      Firefox ≥126) y, si falta, cae a `transform: scale()` estándar con compensación de ancho/alto
+      (`width: 100/s %`, origen top-left). **Verificado en vivo:** camino `zoom` aplica/limpia y persiste;
+      el fallback produce `scale(1.25)` + ancho 80% y resetea limpio. 0 errores de consola.
 - [ ] **C3 · UX-2 — Accesibilidad del formulario público:** `<fieldset>/<legend>` + `aria` en toggles.
 - [ ] **C4 · CA-4 — Nav: usar `<button>` en vez de `<a href="#" onclick>`** (se hace junto con B1).
 
