@@ -213,11 +213,11 @@
 ### Funcionando
 - **Auth / login** ✅ — `js/auth.js` bloquea el CRM hasta autenticar (Supabase Auth). Usuario admin creado y login en producción funcionando.
 - **Pipeline de prospectos** ✅ — kanban + lista, filtros, drag & drop entre etapas. Crear/editar prospecto **arreglado hoy** (ver §6/§7).
-- **Diagnósticos** ✅ — CRUD conectado; columnas (`lead_id, scores, hallazgos, oportunidades, estado`) coinciden con el esquema real. **Cuestionario ampliado a 27 preguntas (9 por área, sub-dimensiones) — 2026-06-23.** `scores` es jsonb → ampliar no migró la base.
+- **Diagnósticos** ✅ — CRUD conectado; columnas (`lead_id, scores, hallazgos, oportunidades, estado`) coinciden con el esquema real. **Cuestionario ampliado a 27 preguntas (9 por área, sub-dimensiones) + escala graduada No/Parcial/Sí — 2026-06-23.** `scores` es jsonb (guarda 0/0.5/1; tolera el Sí/No viejo) → ampliar no migró la base.
 - **Agenda / citas** 🟡 — CRUD conectado; **reescrita como calendario el 2026-06-12** (ver arriba).
 - **Propuestas con ítems + IVA** 🟡 — tabla dinámica de servicios {descripcion, cantidad, precioUnit}; subtotal + IVA 19% + total; guarda en `servicios` (jsonb) y `valor`. Retrocompatible con formato viejo (string[]).
 - **Correlativos en UI** ✅ — `LEAD-/DIA-/PROP-/FAC-000001` ahora se leen de la columna real `codigo` (arreglado hoy; antes leía `row.correlativo` inexistente → nunca aparecían).
-- **Informe Ejecutivo 360 (PDF)** ✅ — motor de reporte (8 páginas A4 + gráficos SVG). **Re-skineado a la identidad del sitio web (crema+petróleo, Spectral) — 2026-06-23**, verificado en el preview. La piel vive en `modules/informe-ejecutivo/informe.css` (tokens scope-eados a `.informe-viewer`).
+- **Informe Ejecutivo 360 (PDF)** ✅ — motor de reporte (8 páginas A4 + gráficos SVG). **Re-skineado a la identidad del sitio web (crema+petróleo, Spectral) — 2026-06-23**, verificado en el preview. La piel vive en `modules/informe-ejecutivo/informe.css` (tokens scope-eados a `.informe-viewer`). **+ v2 análisis profundo (2026-06-23 cont.):** escala graduada, sub-dimensiones, benchmarks por rubro/tamaño, cuantificación del valor en juego ($), narrativa con insight cruzado y radar comparativo (ver §7).
 - **Landing/Web → Supabase** 🔴→✅ (corregido 2026-06-23 vía el sitio `grupotriada.cl`) — **HALLAZGO:** el insert anónimo `origen='landing'` **NUNCA funcionó** (el 1er lead real de la tabla fue `LEAD-000001`, de una prueba de hoy). La policy `leads_public_ins` **faltaba en la base** pese a estar en `schema.sql` (drift esquema↔base); se creó (`supabase/leads_public_ins.sql`) pero **`anon` SIGUE sin poder insertar** aunque `pg_policies` la muestra correcta (INSERT/{anon}/`origen='landing'`) y no hay policies restrictivas. `set role anon; insert…landing` **también falla** (42501) en el SQL Editor; `set role service_role` **SÍ** inserta → el problema es **la RLS de `anon`, no triggers/constraints** (misterio sin resolver). **SOLUCIÓN en producción:** el sitio web (`triada-home`/`grupotriada.cl`) inserta vía **llave secreta `service_role` server-side** (no anon), tras su escudo anti-abuso → además **más seguro** (solo el backend con escudo crea leads). El form en vivo ya crea leads, verificado E2E. **Pendientes CRM:** (1) decidir si vale resolver el misterio de la RLS anon o quedarse con service_role; (2) borrar leads de prueba `LEAD-000001`/`LEAD-000002`. *(El viejo `diagnostico-publico.html` usa la tabla `autodiagnosticos`, cuyo insert anónimo SÍ funciona — policy distinta.)*
 - **Facturación** 🟡 — **arreglado hoy** (decisión del usuario: facturas → `cliente_id`). Módulo reescrito a cliente-céntrico: `facturaToSupa/FromSupa` mapean columnas reales (`cliente_id, monto, pagado, estado, emision, vencimiento`); estados al enum real (`pendiente/parcial/pagado/vencido`, antes mandaba `Pendiente/Enviada` → 22P02); `toFactEstado()` blinda el valor; modal/tabla seleccionan y muestran **cliente**; guardado en try/catch. **Depende de que existan clientes** (ver 🔴 abajo) para ser usable.
 
@@ -445,6 +445,28 @@ Columnas del calendario agregadas a `citas` y verificadas en vivo. Persistencia 
 ---
 
 ## 7. Bitácora de sesiones (más reciente arriba)
+
+### 2026-06-23 (cont.) — Informe v2: análisis profundo (graduado · sub-dim · benchmark · $ · narrativa · radar)
+- El usuario pidió llevar el informe "al nivel máximo de calidad, estética y análisis de información".
+  Se evaluó 0-10 (estética ~7.2 / análisis ~4.7 / global ~6) y se ejecutó el plan. Commits
+  `bd9cb67` · `7833fe4` · `ce98f7a` (pusheados, en vivo).
+- **Escala graduada No/Parcial/Sí** (`answerValue`+`scorePct` en utils.js; modal 3 estados; motor:
+  Sí=fortaleza, No=hallazgo, Parcial=solo puntaje). Retrocompatible con Sí/No viejo.
+- **Sub-dimensiones en el informe**: el motor calcula el puntaje de cada sub-bloque (DIAG_GRUPOS) y
+  el informe muestra las 3 sub-barras por área.
+- **Benchmarks** (`modules/informe-ejecutivo/informe.benchmarks.js`, referencia Tríada curada por
+  rubro×tamaño): "+X vs ref." por área + polígono punteado en el radar (Tu empresa vs Referencia
+  rubro). Solo si el prospecto tiene rubro o tamaño.
+- **Cuantificación $** ("valor en juego"): desde `facturacion_est` + brecha × factor por área, rango
+  con caveat explícito. Solo si hay facturación numérica (sin falsa precisión).
+- **Narrativa con insight cruzado** (reglas, sin IA — decisión del usuario): `_insightPatron` detecta
+  el patrón (ventas↑/finanzas↓ → "capturar, no vender más", etc.) e integra benchmark + $.
+- **Portada con titular** (índice + valor en juego). Sin logo del cliente (decisión del usuario).
+- Verificado: 35/35 tests · node --check · smoke graduado/legacy/benchmark/narrativa · render de las 8
+  páginas en preview · 0 errores. Scores estimados tras el trabajo: análisis ~4.7→~7, global ~6→~8.
+- ⬜ **Pendiente del plan (polish/producción):** A5 ROI/payback por oportunidad · B3 página de
+  metodología + densidad · B4 tipografía fina (cifras tabulares, itálica de énfasis) · B5 self-host de
+  Spectral/Libre Franklin + prueba del PDF real.
 
 ### 2026-06-23 — Diagnóstico 360: cuestionario ampliado + Informe con identidad del sitio
 - El usuario quería más preguntas (cubrir todo el espectro de la empresa) y que el informe final
