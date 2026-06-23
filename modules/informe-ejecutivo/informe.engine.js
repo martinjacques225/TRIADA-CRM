@@ -319,8 +319,10 @@ export function computeInforme(diag, prospecto, evaluador = {}) {
   const segundaPeor = ordenadas[1];
   const mejor = ordenadas[ordenadas.length - 1];
 
-  const resumenEjecutivo = _resumen(empresa, overall, nivel, mejor, peor, segundaPeor, target);
-  const conclusion = _conclusion(empresa, overall, nivel, peor, mejor, target, topHallazgos.length);
+  const narrativaCtx = { empresa, overall, nivel, target, areas, mejor, peor, segundaPeor,
+    benchmarkContext, benchmarkOverall, economia, nHallazgos: topHallazgos.length };
+  const resumenEjecutivo = _resumen(narrativaCtx);
+  const conclusion = _conclusion(narrativaCtx);
 
   return {
     codigo: codigoInforme(diag),
@@ -359,32 +361,64 @@ function _buildPlan(opps) {
   };
 }
 
-// ── Generador de resumen ejecutivo ──
-function _resumen(empresa, overall, nivel, mejor, peor, segundaPeor, target) {
-  const partes = [];
-  partes.push(`${empresa} presenta un Índice General de Madurez Empresarial de ${overall}/100, ubicándose en un nivel «${nivel.id}».`);
+// ── Generadores de narrativa (reglas con detección de patrón cruzado) ──
+function _fmtM(n) {
+  const v = n || 0;
+  return v >= 1e6 ? '$' + Math.round(v / 1e6).toLocaleString('es-CL') + 'M' : '$' + Math.round(v).toLocaleString('es-CL');
+}
 
-  if (mejor.score >= 60) {
-    partes.push(`El área de ${mejor.short} muestra el mejor desempeño (${mejor.score}/100) y constituye una base sólida sobre la cual construir.`);
-  } else {
-    partes.push(`Ninguna área alcanza aún un nivel óptimo, lo que representa una oportunidad de mejora transversal.`);
+// Insight cruzado: qué historia cuentan las 3 áreas EN CONJUNTO (no área por área).
+function _insightPatron(areas) {
+  const sorted = [...areas].sort((a, b) => b.score - a.score);
+  const best = sorted[0], worst = sorted[sorted.length - 1];
+  const spread = best.score - worst.score;
+  if (spread <= 12) {
+    if (best.score >= 70) return 'Las tres áreas avanzan parejas y a buen nivel: el salto vendrá de optimizar el conjunto y sostener las buenas prácticas, más que de corregir un punto aislado.';
+    if (worst.score < 45) return 'Las tres áreas comparten brechas de magnitud similar: conviene ordenar primero lo esencial en cada una antes de pensar en optimizar.';
+    return 'La madurez es pareja entre las tres áreas, sin un punto crítico aislado; lo más rentable es subir el conjunto un escalón de forma coordinada.';
   }
+  const patrones = {
+    'ventas>finanzas': 'El motor comercial funciona, pero la gestión financiera no lo sostiene: se vende bien y, aun así, el resultado se diluye por falta de control de márgenes y caja. El foco no es vender más, sino capturar lo que ya se vende.',
+    'ventas>tec':      'Las ventas avanzan a pulso, sin el soporte tecnológico que las haría escalables y predecibles: el crecimiento depende de las personas y su memoria, no de un sistema. Ahí está el techo.',
+    'tec>ventas':      'La base digital está instalada, pero no se traduce en ventas: hay capacidad esperando un proceso comercial que genere demanda y cierre de forma consistente.',
+    'tec>finanzas':    'Hay orden tecnológico, pero la gestión financiera no aprovecha esa información para decidir: el control del negocio va por detrás de su digitalización.',
+    'finanzas>ventas': 'Las finanzas están bajo control, pero el crecimiento comercial no acompaña: el negocio se administra bien; falta venderle más y mejor al mercado.',
+    'finanzas>tec':    'La gestión financiera es sólida, pero se sostiene en procesos manuales: digitalizar liberaría tiempo, reduciría errores y daría escala al control que ya existe.',
+  };
+  return patrones[`${best.key}>${worst.key}`]
+    || `El desempeño es desparejo: ${best.short} funciona como fortaleza mientras ${worst.short} concentra la mayor brecha.`;
+}
 
-  const focos = (peor.short === segundaPeor.short || segundaPeor.score >= 70)
-    ? `${peor.short} (${peor.score}/100)`
-    : `${peor.short} (${peor.score}/100) y ${segundaPeor.short} (${segundaPeor.score}/100)`;
-  partes.push(`Se identifican oportunidades relevantes principalmente en ${focos}.`);
-
-  partes.push(`Con un plan estructurado y enfocado, el diagnóstico proyecta alcanzar un nivel de madurez cercano a ${target}/100.`);
-  return partes.join(' ');
+function _resumen(ctx) {
+  const { empresa, overall, nivel, target, areas, benchmarkContext, benchmarkOverall, economia } = ctx;
+  const p = [];
+  p.push(`${empresa} obtiene un Índice General de Madurez Empresarial de ${overall}/100, ubicándose en un nivel «${nivel.id}».`);
+  if (benchmarkContext) {
+    const d = overall - benchmarkOverall;
+    p.push(d >= 3
+      ? `Eso la sitúa ${d} puntos por sobre la referencia estimada de su rubro y tamaño (${benchmarkOverall}/100): una base de partida favorable.`
+      : d <= -3
+        ? `Eso la sitúa ${Math.abs(d)} puntos por debajo de la referencia estimada de su rubro y tamaño (${benchmarkOverall}/100), donde se concentra la urgencia.`
+        : `Eso la deja en línea con la referencia estimada de su rubro y tamaño (${benchmarkOverall}/100).`);
+  }
+  p.push(_insightPatron(areas));
+  if (economia) {
+    p.push(`Cerrar estas brechas equivale del orden de ${_fmtM(economia.totalBajo)} a ${_fmtM(economia.totalAlto)} al año en valor en juego —una referencia para priorizar, no una promesa de resultado.`);
+  }
+  p.push(`Con un plan estructurado y enfocado en lo de mayor impacto, el diagnóstico proyecta alcanzar un nivel cercano a ${target}/100.`);
+  return p.join(' ');
 }
 
 // ── Generador de conclusión ejecutiva ──
-function _conclusion(empresa, overall, nivel, peor, mejor, target, nHallazgos) {
+function _conclusion(ctx) {
+  const { empresa, overall, nivel, target, mejor, peor, economia } = ctx;
+  const valorFrase = economia
+    ? `—del orden de ${_fmtM(economia.totalBajo)} a ${_fmtM(economia.totalAlto)} al año— `
+    : '—tiempo, ventas o control— ';
   return [
     `${empresa} se encuentra hoy en un nivel de madurez «${nivel.id}», con un Índice General de ${overall}/100. ${nivel.descLong}`,
-    `El diagnóstico identificó ${nHallazgos} ${nHallazgos === 1 ? 'hallazgo prioritario' : 'hallazgos prioritarios'}, concentrados principalmente en el área de ${peor.short}. Estos representan los puntos donde la empresa está dejando valor sobre la mesa —tiempo, ventas o control— que hoy no se captura.`,
-    `Al mismo tiempo, ${mejor.short} ${mejor.score >= 60 ? 'opera como un activo sobre el cual apalancar el crecimiento' : 'presenta margen de mejora junto al resto de las áreas'}. La buena noticia es que las oportunidades detectadas son accionables: con un plan estructurado, ${empresa} puede proyectar un nivel de madurez cercano a ${target}/100.`,
-    `Recomendamos comenzar por las acciones de corto plazo de alto impacto y bajo esfuerzo, que generan resultados visibles con rapidez y construyen el impulso necesario para los cambios de mayor alcance.`,
+    `El diagnóstico concentró sus hallazgos prioritarios en ${peor.short} (${peor.score}/100): ahí está el valor ${valorFrase}que la empresa hoy deja sobre la mesa y que un plan ordenado permite capturar.`,
+    `Al mismo tiempo, ${mejor.short} (${mejor.score}/100) ${mejor.score >= 60 ? 'opera como un activo sobre el cual apalancar el crecimiento' : 'parte de una base algo más firme'}. Las oportunidades detectadas son accionables: con foco y método, ${empresa} puede proyectar un nivel cercano a ${target}/100.`,
+    `La recomendación es partir por las acciones de corto plazo de alto impacto y bajo esfuerzo: generan resultados visibles rápido y construyen el impulso para los cambios de mayor alcance.`,
   ];
 }

@@ -38,6 +38,13 @@ export function radarChart(areas, opts = {}) {
     grid += `<polygon points="${pts}" fill="${f === 1 ? '#F4F1E9' : 'none'}" stroke="#E0D9C8" stroke-width="1"/>`;
   });
   const axes = areas.map((_, i) => { const p = pt(i, 1); return `<line x1="${cx}" y1="${cy}" x2="${p.x.toFixed(1)}" y2="${p.y.toFixed(1)}" stroke="#E0D9C8" stroke-width="1"/>`; }).join('');
+
+  // Polígono de referencia del rubro (punteado) — solo si hay benchmark
+  const showBench = opts.showBenchmark && areas.every(a => typeof a.benchmark === 'number');
+  const benchPoly = showBench
+    ? `<polygon points="${areas.map((a, i) => { const p = pt(i, Math.max(0, Math.min(1, a.benchmark / 100))); return `${p.x.toFixed(1)},${p.y.toFixed(1)}`; }).join(' ')}" fill="none" stroke="#8A90A3" stroke-width="1.5" stroke-dasharray="4 3" stroke-linejoin="round"/>`
+    : '';
+
   const dataPts = areas.map((a, i) => { const p = pt(i, a.score / 100); return `${p.x.toFixed(1)},${p.y.toFixed(1)}`; }).join(' ');
   const dots = areas.map((a, i) => { const p = pt(i, a.score / 100); return `<circle cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="5" fill="${a.color}" stroke="#fff" stroke-width="2"/>`; }).join('');
   const labels = areas.map((a, i) => {
@@ -48,6 +55,7 @@ export function radarChart(areas, opts = {}) {
 
   return `<svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}" class="chart-radar" role="img" aria-label="Radar de madurez por área">
     ${grid}${axes}
+    ${benchPoly}
     <polygon points="${dataPts}" fill="rgba(47,140,147,.16)" stroke="#2F8C93" stroke-width="2.5" stroke-linejoin="round"/>
     ${dots}${labels}
   </svg>`;

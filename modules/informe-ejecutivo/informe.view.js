@@ -56,6 +56,10 @@ function pageCover(rep) {
       <h1 class="cover-title">TRÍADA 360</h1>
       <div class="cover-sub">Diagnóstico Integral de Madurez Empresarial</div>
       <div class="cover-quote">“Las empresas más exitosas no son las que trabajan más,<br>sino las que entienden mejor dónde enfocar sus esfuerzos.”</div>
+      <div class="cover-result">
+        <span class="cr-item"><span class="cr-k">Índice general</span><span class="cr-v"><b>${rep.overall}</b>/100 · ${esc(rep.nivel.id)}</span></span>
+        ${rep.economia ? `<span class="cr-div"></span><span class="cr-item"><span class="cr-k">Valor en juego</span><span class="cr-v"><b>${fmtMonto(rep.economia.totalBajo)}–${fmtMonto(rep.economia.totalAlto)}</b> / año</span></span>` : ''}
+      </div>
     </div>
 
     <div class="cover-meta">
@@ -102,7 +106,7 @@ function pageResumen(rep) {
         <span class="rv-amount">${fmtMonto(rep.economia.totalBajo)}–${fmtMonto(rep.economia.totalAlto)} <small>/ año</small></span>
       </div>
       <div class="rv-areas">
-        ${rep.economia.porArea.map(p => `<span class="rv-chip"><i style="background:${p.color}"></i>${esc(p.area)}: ${fmtMonto(p.bajo)}–${fmtMonto(p.alto)}</span>`).join('')}
+        ${rep.economia.porArea.map(p => `<span class="rv-chip"><i style="background:${p.color}"></i>${esc(p.area)}: ${p.alto ? `${fmtMonto(p.bajo)}–${fmtMonto(p.alto)}` : 'sin brecha'}</span>`).join('')}
       </div>
       <div class="rv-note">Estimación de referencia sobre la facturación anual informada y el potencial de mejora de cada área. Dimensiona la oportunidad; no es una promesa de resultado y debe validarse con el cliente.</div>
     </div>` : ''}
@@ -126,8 +130,9 @@ function pageResultados(rep) {
         ${rep.areas.map(areaBar).join('')}
       </div>
       <div class="resultados-radar">
-        ${radarChart(rep.areas, { size: 300 })}
-        <div class="radar-caption">Perfil de madurez en las tres dimensiones evaluadas</div>
+        ${radarChart(rep.areas, { size: 300, showBenchmark: rep.benchmarkContext })}
+        ${rep.benchmarkContext ? `<div class="radar-legend"><span class="rl-you">Tu empresa</span><span class="rl-ref">Referencia rubro</span></div>` : ''}
+        <div class="radar-caption">Perfil de madurez vs. la referencia estimada de tu rubro</div>
       </div>
     </div>
     <div class="area-detail-list">
