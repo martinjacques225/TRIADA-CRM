@@ -107,8 +107,9 @@ export function renderDiagnosticoModal(prospectoId, onSave) {
             <div class="score-question">
               <div class="score-q-text" id="${a.id}-q-${i}">${escHtml(preguntas[i])}</div>
               <div class="score-q-btns" role="radiogroup" aria-labelledby="${a.id}-q-${i}">
-                <button type="button" role="radio" aria-checked="${answers[a.id][i]===true}"  class="score-q-btn ${answers[a.id][i]===true?'active-yes':''}" data-a="${a.id}" data-i="${i}" data-v="yes">Sí</button>
-                <button type="button" role="radio" aria-checked="${answers[a.id][i]===false}" class="score-q-btn ${answers[a.id][i]===false?'active-no':''}"  data-a="${a.id}" data-i="${i}" data-v="no">No</button>
+                <button type="button" role="radio" aria-checked="${answers[a.id][i]===0}"   class="score-q-btn ${answers[a.id][i]===0?'active-no':''}"    data-a="${a.id}" data-i="${i}" data-v="0">No</button>
+                <button type="button" role="radio" aria-checked="${answers[a.id][i]===0.5}" class="score-q-btn ${answers[a.id][i]===0.5?'active-mid':''}" data-a="${a.id}" data-i="${i}" data-v="0.5">Parcial</button>
+                <button type="button" role="radio" aria-checked="${answers[a.id][i]===1}"   class="score-q-btn ${answers[a.id][i]===1?'active-yes':''}"   data-a="${a.id}" data-i="${i}" data-v="1">Sí</button>
               </div>
             </div>`;
         }
@@ -121,13 +122,13 @@ export function renderDiagnosticoModal(prospectoId, onSave) {
     // Listeners una sola vez; al hacer clic solo se actualiza el botón tocado (sin re-render total)
     body.querySelectorAll('.score-q-btn').forEach(btn => {
       btn.addEventListener('click', () => {
-        const a = btn.dataset.a, i = +btn.dataset.i, v = btn.dataset.v === 'yes';
+        const a = btn.dataset.a, i = +btn.dataset.i, v = parseFloat(btn.dataset.v);
         answers[a][i] = v;
         btn.parentElement.querySelectorAll('.score-q-btn').forEach(b => {
-          b.classList.remove('active-yes', 'active-no');
+          b.classList.remove('active-yes', 'active-no', 'active-mid');
           b.setAttribute('aria-checked', 'false');
         });
-        btn.classList.add(v ? 'active-yes' : 'active-no');
+        btn.classList.add(v === 1 ? 'active-yes' : v === 0 ? 'active-no' : 'active-mid');
         btn.setAttribute('aria-checked', 'true');
         _updateScores();
       });

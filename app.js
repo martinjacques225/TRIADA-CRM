@@ -331,7 +331,8 @@ async function init() {
 
       const lineasPreg = preguntas.map((q, i) => {
         const resp = (areaScores || [])[i];
-        return `${resp === true ? '✅' : resp === false ? '❌' : '⬜'} ${q}`;
+        const mark = (resp === true || resp === 1) ? '✅' : resp === 0.5 ? '◐' : (resp === false || resp === 0) ? '❌' : '⬜';
+        return `${mark} ${q}`;
       });
 
       const hallazgos    = (diag?.hallazgos    || []).slice(0, 5);

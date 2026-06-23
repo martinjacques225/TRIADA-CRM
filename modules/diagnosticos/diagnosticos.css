@@ -12,6 +12,9 @@
 .diag-card-actions { display: flex; gap: 8px; margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--border); }
 
 /* ── Modal del Diagnóstico 360 (cuestionario) ─────────────────── */
+/* Escala graduada: el botón "Parcial" usa el ámbar de la marca (Sí/No viven en styles.css) */
+.score-q-btn.active-mid { background: var(--amber); color: #fff; border-color: var(--amber); }
+
 .diag-summary { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 16px; }
 .diag-summary-card {
   background: var(--surface2);

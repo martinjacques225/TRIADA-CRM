@@ -1,7 +1,10 @@
 // modules/informe-ejecutivo/informe.engine.js
 // Motor de análisis y generación de contenido del Informe Ejecutivo Tríada 360.
-// Sin dependencias: toma un diagnóstico + prospecto + evaluador y produce
-// puntajes, clasificación, hallazgos, oportunidades, plan de acción y narrativa.
+// Toma un diagnóstico + prospecto + evaluador y produce puntajes, clasificación,
+// hallazgos, oportunidades, plan de acción y narrativa.
+// Única dependencia: constantes puras de js/utils.js (sub-dimensiones + escala de
+// respuesta) — nada de red, así que sigue siendo testeable en node.
+import { DIAG_GRUPOS, answerValue } from '../../js/utils.js';
 
 // ── Niveles de madurez (clasificación 0-100) ──
 export const NIVELES = [
@@ -182,8 +185,19 @@ const ESFUERZO_W = { Bajo:3, Medio:2, Alto:1 }; // menor esfuerzo => mayor prior
 function _scoreArea(arr) {
   const a = arr || [];
   if (!a.length) return 0;
-  const yes = a.filter(v => v === true).length;
-  return Math.round((yes / a.length) * 100);
+  const sum = a.reduce((s, v) => s + answerValue(v), 0);
+  return Math.round((sum / a.length) * 100);
+}
+
+// Puntaje por sub-dimensión: parte el arreglo plano del área según DIAG_GRUPOS.
+function _subdimensiones(areaKey, arr) {
+  const grupos = DIAG_GRUPOS[areaKey] || [];
+  let gi = 0;
+  return grupos.map(g => {
+    const slice = (arr || []).slice(gi, gi + g.n);
+    gi += g.n;
+    return { label: g.label, score: _scoreArea(slice) };
+  });
 }
 
 // ── Código único de informe (determinístico y estable) ──
@@ -205,14 +219,18 @@ export function computeInforme(diag, prospecto, evaluador = {}) {
   // 1) Áreas con puntaje, nivel, fortalezas y debilidades
   const areas = AREAS_INFORME.map(a => {
     const arr = diag[a.scoreKey] || [];
-    const yesIdx = arr.map((v, i) => ({ v, i })).filter(x => x.v === true).map(x => x.i);
-    const noIdx  = arr.map((v, i) => ({ v, i })).filter(x => x.v === false).map(x => x.i);
+    // Escala graduada: Sí (true/1) = fortaleza · No (false/0) = hallazgo.
+    // Parcial (0.5) y sin responder (null) no generan fortaleza ni hallazgo;
+    // solo mueven el puntaje (crédito parcial).
+    const yesIdx = arr.map((v, i) => ({ v, i })).filter(x => x.v === true || x.v === 1).map(x => x.i);
+    const noIdx  = arr.map((v, i) => ({ v, i })).filter(x => x.v === false || x.v === 0).map(x => x.i);
     const score = _scoreArea(arr);
     const targetScore = Math.min(95, score + Math.round((100 - score) * 0.6));
     return {
       ...a,
       score, targetScore,
       nivel: nivelFor(score),
+      subdimensiones: _subdimensiones(a.key, arr),
       fortalezas: yesIdx.map(i => STRENGTHS[a.key][i]).filter(Boolean),
       debilidades: noIdx.map(i => FINDINGS[a.key][i]?.titulo).filter(Boolean),
       _noIdx: noIdx,

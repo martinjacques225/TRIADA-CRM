@@ -92,12 +92,20 @@ export function areaIcon(area, size = 16) {
   return (typeof window !== 'undefined' && window.icon) ? window.icon(a.iconName, '', size) : a.icon;
 }
 
-// Puntaje 0-100 de un área a partir de su arreglo de respuestas (true/false/null).
-// Dinámico según la cantidad real de respuestas: soporta áreas de 5, 9 o N preguntas
-// (y diagnósticos viejos) sin romperse. Devuelve 0 si aún no hay respuestas.
+// Valor 0..1 de una respuesta del diagnóstico. Escala graduada:
+//   Sí = 1 · Parcial = 0.5 · No = 0 · sin responder (null) = 0.
+// Retrocompatible con diagnósticos viejos en Sí/No (booleanos): true→1, false→0.
+export const answerValue = (x) =>
+  x === true ? 1 : (typeof x === 'number' ? Math.max(0, Math.min(1, x)) : 0);
+
+// Puntaje 0-100 de un área a partir de su arreglo de respuestas.
+// Dinámico por largo real (5, 9 o N preguntas) y por valor (crédito parcial).
+// Devuelve 0 si aún no hay respuestas.
 export const scorePct = (arr) => {
   const a = arr || [];
-  return a.length ? Math.round((a.filter(x => x === true).length / a.length) * 100) : 0;
+  if (!a.length) return 0;
+  const sum = a.reduce((s, x) => s + answerValue(x), 0);
+  return Math.round((sum / a.length) * 100);
 };
 
 // Diagnóstico 360 — cuestionario oficial del CRM (9 preguntas por área, 27 en total).

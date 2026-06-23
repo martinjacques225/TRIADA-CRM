@@ -119,6 +119,12 @@ function pageResultados(rep) {
           <span class="ad-score" style="color:${a.color}">${a.score}<small>/100</small></span>
           <span class="ad-nivel" style="color:${a.nivel.color};background:${a.nivel.bg}">${a.nivel.id}</span>
         </div>
+        <div class="ad-subdims">
+          ${(a.subdimensiones || []).map(s => `<div class="ad-subdim">
+            <div class="ad-subdim-top"><span class="ad-subdim-name">${esc(s.label)}</span><span class="ad-subdim-score">${s.score}</span></div>
+            <div class="ad-subdim-track"><div class="ad-subdim-fill" style="width:${s.score}%;background:${a.color}"></div></div>
+          </div>`).join('')}
+        </div>
         <div class="ad-cols">
           <div class="ad-col">
             <div class="ad-col-h ad-pos">Fortalezas</div>

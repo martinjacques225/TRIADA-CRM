@@ -175,6 +175,12 @@
 .ad-item-pos { color: #3d7a5e; }
 .ad-item-neg { color: #9c4f44; }
 .ad-empty { font-size: 12px; color: var(--rep-faint); font-style: italic; }
+.ad-subdims { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-bottom: 14px; }
+.ad-subdim-top { display: flex; justify-content: space-between; align-items: baseline; gap: 6px; margin-bottom: 4px; }
+.ad-subdim-name { font-size: 10px; font-weight: 600; color: var(--rep-muted); line-height: 1.2; }
+.ad-subdim-score { font-size: 12px; font-weight: 700; color: var(--rep-ink); font-variant-numeric: tabular-nums; }
+.ad-subdim-track { height: 5px; background: var(--rep-cream-alt); border-radius: 980px; overflow: hidden; }
+.ad-subdim-fill { height: 100%; border-radius: 980px; }
 
 /* ══════════ HALLAZGOS ══════════ */
 .hallazgos-list { display: flex; flex-direction: column; gap: 14px; }
