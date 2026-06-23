@@ -33,7 +33,33 @@
 
 ---
 
-## 1. Estado actual (al 2026-06-17)
+## 1. Estado actual (al 2026-06-23)
+
+### 🆕 Diagnóstico 360 ampliado + Informe Ejecutivo con identidad del sitio (2026-06-23)
+> El usuario pidió ampliar el **contenido** del Diagnóstico 360 (tenía pocas preguntas) y darle al
+> **informe final la identidad del sitio web** (`grupotriada.cl`). Pusheado (`e54be3e`).
+> - **Cuestionario 15 → 27 preguntas** (9 por área, 3 sub-dimensiones c/u). Decisión del usuario:
+>   **profundizar las 3 áreas** (Tec·Ventas·Finanzas, la regla de 3 de la marca), NO agregar áreas.
+>   Temas nuevos: respaldos, ciberseguridad/Ley 21.719, presencia digital, postventa, CAC/LTV,
+>   separación finanzas personales, SII, presupuesto, financiamiento. En `js/utils.js`
+>   (`DIAG_PREGUNTAS` + `DIAG_GRUPOS`).
+> - **Motor del informe (`informe.engine.js`)**: catálogos paralelos fortaleza/hallazgo/oportunidad
+>   expandidos a 9×3, **alineados 1:1 por índice** con las preguntas (si tocas una pregunta, toca su
+>   catálogo). Puntaje **dinámico** vía `scorePct(arr)` (largo real) en `utils.js`; reemplazó el `/5`
+>   hardcodeado en app.js, modals.js, informes.js, diagnosticos.js. **Diagnósticos viejos de 5
+>   respuestas NO rompen** (puntaje ok); solo las etiquetas del informe pueden correrse → rehacerlos
+>   si fueran reales (eran de prueba).
+> - **Modal (`diagnosticos.js` + `.css`)**: preguntas agrupadas por sub-dimensión, tarjetas de
+>   resumen por área y **barra de progreso global**. Sigue en la piel del CRM (themea claro/oscuro/Matrix).
+> - **Informe Ejecutivo re-skineado a la marca del sitio** (`informe.css` reescrito + `view.js` +
+>   `charts.js`): crema + petróleo, **Spectral / Libre Franklin**, color por área
+>   `#3D6E92/#2F8C93/#5E9E7E`, niveles de madurez alineados, portada petróleo con aura, cifras en
+>   Spectral, íconos de área como puntos de color (sin emoji). **Tokens scope-eados a
+>   `.informe-viewer`** → NO afecta al resto del CRM. Fuentes vía Google Fonts (patrón ya usado).
+> - **Formulario público** (`diagnostico-publico.html`) **sin cambios** (queda en 15; decisión del
+>   usuario: máxima conversión). Su scoring también tolera 5 o 9 respuestas (`scorePct`).
+> - **Verificado:** 35/35 tests, `node --check` OK (8 archivos), render de las 8 páginas del informe
+>   y del modal en el preview (claro/oscuro, layout A4 de 2 columnas), 0 errores de consola.
 
 ### 🔎 Nuevo: Auditoría 360 (2026-06-17) — informe + plan-checklist vivo
 > Revisión profunda multi-disciplina (seguridad/OWASP · arquitectura · backend · DB · escalabilidad ·
@@ -187,12 +213,12 @@
 ### Funcionando
 - **Auth / login** ✅ — `js/auth.js` bloquea el CRM hasta autenticar (Supabase Auth). Usuario admin creado y login en producción funcionando.
 - **Pipeline de prospectos** ✅ — kanban + lista, filtros, drag & drop entre etapas. Crear/editar prospecto **arreglado hoy** (ver §6/§7).
-- **Diagnósticos** 🟡 — CRUD conectado; columnas (`lead_id, scores, hallazgos, oportunidades, estado`) coinciden con el esquema real.
+- **Diagnósticos** ✅ — CRUD conectado; columnas (`lead_id, scores, hallazgos, oportunidades, estado`) coinciden con el esquema real. **Cuestionario ampliado a 27 preguntas (9 por área, sub-dimensiones) — 2026-06-23.** `scores` es jsonb → ampliar no migró la base.
 - **Agenda / citas** 🟡 — CRUD conectado; **reescrita como calendario el 2026-06-12** (ver arriba).
 - **Propuestas con ítems + IVA** 🟡 — tabla dinámica de servicios {descripcion, cantidad, precioUnit}; subtotal + IVA 19% + total; guarda en `servicios` (jsonb) y `valor`. Retrocompatible con formato viejo (string[]).
 - **Correlativos en UI** ✅ — `LEAD-/DIA-/PROP-/FAC-000001` ahora se leen de la columna real `codigo` (arreglado hoy; antes leía `row.correlativo` inexistente → nunca aparecían).
-- **Informes / informe ejecutivo (PDF)** 🟡 — motor de reporte; no re-verificado esta sesión.
-- **Landing → Supabase** 🟡 — `01-WEB/Triada_Landing_Conversion.html` + `diagnostico-publico.html` insertan leads vía REST con `origen='landing'` (permitido a anon por RLS).
+- **Informe Ejecutivo 360 (PDF)** ✅ — motor de reporte (8 páginas A4 + gráficos SVG). **Re-skineado a la identidad del sitio web (crema+petróleo, Spectral) — 2026-06-23**, verificado en el preview. La piel vive en `modules/informe-ejecutivo/informe.css` (tokens scope-eados a `.informe-viewer`).
+- **Landing/Web → Supabase** 🔴→✅ (corregido 2026-06-23 vía el sitio `grupotriada.cl`) — **HALLAZGO:** el insert anónimo `origen='landing'` **NUNCA funcionó** (el 1er lead real de la tabla fue `LEAD-000001`, de una prueba de hoy). La policy `leads_public_ins` **faltaba en la base** pese a estar en `schema.sql` (drift esquema↔base); se creó (`supabase/leads_public_ins.sql`) pero **`anon` SIGUE sin poder insertar** aunque `pg_policies` la muestra correcta (INSERT/{anon}/`origen='landing'`) y no hay policies restrictivas. `set role anon; insert…landing` **también falla** (42501) en el SQL Editor; `set role service_role` **SÍ** inserta → el problema es **la RLS de `anon`, no triggers/constraints** (misterio sin resolver). **SOLUCIÓN en producción:** el sitio web (`triada-home`/`grupotriada.cl`) inserta vía **llave secreta `service_role` server-side** (no anon), tras su escudo anti-abuso → además **más seguro** (solo el backend con escudo crea leads). El form en vivo ya crea leads, verificado E2E. **Pendientes CRM:** (1) decidir si vale resolver el misterio de la RLS anon o quedarse con service_role; (2) borrar leads de prueba `LEAD-000001`/`LEAD-000002`. *(El viejo `diagnostico-publico.html` usa la tabla `autodiagnosticos`, cuyo insert anónimo SÍ funciona — policy distinta.)*
 - **Facturación** 🟡 — **arreglado hoy** (decisión del usuario: facturas → `cliente_id`). Módulo reescrito a cliente-céntrico: `facturaToSupa/FromSupa` mapean columnas reales (`cliente_id, monto, pagado, estado, emision, vencimiento`); estados al enum real (`pendiente/parcial/pagado/vencido`, antes mandaba `Pendiente/Enviada` → 22P02); `toFactEstado()` blinda el valor; modal/tabla seleccionan y muestran **cliente**; guardado en try/catch. **Depende de que existan clientes** (ver 🔴 abajo) para ser usable.
 
 ### ✅ Resueltos en la sesión de auditoría (2026-06-11 tarde) — TODOS los 🔴 de la auditoría
@@ -419,6 +445,23 @@ Columnas del calendario agregadas a `citas` y verificadas en vivo. Persistencia 
 ---
 
 ## 7. Bitácora de sesiones (más reciente arriba)
+
+### 2026-06-23 — Diagnóstico 360: cuestionario ampliado + Informe con identidad del sitio
+- El usuario quería más preguntas (cubrir todo el espectro de la empresa) y que el informe final
+  tuviera la identidad del sitio web. Se trabajó en 2 fases y se pusheó junto (`e54be3e`).
+- **Decisiones (taxonomía, vía AskUserQuestion):** profundizar las 3 áreas (no agregar áreas) ·
+  9 preguntas por área (27 total) · el formulario público se queda corto (15).
+- **Fase 1 — cuestionario:** `DIAG_PREGUNTAS` (9×3) + `DIAG_GRUPOS` (sub-dimensiones) en utils.js;
+  catálogos del motor a 9×3 alineados 1:1 por índice; `scorePct()` dinámico reemplaza el `/5` en 4
+  archivos; modal agrupado + barra de progreso; estilos en diagnosticos.css.
+- **Fase 2 — informe:** `informe.css` reescrito con tokens de marca del sitio scope-eados a
+  `.informe-viewer`; colores por área + niveles a la marca en el engine; portada petróleo, Spectral,
+  puntos de color en vez de emoji y gráficos re-skineados en view.js/charts.js.
+- **Verificado:** 35/35 tests · node --check 8/8 · render de las 8 páginas + modal en preview
+  (claro/oscuro) · 0 errores de consola. Diagnósticos viejos de 5 respuestas no rompen (scorePct
+  dinámico); deuda menor: sus etiquetas de informe pueden correrse (eran datos de prueba).
+- ⬜ Opcional futuro: self-hostear Spectral/Libre Franklin para fidelidad tipográfica exacta (hoy via
+  Google Fonts); sincronizar el form público si se decide ampliarlo.
 
 ### 2026-06-17 — Auditoría 360 multi-disciplina + plan-checklist vivo
 - Revisión profunda con el panel enterprise (Principal/Architect/DevSecOps/Backend/DBA/FAANG/CTO/
