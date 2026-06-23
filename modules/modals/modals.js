@@ -1,6 +1,6 @@
 // modules/modals/modals.js
 import { prospectos, diagnosticos, citas, propuestas, clientes, facturas, autodiags, presupuestos } from '../../js/db.js';
-import { escHtml, PIPELINE_STAGES, RUBROS, TAMANOS, DOLORES, ORIGENES, DIAG_AREAS, toast, formatCLP, propEstadoLabel } from '../../js/utils.js';
+import { escHtml, PIPELINE_STAGES, RUBROS, TAMANOS, DOLORES, ORIGENES, DIAG_AREAS, toast, formatCLP, propEstadoLabel, scorePct } from '../../js/utils.js';
 import { attachFormatting, validateRut, validateEmail } from '../../js/format.js';
 import { openMeetingModal } from '../agenda/agenda.js';
 import { renderPropuestaModal } from '../propuestas/propuestas.js';
@@ -164,9 +164,9 @@ export async function openProspectoDetail(id) {
     ${autos.length ? (() => {
       const a = autos[0]; // el más reciente
       const sc = {
-        tec:     Math.round(((a.scoresTec     ||[]).filter(x=>x===true).length/5)*100),
-        ventas:  Math.round(((a.scoresVentas  ||[]).filter(x=>x===true).length/5)*100),
-        finanzas:Math.round(((a.scoresFinanzas||[]).filter(x=>x===true).length/5)*100),
+        tec:     scorePct(a.scoresTec),
+        ventas:  scorePct(a.scoresVentas),
+        finanzas:scorePct(a.scoresFinanzas),
       };
       return `<div style="background:var(--amber-l);border:1px solid var(--amber);border-radius:10px;padding:12px;margin-bottom:16px;font-size:13px">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
@@ -184,9 +184,9 @@ export async function openProspectoDetail(id) {
     ${diags.length===0?`<p style="font-size:13px;color:var(--text3)">Sin diagnósticos aún.</p>`:
       diags.map(d=>{
         const scores = {
-          tec:     Math.round(((d.scoresTec     ||[]).filter(x=>x===true).length/5)*100),
-          ventas:  Math.round(((d.scoresVentas  ||[]).filter(x=>x===true).length/5)*100),
-          finanzas:Math.round(((d.scoresFinanzas||[]).filter(x=>x===true).length/5)*100),
+          tec:     scorePct(d.scoresTec),
+          ventas:  scorePct(d.scoresVentas),
+          finanzas:scorePct(d.scoresFinanzas),
         };
         return `<div style="background:var(--surface2);border-radius:10px;padding:12px;margin-bottom:8px;font-size:13px">
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">

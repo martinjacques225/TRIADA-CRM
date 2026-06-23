@@ -13,12 +13,12 @@ export function ringGauge(score, opts = {}) {
   const v = Math.max(0, Math.min(100, score));
   const off = circ * (1 - v / 100);
   return `<svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}" class="chart-ring" role="img" aria-label="Índice ${score} de 100">
-    <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="#E5E9F0" stroke-width="${stroke}"/>
+    <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="#E0D9C8" stroke-width="${stroke}"/>
     <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${color}" stroke-width="${stroke}"
             stroke-linecap="round" stroke-dasharray="${circ.toFixed(1)}" stroke-dashoffset="${off.toFixed(1)}"
             transform="rotate(-90 ${cx} ${cy})"/>
-    <text x="${cx}" y="${cy - size*0.02}" text-anchor="middle" style="font-size:${(size*0.30).toFixed(0)}px;font-weight:800;fill:#16234A;letter-spacing:-.03em">${score}</text>
-    <text x="${cx}" y="${cy + size*0.14}" text-anchor="middle" style="font-size:${(size*0.075).toFixed(0)}px;font-weight:600;fill:#94A0B6;letter-spacing:.18em">/ 100</text>
+    <text x="${cx}" y="${cy - size*0.02}" text-anchor="middle" style="font-family:'Spectral',Georgia,serif;font-size:${(size*0.31).toFixed(0)}px;font-weight:600;fill:#14222E;letter-spacing:-.03em">${score}</text>
+    <text x="${cx}" y="${cy + size*0.14}" text-anchor="middle" style="font-size:${(size*0.075).toFixed(0)}px;font-weight:600;fill:#8A90A3;letter-spacing:.18em">/ 100</text>
     ${label ? `<text x="${cx}" y="${cy + size*0.27}" text-anchor="middle" style="font-size:${(size*0.072).toFixed(0)}px;font-weight:700;fill:${color};text-transform:uppercase;letter-spacing:.1em">${label}</text>` : ''}
   </svg>`;
 }
@@ -35,20 +35,20 @@ export function radarChart(areas, opts = {}) {
   let grid = '';
   [0.25, 0.5, 0.75, 1].forEach(f => {
     const pts = areas.map((_, i) => { const p = pt(i, f); return `${p.x.toFixed(1)},${p.y.toFixed(1)}`; }).join(' ');
-    grid += `<polygon points="${pts}" fill="${f === 1 ? '#F4F6F8' : 'none'}" stroke="#E5E9F0" stroke-width="1"/>`;
+    grid += `<polygon points="${pts}" fill="${f === 1 ? '#F4F1E9' : 'none'}" stroke="#E0D9C8" stroke-width="1"/>`;
   });
-  const axes = areas.map((_, i) => { const p = pt(i, 1); return `<line x1="${cx}" y1="${cy}" x2="${p.x.toFixed(1)}" y2="${p.y.toFixed(1)}" stroke="#E5E9F0" stroke-width="1"/>`; }).join('');
+  const axes = areas.map((_, i) => { const p = pt(i, 1); return `<line x1="${cx}" y1="${cy}" x2="${p.x.toFixed(1)}" y2="${p.y.toFixed(1)}" stroke="#E0D9C8" stroke-width="1"/>`; }).join('');
   const dataPts = areas.map((a, i) => { const p = pt(i, a.score / 100); return `${p.x.toFixed(1)},${p.y.toFixed(1)}`; }).join(' ');
   const dots = areas.map((a, i) => { const p = pt(i, a.score / 100); return `<circle cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="5" fill="${a.color}" stroke="#fff" stroke-width="2"/>`; }).join('');
   const labels = areas.map((a, i) => {
     const p = pt(i, 1.24);
-    return `<text x="${p.x.toFixed(1)}" y="${p.y.toFixed(1)}" text-anchor="middle" dominant-baseline="middle" style="font-size:12.5px;font-weight:700;fill:#16234A">${a.short}</text>
+    return `<text x="${p.x.toFixed(1)}" y="${p.y.toFixed(1)}" text-anchor="middle" dominant-baseline="middle" style="font-size:12.5px;font-weight:700;fill:#14222E">${a.short}</text>
             <text x="${p.x.toFixed(1)}" y="${(p.y + 16).toFixed(1)}" text-anchor="middle" dominant-baseline="middle" style="font-size:12px;font-weight:700;fill:${a.color}">${a.score}</text>`;
   }).join('');
 
   return `<svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}" class="chart-radar" role="img" aria-label="Radar de madurez por área">
     ${grid}${axes}
-    <polygon points="${dataPts}" fill="rgba(12,124,136,.14)" stroke="#0C7C88" stroke-width="2.5" stroke-linejoin="round"/>
+    <polygon points="${dataPts}" fill="rgba(47,140,147,.16)" stroke="#2F8C93" stroke-width="2.5" stroke-linejoin="round"/>
     ${dots}${labels}
   </svg>`;
 }
@@ -58,7 +58,7 @@ export function areaBar(area) {
   const w = 100;
   return `<div class="chart-areabar">
     <div class="areabar-head">
-      <span class="areabar-name">${area.icon} ${area.label}</span>
+      <span class="areabar-name"><span class="areabar-dot" style="background:${area.color}"></span>${area.label}</span>
       <span class="areabar-score" style="color:${area.color}">${area.score}<small>/100</small></span>
     </div>
     <div class="areabar-track">
@@ -86,25 +86,25 @@ export function impactEffortMatrix(opps, opts = {}) {
   const half = plot / 2;
   const quad = (qx, qy, fill) => `<rect x="${qx}" y="${qy}" width="${half}" height="${half}" fill="${fill}"/>`;
   const quadrants =
-    quad(x0, y0, 'rgba(46,155,115,.10)') +          // top-left: alto impacto, bajo esfuerzo → prioridad
-    quad(x0 + half, y0, 'rgba(240,180,41,.07)') +   // top-right
-    quad(x0, y0 + half, 'rgba(81,96,192,.05)') +   // bottom-left
-    quad(x0 + half, y0 + half, 'rgba(224,96,79,.05)'); // bottom-right
+    quad(x0, y0, 'rgba(94,158,126,.12)') +          // top-left: alto impacto, bajo esfuerzo → prioridad
+    quad(x0 + half, y0, 'rgba(192,137,47,.07)') +   // top-right
+    quad(x0, y0 + half, 'rgba(61,110,146,.05)') +   // bottom-left
+    quad(x0 + half, y0 + half, 'rgba(180,82,74,.05)'); // bottom-right
 
   // Etiqueta "Prioridad" en quick wins
-  const quickLbl = `<text x="${x0 + half/2}" y="${y0 + 18}" text-anchor="middle" style="font-size:10.5px;font-weight:700;fill:#2E9B73;letter-spacing:.1em;text-transform:uppercase">Prioridad</text>`;
+  const quickLbl = `<text x="${x0 + half/2}" y="${y0 + 18}" text-anchor="middle" style="font-size:10.5px;font-weight:700;fill:#5E9E7E;letter-spacing:.1em;text-transform:uppercase">Prioridad</text>`;
 
   // Ejes
   const axes = `
-    <line x1="${x0}" y1="${y0 + plot}" x2="${x0 + plot}" y2="${y0 + plot}" stroke="#D8DCE8" stroke-width="1.5"/>
-    <line x1="${x0}" y1="${y0}" x2="${x0}" y2="${y0 + plot}" stroke="#D8DCE8" stroke-width="1.5"/>
-    <line x1="${x0 + half}" y1="${y0}" x2="${x0 + half}" y2="${y0 + plot}" stroke="#E5E9F0" stroke-width="1" stroke-dasharray="4 4"/>
-    <line x1="${x0}" y1="${y0 + half}" x2="${x0 + plot}" y2="${y0 + half}" stroke="#E5E9F0" stroke-width="1" stroke-dasharray="4 4"/>`;
+    <line x1="${x0}" y1="${y0 + plot}" x2="${x0 + plot}" y2="${y0 + plot}" stroke="#E0D9C8" stroke-width="1.5"/>
+    <line x1="${x0}" y1="${y0}" x2="${x0}" y2="${y0 + plot}" stroke="#E0D9C8" stroke-width="1.5"/>
+    <line x1="${x0 + half}" y1="${y0}" x2="${x0 + half}" y2="${y0 + plot}" stroke="#E5DFD0" stroke-width="1" stroke-dasharray="4 4"/>
+    <line x1="${x0}" y1="${y0 + half}" x2="${x0 + plot}" y2="${y0 + half}" stroke="#E5DFD0" stroke-width="1" stroke-dasharray="4 4"/>`;
 
   // Rótulos de ejes
   const axisLabels = `
-    <text x="${x0 + plot/2}" y="${size - 12}" text-anchor="middle" style="font-size:12px;font-weight:700;fill:#5E6A85">Esfuerzo de implementación →</text>
-    <text x="16" y="${y0 + plot/2}" text-anchor="middle" transform="rotate(-90 16 ${y0 + plot/2})" style="font-size:12px;font-weight:700;fill:#5E6A85">Impacto potencial →</text>`;
+    <text x="${x0 + plot/2}" y="${size - 12}" text-anchor="middle" style="font-size:12px;font-weight:700;fill:#46555F">Esfuerzo de implementación →</text>
+    <text x="16" y="${y0 + plot/2}" text-anchor="middle" transform="rotate(-90 16 ${y0 + plot/2})" style="font-size:12px;font-weight:700;fill:#46555F">Impacto potencial →</text>`;
 
   // Puntos (numerados por prioridad)
   const dots = opps.map((o, idx) => {
@@ -129,17 +129,17 @@ export function maturityMap(overall, target, opts = {}) {
   const h = 150;
   const barY = 64, barH = 22;
   const bands = [
-    { from: 0,  to: 40,  color: '#C04F3F', label: 'Crítico' },
-    { from: 40, to: 60,  color: '#C2871A', label: 'En Riesgo' },
-    { from: 60, to: 80,  color: '#0C7C88', label: 'Funcional' },
-    { from: 80, to: 100, color: '#2E9B73', label: 'Optimizado' },
+    { from: 0,  to: 40,  color: '#B4524A', label: 'Crítico' },
+    { from: 40, to: 60,  color: '#C0892F', label: 'En Riesgo' },
+    { from: 60, to: 80,  color: '#2F8C93', label: 'Funcional' },
+    { from: 80, to: 100, color: '#5E9E7E', label: 'Optimizado' },
   ];
   const px = v => (v / 100) * w;
 
   const segs = bands.map(b => `
     <rect x="${px(b.from)}" y="${barY}" width="${px(b.to - b.from)}" height="${barH}" fill="${b.color}" opacity=".85"/>
-    <text x="${px((b.from + b.to) / 2)}" y="${barY + barH + 18}" text-anchor="middle" style="font-size:11px;font-weight:600;fill:#5E6A85">${b.label}</text>
-    <text x="${px(b.to)}" y="${barY - 8}" text-anchor="middle" style="font-size:10px;fill:#94A0B6">${b.to}</text>`).join('');
+    <text x="${px((b.from + b.to) / 2)}" y="${barY + barH + 18}" text-anchor="middle" style="font-size:11px;font-weight:600;fill:#46555F">${b.label}</text>
+    <text x="${px(b.to)}" y="${barY - 8}" text-anchor="middle" style="font-size:10px;fill:#8A90A3">${b.to}</text>`).join('');
 
   const marker = (v, color, label, above) => {
     const x = px(v);
@@ -156,13 +156,13 @@ export function maturityMap(overall, target, opts = {}) {
 
   // Flecha de evolución
   const arrow = target > overall ? `
-    <line x1="${px(overall)}" y1="${barY + barH/2}" x2="${px(target)}" y2="${barY + barH/2}" stroke="#16234A" stroke-width="2" stroke-dasharray="5 4"/>
+    <line x1="${px(overall)}" y1="${barY + barH/2}" x2="${px(target)}" y2="${barY + barH/2}" stroke="#14222E" stroke-width="2" stroke-dasharray="5 4"/>
     ` : '';
 
   return `<svg width="100%" viewBox="0 0 ${w} ${h}" class="chart-maturity" role="img" aria-label="Mapa de madurez empresarial">
     ${segs}
     ${arrow}
-    ${marker(overall, '#16234A', 'Hoy', true)}
-    ${marker(target, '#2E9B73', 'Objetivo', false)}
+    ${marker(overall, '#14222E', 'Hoy', true)}
+    ${marker(target, '#5E9E7E', 'Objetivo', false)}
   </svg>`;
 }

@@ -17,9 +17,9 @@ const LOGO = `<svg viewBox="0 0 120 120" fill="none" class="report-logo">
 </svg>`;
 
 const LOGO_TRI = `<svg viewBox="0 0 120 120" fill="none" style="width:38px;height:38px">
-  <path d="M26 90 L60 62 L94 90" stroke="#16234A" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/>
-  <path d="M26 73 L60 45 L94 73" stroke="#0C7C88" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/>
-  <path d="M26 56 L60 28 L94 56" stroke="#2E9B73" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M26 90 L60 62 L94 90" stroke="#3D6E92" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M26 73 L60 45 L94 73" stroke="#2F8C93" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M26 56 L60 28 L94 56" stroke="#6BA083" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/>
 </svg>`;
 
 function footer(rep, n) {
@@ -38,9 +38,9 @@ function pageCover(rep) {
     <div class="cover-top">
       <div class="cover-brand">${LOGO}<span>TRÍADA</span></div>
       <div class="cover-areas">
-        <span><i style="background:#5160C0"></i>Tecnología</span>
-        <span><i style="background:#0C7C88"></i>Ventas</span>
-        <span><i style="background:#2E9B73"></i>Finanzas</span>
+        <span><i style="background:#3D6E92"></i>Tecnología</span>
+        <span><i style="background:#2F8C93"></i>Ventas</span>
+        <span><i style="background:#5E9E7E"></i>Finanzas</span>
       </div>
     </div>
 
@@ -114,7 +114,7 @@ function pageResultados(rep) {
     <div class="area-detail-list">
       ${rep.areas.map(a => `<div class="area-detail">
         <div class="ad-head">
-          <span class="ad-icon">${a.icon}</span>
+          <span class="ad-dot" style="background:${a.color}"></span>
           <span class="ad-name">${esc(a.label)}</span>
           <span class="ad-score" style="color:${a.color}">${a.score}<small>/100</small></span>
           <span class="ad-nivel" style="color:${a.nivel.color};background:${a.nivel.bg}">${a.nivel.id}</span>
@@ -136,9 +136,9 @@ function pageResultados(rep) {
 }
 
 const RIESGO_STYLE = {
-  Alto:  { color:'#C04F3F', bg:'#FCEEEC', label:'Riesgo Alto' },
-  Medio: { color:'#C2871A', bg:'#F8F0DD', label:'Riesgo Medio' },
-  Bajo:  { color:'#5160C0', bg:'#ECEEFA', label:'Riesgo Bajo' },
+  Alto:  { color:'#B4524A', bg:'#F6EAE6', label:'Riesgo Alto' },
+  Medio: { color:'#C0892F', bg:'#F4ECDA', label:'Riesgo Medio' },
+  Bajo:  { color:'#3D6E92', bg:'#E7EEF3', label:'Riesgo Bajo' },
 };
 
 function pageHallazgos(rep) {
@@ -153,7 +153,7 @@ function pageHallazgos(rep) {
           <div class="hz-body">
             <div class="hz-top">
               <span class="hz-title">${esc(h.titulo)}</span>
-              <span class="hz-area" style="color:${h.areaColor}">${h.areaIcon || ''} ${esc(h.area)}</span>
+              <span class="hz-area" style="color:${h.areaColor}"><i style="background:${h.areaColor}"></i>${esc(h.area)}</span>
             </div>
             <p class="hz-impacto">${esc(h.impacto)}</p>
             <div class="hz-tags">
@@ -168,14 +168,14 @@ function pageHallazgos(rep) {
 }
 
 const DIF_STYLE = {
-  Bajo:  { color:'#2E9B73', label:'Esfuerzo bajo' },
-  Medio: { color:'#C2871A', label:'Esfuerzo medio' },
-  Alto:  { color:'#C04F3F', label:'Esfuerzo alto' },
+  Bajo:  { color:'#5E9E7E', label:'Esfuerzo bajo' },
+  Medio: { color:'#C0892F', label:'Esfuerzo medio' },
+  Alto:  { color:'#B4524A', label:'Esfuerzo alto' },
 };
 const IMP_STYLE = {
-  Alto:  { color:'#0C7C88', label:'Impacto alto' },
-  Medio: { color:'#5160C0', label:'Impacto medio' },
-  Bajo:  { color:'#94A0B6', label:'Impacto bajo' },
+  Alto:  { color:'#1C7A82', label:'Impacto alto' },
+  Medio: { color:'#3D6E92', label:'Impacto medio' },
+  Bajo:  { color:'#8A90A3', label:'Impacto bajo' },
 };
 
 function pageOportunidades(rep) {
@@ -192,9 +192,9 @@ function pageOportunidades(rep) {
               <div class="op-title">${esc(o.titulo)}</div>
               <div class="op-benef"><strong>Beneficio:</strong> ${esc(o.beneficio)}</div>
               <div class="op-tags">
-                <span class="op-tag" style="color:${m.color}">◆ ${m.label}</span>
-                <span class="op-tag" style="color:${d.color}">⚙ ${d.label}</span>
-                <span class="op-tag" style="color:${o.areaColor}">${esc(o.area)}</span>
+                <span class="op-tag" style="color:${m.color}"><i style="background:${m.color}"></i>${m.label}</span>
+                <span class="op-tag" style="color:${d.color}"><i style="background:${d.color}"></i>${d.label}</span>
+                <span class="op-tag" style="color:${o.areaColor}"><i style="background:${o.areaColor}"></i>${esc(o.area)}</span>
               </div>
             </div>
           </div>`;
@@ -220,23 +220,23 @@ function pageMapa(rep) {
     <div class="mapa-delta">
       <div class="md-box">
         <div class="md-label">Hoy</div>
-        <div class="md-val" style="color:#16234A">${rep.overall}</div>
+        <div class="md-val" style="color:#14222E">${rep.overall}</div>
         <div class="md-nivel" style="color:${rep.nivel.color}">${rep.nivel.id}</div>
       </div>
       <div class="md-arrow">
         <div class="md-potencial">+${rep.potencial}</div>
-        <svg viewBox="0 0 80 24" width="80" height="24"><path d="M2 12 H70 M62 5 L72 12 L62 19" stroke="#2E9B73" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <svg viewBox="0 0 80 24" width="80" height="24"><path d="M2 12 H70 M62 5 L72 12 L62 19" stroke="#5E9E7E" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
         <div class="md-potencial-lbl">de mejora potencial</div>
       </div>
       <div class="md-box">
         <div class="md-label">Objetivo</div>
-        <div class="md-val" style="color:#2E9B73">${rep.target}</div>
+        <div class="md-val" style="color:#5E9E7E">${rep.target}</div>
         <div class="md-nivel" style="color:${rep.nivel.color}">proyectado</div>
       </div>
     </div>
     <div class="mapa-areas">
       ${rep.areas.map(a => `<div class="ma-row">
-        <span class="ma-name">${a.icon} ${a.short}</span>
+        <span class="ma-name"><i style="background:${a.color}"></i>${a.short}</span>
         <div class="ma-track">
           <div class="ma-fill-now" style="width:${a.score}%;background:${a.color}"></div>
           <div class="ma-fill-target" style="left:${a.score}%;width:${Math.max(0, a.targetScore - a.score)}%;background:${a.color}"></div>
@@ -267,9 +267,9 @@ function pagePlan(rep) {
     ${pageHead('06', 'Plan de Acción Recomendado')}
     <p class="page-intro">Hoja de ruta priorizada. Cada acción responde directamente a los hallazgos detectados y avanza de las victorias rápidas hacia los cambios de mayor alcance.</p>
     <div class="plan-grid">
-      ${fase('Corto Plazo', '0 – 30 días', rep.plan.corto, '#2E9B73')}
-      ${fase('Mediano Plazo', '30 – 90 días', rep.plan.mediano, '#0C7C88')}
-      ${fase('Largo Plazo', '90 – 180 días', rep.plan.largo, '#16234A')}
+      ${fase('Corto Plazo', '0 – 30 días', rep.plan.corto, '#5E9E7E')}
+      ${fase('Mediano Plazo', '30 – 90 días', rep.plan.mediano, '#2F8C93')}
+      ${fase('Largo Plazo', '90 – 180 días', rep.plan.largo, '#3D6E92')}
     </div>
     ${footer(rep, 7)}
   </section>`;
@@ -286,10 +286,10 @@ function pageConclusion(rep) {
         <div class="ch-label">Índice actual</div>
         <div class="ch-val" style="color:${rep.nivel.color}">${rep.overall}<small>/100</small></div>
       </div>
-      <svg viewBox="0 0 60 24" width="60" height="24"><path d="M2 12 H48 M40 5 L52 12 L40 19" stroke="#2E9B73" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <svg viewBox="0 0 60 24" width="60" height="24"><path d="M2 12 H48 M40 5 L52 12 L40 19" stroke="#5E9E7E" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
       <div class="ch-right">
         <div class="ch-label">Potencial proyectado</div>
-        <div class="ch-val" style="color:#2E9B73">${rep.target}<small>/100</small></div>
+        <div class="ch-val" style="color:#5E9E7E">${rep.target}<small>/100</small></div>
       </div>
     </div>
     <div class="conclusion-sign">

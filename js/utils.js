@@ -92,27 +92,81 @@ export function areaIcon(area, size = 16) {
   return (typeof window !== 'undefined' && window.icon) ? window.icon(a.iconName, '', size) : a.icon;
 }
 
+// Puntaje 0-100 de un área a partir de su arreglo de respuestas (true/false/null).
+// Dinámico según la cantidad real de respuestas: soporta áreas de 5, 9 o N preguntas
+// (y diagnósticos viejos) sin romperse. Devuelve 0 si aún no hay respuestas.
+export const scorePct = (arr) => {
+  const a = arr || [];
+  return a.length ? Math.round((a.filter(x => x === true).length / a.length) * 100) : 0;
+};
+
+// Diagnóstico 360 — cuestionario oficial del CRM (9 preguntas por área, 27 en total).
+// El orden importa: el motor del Informe Ejecutivo (informe.engine.js) tiene catálogos
+// de fortalezas/hallazgos/oportunidades en paralelo, indexados 1:1 contra estas preguntas.
+// Si agregas/quitas/reordenas una pregunta, ajusta también ese catálogo y DIAG_GRUPOS.
 export const DIAG_PREGUNTAS = {
   tec: [
-    '¿Los sistemas internos están integrados entre sí?',
-    '¿El equipo usa herramientas digitales para su trabajo diario?',
-    '¿Se automatizan tareas repetitivas?',
-    '¿Los datos del negocio están centralizados y accesibles?',
-    '¿Se mide el desempeño digital con indicadores?',
+    // Sistemas y datos
+    '¿Los sistemas internos (ventas, finanzas, operación) están integrados y comparten información?',
+    '¿La información del negocio está centralizada y accesible para quien la necesita?',
+    '¿Se toman decisiones con datos e indicadores, y no solo por intuición?',
+    // Automatización y herramientas
+    '¿El equipo trabaja con herramientas digitales en vez de planillas sueltas o papel?',
+    '¿Se automatizan tareas repetitivas (facturación, reportes, recordatorios)?',
+    // Presencia y seguridad digital
+    '¿La empresa tiene presencia digital activa (web, redes, Google) acorde a su rubro?',
+    '¿Existen respaldos automáticos de la información crítica del negocio?',
+    '¿Los accesos, contraseñas y permisos se gestionan de forma segura?',
+    '¿Hay alguien (interno o externo) a cargo del soporte y la mejora tecnológica?',
   ],
   ventas: [
-    '¿Existe un proceso de ventas documentado y seguido?',
-    '¿Se hace seguimiento estructurado a cada prospecto?',
-    '¿Se mide la tasa de conversión de cotizaciones?',
-    '¿El equipo tiene metas claras y seguimiento regular?',
-    '¿Se usa algún CRM o herramienta de gestión de clientes?',
+    // Generación de demanda
+    '¿La empresa genera prospectos de forma constante (no solo por recomendación o boca a boca)?',
+    '¿Se invierte en marketing o difusión de forma planificada y medida?',
+    // Proceso y cierre
+    '¿Existe un proceso de ventas documentado que el equipo sigue?',
+    '¿Se hace seguimiento estructurado a cada prospecto y cotización?',
+    '¿Se usa un CRM o herramienta para gestionar clientes y oportunidades?',
+    '¿Se mide la tasa de conversión (cuántas cotizaciones se cierran)?',
+    '¿El equipo comercial tiene metas claras y seguimiento regular?',
+    // Clientes y crecimiento
+    '¿Existe un proceso de postventa para retener y hacer crecer a los clientes actuales?',
+    '¿Se conoce cuánto cuesta conseguir un cliente y cuánto deja en el tiempo?',
   ],
   finanzas: [
-    '¿Se conoce el margen real de cada producto o servicio?',
+    // Control y caja
+    '¿Las finanzas del negocio están separadas de las personales del dueño?',
     '¿El flujo de caja se proyecta con al menos 3 meses de anticipación?',
+    '¿Se revisan los resultados (estado de resultados) mensualmente?',
+    // Rentabilidad y costos
+    '¿Se conoce el margen real de cada producto o servicio?',
     '¿Los costos fijos y variables están claramente identificados?',
-    '¿Se revisan los estados financieros mensualmente?',
-    '¿Existen indicadores de rentabilidad por línea de negocio?',
+    '¿Existen indicadores de rentabilidad por línea de negocio o cliente?',
+    // Formalidad y planificación
+    '¿La empresa está al día con sus obligaciones tributarias y contables (SII)?',
+    '¿Existe un presupuesto anual contra el cual se compara el desempeño?',
+    '¿La empresa accede a financiamiento o capital de trabajo cuando lo necesita?',
+  ],
+};
+
+// Sub-dimensiones de cada área, para agrupar las preguntas en el modal del diagnóstico.
+// La suma de `n` debe igualar la cantidad de preguntas del área en DIAG_PREGUNTAS y el
+// orden debe coincidir (se recorren en secuencia sobre el arreglo plano de preguntas).
+export const DIAG_GRUPOS = {
+  tec: [
+    { label: 'Sistemas y datos',              n: 3 },
+    { label: 'Automatización y herramientas', n: 2 },
+    { label: 'Presencia y seguridad digital', n: 4 },
+  ],
+  ventas: [
+    { label: 'Generación de demanda', n: 2 },
+    { label: 'Proceso y cierre',      n: 5 },
+    { label: 'Clientes y crecimiento', n: 2 },
+  ],
+  finanzas: [
+    { label: 'Control y caja',             n: 3 },
+    { label: 'Rentabilidad y costos',      n: 3 },
+    { label: 'Formalidad y planificación', n: 3 },
   ],
 };
 

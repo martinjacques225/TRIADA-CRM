@@ -10,3 +10,56 @@
 .diag-area-mini-head { font-size: 13px; font-weight: 600; display: flex; align-items: center; gap: 5px; }
 .diag-hallazgos { padding-top: 14px; border-top: 1px solid var(--border); }
 .diag-card-actions { display: flex; gap: 8px; margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--border); }
+
+/* ── Modal del Diagnóstico 360 (cuestionario) ─────────────────── */
+.diag-summary { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 16px; }
+.diag-summary-card {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-top: 3px solid var(--area, var(--primary));
+  border-radius: var(--radius-sm);
+  padding: 13px 12px 12px;
+  text-align: center;
+}
+.diag-summary-icon { color: var(--area, var(--primary)); display: flex; justify-content: center; margin-bottom: 5px; }
+.diag-summary-label { font-size: 12.5px; font-weight: 600; color: var(--text2); }
+.diag-summary-score {
+  font-family: var(--serif);
+  font-size: 26px; font-weight: 600; color: var(--ink);
+  margin: 2px 0 9px; line-height: 1; font-variant-numeric: tabular-nums;
+}
+
+.diag-progress { display: flex; align-items: center; gap: 12px; margin: 0 2px 22px; }
+.diag-progress-track { flex: 1; height: 6px; background: var(--surface3); border-radius: 980px; overflow: hidden; }
+.diag-progress-fill {
+  height: 100%; width: 0; border-radius: 980px;
+  background: linear-gradient(90deg, var(--violet), var(--teal) 55%, var(--green));
+  transition: width .45s var(--ease);
+}
+.diag-progress-label { font-size: 11.5px; font-weight: 600; color: var(--text3); white-space: nowrap; font-variant-numeric: tabular-nums; }
+
+.diag-area-block { margin-bottom: 22px; }
+.diag-area-title {
+  display: flex; align-items: center; gap: 9px;
+  font-family: var(--serif); font-size: 17px; font-weight: 600; color: var(--ink);
+  padding-bottom: 9px; margin-bottom: 4px;
+  border-bottom: 1px solid var(--border);
+}
+.diag-area-title-ic { display: inline-flex; }
+
+.diag-subgroup { margin-top: 16px; }
+.diag-subgroup:first-child { margin-top: 8px; }
+.diag-subgroup-label {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 10.5px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase;
+  color: var(--area, var(--text3));
+  margin-bottom: 2px;
+}
+.diag-subgroup-label::before {
+  content: ''; width: 16px; height: 2px; border-radius: 2px;
+  background: currentColor; opacity: .55;
+}
+
+@media (max-width: 560px) {
+  .diag-summary { grid-template-columns: 1fr; }
+}

@@ -21,7 +21,7 @@ async function _setArea(area) {
   }
 }
 import { S } from './js/state.js';
-import { toast, escHtml, PIPELINE_STAGES, DIAG_AREAS, DIAG_PREGUNTAS } from './js/utils.js';
+import { toast, escHtml, PIPELINE_STAGES, DIAG_AREAS, DIAG_PREGUNTAS, scorePct } from './js/utils.js';
 
 import * as ModHome          from './modules/home/home.js';
 import * as ModPipeline      from './modules/pipeline/pipeline.js';
@@ -297,9 +297,9 @@ async function init() {
       const empresa   = prospecto?.empresa || prospecto?.nombre || 'Cliente';
 
       const scores = {
-        tec:      Math.round(((diag.scoresTec      || []).filter(x => x === true).length / 5) * 100),
-        ventas:   Math.round(((diag.scoresVentas   || []).filter(x => x === true).length / 5) * 100),
-        finanzas: Math.round(((diag.scoresFinanzas || []).filter(x => x === true).length / 5) * 100),
+        tec:      scorePct(diag.scoresTec),
+        ventas:   scorePct(diag.scoresVentas),
+        finanzas: scorePct(diag.scoresFinanzas),
       };
 
       _openSimpleModal('Compartir diagnóstico por área', `
@@ -325,7 +325,7 @@ async function init() {
       const empresa   = prospecto?.empresa || prospecto?.nombre || 'Cliente';
       const area      = DIAG_AREAS.find(a => a.id === areaId);
       const areaScores = areaId === 'tec' ? diag?.scoresTec : areaId === 'ventas' ? diag?.scoresVentas : diag?.scoresFinanzas;
-      const score     = Math.round(((areaScores || []).filter(x => x === true).length / 5) * 100);
+      const score     = scorePct(areaScores);
       const nivel     = score >= 80 ? 'Maduro ✅' : score >= 50 ? 'En desarrollo ⚠️' : 'Crítico 🔴';
       const preguntas = DIAG_PREGUNTAS[areaId] || [];
 

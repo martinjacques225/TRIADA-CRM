@@ -5,7 +5,7 @@
 //    propuestas por estado (barras), embudo de conversión, madurez por área.
 //  · Descarga del informe en PDF corporativo.
 import { prospectos, diagnosticos, propuestas, citas, clientes, facturas } from '../../js/db.js';
-import { PIPELINE_STAGES, formatCLP, formatDate, toast, stageIcon, areaIcon, PROP_ESTADOS, escHtml } from '../../js/utils.js';
+import { PIPELINE_STAGES, formatCLP, formatDate, toast, stageIcon, areaIcon, PROP_ESTADOS, escHtml, scorePct } from '../../js/utils.js';
 import { openCorporateDoc } from '../../js/pdf.js';
 
 const _i = (n, s) => (window.icon ? window.icon(n, '', s) : '');
@@ -108,7 +108,7 @@ export async function render() {
   const total = M.todos.length || 1;
   const byStage = PIPELINE_STAGES.map(st => ({ ...st, cnt: M.todos.filter(p => p.estado === st.id).length }));
   const tasa = Math.round(M.todos.filter(p => p.estado === 'Cliente').length / total * 100);
-  const avgScore = (k) => { if (!M.todosD.length) return 0; const v = M.todosD.map(d => Math.round(((d[`scores${k}`] || []).filter(x => x === true).length / 5) * 100)); return Math.round(v.reduce((s, x) => s + x, 0) / v.length); };
+  const avgScore = (k) => { if (!M.todosD.length) return 0; const v = M.todosD.map(d => scorePct(d[`scores${k}`])); return Math.round(v.reduce((s, x) => s + x, 0) / v.length); };
   const madurez = [{ l: 'Tecnología', id: 'tec', v: avgScore('Tec'), c: '#5160C0' }, { l: 'Ventas', id: 'ventas', v: avgScore('Ventas'), c: '#0C7C88' }, { l: 'Finanzas', id: 'finanzas', v: avgScore('Finanzas'), c: '#2E9B73' }];
 
   const facSegs = [

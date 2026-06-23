@@ -1,6 +1,6 @@
 // modules/diagnosticos/diagnosticos.js
 import { diagnosticos, prospectos } from '../../js/db.js';
-import { escHtml, formatDate, DIAG_AREAS, DIAG_PREGUNTAS, areaIcon, toast } from '../../js/utils.js';
+import { escHtml, formatDate, DIAG_AREAS, DIAG_PREGUNTAS, DIAG_GRUPOS, areaIcon, toast, scorePct } from '../../js/utils.js';
 
 const _i = (n, s) => (window.icon ? window.icon(n, '', s) : '');
 
@@ -44,9 +44,9 @@ function _scoreLabel(score) {
 
 function _diagCard(d, p) {
   const scores = {
-    tec:     Math.round(((d.scoresTec     || []).filter(x=>x===true).length / 5) * 100),
-    ventas:  Math.round(((d.scoresVentas  || []).filter(x=>x===true).length / 5) * 100),
-    finanzas:Math.round(((d.scoresFinanzas|| []).filter(x=>x===true).length / 5) * 100),
+    tec:      scorePct(d.scoresTec),
+    ventas:   scorePct(d.scoresVentas),
+    finanzas: scorePct(d.scoresFinanzas),
   };
   const overall = Math.round((scores.tec + scores.ventas + scores.finanzas) / 3);
   const oc = _scoreColor(overall);
@@ -84,60 +84,95 @@ function _diagCard(d, p) {
 
 // Modal para crear/completar diagnóstico
 export function renderDiagnosticoModal(prospectoId, onSave) {
-  let answers = { tec: Array(5).fill(null), ventas: Array(5).fill(null), finanzas: Array(5).fill(null) };
+  // Respuestas dinámicas: tantas casillas como preguntas tenga cada área (hoy 9 c/u).
+  const answers = Object.fromEntries(
+    DIAG_AREAS.map(a => [a.id, Array(DIAG_PREGUNTAS[a.id].length).fill(null)])
+  );
+  const totalPreguntas = DIAG_AREAS.reduce((s, a) => s + DIAG_PREGUNTAS[a.id].length, 0);
 
   const body = document.getElementById('modalBody');
   if (!body) return;
 
   function _renderAnswers() {
-    document.querySelectorAll('[data-area]').forEach(areaEl => {
-      const aId = areaEl.dataset.area;
-      const qs = DIAG_PREGUNTAS[aId];
-      areaEl.innerHTML = qs.map((q, i) => `
-        <div class="score-question">
-          <div class="score-q-text">${escHtml(q)}</div>
-          <div class="score-q-btns">
-            <button type="button" class="score-q-btn ${answers[aId][i]===true?'active-yes':''}" data-a="${aId}" data-i="${i}" data-v="yes">Sí</button>
-            <button type="button" class="score-q-btn ${answers[aId][i]===false?'active-no':''}"  data-a="${aId}" data-i="${i}" data-v="no">No</button>
-          </div>
-        </div>`).join('');
+    DIAG_AREAS.forEach(a => {
+      const cont = body.querySelector(`[data-area="${a.id}"]`);
+      if (!cont) return;
+      const preguntas = DIAG_PREGUNTAS[a.id];
+      const grupos = DIAG_GRUPOS[a.id] || [{ label: '', n: preguntas.length }];
+      let i = 0; // índice plano del área (alineado 1:1 con el motor del informe)
+      cont.innerHTML = grupos.map(g => {
+        let filas = '';
+        for (let k = 0; k < g.n; k++, i++) {
+          filas += `
+            <div class="score-question">
+              <div class="score-q-text" id="${a.id}-q-${i}">${escHtml(preguntas[i])}</div>
+              <div class="score-q-btns" role="radiogroup" aria-labelledby="${a.id}-q-${i}">
+                <button type="button" role="radio" aria-checked="${answers[a.id][i]===true}"  class="score-q-btn ${answers[a.id][i]===true?'active-yes':''}" data-a="${a.id}" data-i="${i}" data-v="yes">Sí</button>
+                <button type="button" role="radio" aria-checked="${answers[a.id][i]===false}" class="score-q-btn ${answers[a.id][i]===false?'active-no':''}"  data-a="${a.id}" data-i="${i}" data-v="no">No</button>
+              </div>
+            </div>`;
+        }
+        return `<div class="diag-subgroup" style="--area:${a.color}">
+          ${g.label ? `<div class="diag-subgroup-label">${escHtml(g.label)}</div>` : ''}
+          ${filas}
+        </div>`;
+      }).join('');
     });
     // Listeners una sola vez; al hacer clic solo se actualiza el botón tocado (sin re-render total)
-    document.querySelectorAll('.score-q-btn').forEach(btn => {
+    body.querySelectorAll('.score-q-btn').forEach(btn => {
       btn.addEventListener('click', () => {
         const a = btn.dataset.a, i = +btn.dataset.i, v = btn.dataset.v === 'yes';
         answers[a][i] = v;
-        btn.parentElement.querySelectorAll('.score-q-btn').forEach(b => b.classList.remove('active-yes', 'active-no'));
+        btn.parentElement.querySelectorAll('.score-q-btn').forEach(b => {
+          b.classList.remove('active-yes', 'active-no');
+          b.setAttribute('aria-checked', 'false');
+        });
         btn.classList.add(v ? 'active-yes' : 'active-no');
+        btn.setAttribute('aria-checked', 'true');
         _updateScores();
       });
     });
   }
 
   function _updateScores() {
+    let respondidas = 0;
     DIAG_AREAS.forEach(area => {
-      const s = Math.round((answers[area.id].filter(x=>x===true).length / 5) * 100);
+      const arr = answers[area.id];
+      respondidas += arr.filter(x => x !== null).length;
+      const s = scorePct(arr);
       const el = document.getElementById(`score_${area.id}`);
       const bar = document.getElementById(`bar_${area.id}`);
       if (el) el.textContent = s + '%';
       if (bar) { bar.style.width = s + '%'; bar.style.background = s>=80?'#2E9B73':s>=50?'#C2871A':'#C04F3F'; }
     });
+    const fill = document.getElementById('diagProgressFill');
+    const lbl  = document.getElementById('diagProgressLabel');
+    if (fill) fill.style.width = Math.round(respondidas / totalPreguntas * 100) + '%';
+    if (lbl)  lbl.textContent  = `${respondidas}/${totalPreguntas} respondidas`;
   }
 
   body.innerHTML = `
-    <div style="display:flex;gap:16px;margin-bottom:18px;flex-wrap:wrap">
-      ${DIAG_AREAS.map(a=>`<div style="flex:1;min-width:120px;background:var(--surface2);border-radius:10px;padding:12px;text-align:center">
-        <div style="margin-bottom:4px;color:${a.color};display:flex;justify-content:center">${areaIcon(a.id,22)}</div>
-        <div style="font-size:13px;font-weight:600;color:${a.color}">${a.label}</div>
-        <div id="score_${a.id}" style="font-size:22px;font-weight:800;color:var(--navy);margin:4px 0">0%</div>
-        <div class="score-bar"><div class="score-fill" id="bar_${a.id}" style="width:0;background:${a.color}"></div></div>
-      </div>`).join('')}
+    <div class="diag-summary">
+      ${DIAG_AREAS.map(a=>`
+        <div class="diag-summary-card" style="--area:${a.color}">
+          <div class="diag-summary-icon">${areaIcon(a.id,22)}</div>
+          <div class="diag-summary-label">${escHtml(a.label)}</div>
+          <div class="diag-summary-score" id="score_${a.id}">0%</div>
+          <div class="score-bar" style="height:7px;margin:0"><div class="score-fill" id="bar_${a.id}" style="width:0;background:${a.color}"></div></div>
+        </div>`).join('')}
     </div>
+
+    <div class="diag-progress">
+      <div class="diag-progress-track"><div class="diag-progress-fill" id="diagProgressFill"></div></div>
+      <span class="diag-progress-label" id="diagProgressLabel">0/${totalPreguntas} respondidas</span>
+    </div>
+
     ${DIAG_AREAS.map(a=>`
-      <div style="margin-bottom:18px">
-        <div style="font-size:14px;font-weight:700;color:var(--text);margin-bottom:10px;display:flex;align-items:center;gap:7px"><span style="color:${a.color};display:inline-flex">${areaIcon(a.id,17)}</span> ${a.label}</div>
+      <section class="diag-area-block">
+        <header class="diag-area-title"><span class="diag-area-title-ic" style="color:${a.color}">${areaIcon(a.id,18)}</span>${escHtml(a.label)}</header>
         <div data-area="${a.id}"></div>
-      </div>`).join('')}
+      </section>`).join('')}
+
     <div class="form-group" style="margin-top:8px">
       <label>Hallazgos clave (uno por línea)</label>
       <textarea id="diagHallazgos" rows="3" placeholder="Ej: No usan CRM&#10;Sin control de costos variables"></textarea>
