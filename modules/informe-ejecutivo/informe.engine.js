@@ -5,6 +5,7 @@
 // Única dependencia: constantes puras de js/utils.js (sub-dimensiones + escala de
 // respuesta) — nada de red, así que sigue siendo testeable en node.
 import { DIAG_GRUPOS, answerValue } from '../../js/utils.js';
+import { benchmarkFor, VALOR_FACTOR } from './informe.benchmarks.js';
 
 // ── Niveles de madurez (clasificación 0-100) ──
 export const NIVELES = [
@@ -200,6 +201,32 @@ function _subdimensiones(areaKey, arr) {
   });
 }
 
+// ── Cuantificación económica (valor en juego) ──
+// Lee la facturación anual estimada del prospecto (numérica). Si no hay número
+// utilizable, devuelve null y el informe no muestra cifras (sin falsa precisión).
+function _parseMonto(v) {
+  if (typeof v === 'number') return v > 0 ? v : 0;
+  const n = parseInt(String(v ?? '').replace(/[^\d]/g, ''), 10);
+  return Number.isFinite(n) && n > 0 ? n : 0;
+}
+function _economia(areas, facturacionEst) {
+  const fact = _parseMonto(facturacionEst);
+  if (!fact) return null;
+  // Por área: valor en juego = facturación × factor del área × brecha de madurez.
+  // Se reporta como rango [50% .. 100%] del techo, para dimensionar (no prometer).
+  const porArea = areas.map(a => {
+    const gap = Math.max(0, (100 - a.score) / 100);
+    const alto = Math.round(fact * (VALOR_FACTOR[a.key] || 0.06) * gap);
+    return { area: a.short, areaKey: a.key, color: a.color, bajo: Math.round(alto * 0.5), alto };
+  });
+  return {
+    fact,
+    porArea,
+    totalBajo: porArea.reduce((s, x) => s + x.bajo, 0),
+    totalAlto: porArea.reduce((s, x) => s + x.alto, 0),
+  };
+}
+
 // ── Código único de informe (determinístico y estable) ──
 export function codigoInforme(diag) {
   const d = new Date(diag.fecha || Date.now());
@@ -241,6 +268,15 @@ export function computeInforme(diag, prospecto, evaluador = {}) {
   const overall = Math.round(areas.reduce((s, a) => s + a.score, 0) / areas.length);
   const nivel = nivelFor(overall);
   const target = Math.round(areas.reduce((s, a) => s + a.targetScore, 0) / areas.length);
+
+  // 2.5) Benchmark (referencia Tríada por rubro/tamaño) + cuantificación ($)
+  const benchmarkContext = !!(prospecto?.rubro || prospecto?.tamano);
+  areas.forEach(a => {
+    a.benchmark = benchmarkFor(a.key, prospecto?.rubro, prospecto?.tamano);
+    a.vsBenchmark = a.score - a.benchmark;
+  });
+  const benchmarkOverall = Math.round(areas.reduce((s, a) => s + a.benchmark, 0) / areas.length);
+  const economia = _economia(areas, prospecto?.facturacionEst);
 
   // 3) HALLAZGOS — todos los "No", ordenados por riesgo, top 5
   let hallazgos = [];
@@ -293,6 +329,7 @@ export function computeInforme(diag, prospecto, evaluador = {}) {
     prospecto,
     evaluador,
     overall, nivel, target, potencial: target - overall,
+    benchmarkContext, benchmarkOverall, economia,
     areas,
     hallazgos: topHallazgos,
     oportunidades: topOportunidades,

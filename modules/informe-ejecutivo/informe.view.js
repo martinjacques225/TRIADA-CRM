@@ -10,6 +10,13 @@ function fmtFechaLarga(iso) {
   return d.toLocaleDateString('es-CL', { day: '2-digit', month: 'long', year: 'numeric' });
 }
 
+// Monto compacto en CLP: ≥1M se muestra en millones ("$50M", "$1.200M").
+function fmtMonto(n) {
+  if (!n) return '—';
+  if (n >= 1e6) return '$' + Math.round(n / 1e6).toLocaleString('es-CL') + 'M';
+  return '$' + Math.round(n).toLocaleString('es-CL');
+}
+
 const LOGO = `<svg viewBox="0 0 120 120" fill="none" class="report-logo">
   <path d="M26 90 L60 62 L94 90" stroke="currentColor" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/>
   <path d="M26 73 L60 45 L94 73" stroke="currentColor" stroke-width="11" stroke-linecap="round" stroke-linejoin="round" opacity=".72"/>
@@ -83,10 +90,22 @@ function pageResumen(rep) {
             <span class="rt-area-dot" style="background:${a.color}"></span>
             <span class="rt-area-name">${a.short}</span>
             <span class="rt-area-score" style="color:${a.color}">${a.score}</span>
+            ${rep.benchmarkContext ? `<span class="rt-area-bench ${a.vsBenchmark >= 0 ? 'pos' : 'neg'}">${a.vsBenchmark >= 0 ? '+' : ''}${a.vsBenchmark} vs ref.</span>` : ''}
           </div>`).join('')}
         </div>
+        ${rep.benchmarkContext ? `<div class="rt-bench-note">Referencia Tríada estimada por rubro y tamaño de empresa.</div>` : ''}
       </div>
     </div>
+    ${rep.economia ? `<div class="resumen-valor">
+      <div class="rv-head">
+        <span class="rv-label">Valor estimado en juego</span>
+        <span class="rv-amount">${fmtMonto(rep.economia.totalBajo)}–${fmtMonto(rep.economia.totalAlto)} <small>/ año</small></span>
+      </div>
+      <div class="rv-areas">
+        ${rep.economia.porArea.map(p => `<span class="rv-chip"><i style="background:${p.color}"></i>${esc(p.area)}: ${fmtMonto(p.bajo)}–${fmtMonto(p.alto)}</span>`).join('')}
+      </div>
+      <div class="rv-note">Estimación de referencia sobre la facturación anual informada y el potencial de mejora de cada área. Dimensiona la oportunidad; no es una promesa de resultado y debe validarse con el cliente.</div>
+    </div>` : ''}
     ${footer(rep, 2)}
   </section>`;
 }
