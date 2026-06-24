@@ -35,6 +35,18 @@
 
 ## 1. Estado actual (al 2026-06-23)
 
+### 🆕 Fix del PDF del Informe 360 — ya no se desordena al imprimir (2026-06-23)
+> El visor se veía bien pero el **PDF se desordenaba por completo** (8 págs → 16, con contenido
+> recortado y piezas flotando en hojas casi en blanco). Causa: el breakpoint móvil
+> `@media (max-width:880px)` del visor se activaba **al imprimir** (una hoja A4 mide ~794px < 880px)
+> → colapsaba todas las grillas a 1 columna. Fix en `modules/informe-ejecutivo/informe.css`:
+> `@media screen and (...)` (nunca aplica en impresión) + `.report-page` sin alto fijo
+> (`min-height` + `break-inside:avoid`, fluye en vez de recortar) + `box-sizing:border-box`
+> explícito (210×297mm exactos). Commit `642faee`, en vivo. **Verificado** renderizando el motor
+> real por Chrome headless en modo impresión. **Trade-off aceptado por el usuario ("dejar fluir"):**
+> diagnósticos densos pasan a 9-10 págs sin recortar nada. Detalle en §7. Cierra el "prueba del PDF
+> real" que quedaba pendiente de B5.
+
 ### 🆕 Diagnóstico 360 ampliado + Informe Ejecutivo con identidad del sitio (2026-06-23)
 > El usuario pidió ampliar el **contenido** del Diagnóstico 360 (tenía pocas preguntas) y darle al
 > **informe final la identidad del sitio web** (`grupotriada.cl`). Pusheado (`e54be3e`).
@@ -445,6 +457,34 @@ Columnas del calendario agregadas a `citas` y verificadas en vivo. Persistencia 
 ---
 
 ## 7. Bitácora de sesiones (más reciente arriba)
+
+### 2026-06-23 (cont. 2) — Fix del PDF del Informe 360 (se desordenaba al imprimir)
+- El usuario reportó que el PDF "se desordena por completo y pierde calidad". **Causa raíz:** el
+  breakpoint responsive del visor `@media (max-width:880px)` se activaba **al imprimir** — una hoja
+  A4 mide ~794px (210mm @96dpi), por debajo de 880px. Eso colapsaba las grillas (medidor+texto,
+  barras+radar, lista+matriz, plan 3 col, meta de portada) a **1 columna**, el contenido desbordaba
+  la página de **alto fijo** (`height:297mm`) y **8 págs se partían en 16**, con piezas en hojas en
+  blanco (p. ej. el código de informe). Commit `642faee` (pusheado, en vivo).
+- **Fix** en `modules/informe-ejecutivo/informe.css` (3 cambios, solo CSS, sin tocar el visor en
+  pantalla): (1) acotar el breakpoint a `@media screen and (...)` → nunca aplica en impresión;
+  (2) `.report-page` **sin `height` fijo** (queda `min-height:297mm` + `break-inside:avoid` en
+  tarjetas) → las páginas densas **fluyen** a otra hoja en vez de **recortar**, y las tarjetas no se
+  parten a la mitad; (3) `box-sizing:border-box` explícito → cada hoja es 210×297mm exactos (no
+  depende del reset global de `styles.css`).
+- **Verificación E2E (no ✅ a ciegas):** se renderizó el **motor real** (`informe.engine.js` +
+  `informe.view.js`) con un diagnóstico denso (peor caso) vía **Chrome headless `--print-to-pdf`**
+  (mismas condiciones que "Guardar como PDF" del navegador), cargando `styles.css` + `informe.css`
+  como el CRM real. Antes: **16 págs reventadas**. Después: **informe limpio**, 8 secciones con su
+  layout correcto, footers 2/8…8/8, **nada recortado** (la ficha de Finanzas que se perdía ahora
+  aparece entera). Las hojas del PDF roto del usuario (16 págs, código en hoja en blanco)
+  confirmaron el síntoma de entrada.
+- ⚠️ **Gotcha de fidelidad de la verificación:** sin cargar `styles.css` (reset
+  `*{box-sizing:border-box}`), `.report-page` cae en content-box y desborda 38mm/hoja → falso
+  positivo de "16 págs". Hay que reproducir el entorno real (reset global) para que la prueba valga.
+- **Trade-off aceptado por el usuario (decidió "dejar fluir"):** en diagnósticos densos (empresas de
+  baja madurez = muchas debilidades), Resultados y Oportunidades fluyen a una 2ª hoja (contenido
+  completo, algo de blanco) → 9-10 págs. ⬜ Pendiente opcional: split **diseñado** de esas 2 páginas
+  para eliminar el espacio en blanco (cambio de layout en `view.js`).
 
 ### 2026-06-23 (cont.) — Informe v2: análisis profundo (graduado · sub-dim · benchmark · $ · narrativa · radar)
 - El usuario pidió llevar el informe "al nivel máximo de calidad, estética y análisis de información".
