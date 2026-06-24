@@ -10,8 +10,12 @@
 export { supabase } from '../../js/supabase.js';
 
 // Capa de datos completa: db.prospectos / diagnosticos / citas / propuestas /
-// profiles / clientes / autodiags … + setCurrentUser / getCurrentUserId / config.
+// profiles / clientes / autodiags … + setCurrentUser / getCurrentUserId / config /
+// clearReadCache.
 export * as db from '../../js/db.js';
+
+// Sincronización en vivo (Supabase Realtime), compartida con el CRM de escritorio.
+export { startRealtime, stopRealtime } from '../../js/realtime.js';
 
 // Helpers + constantes oficiales del CRM (cuestionario 360 EXACTO incluido).
 export {

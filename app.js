@@ -1,6 +1,7 @@
 // app.js — Tríada Diagnóstico CRM orchestrator
-import { initDB, config, prospectos, diagnosticos, propuestas, citas, clientes, facturas, autodiags, importLandingLeads, setCurrentUser, getCurrentUserId } from './js/db.js';
+import { initDB, config, prospectos, diagnosticos, propuestas, citas, clientes, facturas, autodiags, importLandingLeads, setCurrentUser, getCurrentUserId, clearReadCache } from './js/db.js';
 import { requireAuth, signOut } from './js/auth.js';
+import { startRealtime } from './js/realtime.js';
 import { supabase } from './js/supabase.js';
 
 let _profile = null;
@@ -414,6 +415,15 @@ async function init() {
   try { await initReminders(); } catch (err) { console.error('No se pudo iniciar el motor de recordatorios:', err); }
   // Mascota de la compañía (opt-in; se controla desde Configuración)
   try { await initMascota(); } catch (err) { console.error('No se pudo iniciar la mascota:', err); }
+
+  // Sincronización EN VIVO móvil↔PC (Supabase Realtime): cuando otra sesión o
+  // dispositivo crea/edita datos, refresca la vista actual — salvo si hay un modal
+  // abierto, para no interrumpir lo que estás escribiendo. Requiere supabase/realtime.sql.
+  startRealtime(() => {
+    clearReadCache();
+    const m = document.getElementById('modalOverlay');
+    if (!m || !m.classList.contains('open')) refreshView();
+  });
 }
 
 // Escala global de tipografía/UI. Valores: 0.9 / 1 / 1.1 / 1.25

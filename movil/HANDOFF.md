@@ -15,7 +15,8 @@ el 360 y el PDF quedan **idénticos por construcción** (mismos archivos, cero d
 
 - **Diseño fuente:** Claude Design `Tríada CRM Móvil.dc.html` (copia local en
   `Desktop/files/PROYECTO CONSULTORIA/CRM-MOVIL-CLAUDE-DESIGN/Triada-CRM-Movil.dc.html`).
-- **Despliegue (pendiente):** GitHub Pages junto al CRM → `…/TRIADA-CRM/movil/`.
+- **Despliegue ✅ EN VIVO:** https://martinjacques225.github.io/TRIADA-CRM/movil/ (GitHub Pages, push a `main`, commit `38d095a`). Verificado: index 200 + app.js/manifest/icons 200 + los archivos reutilizados del CRM (js/, modules/informe-ejecutivo/) 200. Arranca a login con Supabase real.
+- **Red de seguridad de la barra final:** `index.html` redirige `/…/movil` → `/…/movil/` (si no, `serve`/hosts sin trailing-slash rompen los imports relativos `./js/app.js`).
 
 ## 1. Arquitectura
 
@@ -53,7 +54,8 @@ y `/js/db.js`→`/_preview/mock-db.js` (los mismos mocks del `preview.html` del 
 | 4 | **Propuesta** (ítems + qty/precio + Subtotal→IVA 19%→Total en vivo) | ✅ verificado (math E2E) |
 | 7 | **Perfil** (identidad sync, tema claro/oscuro/matrix con swatch, equipo, cambiar contraseña, cerrar sesión) | ✅ verificado |
 | 7 | trIA real · panel de campana | ⬜ (stubs informativos) |
-| 8 | PWA íconos PNG · **deploy** (GitHub Pages `…/TRIADA-CRM/movil/`) | ⬜ |
+| 8 | PWA íconos PNG (512/192/180 full-bleed) · **deploy** | ✅ EN VIVO https://martinjacques225.github.io/TRIADA-CRM/movil/ |
+| 9 | **App "en todo el sentido":** sync en vivo (Realtime), aviso de actualización, pull-to-refresh, alta de usuarios | ⬜ (ver §6) |
 
 **Responsividad verificada (Preview MCP):** barrido de overflow horizontal en **320px y 360px** sobre las
 13 pantallas → **cero desbordes** (ningún elemento fuera del viewport salvo los chip-rows con scroll propio,
@@ -97,3 +99,23 @@ Falta (no prioritario): **Agenda + Nueva cita**, **Propuesta** (ítems + IVA + c
 **Gotcha nuevo:** el visor tiene `animation:fadeIn` (opacity 0→1); en impresión estática headless NO
 completa → páginas en blanco. Fix del harness: `@media print{*{animation:none!important;transition:none!important}}`
 + `--virtual-time-budget`. (La app real NO sufre esto: al hacer `window.print()` la animación ya terminó.)
+
+## 6. "App en todo el sentido" — sync móvil↔PC · usuarios · actualizaciones
+
+Lo pidió el usuario explícitamente. La arquitectura YA lo entrega en su base (por eso la Opción A):
+
+- **Sincronización:** móvil y PC comparten el **mismo proyecto Supabase** → la MISMA base de datos.
+  Un lead/cita/propuesta/360 capturado en el celular YA está en el CRM de PC y viceversa (misma tabla,
+  sin export/import). HOY se refleja **al refrescar/navegar** (caché de lectura 15s en `js/db.js`, que se
+  invalida en cada escritura). Para que sea **instantáneo/en vivo**: agregar **Supabase Realtime**
+  (suscripción a cambios) en el móvil **y en el escritorio** + habilitar Realtime por tabla en Supabase.
+- **Usuarios:** mismo **Supabase Auth** + mismas **RLS/roles/multitenancy** que el CRM de PC (ya auditados,
+  ver [[project_auditoria_seguridad_enterprise]]). Cada socio entra con su cuenta; `responsable` se asigna
+  solo (`db.setCurrentUser`). Falta: que el usuario termine el alta del equipo en Supabase (invitaciones +
+  SQL de rol), igual que para el escritorio.
+- **Actualizaciones:** PWA + service worker **network-first** → al volver a abrir, trae la versión nueva.
+  Falta: **aviso explícito** "hay versión nueva, recargar" (escuchar `updatefound`/`controllerchange`).
+
+**Backlog para que sea 100% 'app de verdad':** (1) Realtime en móvil+PC, (2) aviso de actualización,
+(3) pull-to-refresh en listas, (4) verificar alta multiusuario end-to-end con cuentas reales,
+(5) trIA real, (6) panel de campana/notificaciones.

@@ -54,6 +54,14 @@ async function _cachedAll(table, fetcher) {
 }
 function _invalidate(table) { _readCache.delete(table); _readInflight.delete(table); }
 
+// Limpia la caché de lecturas (una tabla concreta, o todo si no se pasa nada).
+// Lo usa la sincronización en vivo (js/realtime.js): tras un cambio remoto de
+// otra sesión/dispositivo, la próxima lectura sale fresca de Supabase.
+export function clearReadCache(table) {
+  if (table) { _readCache.delete(table); _readInflight.delete(table); }
+  else { _readCache.clear(); _readInflight.clear(); }
+}
+
 // ─── PROSPECTOS → leads ───────────────────────────────────────
 export const prospectos = {
   getAll:   async ()       => _cachedAll('leads', async () => {

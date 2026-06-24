@@ -2,7 +2,7 @@
 // app.js — controlador de la PWA: arranque, sesión/auth, router, chrome
 // (bottom nav + FABs) y hojas (crear / más / trIA). Una sola instancia: `app`.
 // ============================================================================
-import { store, db, supabase, PIPELINE_STAGES, escHtml } from './core.js';
+import { store, db, supabase, startRealtime, stopRealtime, PIPELINE_STAGES, escHtml } from './core.js';
 import { logo, ic, toast, openSheet, closeSheet, haptic } from './ui.js';
 import * as auth from './screens/auth.js';
 import hoy from './screens/hoy.js';
@@ -72,18 +72,28 @@ const app = {
     closeSheet();
     this.renderScreen();
   },
-  async renderScreen() {
+  async renderScreen(opts = {}) {
     const scr = SCREENS[store.screen] || SCREENS.hoy;
     const host = document.getElementById('screen');
-    host.scrollTop = 0;
+    const keepScroll = opts.preserveScroll ? host.scrollTop : 0;
     try {
       host.innerHTML = await scr.render(this);
     } catch (err) {
       console.error('render', store.screen, err);
       host.innerHTML = `<div class="pad"><div class="card" style="margin-top:60px;text-align:center;padding:30px"><div class="empty__t">Algo falló</div><div class="empty__d">${(err && err.message) || 'Error al cargar.'}</div><button class="btn btn--ghost btn--sm" onclick="location.reload()">Reintentar</button></div></div>`;
     }
+    host.scrollTop = keepScroll;
     if (scr.mount) try { scr.mount(this); } catch (err) { console.error('mount', store.screen, err); }
     this.renderChrome(scr.chrome !== false);
+  },
+
+  // Cambio remoto (otro dispositivo/sesión) vía Realtime: refresca la caché y, si
+  // estás en una vista de LISTA, la re-pinta en vivo (conservando el scroll). En
+  // formularios/detalle NO interrumpe lo que estás haciendo.
+  _onRemoteChange() {
+    try { db.clearReadCache(); } catch (_) {}
+    const LIVE = ['hoy', 'leads', 'pipeline', 'agenda'];
+    if (LIVE.includes(store.screen)) this.renderScreen({ preserveScroll: true });
   },
 
   // — Chrome (bottom nav + FABs) —
@@ -212,6 +222,7 @@ const app = {
       const team = await db.profiles.getAll();
       store.profile = team.find((p) => p.id === user.id) || team[0] || null;
     } catch (_) { store.profile = null; }
+    startRealtime(() => this._onRemoteChange()); // sincronización en vivo móvil↔PC
     const dest = this._bootScreen || 'hoy';
     const params = this._bootParams || {};
     this._bootScreen = null; this._bootParams = {};
@@ -244,6 +255,7 @@ const app = {
     return { error };
   },
   async signOut() {
+    stopRealtime();
     try { await supabase.auth.signOut(); } catch (_) {}
     store.user = null; store.profile = null; this._history = [];
     return this.navigate('login');
