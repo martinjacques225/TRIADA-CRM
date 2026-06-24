@@ -104,7 +104,7 @@ export default {
     const body = host.querySelector('#agBody');
     const refresh = () => { body.innerHTML = _view === 'lista' ? listaHtml() : diaHtml(); };
 
-    host.querySelector('#agBell').addEventListener('click', () => toast('Recordatorios próximos: próxima fase', 'info'));
+    host.querySelector('#agBell').addEventListener('click', () => app.openCampana());
     host.querySelectorAll('.ag-seg').forEach((b) => b.addEventListener('click', () => {
       _view = b.getAttribute('data-view');
       host.querySelectorAll('.ag-seg').forEach((s) => s.classList.toggle('seg__item--on', s.getAttribute('data-view') === _view));

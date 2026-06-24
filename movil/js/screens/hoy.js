@@ -71,7 +71,7 @@ export default {
       <header class="hdr hdr--bar">
         <div style="display:flex;align-items:center;gap:9px">${logo(26)}<span class="wordmark" style="font-size:19px">Tríada<span class="brand-dot">·</span></span></div>
         <div style="display:flex;align-items:center;gap:6px">
-          <button class="icon-btn" id="bell" style="width:40px;height:40px" aria-label="Recordatorios">${ic('bell', { size: 20 })}<span class="dot-badge"></span></button>
+          <button class="icon-btn" id="bell" style="width:40px;height:40px" aria-label="Recordatorios">${ic('bell', { size: 20 })}${(citasHoy.length || porContactar) ? '<span class="dot-badge"></span>' : ''}</button>
           <button class="avatar" data-go="perfil" style="width:40px;height:40px;font-size:14px">${e(ini)}</button>
         </div>
       </header>
@@ -110,7 +110,7 @@ export default {
   mount(app) {
     const host = document.getElementById('screen');
     host.querySelectorAll('[data-go]').forEach((el) => el.addEventListener('click', () => app.navigate(el.getAttribute('data-go'))));
-    host.querySelector('#bell')?.addEventListener('click', () => toast('Panel de recordatorios: próxima fase', 'info'));
+    host.querySelector('#bell')?.addEventListener('click', () => app.openCampana());
     host.querySelectorAll('[data-cita]').forEach((el) => el.addEventListener('click', () => app.navigate('agenda')));
     host.querySelectorAll('[data-lead]').forEach((el) => el.addEventListener('click', () => app.navigate('ficha', { leadId: el.getAttribute('data-lead') })));
     host.querySelectorAll('.qa').forEach((b) => b.addEventListener('click', (ev) => {

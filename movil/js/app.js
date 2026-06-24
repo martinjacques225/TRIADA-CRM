@@ -5,6 +5,7 @@
 import { store, db, supabase, startRealtime, stopRealtime, PIPELINE_STAGES, escHtml } from './core.js';
 import { logo, ic, toast, openSheet, closeSheet, haptic } from './ui.js';
 import { openTria as openTriaSheet } from './tria.js';
+import { openCampana as openCampanaSheet } from './campana.js';
 import * as auth from './screens/auth.js';
 import hoy from './screens/hoy.js';
 import leads from './screens/leads.js';
@@ -166,6 +167,7 @@ const app = {
     });
   },
   openTria() { openTriaSheet(this); },
+  openCampana() { openCampanaSheet(this); },
 
   // Hoja "cambiar etapa" (usada por Ficha y Pipeline). onChange(estadoNuevo).
   openEtapaSheet(lead, onChange) {
