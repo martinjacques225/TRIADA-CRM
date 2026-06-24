@@ -160,6 +160,8 @@
 .tria-tag{font-size:10px;font-weight:700;letter-spacing:.12em;color:var(--teal);text-transform:uppercase}
 .tria-ia{font-size:9px;font-weight:700;letter-spacing:.08em;color:var(--text3);background:var(--surface2);padding:1px 6px;border-radius:20px}
 .tria-breath{display:flex;animation:triaBreath 3.6s ease-in-out infinite}
+.tria-dot{width:7px;height:7px;border-radius:50%;background:var(--text3);animation:triaDotB .9s infinite ease-in-out}
+@keyframes triaDotB{0%,60%,100%{opacity:.35;transform:translateY(0)}30%{opacity:1;transform:translateY(-3px)}}
 
 /* ── Toast ───────────────────────────────────────────────────── */
 #toast-root{position:absolute;left:0;right:0;bottom:calc(94px + env(safe-area-inset-bottom));z-index:200;

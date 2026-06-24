@@ -4,6 +4,7 @@
 // ============================================================================
 import { store, db, supabase, startRealtime, stopRealtime, PIPELINE_STAGES, escHtml } from './core.js';
 import { logo, ic, toast, openSheet, closeSheet, haptic } from './ui.js';
+import { openTria as openTriaSheet } from './tria.js';
 import * as auth from './screens/auth.js';
 import hoy from './screens/hoy.js';
 import leads from './screens/leads.js';
@@ -146,34 +147,25 @@ const app = {
   openMore() {
     const row = (action, icon, label) => `
       <button class="sheet-link" data-go="${action}">${ic(icon, { size: 20 })}<span>${label}</span>${ic('next', { size: 18, sw: 2 })}</button>`;
+    const standalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
+    const installRow = standalone ? '' : `<button class="sheet-link" data-install style="color:var(--teal)">${ic('share', { size: 20 })}<span style="color:var(--teal)">Instalar app</span>${ic('next', { size: 18, sw: 2 })}</button>`;
     openSheet(`
       <div class="sheet__body">
         <div class="sheet__title">Más</div>
+        ${installRow}
         ${row('perfil', 'user', 'Mi perfil')}
         ${row('propuesta', 'fileText', 'Propuestas')}
         ${row('diagnostico', 'diag360', 'Diagnóstico 360')}
         ${row('overview', 'grid', 'Mapa de pantallas')}
       </div>`, {
-      onMount: (el) => el.querySelectorAll('[data-go]').forEach((b) =>
-        b.addEventListener('click', () => this.navigate(b.getAttribute('data-go')))),
-    });
-  },
-  openTria() {
-    const chip = (t) => `<button class="chip" data-tria="${t}">${t}</button>`;
-    openSheet(`
-      <div style="display:flex;align-items:center;gap:12px;padding:6px 20px 14px;border-bottom:1px solid var(--border)">
-        <div style="width:46px;height:46px;border-radius:14px;background:linear-gradient(150deg,var(--navy),var(--navy-d));display:flex;align-items:center;justify-content:center;flex:none"><span class="tria-breath">${logo(24, { light: true, sw: 12 })}</span></div>
-        <div style="flex:1"><div style="display:flex;align-items:center;gap:7px"><span class="serif" style="font-size:18px;font-weight:600;color:var(--ink)">trIA</span><span class="tria-ia">ASISTENTE IA</span></div><div style="font-size:12px;color:var(--text2)">Listo para ayudarte en terreno</div></div>
-        <button data-close style="width:34px;height:34px;border-radius:50%;border:0;background:var(--surface2);color:var(--text2);cursor:pointer;display:flex;align-items:center;justify-content:center">${ic('x', { size: 17, sw: 2 })}</button>
-      </div>
-      <div style="padding:16px 20px;font-size:14px;color:var(--text2);line-height:1.5;min-height:80px">Hola ${(store.profile && store.profile.nombre || 'Martín').split(' ')[0]}. Soy <b style="color:var(--ink)">trIA</b>. ¿En qué te ayudo? <span style="color:var(--text3)">(El asistente llega en una fase próxima.)</span></div>
-      <div class="chip-row" style="padding:0 20px 14px">${['Resume este prospecto', 'Próximos pasos del pipeline', 'Redacta WhatsApp de seguimiento', 'Prepárame la reunión de hoy'].map(chip).join('')}</div>`, {
       onMount: (el) => {
-        el.querySelector('[data-close]').addEventListener('click', closeSheet);
-        el.querySelectorAll('[data-tria]').forEach((b) => b.addEventListener('click', () => { closeSheet(); toast('trIA llega en una fase próxima', 'info'); }));
+        el.querySelectorAll('[data-go]').forEach((b) => b.addEventListener('click', () => this.navigate(b.getAttribute('data-go'))));
+        const inst = el.querySelector('[data-install]');
+        if (inst) inst.addEventListener('click', () => this.promptInstall());
       },
     });
   },
+  openTria() { openTriaSheet(this); },
 
   // Hoja "cambiar etapa" (usada por Ficha y Pipeline). onChange(estadoNuevo).
   openEtapaSheet(lead, onChange) {
@@ -322,9 +314,34 @@ const app = {
       ind.classList.remove('ptr--spinning', 'ptr--ready');
     });
   },
+
+  // "Instalar app": prompt nativo en Android; instrucciones paso a paso en iOS.
+  async promptInstall() {
+    closeSheet();
+    const standalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
+    if (standalone) { toast('Ya estás usando la app instalada ✓', 'ok'); return; }
+    if (this._installPrompt) {
+      this._installPrompt.prompt();
+      try { await this._installPrompt.userChoice; } catch (_) {}
+      this._installPrompt = null;
+      return;
+    }
+    const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+    const step = (n, html) => `<div style="display:flex;gap:11px;align-items:flex-start;margin-bottom:12px"><span style="width:24px;height:24px;border-radius:50%;background:var(--teal);color:#fff;font-weight:700;font-size:12px;display:flex;align-items:center;justify-content:center;flex:none">${n}</span><div style="flex:1;font-size:13.5px;color:var(--text);line-height:1.5">${html}</div></div>`;
+    const steps = isIOS
+      ? step(1, 'Abre este enlace <b>en Safari</b> (en iPhone solo Safari puede instalar).') + step(2, 'Toca <b>Compartir</b> (el cuadro con la flecha ↑, abajo).') + step(3, 'Baja y toca <b>"Agregar a inicio"</b> → <b>Agregar</b>.')
+      : step(1, 'Abre este enlace <b>en Chrome</b>.') + step(2, 'Toca el menú <b>⋮</b> (arriba a la derecha).') + step(3, 'Toca <b>"Instalar aplicación"</b> (o "Agregar a pantalla de inicio").');
+    openSheet(`<div class="sheet__body"><div class="sheet__title">Instalar Tríada CRM</div><div style="font-size:13px;color:var(--text2);margin:-6px 0 16px">No se descarga de una tienda: se instala desde el navegador.</div>${steps}<button class="btn btn--primary btn--block" data-close style="margin-top:6px">Entendido</button></div>`, {
+      onMount: (el) => el.querySelector('[data-close]').addEventListener('click', closeSheet),
+    });
+  },
 };
 
 window._m = app; // acceso para depurar en consola
+
+// Captura el evento de instalación (Android/Chrome) para ofrecer un botón "Instalar app".
+window.addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); app._installPrompt = e; });
+window.addEventListener('appinstalled', () => { app._installPrompt = null; toast('App instalada ✓', 'ok'); });
 
 // ── Arranque ────────────────────────────────────────────────────────────────
 (async function boot() {

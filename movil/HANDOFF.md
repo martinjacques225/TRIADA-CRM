@@ -57,7 +57,8 @@ y `/js/db.js`→`/_preview/mock-db.js` (los mismos mocks del `preview.html` del 
 | 8 | PWA íconos PNG (512/192/180 full-bleed) · **deploy** | ✅ EN VIVO https://martinjacques225.github.io/TRIADA-CRM/movil/ |
 | 9a | **Sync EN VIVO (Supabase Realtime)** móvil↔PC — `js/realtime.js` compartido | ✅ DESPLEGADO (commit `ffe54f1`); **inerte hasta correr `supabase/realtime.sql`** |
 | 9b | **Aviso de "nueva versión"** (SW espera + banner) · **pull-to-refresh** en listas | ✅ verificado en Preview |
-| 9c | Alta multiusuario (cuentas reales) · trIA real · campana | ⬜ |
+| 9c | **trIA real** (`movil/js/tria.js`, reglas sobre datos reales: reunión de hoy / pasos del pipeline / resumen / redactar+enviar WhatsApp) · **botón "Instalar app"** (prompt nativo Android + instrucciones iOS, en menú Más) | ✅ verificado |
+| 9d | Alta multiusuario verificada (cuentas reales) · campana de recordatorios | ⬜ |
 
 **Responsividad verificada (Preview MCP):** barrido de overflow horizontal en **320px y 360px** sobre las
 13 pantallas → **cero desbordes** (ningún elemento fuera del viewport salvo los chip-rows con scroll propio,
