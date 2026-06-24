@@ -1,0 +1,57 @@
+/* ============================================================================
+   Tríada CRM Móvil · tokens.css
+   Fuente única de marca de la PWA. Tokens EXACTOS del diseño de Claude Design
+   (claro · oscuro · matrix) — alineados con el sistema de marca del escritorio.
+   No mezclar con la piel del informe (esa usa la marca del sitio a propósito).
+   ============================================================================ */
+:root{
+  --bg:#F4F6F8;--surface:#FFFFFF;--surface2:#F0F2F6;--surface3:#E7EBF1;--border:#E5E9F0;--border2:#D6DCE6;
+  --ink:#142037;--text:#2A3553;--text2:#5E6A85;--text3:#94A0B6;
+  --primary:#0C7C88;--primary-d:#0A626C;--primary-l:#E2F0F1;--teal:#0C7C88;--teal-d:#0A626C;--teal-l:#E2F0F1;
+  --navy:#16234A;--navy-d:#0F1933;--navy-l:#E9ECF4;--green:#2E9B73;--green-l:#E4F2EB;--violet:#5160C0;--violet-l:#ECEEFA;
+  --amber:#C2871A;--amber-l:#F8F0DD;--danger:#C04F3F;--danger-l:#F9E9E6;--brass:#B8893B;--muted:#94A0B6;
+  --shadow-sm:0 1px 2px rgba(20,32,55,.05),0 1px 1px rgba(20,32,55,.03);
+  --shadow:0 4px 14px rgba(20,32,55,.07),0 1px 3px rgba(20,32,55,.05);
+  --shadow-lg:0 18px 48px rgba(20,32,55,.16),0 6px 16px rgba(20,32,55,.08);
+  --ring:0 0 0 3px rgba(12,124,136,.16);
+  --radius:14px;--radius-sm:10px;--radius-lg:20px;--radius-xs:7px;
+  --font:'Hanken Grotesk',-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;
+  --serif:'Newsreader',Georgia,'Times New Roman',serif;
+  --ease:cubic-bezier(.22,.61,.36,1);--tr:.18s cubic-bezier(.4,0,.2,1);
+}
+[data-theme="dark"]{--bg:#0B1220;--surface:#111A2C;--surface2:#16223A;--surface3:#1E2C48;--border:#233351;--border2:#2E4063;--ink:#ECF1FA;--text:#C5D0E4;--text2:#8C99B5;--text3:#5C6B8A;--primary:#2BBCC4;--primary-d:#1E9AA2;--primary-l:#0E2E33;--teal:#2BBCC4;--teal-d:#1E9AA2;--teal-l:#0E2E33;--navy:#2C3E72;--navy-l:#1A2742;--green:#3FB587;--green-l:#112A21;--violet:#7C8AE0;--violet-l:#1A2042;--amber:#DDA73A;--amber-l:#2A220C;--danger:#E0705F;--danger-l:#2E1512;--brass:#CBA15A;--shadow-sm:0 1px 2px rgba(0,0,0,.3);--shadow:0 4px 16px rgba(0,0,0,.4);--shadow-lg:0 18px 50px rgba(0,0,0,.55);--ring:0 0 0 3px rgba(43,188,196,.22);}
+[data-theme="matrix"]{--bg:#04080A;--surface:#07110E;--surface2:#0A1813;--surface3:#0F231A;--border:#16382A;--border2:#1F4E39;--ink:#C6FBD7;--text:#7CE6A2;--text2:#4FB87C;--text3:#2F7A50;--primary:#2EE66B;--primary-d:#1FB851;--primary-l:#0B2616;--teal:#2EE66B;--teal-d:#1FB851;--teal-l:#0B2616;--navy:#3DF07A;--navy-l:#0B2616;--green:#39FF6A;--green-l:#0B2616;--violet:#4FE0A0;--violet-l:#0B2616;--amber:#A8E04F;--amber-l:#0B2616;--danger:#FF6B5C;--danger-l:#0B2616;--brass:#6FE6A0;--shadow-sm:0 1px 2px rgba(0,0,0,.5);--shadow:0 4px 18px rgba(0,40,15,.55);--shadow-lg:0 18px 50px rgba(0,0,0,.7);--ring:0 0 0 3px rgba(46,230,107,.30);}
+
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;height:100%}
+html{-webkit-text-size-adjust:100%}
+body{
+  background:var(--bg);color:var(--text);
+  font-family:var(--font);font-size:15px;line-height:1.45;
+  -webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;
+  overscroll-behavior-y:none;
+  transition:background .3s var(--ease),color .3s var(--ease);
+}
+button,input,textarea,select{font-family:inherit}
+input,textarea{font-size:16px} /* evita el zoom de iOS al enfocar (<16px lo gatilla) */
+a{color:inherit;text-decoration:none}
+h1,h2,h3,h4,p{margin:0}
+::-webkit-scrollbar{width:0;height:0;display:none}
+*{scrollbar-width:none}
+
+/* ── Animaciones de marca (idénticas al diseño) ── */
+@keyframes triaDraw{to{stroke-dashoffset:0}}
+@keyframes triaBreath{0%,100%{transform:translateY(0) scale(1);opacity:.94}50%{transform:translateY(-1.5px) scale(1.02);opacity:1}}
+@keyframes triaThink{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}
+@keyframes triaGlow{0%{opacity:0;transform:scale(.5)}45%{opacity:.6}100%{opacity:0;transform:scale(1.6)}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes scrn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+@keyframes shimmer{0%{background-position:-180px 0}100%{background-position:calc(180px + 100%) 0}}
+@keyframes sheetIn{from{opacity:0;transform:translateY(40px)}to{opacity:1;transform:translateY(0)}}
+@keyframes overlayIn{from{opacity:0}to{opacity:1}}
+@keyframes toastIn{0%{opacity:0;transform:translateY(14px) scale(.96)}12%{opacity:1;transform:translateY(0) scale(1)}88%{opacity:1;transform:translateY(0) scale(1)}100%{opacity:0;transform:translateY(-6px)}}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes hotPulse{0%,100%{box-shadow:0 0 0 0 rgba(192,79,63,.45)}50%{box-shadow:0 0 0 4px rgba(192,79,63,0)}}
+@keyframes menuPop{from{opacity:0;transform:translateY(10px) scale(.95)}to{opacity:1;transform:translateY(0) scale(1)}}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.001ms !important;animation-iteration-count:1 !important;transition-duration:.001ms !important;scroll-behavior:auto !important}}

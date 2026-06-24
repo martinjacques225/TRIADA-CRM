@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1, user-scalable=no">
+  <meta name="description" content="Tríada CRM Móvil — captura leads, agenda, propuestas y Diagnóstico 360 en terreno.">
+  <meta name="theme-color" content="#0C7C88">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Tríada CRM">
+  <title>Tríada CRM Móvil</title>
+
+  <!-- Asegura la barra final en la URL de la carpeta (p.ej. /…/movil → /…/movil/)
+       para que los imports relativos (./js/app.js) resuelvan en cualquier host /
+       dev-server. GitHub Pages ya la agrega; esto es red de seguridad. -->
+  <script>
+    (function () {
+      var p = location.pathname, last = p.substring(p.lastIndexOf('/') + 1);
+      if (p && !p.endsWith('/') && last.indexOf('.') === -1) location.replace(p + '/' + location.search + location.hash);
+    })();
+  </script>
+
+  <!-- Captura el tipo de enlace de autenticación (invitación / recuperación) ANTES
+       de que el cliente Supabase consuma y limpie el hash de la URL. -->
+  <script>
+    (function () {
+      var h = window.location.hash || '';
+      var m = h.match(/[#&]type=(invite|recovery|signup|email_change)/);
+      window.__authFlow = m ? m[1] : null;
+    })();
+  </script>
+
+  <link rel="manifest" href="./manifest.json">
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+  <link rel="preconnect" href="https://pqrjndirqtucoumijben.supabase.co" crossorigin>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700;800&family=Newsreader:opsz,wght@6..72,400;6..72,500;6..72,600&display=swap" rel="stylesheet">
+  <link rel="icon" type="image/svg+xml" href="./icon.svg">
+  <link rel="apple-touch-icon" href="./icon-180.png">
+  <link rel="stylesheet" href="./css/tokens.css">
+  <link rel="stylesheet" href="./css/app.css">
+  <!-- Piel del Informe Ejecutivo 360 (reutilizada del CRM; scope-eada a .informe-viewer) -->
+  <link rel="stylesheet" href="../modules/informe-ejecutivo/informe.css">
+</head>
+<body>
+  <div id="app" data-theme="light">
+    <main id="screen"></main>
+    <div id="chrome"></div>
+    <div id="sheet-root"></div>
+    <div id="toast-root"></div>
+  </div>
+
+  <!-- Biblioteca de íconos de línea (window.icon) del CRM — opcional, fallback -->
+  <script src="../js/icons.js"></script>
+  <script type="module" src="./js/app.js"></script>
+</body>
+</html>
