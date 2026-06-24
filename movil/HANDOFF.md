@@ -1,131 +1,96 @@
 # HANDOFF — Tríada CRM Móvil (PWA de terreno)
 
-> Documento vivo. Estado de la construcción de la app móvil.
-> Última actualización: **2026-06-24**
+> Documento vivo · fuente de verdad del proyecto.
+> Última actualización: **2026-06-24** · Estado: **✅ COMPLETO y DESPLEGADO**
 
 ---
 
-## 0. Qué es
+## 0. Qué es y dónde está
 
-PWA **mobile-first instalable** = compañero de terreno del CRM de Diagnóstico 360.
-Vive en **`movil/` DENTRO del repo `TRIADA-CRM`** y reutiliza *literalmente* la capa de
-datos del escritorio (mismo Supabase `pqrjndirqtucoumijben`) + el cuestionario 360 y
-(pronto) el motor del informe PDF. Decisión del usuario: subcarpeta, no repo aparte →
-el 360 y el PDF quedan **idénticos por construcción** (mismos archivos, cero duplicación).
+PWA **mobile-first instalable** = compañero de terreno del CRM de Diagnóstico 360. Vive en
+**`movil/` DENTRO del repo `TRIADA-CRM`** y reutiliza *literalmente* la capa de datos del
+escritorio (mismo Supabase `pqrjndirqtucoumijben`), el cuestionario 360 (`js/utils.js`) y el
+motor del informe PDF (`modules/informe-ejecutivo/`) → el **360 y el PDF son idénticos al de PC
+por construcción** (mismos archivos, cero duplicación). Decisión del usuario: subcarpeta, no repo aparte.
 
-- **Diseño fuente:** Claude Design `Tríada CRM Móvil.dc.html` (copia local en
-  `Desktop/files/PROYECTO CONSULTORIA/CRM-MOVIL-CLAUDE-DESIGN/Triada-CRM-Movil.dc.html`).
-- **Despliegue ✅ EN VIVO:** https://martinjacques225.github.io/TRIADA-CRM/movil/ (GitHub Pages, push a `main`, commit `38d095a`). Verificado: index 200 + app.js/manifest/icons 200 + los archivos reutilizados del CRM (js/, modules/informe-ejecutivo/) 200. Arranca a login con Supabase real.
-- **Red de seguridad de la barra final:** `index.html` redirige `/…/movil` → `/…/movil/` (si no, `serve`/hosts sin trailing-slash rompen los imports relativos `./js/app.js`).
+- **EN VIVO:** https://martinjacques225.github.io/TRIADA-CRM/movil/ (GitHub Pages, push a `main`).
+- **Instalable:** no se baja de tienda; se "Agrega a inicio" desde el navegador (botón "Instalar app" en menú Más).
+- **Diseño fuente:** Claude Design `Tríada CRM Móvil.dc.html` (copia local en `Desktop/files/PROYECTO CONSULTORIA/CRM-MOVIL-CLAUDE-DESIGN/Triada-CRM-Movil.dc.html`).
+- **Mismo equipo, misma cuenta, mismos datos y seguridad (RLS)** que el CRM de escritorio.
 
 ## 1. Arquitectura
 
 ```
 movil/
-  index.html         · app real (importa ../js + ../modules del CRM)
-  preview.html       · = app, pero con import-map → mocks del CRM (verificación sin auth real)
-  manifest.json · sw.js · icon.svg
-  css/tokens.css     · tokens EXACTOS del diseño (claro/oscuro/matrix) + reset + keyframes
-  css/app.css        · sistema de componentes (shell, nav, FABs, sheets, cards, chips, inputs…)
-  js/core.js         · ⭐ costura ÚNICA con ../../js/ (db, supabase, utils 360). El import-map lo remapea.
-  js/ui.js           · logo, íconos de línea, openSheet, toast, openWhatsApp/openTel, haptic
-  js/app.js          · controlador: boot, auth, router, chrome (nav+fabs), sheets (crear/más/trIA)
-  js/screens/auth.js · splash animado · login · crea contraseña (Supabase Auth real)
-  js/screens/hoy.js  · Hoy
-  js/screens/leads.js· Leads
+  index.html        · app real (redirección barra-final + captura __authFlow + ../js/icons.js + js/app.js)
+  preview.html      · = app con import-map → mocks del CRM (GITIGNORED, solo dev/verificación)
+  manifest.json · sw.js (v2, update-prompt) · icon.svg · icon-512/192/180.png (PNG full-bleed)
+  css/tokens.css    · tokens EXACTOS del diseño (claro/oscuro/matrix) + reset + keyframes
+  css/app.css       · componentes (shell, nav, FABs, sheets, cards, chips, inputs, ptr, upd-bar, tria-dot…)
+  js/core.js        · ⭐ COSTURA ÚNICA con ../../js/ (db, supabase, realtime, utils 360) + store + helpers
+  js/ui.js          · logo, íconos de línea, openSheet, toast, openWhatsApp/openTel, supabaseUpdatePassword, haptic
+  js/app.js         · controlador: boot, auth, router, chrome, sheets, REALTIME, update-SW, pull-to-refresh, install
+  js/informe.js     · ⭐ Informe PDF (reutiliza computeInforme + buildReportDoc del CRM)
+  js/tria.js        · asistente trIA (reglas sobre datos reales)
+  js/campana.js     · panel de recordatorios
+  js/screens/       · auth · hoy · leads · captura · ficha · pipeline · diagnostico · agenda · cita · propuesta · perfil
 ```
 
 **Costura de datos:** todo cruce a `../../js/` y `../../modules/` pasa SOLO por `js/core.js`.
-`preview.html` trae un `<script type="importmap">` que remapea `/js/supabase.js`→`/_preview/mock-supabase.js`
-y `/js/db.js`→`/_preview/mock-db.js` (los mismos mocks del `preview.html` del escritorio).
+Reutiliza del CRM: `js/{supabase,db,utils,format,icons,realtime}.js`, `modules/informe-ejecutivo/*`,
+y en preview los mocks `/_preview/mock-{supabase,db}.js` (vía import-map de `preview.html`).
+**Cambios al CRM de PC (compartidos):** `js/realtime.js` (nuevo), `js/db.js` (+`clearReadCache`),
+`app.js` (arranca Realtime). Supabase: `supabase/realtime.sql` + `supabase/team.sql` (nuevos).
 
-## 2. Estado
+## 2. Funcionalidades (todas ✅ desplegadas y verificadas)
 
-| Fase | Qué | Estado |
-|---|---|---|
-| 1 | Cimientos: PWA shell, tokens (claro/oscuro/matrix), capa de datos, splash/login/crear-contraseña, bottom nav + FABs + sheets | ✅ verificado en Preview |
-| 2 | Hoy · Leads | ✅ verificado |
-| 2 | Captura · Ficha · Pipeline | ✅ verificado (incl. guardar lead E2E + cambiar etapa + tab Diagnóstico con scorePct) |
-| 3 | Agenda · Nueva cita | ⬜ |
-| 4 | Propuesta (ítems + IVA + cotización) | ⬜ |
-| 5 | **⭐ Diagnóstico 360 EXACTO** (27 preguntas, sub-dimensiones, No/Parcial/Sí, guarda en `diagnosticos`) | ✅ verificado E2E (live scoring 100/0/17 = scorePct; guarda scoresTec/Ventas/Finanzas 0/0.5/1/null) |
-| 6 | **⭐ Informe en PDF** (`movil/js/informe.js` reutiliza computeInforme+buildReportDoc+informe.css del CRM) | ✅ verificado: visor 8 págs en navegador + **PDF A4 real** renderizado con Chrome headless (idéntico al de PC) |
-| 3 | **Agenda** (Lista/Día + filtro por tipo) · **Nueva cita** (form completo, date/time nativos, editar) | ✅ verificado |
-| 4 | **Propuesta** (ítems + qty/precio + Subtotal→IVA 19%→Total en vivo) | ✅ verificado (math E2E) |
-| 7 | **Perfil** (identidad sync, tema claro/oscuro/matrix con swatch, equipo, cambiar contraseña, cerrar sesión) | ✅ verificado |
-| 7 | trIA real · panel de campana | ⬜ (stubs informativos) |
-| 8 | PWA íconos PNG (512/192/180 full-bleed) · **deploy** | ✅ EN VIVO https://martinjacques225.github.io/TRIADA-CRM/movil/ |
-| 9a | **Sync EN VIVO (Supabase Realtime)** móvil↔PC — `js/realtime.js` compartido | ✅ DESPLEGADO (commit `ffe54f1`); **inerte hasta correr `supabase/realtime.sql`** |
-| 9b | **Aviso de "nueva versión"** (SW espera + banner) · **pull-to-refresh** en listas | ✅ verificado en Preview |
-| 9c | **trIA real** (`movil/js/tria.js`, reglas sobre datos reales: reunión de hoy / pasos del pipeline / resumen / redactar+enviar WhatsApp) · **botón "Instalar app"** (prompt nativo Android + instrucciones iOS, en menú Más) | ✅ verificado |
-| 9d | **Campana de recordatorios** (`movil/js/campana.js`: reuniones de hoy con cuenta regresiva + leads por contactar; badge condicional) · Multiusuario (alta del equipo guiada con `supabase/team.sql` + URL config; lo ejecuta el usuario) | ✅ campana verificada · multiusuario en manos del usuario |
+| Área | Detalle |
+|---|---|
+| **Auth** | Splash animado · Login · Crear contraseña (invitación/recuperación) — Supabase Auth real |
+| **Pantallas** | Hoy · Leads · Captura (RUT mód-11) · Ficha (tabs) · Pipeline · Agenda (Lista/Día) · Nueva cita (date/time nativos, editar) · Propuesta (ítems + Subtotal→IVA 19%→Total) · Perfil (tema swatch, equipo, cambiar contraseña, cerrar sesión) |
+| **⭐ Diagnóstico 360** | EXACTO al de PC: 27 preguntas/sub-dimensiones, toggle No/Parcial/Sí, progreso X/27 + puntaje por área en vivo, guarda en `diagnosticos` (scoresTec/Ventas/Finanzas 0/0.5/1). Usa `DIAG_PREGUNTAS`/`scorePct` del CRM |
+| **⭐ Informe PDF** | `js/informe.js` reutiliza el motor del CRM → 8 págs A4 idénticas; "Descargar PDF" = `window.print()` (en móvil = Guardar/Compartir como PDF). Verificado con PDF A4 real (Chrome headless) |
+| **Sync EN VIVO** | `js/realtime.js` (móvil **y** PC): un cambio en un dispositivo refresca el otro solo. Móvil refresca listas conservando scroll; PC refresca salvo modal abierto |
+| **Actualizaciones** | sw.js v2 (espera sin skipWaiting) + banner "Nueva versión" → SKIP_WAITING + reload · **pull-to-refresh** en listas |
+| **trIA** | Asistente de reglas (sin IA externa) sobre datos reales: reunión de hoy / pasos del pipeline / resumen / redactar+enviar WhatsApp. Cada respuesta trae acción. Rotulado IA |
+| **Campana** | Recordatorios: reuniones de hoy con cuenta regresiva + leads por contactar; badge condicional |
+| **Multiusuario** | Mismo Auth + RLS/roles que el CRM. Alta del equipo guiada (ver §3) |
+| **PWA** | Instalable (íconos PNG), tema claro/oscuro/matrix, **responsive verificado 320–360px (cero desbordes)** |
 
-> **Plan completo.** Núcleo + 360 + Informe PDF + responsive + deploy + sync en vivo (Realtime) +
-> updates (banner + pull-to-refresh) + instalar app + trIA + multiusuario + campana. Todo desplegado.
-> Quedan solo mejoras opcionales: notificaciones push reales, cotización PDF de la propuesta, SMTP para invitaciones.
+## 3. Supabase — SQL a correr y estado del equipo
 
-**Responsividad verificada (Preview MCP):** barrido de overflow horizontal en **320px y 360px** sobre las
-13 pantallas → **cero desbordes** (ningún elemento fuera del viewport salvo los chip-rows con scroll propio,
-que es intencional). Consola limpia. Capturas OK de todas. Patrón clave de los forms: `_form` se carga una
-vez por navegación (`_formKey`) y los inputs se vuelcan a `_form` (`syncInputs`) antes de cada re-pintado →
-re-render no pierde lo escrito ni las selecciones.
+- `supabase/realtime.sql` — **✅ CORRIDO** (sync en vivo ACTIVO). Habilita Realtime por tabla.
+- `supabase/team.sql` — **✅ CORRIDO**. Equipo dado de alta: **Vicente Rojas** (vicente@grupotriada.cl) +
+  **Ignacia Uribe** (ignacia@grupotriada.cl), ambos `consultor`/`comercial` por defecto.
+- **Falta confirmar (acciones del usuario en el dashboard, no son SQL):**
+  - **Auth → URL Configuration:** Site URL = `…/TRIADA-CRM/movil/` + Redirect URLs con `…/TRIADA-CRM/` y `…/TRIADA-CRM/movil/`.
+  - **Auth → Users → Invite** a vicente@ e ignacia@ (el trigger `handle_new_user` les crea el perfil solo).
+  - Que ambos abran el email → "Crea tu contraseña" → entran.
 
-## 3. Cómo verificar (Preview MCP)
+## 4. Lo que queda (opcional, no bloquea)
+
+- **Notificaciones push reales** (que suene el teléfono con los recordatorios de `citas.recordatorios`).
+- **Cotización de la propuesta en PDF** (hoy los botones "Cotización PDF"/"Compartir" son stubs; armar como el informe 360).
+- **SMTP propio** en Supabase para que las invitaciones no caigan en spam.
+- **Overview / "Mapa de pantallas"** sigue siendo un stub (baja prioridad).
+
+## 5. Cómo verificar (Preview MCP)
 
 1. Servidor `triada-crm` (`.claude/launch.json` de PROYECTO CONSULTORIA) sirve la raíz del repo en **:5174**.
-2. Abrir **`/movil/preview.html`** (NO `/movil/` — esa es la app real con Supabase real).
-3. El harness **recarga la página y descarta el query string** en cada screenshot → para
-   forzar pantalla/tema usar **localStorage** (sobrevive al reload), solo en `preview.html`:
-   - `localStorage.setItem('__movil_dev_screen','leads')` · valores: hoy/leads/captura/ficha/pipeline/agenda/cita/propuesta/diagnostico/perfil
-   - `localStorage.setItem('__movil_dev_lead','p4')` (para Ficha)
-   - `localStorage.setItem('__movil_dev_theme','dark')` · dark/matrix
-   - luego `location.reload()` + screenshot. Limpiar con `removeItem` al terminar.
+2. Abrir **`/movil/preview.html`** (mocks, sin auth real). NO `/movil/` (esa es la app real con Supabase real).
+3. El harness **recarga y descarta el query string** en cada screenshot → forzar pantalla/tema con **localStorage**
+   (solo en preview.html): `__movil_dev_screen` (hoy/leads/captura/ficha/pipeline/agenda/cita/propuesta/diagnostico/perfil),
+   `__movil_dev_lead` (p4), `__movil_dev_theme` (dark/matrix) → `location.reload()` + screenshot. Limpiar con `removeItem`.
+4. Realtime, SW-update e install **no corren** en preview (no-op en mock / gated a prod) — se prueban con la app real.
 
-## 4. Gotchas
+## 6. Gotchas (todos ya resueltos en el código)
 
-- **Rutas de import:** desde `movil/js/*` el CRM está en `../../js/`; desde `movil/js/screens/*`
-  NO se importa el CRM directo → todo pasa por `../core.js`. Una sola ruta cruzada que mantener.
-- **`serve` usa clean-URLs** (quita `.html`) y el reload del preview pierde el `?query` → usar localStorage (arriba).
-- **Service worker:** solo se registra en prod (https, no localhost) para no ensuciar la verificación.
-- **Mock supabase** del escritorio no tiene `updateUser`/`resetPasswordForEmail` → `app.js` los llama defensivamente (no rompe el preview).
-- Inputs a `font-size:16px` para evitar el zoom de iOS al enfocar.
-
-## 5. Próximo paso
-
-**Listo: shell + auth + Hoy · Leads · Captura · Ficha · Pipeline + ⭐360 + ⭐Informe PDF.**
-El 360 y el PDF reutilizan los MISMOS archivos del escritorio (`js/utils.js` y
-`modules/informe-ejecutivo/`) → idénticos por construcción.
-
-Falta (no prioritario): **Agenda + Nueva cita**, **Propuesta** (ítems + IVA + cotización),
-**trIA** real, **Perfil** real (temas/sync), panel de campana, íconos PNG del manifest, y **deploy**
-(GitHub Pages `…/TRIADA-CRM/movil/`). Stubs actuales: agenda, cita, propuesta, perfil, overview, trIA.
-
-### Verificar el PDF fielmente (Chrome headless, método del informe)
-`computeInforme`+`buildReportDoc` son puros → corren en Node. Harness de muestra en
-`Desktop/files/_movil_pdf/` (`render-informe.mjs` → HTML → `chrome --headless=new --print-to-pdf`).
-**Gotcha nuevo:** el visor tiene `animation:fadeIn` (opacity 0→1); en impresión estática headless NO
-completa → páginas en blanco. Fix del harness: `@media print{*{animation:none!important;transition:none!important}}`
-+ `--virtual-time-budget`. (La app real NO sufre esto: al hacer `window.print()` la animación ya terminó.)
-
-## 6. "App en todo el sentido" — sync móvil↔PC · usuarios · actualizaciones
-
-Lo pidió el usuario explícitamente. La arquitectura YA lo entrega en su base (por eso la Opción A):
-
-- **Sincronización:** móvil y PC comparten el **mismo proyecto Supabase** → la MISMA base de datos.
-  Un lead/cita/propuesta/360 capturado en el celular YA está en el CRM de PC y viceversa (misma tabla,
-  sin export/import). HOY se refleja **al refrescar/navegar** (caché de lectura 15s en `js/db.js`, que se
-  invalida en cada escritura). Para que sea **instantáneo/en vivo**: agregar **Supabase Realtime**
-  (suscripción a cambios) en el móvil **y en el escritorio** + habilitar Realtime por tabla en Supabase.
-- **Usuarios:** mismo **Supabase Auth** + mismas **RLS/roles/multitenancy** que el CRM de PC (ya auditados,
-  ver [[project_auditoria_seguridad_enterprise]]). Cada socio entra con su cuenta; `responsable` se asigna
-  solo (`db.setCurrentUser`). Falta: que el usuario termine el alta del equipo en Supabase (invitaciones +
-  SQL de rol), igual que para el escritorio.
-- **Actualizaciones:** PWA + service worker **network-first** → al volver a abrir, trae la versión nueva.
-  Falta: **aviso explícito** "hay versión nueva, recargar" (escuchar `updatefound`/`controllerchange`).
-
-**Backlog para que sea 100% 'app de verdad':** (1) ✅ **Realtime en móvil+PC DESPLEGADO** (`js/realtime.js`
-compartido; móvil refresca listas conservando scroll, PC refresca salvo modal abierto; `db.clearReadCache`).
-**Solo falta correr `supabase/realtime.sql`** (idempotente) en el SQL Editor de Supabase para activarlo —
-hasta entonces es inerte. RLS sigue mandando. (2) ✅ **aviso de actualización** (sw.js v2 espera sin skipWaiting + `_showUpdate` banner → SKIP_WAITING + reload),
-(3) ✅ **pull-to-refresh** en listas (`_initPull`, touch desde arriba → clearReadCache + re-render),
-(4) verificar alta multiusuario end-to-end con cuentas reales, (5) trIA real, (6) campana.
+- **Costura de imports:** desde `movil/js/*` → `../../js/`; las screens NO importan el CRM directo, pasan por `core.js`.
+- **Barra final:** `serve`/hosts sin trailing-slash hacen que `./js/app.js` resuelva mal → `index.html` redirige `/…/movil`→`/…/movil/`. GH Pages ya la agrega.
+- **Reload del preview pierde el `?query`** y `serve` quita `.html` → usar localStorage (§5).
+- **Service worker:** solo se registra en prod (https, no localhost). v2 ESPERA (sin skipWaiting) para el banner de update.
+- **Realtime:** inerte sin `supabase/realtime.sql`. RLS sigue mandando (cada quien recibe solo lo suyo).
+- **Mock supabase** del CRM no tiene `updateUser`/`resetPasswordForEmail`/`channel` → se llaman defensivamente (preview no rompe).
+- **Forms:** `_form` se carga 1 vez por navegación (`_formKey`) + `syncInputs()` antes de cada re-render → no se pierde lo escrito.
+- **PDF headless:** el visor tiene `animation:fadeIn` → en print estático headless deja páginas en blanco. Fix del harness de verificación: `@media print{*{animation:none!important;transition:none!important}}` + `--virtual-time-budget` + `--user-data-dir` (instancia nueva). La app real NO sufre esto (al `print()` la animación ya terminó). Harness en `Desktop/files/_movil_pdf/`.
+- **Screenshots del Preview MCP** se pusieron intermitentes en sesiones largas (timeouts) → reiniciar el server; la verificación funcional vía `preview_eval` es más robusta.
