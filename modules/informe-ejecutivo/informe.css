@@ -62,6 +62,7 @@
 /* ── Hoja A4 ── */
 .report-page {
   width: 210mm; min-height: 297mm;
+  box-sizing: border-box; /* explícito: 210×297mm INCLUYE el padding (no depender del reset global) */
   background: var(--rep-paper); color: var(--rep-ink);
   box-shadow: 0 24px 60px -22px rgba(10,22,32,.55);
   padding: 22mm 20mm 16mm;
@@ -289,7 +290,11 @@
 .report-empty { padding: 40px; text-align: center; font-size: 14px; color: var(--rep-fin); background: #EAF1EC; border: 1px solid var(--rep-border); border-radius: 14px; line-height: 1.6; }
 
 /* ══════════ RESPONSIVE (visor en pantalla) ══════════ */
-@media (max-width: 880px) {
+/* `screen and` es CRÍTICO: al imprimir, la hoja A4 mide ~794px (210mm @96dpi),
+   por debajo de 880px. Sin acotar a `screen`, este breakpoint móvil se activaba
+   AL IMPRIMIR y colapsaba las grillas a una columna → el contenido desbordaba la
+   página de alto fijo (297mm) y se partía en hojas extra (8 págs → 16). */
+@media screen and (max-width: 880px) {
   .report-page { width: 100%; min-height: auto; padding: 28px 22px; }
   .resumen-grid, .resultados-grid, .oport-grid { grid-template-columns: 1fr; gap: 24px; }
   .plan-grid { grid-template-columns: 1fr; }
@@ -309,10 +314,18 @@
   .report-scroll { overflow: visible; padding: 0; }
   .report-doc { gap: 0; }
   .report-page {
-    width: 210mm; min-height: 297mm; height: 297mm;
+    width: 210mm; min-height: 297mm;
     box-shadow: none; margin: 0;
     page-break-after: always; break-after: page;
     -webkit-print-color-adjust: exact; print-color-adjust: exact;
   }
   .report-page:last-child { page-break-after: auto; break-after: auto; }
+  /* Sin `height` fijo: una página con mucho contenido (p. ej. Resultados con 3
+     fichas de área densas en una empresa de baja madurez) CRECE y fluye a una 2ª
+     hoja en vez de RECORTARSE. Las tarjetas no se parten a la mitad y el título
+     no queda huérfano al final de una hoja. */
+  .resultados-grid, .area-detail, .hallazgo-card, .oport-card, .pf-item,
+  .resumen-valor, .conclusion-highlight, .conclusion-cta, .mapa-delta,
+  .cover-result, .cover-meta { break-inside: avoid; }
+  .report-head, .matrix-title, .rh-title { break-after: avoid; }
 }
