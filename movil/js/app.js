@@ -260,6 +260,68 @@ const app = {
     store.user = null; store.profile = null; this._history = [];
     return this.navigate('login');
   },
+
+  // Banner "nueva versión disponible" → activa el SW que espera y recarga.
+  _showUpdate(reg) {
+    if (document.getElementById('updbar')) return;
+    const bar = document.createElement('div');
+    bar.id = 'updbar'; bar.className = 'upd-bar';
+    bar.innerHTML = `<span style="flex:1">Nueva versión disponible</span><button type="button">Actualizar</button>`;
+    document.getElementById('app').appendChild(bar);
+    bar.querySelector('button').addEventListener('click', () => {
+      bar.remove();
+      navigator.serviceWorker.addEventListener('controllerchange', () => location.reload(), { once: true });
+      if (reg.waiting) reg.waiting.postMessage({ type: 'SKIP_WAITING' });
+      else location.reload();
+    });
+  },
+
+  // Pull-to-refresh en las vistas de lista (desde arriba). Refresca datos en vivo.
+  _initPull() {
+    const host = document.getElementById('screen');
+    if (!host) return;
+    const LIVE = ['hoy', 'leads', 'pipeline', 'agenda'];
+    let startY = 0, active = false, dist = 0, ind = null;
+    const getInd = () => {
+      if (!ind) {
+        ind = document.createElement('div'); ind.className = 'ptr';
+        ind.innerHTML = `<span class="ptr-spin">${ic('refresh', { size: 18, sw: 2 })}</span>`;
+        document.getElementById('app').appendChild(ind);
+      }
+      return ind;
+    };
+    host.addEventListener('touchstart', (e) => {
+      const sheetOpen = (document.getElementById('sheet-root').children.length > 0);
+      active = host.scrollTop <= 0 && LIVE.includes(store.screen) && !sheetOpen;
+      if (active) { startY = e.touches[0].clientY; dist = 0; }
+    }, { passive: true });
+    host.addEventListener('touchmove', (e) => {
+      if (!active) return;
+      dist = e.touches[0].clientY - startY;
+      if (dist <= 0) { if (ind) ind.style.opacity = '0'; return; }
+      const pull = Math.min(dist * 0.5, 80);
+      const i = getInd(); i.classList.remove('ptr--snap');
+      i.style.transform = `translateX(-50%) translateY(${pull}px)`;
+      i.style.opacity = String(Math.min(1, pull / 46));
+      i.classList.toggle('ptr--ready', pull >= 52);
+    }, { passive: true });
+    host.addEventListener('touchend', async () => {
+      if (!active) return; active = false;
+      if (!ind) return;
+      const ready = ind.classList.contains('ptr--ready');
+      ind.classList.add('ptr--snap');
+      if (ready) {
+        ind.classList.add('ptr--spinning'); ind.classList.remove('ptr--ready');
+        ind.style.transform = 'translateX(-50%) translateY(52px)';
+        try { db.clearReadCache(); } catch (_) {}
+        try { await this.renderScreen({ preserveScroll: false }); } catch (_) {}
+        await new Promise((r) => setTimeout(r, 250));
+      }
+      ind.style.transform = 'translateX(-50%) translateY(0)';
+      ind.style.opacity = '0';
+      ind.classList.remove('ptr--spinning', 'ptr--ready');
+    });
+  },
 };
 
 window._m = app; // acceso para depurar en consola
@@ -279,6 +341,7 @@ window._m = app; // acceso para depurar en consola
   const skipSplash = q.get('nosplash') === '1' || !!app._bootScreen;
   app.setTheme(q.get('theme') || ls('__movil_dev_theme') || localStorage.getItem('triada_cfg_theme') || 'light');
   registerServiceWorker();
+  app._initPull();
   app._session = resolveSession();
   if (skipSplash) { app._splashDone = true; await app._routeFromSession(); }
   else { store.screen = 'splash'; await app.renderScreen(); }
@@ -294,7 +357,19 @@ async function resolveSession() {
 function registerServiceWorker() {
   // Solo en producción (https, no localhost) para no ensuciar la verificación.
   const local = ['localhost', '127.0.0.1', '0.0.0.0'].includes(location.hostname);
-  if ('serviceWorker' in navigator && location.protocol === 'https:' && !local) {
-    window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js').catch(() => {}));
-  }
+  if (!('serviceWorker' in navigator) || location.protocol !== 'https:' || local) return;
+  window.addEventListener('load', async () => {
+    try {
+      const reg = await navigator.serviceWorker.register('./sw.js');
+      // ¿Ya hay una versión nueva esperando? (con controller = no es la 1ª instalación)
+      if (reg.waiting && navigator.serviceWorker.controller) app._showUpdate(reg);
+      reg.addEventListener('updatefound', () => {
+        const nw = reg.installing;
+        if (!nw) return;
+        nw.addEventListener('statechange', () => {
+          if (nw.state === 'installed' && navigator.serviceWorker.controller) app._showUpdate(reg);
+        });
+      });
+    } catch (_) {}
+  });
 }

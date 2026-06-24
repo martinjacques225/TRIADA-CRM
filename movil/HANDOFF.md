@@ -55,7 +55,9 @@ y `/js/db.js`→`/_preview/mock-db.js` (los mismos mocks del `preview.html` del 
 | 7 | **Perfil** (identidad sync, tema claro/oscuro/matrix con swatch, equipo, cambiar contraseña, cerrar sesión) | ✅ verificado |
 | 7 | trIA real · panel de campana | ⬜ (stubs informativos) |
 | 8 | PWA íconos PNG (512/192/180 full-bleed) · **deploy** | ✅ EN VIVO https://martinjacques225.github.io/TRIADA-CRM/movil/ |
-| 9 | **App "en todo el sentido":** sync en vivo (Realtime), aviso de actualización, pull-to-refresh, alta de usuarios | ⬜ (ver §6) |
+| 9a | **Sync EN VIVO (Supabase Realtime)** móvil↔PC — `js/realtime.js` compartido | ✅ DESPLEGADO (commit `ffe54f1`); **inerte hasta correr `supabase/realtime.sql`** |
+| 9b | **Aviso de "nueva versión"** (SW espera + banner) · **pull-to-refresh** en listas | ✅ verificado en Preview |
+| 9c | Alta multiusuario (cuentas reales) · trIA real · campana | ⬜ |
 
 **Responsividad verificada (Preview MCP):** barrido de overflow horizontal en **320px y 360px** sobre las
 13 pantallas → **cero desbordes** (ningún elemento fuera del viewport salvo los chip-rows con scroll propio,
@@ -116,6 +118,9 @@ Lo pidió el usuario explícitamente. La arquitectura YA lo entrega en su base (
 - **Actualizaciones:** PWA + service worker **network-first** → al volver a abrir, trae la versión nueva.
   Falta: **aviso explícito** "hay versión nueva, recargar" (escuchar `updatefound`/`controllerchange`).
 
-**Backlog para que sea 100% 'app de verdad':** (1) Realtime en móvil+PC, (2) aviso de actualización,
-(3) pull-to-refresh en listas, (4) verificar alta multiusuario end-to-end con cuentas reales,
-(5) trIA real, (6) panel de campana/notificaciones.
+**Backlog para que sea 100% 'app de verdad':** (1) ✅ **Realtime en móvil+PC DESPLEGADO** (`js/realtime.js`
+compartido; móvil refresca listas conservando scroll, PC refresca salvo modal abierto; `db.clearReadCache`).
+**Solo falta correr `supabase/realtime.sql`** (idempotente) en el SQL Editor de Supabase para activarlo —
+hasta entonces es inerte. RLS sigue mandando. (2) ✅ **aviso de actualización** (sw.js v2 espera sin skipWaiting + `_showUpdate` banner → SKIP_WAITING + reload),
+(3) ✅ **pull-to-refresh** en listas (`_initPull`, touch desde arriba → clearReadCache + re-render),
+(4) verificar alta multiusuario end-to-end con cuentas reales, (5) trIA real, (6) campana.

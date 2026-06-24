@@ -1,16 +1,17 @@
 /* Tríada CRM Móvil · service worker
-   Estrategia NETWORK-FIRST: online siempre trae lo último (sin caché rancia en
-   desarrollo); offline cae al shell cacheado. Solo se registra en producción
-   (https, no localhost) — ver js/app.js — para no ensuciar la verificación. */
-const CACHE = 'triada-movil-v1';
+   NETWORK-FIRST (online siempre trae lo último; offline cae al shell cacheado).
+   Actualización LIMPIA: la versión nueva NO se activa sola — espera, la app avisa
+   "nueva versión disponible", y solo al tocar "Actualizar" toma el control (SKIP_WAITING).
+   Solo se registra en producción (https, no localhost) — ver js/app.js. */
+const CACHE = 'triada-movil-v2';
 const SHELL = [
   './', './index.html',
   './css/tokens.css', './css/app.css',
-  './icon.svg', './manifest.json',
+  './icon.svg', './icon-192.png', './icon-512.png', './manifest.json',
 ];
 
 self.addEventListener('install', (e) => {
-  self.skipWaiting();
+  // Sin skipWaiting: la versión nueva espera a que el usuario confirme.
   e.waitUntil(caches.open(CACHE).then((c) => c.addAll(SHELL)).catch(() => {}));
 });
 
@@ -20,6 +21,11 @@ self.addEventListener('activate', (e) => {
       .then((keys) => Promise.all(keys.filter((k) => k !== CACHE).map((k) => caches.delete(k))))
       .then(() => self.clients.claim())
   );
+});
+
+// La app pide activar la versión nueva al tocar "Actualizar".
+self.addEventListener('message', (e) => {
+  if (e.data && e.data.type === 'SKIP_WAITING') self.skipWaiting();
 });
 
 self.addEventListener('fetch', (e) => {
