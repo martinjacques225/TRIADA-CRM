@@ -5,6 +5,7 @@
 // ============================================================================
 import { db, PROP_ESTADOS, propEstadoLabel, formatCLP, formatDate, todayStr, escHtml, initials } from '../core.js';
 import { ic, toast, openSheet, closeSheet } from '../ui.js';
+import { openCotizacion } from '../cotizacion.js';
 
 const e = escHtml;
 let _form = {}, _formKey = null, _items = [], _lead = null;
@@ -42,7 +43,7 @@ export default {
     if (_formKey !== key) {
       if (app.params.propId) {
         const p = await db.propuestas.get(app.params.propId).catch(() => null);
-        _form = { id: p?.id || null, prospectoId: p?.prospectoId || null, estado: p?.estado || 'borrador', vigencia: p?.vigencia || plusDays(15) };
+        _form = { id: p?.id || null, prospectoId: p?.prospectoId || null, estado: p?.estado || 'borrador', vigencia: p?.vigencia || plusDays(15), correlativo: p?.correlativo || null };
         _items = (p?.servicios && p.servicios.length) ? p.servicios.map((s) => ({ descripcion: s.descripcion || '', cantidad: s.cantidad || 1, precioUnit: s.precioUnit || 0 })) : [{ descripcion: '', cantidad: 1, precioUnit: 0 }];
       } else {
         _form = { id: null, prospectoId: app.params.leadId || null, estado: 'borrador', vigencia: plusDays(15) };
@@ -132,7 +133,12 @@ export default {
     });
 
     host.querySelector('#ppProspecto').addEventListener('click', () => openProspectoPicker(app));
-    host.querySelector('#ppPDF').addEventListener('click', () => toast('Cotización PDF: disponible para construir como el Informe 360', 'info'));
+    host.querySelector('#ppPDF').addEventListener('click', () => {
+      _form.vigencia = host.querySelector('#ppVigencia').value || _form.vigencia;
+      const servicios = _items.filter((it) => (it.descripcion || '').trim() || lineOf(it) > 0).map((it) => ({ descripcion: (it.descripcion || '').trim(), cantidad: Number(it.cantidad) || 1, precioUnit: Number(it.precioUnit) || 0 }));
+      if (!servicios.length) { toast('Agrega al menos un ítem con precio para la cotización', 'info'); return; }
+      openCotizacion({ ..._form, servicios }, _lead);
+    });
     host.querySelector('#ppShare').addEventListener('click', () => toast('Compartir: guarda primero y úsalo desde la ficha', 'info'));
 
     host.querySelector('#ppSave').addEventListener('click', async (ev) => {
