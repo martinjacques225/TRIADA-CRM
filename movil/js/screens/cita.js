@@ -58,7 +58,7 @@ export default {
     const L = (t) => `<label class="field__label">${t}</label>`;
 
     return `
-    <section class="screen">
+    <section class="screen" style="display:flex;flex-direction:column">
       <header class="hdr hdr--back">
         <button class="icon-btn icon-btn--bare" id="ctBack" style="width:38px;height:38px" aria-label="Volver">${ic('back', { size: 22, sw: 1.9 })}</button>
         <div class="serif" style="font-size:20px;font-weight:600;color:var(--ink)">${_form.id ? 'Editar cita' : 'Nueva cita'}</div>

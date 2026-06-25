@@ -58,13 +58,13 @@ export default {
     const lead = _lead;
 
     return `
-    <section class="screen">
+    <section class="screen" style="display:flex;flex-direction:column">
       <header class="hdr hdr--back">
         <button class="icon-btn icon-btn--bare" id="ppBack" style="width:38px;height:38px" aria-label="Volver">${ic('back', { size: 22, sw: 1.9 })}</button>
         <div class="serif" style="font-size:20px;font-weight:600;color:var(--ink)">${_form.id ? 'Editar propuesta' : 'Propuesta'}</div>
       </header>
 
-      <div class="pad-form" style="padding-bottom:calc(180px + env(safe-area-inset-bottom))">
+      <div class="pad-form">
         <button type="button" id="ppProspecto" style="width:100%;display:flex;align-items:center;gap:11px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:12px 13px;cursor:pointer;margin-bottom:18px;text-align:left;box-shadow:var(--shadow-sm)">
           <span style="width:38px;height:38px;border-radius:11px;background:var(--navy-l);color:var(--navy);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;flex:none">${lead ? e(initials(lead.nombre)) : ic('users', { size: 18 })}</span>
           <span style="flex:1;min-width:0"><span style="display:block;font-size:11px;color:var(--text3)">Para</span><span class="ell" style="display:block;font-weight:600;font-size:14.5px;color:var(--ink)">${lead ? e(lead.empresa || lead.nombre) : 'Vincular prospecto'}</span></span>

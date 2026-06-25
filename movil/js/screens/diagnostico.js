@@ -77,7 +77,7 @@ export default {
     const sumCell = (id, label) => `<div style="flex:1;text-align:center"><div class="serif tabular" id="dgSum-${id}" style="font-size:30px;font-weight:600;color:${SUM_COLOR[id]}">0</div><div style="font-size:10.5px;color:#9FB0D4;margin-top:3px">${label}</div></div>`;
 
     return `
-    <section class="screen">
+    <section class="screen" style="display:flex;flex-direction:column">
       <header class="hdr" style="padding-bottom:12px;border-bottom:1px solid var(--border)">
         <div style="display:flex;align-items:center;gap:6px;margin-bottom:12px">
           <button class="icon-btn icon-btn--bare" id="dgBack" style="width:38px;height:38px" aria-label="Volver">${ic('back', { size: 22, sw: 1.9 })}</button>
@@ -88,7 +88,7 @@ export default {
         <div class="chip-row" id="dgTabs" style="gap:7px;margin-top:12px;padding:0">${tabsHtml()}</div>
       </header>
 
-      <div class="pad-form" style="padding-bottom:22px">
+      <div class="pad-form">
         ${DIAG_AREAS.map((a) => areaBlock(a.id)).join('')}
 
         <div style="background:linear-gradient(150deg,var(--navy),var(--navy-d));border-radius:var(--radius);padding:18px;color:#fff;margin-bottom:18px">
@@ -100,7 +100,7 @@ export default {
         <div class="field" style="margin-bottom:0"><label class="field__label field__label--opt" for="dgOportunidades">Oportunidades detectadas <span>· una por línea</span></label><textarea id="dgOportunidades" class="textarea" rows="3" placeholder="Ej: Implementar seguimiento de cotizaciones&#10;Automatizar reportes financieros"></textarea></div>
       </div>
 
-      <div class="action-bar" style="position:sticky"><button class="btn btn--primary btn--block" id="dgSave">Guardar diagnóstico</button></div>
+      <div class="action-bar"><button class="btn btn--primary btn--block" id="dgSave">Guardar diagnóstico</button></div>
     </section>`;
   },
 

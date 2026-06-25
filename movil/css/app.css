@@ -10,7 +10,7 @@
 .screen{min-height:100%;background:var(--bg);animation:scrn .3s var(--ease)}
 .screen--center{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:center;padding:calc(34px + env(safe-area-inset-top)) 28px 40px}
 .pad{padding:6px 18px 124px}           /* deja aire para nav + fabs */
-.pad-form{padding:16px 18px calc(150px + env(safe-area-inset-bottom))}
+.pad-form{flex:1;padding:16px 18px calc(24px + env(safe-area-inset-bottom))}
 
 /* ── Header (sticky, respeta el notch) ───────────────────────── */
 .hdr{position:sticky;top:0;z-index:30;background:color-mix(in srgb,var(--bg) 88%,transparent);
@@ -102,7 +102,7 @@
   background:linear-gradient(150deg,var(--teal),var(--teal-d));box-shadow:0 8px 22px -6px rgba(12,124,136,.6)}
 .fab--tria:hover{transform:translateY(-2px)}
 .fab--create{bottom:calc(86px + env(safe-area-inset-bottom));width:56px;height:56px;border-radius:18px;
-  background:var(--navy);box-shadow:0 10px 24px -6px rgba(22,35,74,.55)}
+  background:var(--navy);color:#fff;box-shadow:0 10px 24px -6px rgba(22,35,74,.55)}
 .fab--create:hover{transform:translateY(-2px);background:var(--navy-d)}
 
 .tabbar{position:absolute;left:0;right:0;bottom:0;z-index:55;
@@ -194,7 +194,7 @@
 .progress__bar{height:100%;border-radius:20px;background:var(--teal);transition:width .35s var(--ease)}
 
 /* ── Sticky footer de acción (formularios) ───────────────────── */
-.action-bar{position:absolute;left:0;right:0;bottom:0;z-index:20;
+.action-bar{position:sticky;left:0;right:0;bottom:0;z-index:20;
   background:color-mix(in srgb,var(--surface) 92%,transparent);
   backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-top:1px solid var(--border);
   padding:12px 18px calc(26px + env(safe-area-inset-bottom));display:flex;flex-direction:column;gap:9px}
