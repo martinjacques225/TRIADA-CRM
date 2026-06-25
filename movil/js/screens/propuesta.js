@@ -5,7 +5,7 @@
 // ============================================================================
 import { db, PROP_ESTADOS, propEstadoLabel, formatCLP, formatDate, todayStr, escHtml, initials } from '../core.js';
 import { ic, toast, openSheet, closeSheet } from '../ui.js';
-import { openCotizacion } from '../cotizacion.js';
+import { openCotizacion, shareCotizacion } from '../cotizacion.js';
 
 const e = escHtml;
 let _form = {}, _formKey = null, _items = [], _lead = null;
@@ -139,7 +139,12 @@ export default {
       if (!servicios.length) { toast('Agrega al menos un ítem con precio para la cotización', 'info'); return; }
       openCotizacion({ ..._form, servicios }, _lead);
     });
-    host.querySelector('#ppShare').addEventListener('click', () => toast('Compartir: guarda primero y úsalo desde la ficha', 'info'));
+    host.querySelector('#ppShare').addEventListener('click', () => {
+      _form.vigencia = host.querySelector('#ppVigencia').value || _form.vigencia;
+      const servicios = _items.filter((it) => (it.descripcion || '').trim() || lineOf(it) > 0).map((it) => ({ descripcion: (it.descripcion || '').trim(), cantidad: Number(it.cantidad) || 1, precioUnit: Number(it.precioUnit) || 0 }));
+      if (!servicios.length) { toast('Agrega al menos un ítem con precio para compartir', 'info'); return; }
+      shareCotizacion({ ..._form, servicios }, _lead);
+    });
 
     host.querySelector('#ppSave').addEventListener('click', async (ev) => {
       _form.vigencia = host.querySelector('#ppVigencia').value;

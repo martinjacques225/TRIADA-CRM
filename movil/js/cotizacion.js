@@ -1,35 +1,58 @@
 // ============================================================================
 // cotizacion.js — Cotización comercial en PDF (para enviar al cliente).
-// Reutiliza el scaffolding del Informe 360: .informe-viewer + .report-page + el
-// @media print de modules/informe-ejecutivo/informe.css (cargado global en
-// index.html y preview.html) → misma estética Tríada (crema/petróleo/Spectral)
-// y misma impresión A4. "Descargar PDF" = window.print() (en móvil: Guardar /
-// Compartir como PDF). Trabaja con el estado actual de la propuesta (no requiere
-// guardarla antes).
+// VISOR: reutiliza el scaffolding del Informe 360 (.informe-viewer + .report-page
+// + el @media print de informe.css, cargado global) → estética Tríada idéntica.
+// "Descargar PDF" = window.print() (A4 vector, nítido).
+// "Compartir" = genera el PDF como ARCHIVO (html2canvas + jsPDF desde una hoja A4
+// auto-contenida, sin la CSS responsive) y lo pasa al share nativo del teléfono
+// (navigator.share con files → WhatsApp / Correo / etc. con el PDF adjunto).
+// Ojo: wa.me y mailto NO permiten adjuntar archivos; el share nativo es el único
+// camino web para "enviar el PDF". Fallback: descarga + wa.me/mailto con texto.
 // ============================================================================
 import { store, formatCLP, formatDate, todayStr } from './core.js';
+import { toast, openSheet } from './ui.js';
 
 const esc = (s) => String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 const line = (it) => (Number(it.cantidad) || 0) * (Number(it.precioUnit) || 0);
 
+// Contacto oficial (espejo de triada-home/inc/config.php).
+const TRIADA_EMAIL = 'contacto@grupotriada.cl';
+const TRIADA_WA_DISPLAY = '+56 9 6812 9791';
+const TRIADA_WA_DIGITS = '56968129791';
+
+// Variables de marca (informe.css .informe-viewer) para la hoja A4 auto-contenida
+// que se rasteriza al compartir (fuera de .informe-viewer no heredaría los tokens).
+const REP_VARS = "--rep-serif:'Spectral',Georgia,serif;--rep-sans:'Libre Franklin',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;--rep-paper:#FBF9F3;--rep-cream:#F4F1E9;--rep-ink:#14222E;--rep-body:#46555F;--rep-muted:#6B7780;--rep-faint:#8A90A3;--rep-border:#E5DFD0;--rep-petrol:#0C1B26;--rep-petrol-2:#143A4A;--rep-teal:#1C7A82;--rep-teal-2:#7FD0CC;--rep-teal-l:#E6F1F0";
+
 const LOGO = (size = 32) => `<svg viewBox="0 0 120 120" fill="none" style="width:${size}px;height:${size}px;flex:none">
-  <path d="M26 90 L60 62 L94 90" stroke="#3D6E92" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/>
-  <path d="M26 73 L60 45 L94 73" stroke="#2F8C93" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/>
-  <path d="M26 56 L60 28 L94 56" stroke="#6BA083" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M26 90 L60 62 L94 90" stroke="#3D6E92" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"></path>
+  <path d="M26 73 L60 45 L94 73" stroke="#2F8C93" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"></path>
+  <path d="M26 56 L60 28 L94 56" stroke="#6BA083" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"></path>
 </svg>`;
 
 const BTN = 'border-radius:9px;height:38px;padding:0 14px;font-weight:700;font-size:13px;font-family:var(--rep-sans,system-ui);cursor:pointer;display:inline-flex;align-items:center;gap:6px';
 const BTN_GHOST = `${BTN};border:1px solid var(--rep-border,#E5DFD0);background:transparent;color:var(--rep-ink,#14222E)`;
 const BTN_PRIMARY = `${BTN};border:0;background:#1C7A82;color:#fff`;
 
-// Código de la cotización: usa el correlativo de la propuesta si existe; si no,
-// genera uno por fecha (COT-AAAAMMDD).
+// Términos y condiciones — reflejan los del sitio (grupotriada.cl/terminos):
+// abono 50% inicial, 50% restante, facturación, kickoff, renovación mensual.
+const TYC = [
+  '<b>Abono inicial del 50%.</b> Para reservar el cupo, activar la facturación y dar inicio formal al onboarding, se solicita un abono equivalente al 50% del valor total del servicio.',
+  '<b>50% restante.</b> El saldo se paga antes de la activación / puesta en marcha del servicio.',
+  'Los valores están expresados en pesos chilenos (CLP); el IVA (19%) se detalla en el total. Se emite la documentación tributaria correspondiente conforme a la normativa vigente en Chile.',
+  'Esta cotización es válida hasta la fecha indicada; pasado ese plazo los valores pueden ser actualizados.',
+  'El servicio comienza una vez confirmado el abono y realizada la reunión de kickoff (alineación de objetivos, accesos y expectativas).',
+  'Los servicios de continuidad se renuevan mensualmente para mantener el servicio activo, según el plan contratado.',
+  'Todo requerimiento fuera del alcance descrito se cotiza por separado; la información compartida se trata de forma confidencial.',
+  'Los valores y la periodicidad definitivos quedan establecidos en el contrato firmado entre las partes. Términos completos en grupotriada.cl/terminos.',
+];
+
 function quoteCode(prop) {
   if (prop && prop.correlativo) return String(prop.correlativo);
   return 'COT-' + todayStr().replace(/-/g, '');
 }
 
-function pageHtml(prop, lead) {
+function computeTotals(prop) {
   const items = (prop.servicios || []).map((it) => ({
     descripcion: (it.descripcion || '').trim() || 'Servicio',
     cantidad: Number(it.cantidad) || 1,
@@ -37,14 +60,18 @@ function pageHtml(prop, lead) {
   }));
   const sub = items.reduce((s, it) => s + line(it), 0);
   const iva = Math.round(sub * 0.19);
-  const tot = sub + iva;
+  return { items, sub, iva, tot: sub + iva };
+}
+
+// Contenido de la cotización (sin el contenedor de página). Usa var(--rep-*),
+// así que debe vivir dentro de algo que los defina (.informe-viewer o REP_VARS).
+function pageInner(prop, lead) {
+  const { items, sub, iva, tot } = computeTotals(prop);
   const code = quoteCode(prop);
   const hoy = todayStr();
   const vig = prop.vigencia || hoy;
-
   const emisorNombre = (store.profile && store.profile.nombre) || 'Equipo Tríada';
   const emisorCargo = (store.profile && store.profile.rol) || 'Consultoría Estratégica';
-  const emisorEmail = (store.user && store.user.email) || 'contacto@grupotriada.cl';
 
   const clienteTitulo = lead && (lead.empresa || lead.nombre) ? esc(lead.empresa || lead.nombre) : 'Cliente';
   const clienteLinea = (lbl, val) => val ? `<div style="font-size:12.5px;color:var(--rep-body);margin-top:2px">${lbl ? `<span style="color:var(--rep-faint)">${lbl}: </span>` : ''}${esc(val)}</div>` : '';
@@ -57,9 +84,9 @@ function pageHtml(prop, lead) {
       <td style="text-align:right;padding:11px 12px;font-size:13px;font-weight:600;color:var(--rep-ink);white-space:nowrap">${formatCLP(line(it))}</td>
     </tr>`).join('');
 
+  const tyc = TYC.map((t) => `<li style="margin-bottom:4px">${t}</li>`).join('');
+
   return `
-  <div class="report-page" style="gap:0">
-    <!-- Encabezado -->
     <div style="display:flex;justify-content:space-between;align-items:flex-start;border-bottom:2px solid var(--rep-petrol);padding-bottom:16px;margin-bottom:22px">
       <div style="display:flex;align-items:center;gap:12px">
         ${LOGO(38)}
@@ -75,14 +102,13 @@ function pageHtml(prop, lead) {
       </div>
     </div>
 
-    <!-- De / Para -->
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:13px;margin-bottom:24px">
       <div style="background:var(--rep-cream);border:1px solid var(--rep-border);border-radius:10px;padding:14px 16px;break-inside:avoid">
         <div style="font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--rep-faint);margin-bottom:7px">De</div>
         <div style="font-family:var(--rep-serif);font-size:15px;font-weight:600;color:var(--rep-ink)">Grupo Tríada</div>
         <div style="font-size:12.5px;color:var(--rep-body);margin-top:3px">${esc(emisorNombre)} · ${esc(emisorCargo)}</div>
-        <div style="font-size:12.5px;color:var(--rep-body)">${esc(emisorEmail)}</div>
-        <div style="font-size:12.5px;color:var(--rep-body)">grupotriada.cl</div>
+        <div style="font-size:12.5px;color:var(--rep-body)">${TRIADA_EMAIL}</div>
+        <div style="font-size:12.5px;color:var(--rep-body)">${TRIADA_WA_DISPLAY} · grupotriada.cl</div>
       </div>
       <div style="background:var(--rep-cream);border:1px solid var(--rep-border);border-radius:10px;padding:14px 16px;break-inside:avoid">
         <div style="font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--rep-faint);margin-bottom:7px">Para</div>
@@ -94,7 +120,6 @@ function pageHtml(prop, lead) {
       </div>
     </div>
 
-    <!-- Ítems -->
     <table style="width:100%;table-layout:fixed;border-collapse:collapse;margin-bottom:18px;font-family:var(--rep-sans)">
       <thead>
         <tr style="background:var(--rep-petrol);color:#fff;-webkit-print-color-adjust:exact;print-color-adjust:exact">
@@ -107,43 +132,30 @@ function pageHtml(prop, lead) {
       <tbody>${rows}</tbody>
     </table>
 
-    <!-- Totales -->
-    <div style="display:flex;justify-content:flex-end;margin-bottom:22px;break-inside:avoid">
+    <div style="display:flex;justify-content:flex-end;margin-bottom:20px;break-inside:avoid">
       <div style="width:270px">
-        <div style="display:flex;justify-content:space-between;padding:6px 0;font-size:13px;color:var(--rep-body)"><span>Subtotal</span><span class="tabular">${formatCLP(sub)}</span></div>
-        <div style="display:flex;justify-content:space-between;padding:6px 0;font-size:13px;color:var(--rep-body);border-bottom:1px solid var(--rep-border)"><span>IVA 19%</span><span class="tabular">${formatCLP(iva)}</span></div>
+        <div style="display:flex;justify-content:space-between;padding:6px 0;font-size:13px;color:var(--rep-body)"><span>Subtotal</span><span>${formatCLP(sub)}</span></div>
+        <div style="display:flex;justify-content:space-between;padding:6px 0;font-size:13px;color:var(--rep-body);border-bottom:1px solid var(--rep-border)"><span>IVA 19%</span><span>${formatCLP(iva)}</span></div>
         <div style="display:flex;justify-content:space-between;align-items:baseline;padding:11px 0 0"><span style="font-size:14px;font-weight:700;color:var(--rep-ink)">Total</span><span style="font-family:var(--rep-serif);font-size:25px;font-weight:600;color:var(--rep-teal)">${formatCLP(tot)}</span></div>
       </div>
     </div>
 
-    <!-- Vigencia -->
-    <div style="background:var(--rep-teal-l);border:1px solid var(--rep-teal-2);border-radius:9px;padding:11px 14px;margin-bottom:20px;font-size:12.5px;color:var(--rep-petrol-2);break-inside:avoid">
+    <div style="background:var(--rep-teal-l);border:1px solid var(--rep-teal-2);border-radius:9px;padding:11px 14px;margin-bottom:18px;font-size:12.5px;color:var(--rep-petrol-2);break-inside:avoid">
       Esta cotización es válida hasta el <b>${esc(formatDate(vig))}</b>.
     </div>
 
-    <!-- Términos y condiciones -->
     <div style="break-inside:avoid">
-      <div style="font-family:var(--rep-serif);font-size:15px;font-weight:600;color:var(--rep-ink);margin-bottom:9px">Términos y condiciones</div>
-      <ol style="margin:0;padding-left:18px;font-size:11.5px;color:var(--rep-body);line-height:1.7">
-        <li>Los valores están expresados en pesos chilenos (CLP); el IVA (19%) se detalla en el total.</li>
-        <li>Esta cotización tiene validez hasta la fecha indicada; pasado ese plazo los valores pueden ser actualizados.</li>
-        <li>La forma y los plazos de pago se acuerdan entre las partes al momento de aceptar la cotización.</li>
-        <li>Los trabajos se inician una vez aceptada formalmente esta cotización.</li>
-        <li>Todo requerimiento fuera del alcance descrito se cotiza por separado.</li>
-        <li>La aceptación de esta cotización puede realizarse por medios electrónicos.</li>
-      </ol>
+      <div style="font-family:var(--rep-serif);font-size:15px;font-weight:600;color:var(--rep-ink);margin-bottom:8px">Términos y condiciones</div>
+      <ol style="margin:0;padding-left:18px;font-size:11px;color:var(--rep-body);line-height:1.55">${tyc}</ol>
     </div>
 
-    <!-- Footer -->
-    <div class="report-footer">
-      <span class="rf-brand">Grupo Tríada · Consultoría Estratégica</span>
-      <span class="rf-code">${esc(code)}</span>
-    </div>
-  </div>`;
+    <div style="margin-top:auto;padding-top:16px;border-top:1px solid var(--rep-border);display:flex;justify-content:space-between;align-items:center;font-size:10.5px;color:var(--rep-faint);letter-spacing:.03em">
+      <span style="font-weight:600;color:var(--rep-muted)">Grupo Tríada · Consultoría Estratégica</span>
+      <span style="font-family:'Libre Franklin',monospace;letter-spacing:.04em">${esc(code)}</span>
+    </div>`;
 }
 
-// Abre el visor a pantalla completa con la cotización A4. "Descargar PDF" usa
-// window.print(): en móvil el diálogo del sistema permite Guardar/Compartir como PDF.
+// ── Visor a pantalla completa ───────────────────────────────────────────────
 export function openCotizacion(propuesta, lead) {
   const prev = document.getElementById('cotizacionViewer');
   if (prev) prev.remove();
@@ -157,14 +169,111 @@ export function openCotizacion(propuesta, lead) {
       <div class="rt-left">${LOGO(32)}<div><div class="rt-name">Cotización</div><div class="rt-meta">${esc((lead && (lead.empresa || lead.nombre)) || 'Sin prospecto')} · ${esc(code)}</div></div></div>
       <div class="rt-actions">
         <button id="ctzClose" style="${BTN_GHOST}">Cerrar</button>
+        <button id="ctzShare" style="${BTN_GHOST}">Compartir</button>
         <button id="ctzPrint" style="${BTN_PRIMARY}">Descargar PDF</button>
       </div>
     </div>
-    <div class="report-scroll"><div class="report-doc">${pageHtml(propuesta, lead)}</div></div>`;
+    <div class="report-scroll"><div class="report-doc"><div class="report-page" style="gap:0">${pageInner(propuesta, lead)}</div></div></div>`;
   document.body.appendChild(v);
   document.body.classList.add('has-report-open');
 
   v.querySelector('#ctzClose').onclick = () => { v.remove(); document.body.classList.remove('has-report-open'); };
   v.querySelector('#ctzPrint').onclick = () => window.print();
+  v.querySelector('#ctzShare').onclick = () => shareCotizacion(propuesta, lead);
   const sc = v.querySelector('.report-scroll'); if (sc) sc.scrollTop = 0;
+}
+
+// ── Generación del PDF como archivo (para compartir) ────────────────────────
+let _libs = null;
+async function loadLibs() {
+  if (_libs) return _libs;
+  const [jspdfMod, h2cMod] = await Promise.all([
+    import('https://cdn.jsdelivr.net/npm/jspdf@2.5.2/+esm'),
+    import('https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/+esm'),
+  ]);
+  _libs = { jsPDF: jspdfMod.jsPDF, html2canvas: h2cMod.default };
+  return _libs;
+}
+
+async function generatePdfBlob(prop, lead) {
+  const { jsPDF, html2canvas } = await loadLibs();
+  // Hoja A4 auto-contenida (794×1123px @96dpi), con los tokens definidos inline y
+  // SIN la clase .report-page → la media query responsive de informe.css no aplica.
+  const holder = document.createElement('div');
+  holder.style.cssText = 'position:fixed;left:-10000px;top:0;z-index:-1;pointer-events:none';
+  holder.innerHTML = `<div id="ctzCapture" style="${REP_VARS};width:794px;min-height:1123px;box-sizing:border-box;background:var(--rep-paper);color:var(--rep-ink);padding:83px 76px 60px;font-family:var(--rep-sans);display:flex;flex-direction:column">${pageInner(prop, lead)}</div>`;
+  document.body.appendChild(holder);
+  try {
+    if (document.fonts && document.fonts.ready) { try { await document.fonts.ready; } catch (_) {} }
+    const node = holder.querySelector('#ctzCapture');
+    const canvas = await html2canvas(node, { scale: 2, backgroundColor: '#FBF9F3', useCORS: true, logging: false });
+    const img = canvas.toDataURL('image/jpeg', 0.95);
+    const pdf = new jsPDF('p', 'mm', 'a4');
+    const pw = 210, ph = 297;
+    const imgH = canvas.height * pw / canvas.width;
+    if (imgH <= ph + 2) {
+      // Cabe en una hoja (tolerancia de redondeo sub-pixel). Clamp a 297mm para
+      // que la franja final no genere una 2ª página vacía ni se recorte el footer.
+      pdf.addImage(img, 'JPEG', 0, 0, pw, Math.min(imgH, ph));
+    } else {
+      // Cotización larga (muchos ítems) → pagina en A4 con el truco del offset.
+      let heightLeft = imgH, position = 0;
+      pdf.addImage(img, 'JPEG', 0, position, pw, imgH);
+      heightLeft -= ph;
+      while (heightLeft > 2) { position = heightLeft - imgH; pdf.addPage(); pdf.addImage(img, 'JPEG', 0, position, pw, imgH); heightLeft -= ph; }
+    }
+    return pdf.output('blob');
+  } finally {
+    holder.remove();
+  }
+}
+
+function shareFallbackSheet(lead, msg) {
+  const phone = ((lead && lead.telefono) || '').replace(/\D/g, '');
+  const email = (lead && lead.email) || '';
+  const wa = 'https://wa.me/' + phone + '?text=' + encodeURIComponent(msg);
+  const mail = 'mailto:' + encodeURIComponent(email) + '?subject=' + encodeURIComponent('Cotización Grupo Tríada') + '&body=' + encodeURIComponent(msg + '\n\n(Adjunto la cotización en PDF.)');
+  openSheet(`<div class="sheet__body">
+    <div class="sheet__title">Compartir cotización</div>
+    <div style="font-size:13px;color:var(--text2);margin-bottom:14px">El PDF se descargó a tu dispositivo. Adjúntalo en tu mensaje:</div>
+    <a href="${wa}" target="_blank" rel="noopener" style="display:flex;align-items:center;justify-content:center;gap:8px;height:48px;border-radius:var(--radius-sm);background:#25D366;color:#0b2e1a;font-weight:700;font-size:14px;text-decoration:none;margin-bottom:10px">WhatsApp</a>
+    <a href="${mail}" style="display:flex;align-items:center;justify-content:center;gap:8px;height:48px;border-radius:var(--radius-sm);background:var(--surface);border:1px solid var(--border);color:var(--text);font-weight:700;font-size:14px;text-decoration:none">Correo</a>
+  </div>`);
+}
+
+// Genera el PDF y lo entrega al share nativo del teléfono (WhatsApp/Correo/etc.
+// con el archivo adjunto). Si el equipo no soporta compartir archivos, descarga
+// el PDF y abre WhatsApp/correo con el texto para adjuntarlo manualmente.
+export async function shareCotizacion(prop, lead) {
+  toast('Preparando la cotización…', 'info');
+  let blob;
+  try {
+    blob = await generatePdfBlob(prop, lead);
+  } catch (err) {
+    console.error('cotizacion pdf', err);
+    toast('No se pudo generar el PDF de la cotización', 'err');
+    return;
+  }
+  const code = quoteCode(prop);
+  const { tot } = computeTotals(prop);
+  const nombre = (lead && lead.nombre) ? lead.nombre.split(/\s+/)[0] : '';
+  const msg = `Hola${nombre ? ' ' + nombre : ''}, te comparto la cotización de Grupo Tríada (N° ${code}) por ${formatCLP(tot)}.`;
+  const file = new File([blob], `Cotizacion-${code}.pdf`, { type: 'application/pdf' });
+
+  if (navigator.canShare && navigator.canShare({ files: [file] })) {
+    try {
+      await navigator.share({ files: [file], title: `Cotización ${code}`, text: msg });
+      return;
+    } catch (err) {
+      if (err && err.name === 'AbortError') return; // el usuario canceló
+      // cualquier otro error → cae al fallback
+    }
+  }
+  // Fallback: descarga el PDF y ofrece WhatsApp/correo (adjuntar a mano).
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = `Cotizacion-${code}.pdf`;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 5000);
+  shareFallbackSheet(lead, msg);
 }
