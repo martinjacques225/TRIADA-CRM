@@ -10,7 +10,8 @@
 // camino web para "enviar el PDF". Fallback: descarga + wa.me/mailto con texto.
 // ============================================================================
 import { store, formatCLP, formatDate, todayStr } from './core.js';
-import { toast, openSheet } from './ui.js';
+import { toast } from './ui.js';
+import { nodeToA4Pdf, shareFile } from './pdfshare.js';
 
 const esc = (s) => String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 const line = (it) => (Number(it.cantidad) || 0) * (Number(it.precioUnit) || 0);
@@ -183,67 +184,23 @@ export function openCotizacion(propuesta, lead) {
   const sc = v.querySelector('.report-scroll'); if (sc) sc.scrollTop = 0;
 }
 
-// ── Generación del PDF como archivo (para compartir) ────────────────────────
-let _libs = null;
-async function loadLibs() {
-  if (_libs) return _libs;
-  const [jspdfMod, h2cMod] = await Promise.all([
-    import('https://cdn.jsdelivr.net/npm/jspdf@2.5.2/+esm'),
-    import('https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/+esm'),
-  ]);
-  _libs = { jsPDF: jspdfMod.jsPDF, html2canvas: h2cMod.default };
-  return _libs;
-}
-
+// ── Generación del PDF + compartir (vía pdfshare.js) ────────────────────────
 async function generatePdfBlob(prop, lead) {
-  const { jsPDF, html2canvas } = await loadLibs();
-  // Hoja A4 auto-contenida (794×1123px @96dpi), con los tokens definidos inline y
-  // SIN la clase .report-page → la media query responsive de informe.css no aplica.
+  // Hoja A4 auto-contenida (794×1123px @96dpi): tokens --rep-* inline + SIN la
+  // clase .report-page → la media query responsive de informe.css no la afecta.
   const holder = document.createElement('div');
   holder.style.cssText = 'position:fixed;left:-10000px;top:0;z-index:-1;pointer-events:none';
   holder.innerHTML = `<div id="ctzCapture" style="${REP_VARS};width:794px;min-height:1123px;box-sizing:border-box;background:var(--rep-paper);color:var(--rep-ink);padding:83px 76px 60px;font-family:var(--rep-sans);display:flex;flex-direction:column">${pageInner(prop, lead)}</div>`;
   document.body.appendChild(holder);
   try {
-    if (document.fonts && document.fonts.ready) { try { await document.fonts.ready; } catch (_) {} }
-    const node = holder.querySelector('#ctzCapture');
-    const canvas = await html2canvas(node, { scale: 2, backgroundColor: '#FBF9F3', useCORS: true, logging: false });
-    const img = canvas.toDataURL('image/jpeg', 0.95);
-    const pdf = new jsPDF('p', 'mm', 'a4');
-    const pw = 210, ph = 297;
-    const imgH = canvas.height * pw / canvas.width;
-    if (imgH <= ph + 2) {
-      // Cabe en una hoja (tolerancia de redondeo sub-pixel). Clamp a 297mm para
-      // que la franja final no genere una 2ª página vacía ni se recorte el footer.
-      pdf.addImage(img, 'JPEG', 0, 0, pw, Math.min(imgH, ph));
-    } else {
-      // Cotización larga (muchos ítems) → pagina en A4 con el truco del offset.
-      let heightLeft = imgH, position = 0;
-      pdf.addImage(img, 'JPEG', 0, position, pw, imgH);
-      heightLeft -= ph;
-      while (heightLeft > 2) { position = heightLeft - imgH; pdf.addPage(); pdf.addImage(img, 'JPEG', 0, position, pw, imgH); heightLeft -= ph; }
-    }
-    return pdf.output('blob');
+    return await nodeToA4Pdf(holder.firstElementChild);
   } finally {
     holder.remove();
   }
 }
 
-function shareFallbackSheet(lead, msg) {
-  const phone = ((lead && lead.telefono) || '').replace(/\D/g, '');
-  const email = (lead && lead.email) || '';
-  const wa = 'https://wa.me/' + phone + '?text=' + encodeURIComponent(msg);
-  const mail = 'mailto:' + encodeURIComponent(email) + '?subject=' + encodeURIComponent('Cotización Grupo Tríada') + '&body=' + encodeURIComponent(msg + '\n\n(Adjunto la cotización en PDF.)');
-  openSheet(`<div class="sheet__body">
-    <div class="sheet__title">Compartir cotización</div>
-    <div style="font-size:13px;color:var(--text2);margin-bottom:14px">El PDF se descargó a tu dispositivo. Adjúntalo en tu mensaje:</div>
-    <a href="${wa}" target="_blank" rel="noopener" style="display:flex;align-items:center;justify-content:center;gap:8px;height:48px;border-radius:var(--radius-sm);background:#25D366;color:#0b2e1a;font-weight:700;font-size:14px;text-decoration:none;margin-bottom:10px">WhatsApp</a>
-    <a href="${mail}" style="display:flex;align-items:center;justify-content:center;gap:8px;height:48px;border-radius:var(--radius-sm);background:var(--surface);border:1px solid var(--border);color:var(--text);font-weight:700;font-size:14px;text-decoration:none">Correo</a>
-  </div>`);
-}
-
-// Genera el PDF y lo entrega al share nativo del teléfono (WhatsApp/Correo/etc.
-// con el archivo adjunto). Si el equipo no soporta compartir archivos, descarga
-// el PDF y abre WhatsApp/correo con el texto para adjuntarlo manualmente.
+// Genera el PDF y lo entrega al share nativo del teléfono (WhatsApp/Correo con el
+// archivo adjunto); fallback (descarga + wa.me/mailto al lead) vive en shareFile.
 export async function shareCotizacion(prop, lead) {
   toast('Preparando la cotización…', 'info');
   let blob;
@@ -258,22 +215,5 @@ export async function shareCotizacion(prop, lead) {
   const { tot } = computeTotals(prop);
   const nombre = (lead && lead.nombre) ? lead.nombre.split(/\s+/)[0] : '';
   const msg = `Hola${nombre ? ' ' + nombre : ''}, te comparto la cotización de Grupo Tríada (N° ${code}) por ${formatCLP(tot)}.`;
-  const file = new File([blob], `Cotizacion-${code}.pdf`, { type: 'application/pdf' });
-
-  if (navigator.canShare && navigator.canShare({ files: [file] })) {
-    try {
-      await navigator.share({ files: [file], title: `Cotización ${code}`, text: msg });
-      return;
-    } catch (err) {
-      if (err && err.name === 'AbortError') return; // el usuario canceló
-      // cualquier otro error → cae al fallback
-    }
-  }
-  // Fallback: descarga el PDF y ofrece WhatsApp/correo (adjuntar a mano).
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url; a.download = `Cotizacion-${code}.pdf`;
-  document.body.appendChild(a); a.click(); a.remove();
-  setTimeout(() => URL.revokeObjectURL(url), 5000);
-  shareFallbackSheet(lead, msg);
+  await shareFile(blob, `Cotizacion-${code}.pdf`, { lead, message: msg });
 }

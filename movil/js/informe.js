@@ -9,6 +9,7 @@ import { computeInforme } from '../../modules/informe-ejecutivo/informe.engine.j
 import { buildReportDoc } from '../../modules/informe-ejecutivo/informe.view.js';
 import { store, db } from './core.js';
 import { toast } from './ui.js';
+import { nodeToA4Pdf, shareFile } from './pdfshare.js';
 
 const esc = (s) => String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
@@ -37,6 +38,7 @@ export function openInforme(diag, prospecto, evaluador) {
       <div class="rt-left">${LOGO_TRI}<div><div class="rt-name">Informe Ejecutivo 360</div><div class="rt-meta">${esc(rep.empresa)} · ${esc(rep.codigo)}</div></div></div>
       <div class="rt-actions">
         <button id="rtClose" style="${BTN_GHOST}">Cerrar</button>
+        <button id="rtShare" style="${BTN_GHOST}">Compartir</button>
         <button id="rtPrint" style="${BTN_PRIMARY}">Descargar PDF</button>
       </div>
     </div>
@@ -46,8 +48,38 @@ export function openInforme(diag, prospecto, evaluador) {
 
   v.querySelector('#rtClose').onclick = () => { v.remove(); document.body.classList.remove('has-report-open'); };
   v.querySelector('#rtPrint').onclick = () => window.print();
+  v.querySelector('#rtShare').onclick = () => shareInforme(rep, prospecto);
   const sc = v.querySelector('.report-scroll'); if (sc) sc.scrollTop = 0;
   return rep;
+}
+
+// Genera el PDF del informe (8 hojas A4) y lo entrega al share nativo del teléfono
+// (WhatsApp/Correo con el archivo adjunto). Captura cada `.report-page` con
+// windowWidth=1120 para forzar el layout A4 de escritorio (informe.css se reflowea
+// en móvil). Es pesado (8 hojas) → toast de "preparando". Fallback en shareFile.
+async function shareInforme(rep, prospecto) {
+  const v = document.getElementById('informeViewer');
+  const doc = v && v.querySelector('.report-doc');
+  if (!doc) { toast('Abre el informe primero', 'err'); return; }
+  // El informe son 8 hojas → la generación tarda varios segundos. Estado de carga
+  // en el botón para que no parezca colgado (el toast se desvanece solo).
+  const btn = v.querySelector('#rtShare');
+  const label = btn ? btn.textContent : '';
+  if (btn) { btn.disabled = true; btn.style.opacity = '.6'; btn.textContent = 'Preparando…'; }
+  toast('Preparando el informe… puede tardar unos segundos', 'info');
+  let blob;
+  try {
+    blob = await nodeToA4Pdf(doc, { perPage: true, windowWidth: 1120 });
+  } catch (err) {
+    console.error('informe pdf', err);
+    toast('No se pudo generar el PDF del informe', 'err');
+    return;
+  } finally {
+    if (btn) { btn.disabled = false; btn.style.opacity = ''; btn.textContent = label; }
+  }
+  const nombre = (prospecto && prospecto.nombre) ? prospecto.nombre.split(/\s+/)[0] : '';
+  const msg = `Hola${nombre ? ' ' + nombre : ''}, te comparto el Informe Ejecutivo 360 de Grupo Tríada${rep.codigo ? ' (' + rep.codigo + ')' : ''}.`;
+  await shareFile(blob, `Informe-360-${rep.codigo || 'Triada'}.pdf`, { lead: prospecto, message: msg });
 }
 
 // Carga el diagnóstico (+ prospecto + evaluador desde el perfil) y abre el informe.
