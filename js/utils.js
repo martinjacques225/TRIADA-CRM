@@ -19,16 +19,23 @@ export function todayStr() {
   return new Date().toISOString().slice(0, 10);
 }
 
+// Parsea fechas 'YYYY-MM-DD' como LOCALES: si se dejan a `new Date(str)` se
+// interpretan como UTC-medianoche y, en zonas detrás de UTC (p. ej. Chile),
+// se muestran corridas un día hacia atrás. Las fechas-hora completas (ISO con
+// T/Z) se dejan pasar tal cual.
+function parseLocalDate(iso) {
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(iso));
+  return m ? new Date(+m[1], +m[2] - 1, +m[3]) : new Date(iso);
+}
+
 export function formatDate(iso) {
   if (!iso) return '—';
-  const d = new Date(iso);
-  return d.toLocaleDateString('es-CL', { day:'2-digit', month:'short', year:'numeric' });
+  return parseLocalDate(iso).toLocaleDateString('es-CL', { day:'2-digit', month:'short', year:'numeric' });
 }
 
 export function formatDateShort(iso) {
   if (!iso) return '—';
-  const d = new Date(iso);
-  return d.toLocaleDateString('es-CL', { day:'2-digit', month:'short' });
+  return parseLocalDate(iso).toLocaleDateString('es-CL', { day:'2-digit', month:'short' });
 }
 
 export function formatCLP(n) {
