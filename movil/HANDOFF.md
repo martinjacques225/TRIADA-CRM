@@ -1,7 +1,7 @@
 # HANDOFF — Tríada CRM Móvil (PWA de terreno)
 
 > Documento vivo · fuente de verdad del proyecto.
-> Última actualización: **2026-06-24** · Estado: **✅ COMPLETO y DESPLEGADO**
+> Última actualización: **2026-06-25** · Estado: **✅ COMPLETO y DESPLEGADO**
 
 ---
 
@@ -48,7 +48,7 @@ y en preview los mocks `/_preview/mock-{supabase,db}.js` (vía import-map de `pr
 |---|---|
 | **Auth** | Splash animado · Login · Crear contraseña (invitación/recuperación) — Supabase Auth real |
 | **Pantallas** | Hoy · Leads · Captura (RUT mód-11) · Ficha (tabs) · Pipeline · Agenda (Lista/Día) · Nueva cita (date/time nativos, editar) · Propuesta (ítems + Subtotal→IVA 19%→Total) · Perfil (tema swatch, equipo, cambiar contraseña, cerrar sesión) |
-| **⭐ Diagnóstico 360** | EXACTO al de PC: 27 preguntas/sub-dimensiones, toggle No/Parcial/Sí, progreso X/27 + puntaje por área en vivo, guarda en `diagnosticos` (scoresTec/Ventas/Finanzas 0/0.5/1). Usa `DIAG_PREGUNTAS`/`scorePct` del CRM |
+| **⭐ Diagnóstico 360** | EXACTO al de PC en contenido **Y forma** (2026-06-25): las **27 preguntas (3 áreas × 9) en UN SOLO scroll** apiladas como el PC (ya NO una-a-la-vez por tabs), cabecera de área con ícono + puntaje en vivo, toggle No/Parcial/Sí, progreso X/27, resumen "Puntaje por área" + **Hallazgos y Oportunidades** (textarea, parseados por línea → paridad PC). Tabs superiores = **salto rápido + scroll-spy** (IntersectionObserver). Botón Guardar = **footer sticky** (ver §6). Guarda en `diagnosticos` (scoresTec/Ventas/Finanzas 0/0.5/1 + hallazgos/oportunidades). Usa `DIAG_PREGUNTAS`/`DIAG_GRUPOS`/`scorePct` del CRM |
 | **⭐ Informe PDF** | `js/informe.js` reutiliza el motor del CRM → 8 págs A4 idénticas; "Descargar PDF" = `window.print()` (en móvil = Guardar/Compartir como PDF). Verificado con PDF A4 real (Chrome headless) |
 | **Sync EN VIVO** | `js/realtime.js` (móvil **y** PC): un cambio en un dispositivo refresca el otro solo. Móvil refresca listas conservando scroll; PC refresca salvo modal abierto |
 | **Actualizaciones** | sw.js v2 (espera sin skipWaiting) + banner "Nueva versión" → SKIP_WAITING + reload · **pull-to-refresh** en listas |
@@ -94,3 +94,4 @@ y en preview los mocks `/_preview/mock-{supabase,db}.js` (vía import-map de `pr
 - **Forms:** `_form` se carga 1 vez por navegación (`_formKey`) + `syncInputs()` antes de cada re-render → no se pierde lo escrito.
 - **PDF headless:** el visor tiene `animation:fadeIn` → en print estático headless deja páginas en blanco. Fix del harness de verificación: `@media print{*{animation:none!important;transition:none!important}}` + `--virtual-time-budget` + `--user-data-dir` (instancia nueva). La app real NO sufre esto (al `print()` la animación ya terminó). Harness en `Desktop/files/_movil_pdf/`.
 - **Screenshots del Preview MCP** se pusieron intermitentes en sesiones largas (timeouts) → reiniciar el server; la verificación funcional vía `preview_eval` es más robusta.
+- **`.action-bar` (footer de formularios) flota a media lista:** la clase (`css/app.css` ~L197) usa `position:absolute;bottom:0` anclada a `#screen` (scroll container) → `bottom:0` se resuelve contra la altura **visible** (812px), no la del contenido, así que en cualquier form más alto que el viewport el botón aterriza a media página y se va al scrollear. **Fix aplicado en `diagnostico.js`:** `<div class="action-bar" style="position:sticky">` → footer en flujo, siempre abajo, no tapa el último contenido (sirve porque el 360 siempre supera el viewport). ⚠️ **`cita`/`captura`/`propuesta` aún tienen el bug latente** (mismo origen, `cita` verificado): `sticky` NO basta si el form es corto (`captura`) → ahí evaluar `.screen{position:relative}` revisando que no rompa FABs. Tarea de seguimiento abierta.
