@@ -1,0 +1,62 @@
+/* ============================================================
+   FOUNDATION KIT · Pilar MARCA · brand.css
+   👉 LA "PIEL" — ESTE es el ÚNICO archivo que editas por cliente.
+   ============================================================
+   Por defecto trae la marca Tríada. Para re-marcar una plantilla a un
+   cliente (ej. un restaurante), cambias SOLO los valores de acá:
+   color primario, secundario, los 3 trazos del logo y las fuentes.
+   El sistema (theme.css) NO se toca: mantiene la calidad y consistencia.
+
+   Orden de carga en el HTML:  theme.css  →  brand.css  →  components.css
+   ============================================================ */
+
+:root {
+  /* ── Identidad básica ─────────────────────────────────────── */
+  --brand-name: "Tríada";          /* texto del wordmark (también en logo.js) */
+
+  /* ── Color PRIMARIO (la firma de la marca; botones, enlaces, activo) ── */
+  /* Tríada = teal. Para un cliente, reemplazá toda la escala por la suya. */
+  --color-primary:      #0C7C88;
+  --color-primary-hover:#0A626C;
+  --color-primary-50:   #ECF7F8;
+  --color-primary-100:  #D3EBED;
+  --color-primary-200:  #A8D8DC;
+  --color-primary-300:  #6FBEC5;
+  --color-primary-400:  #2BA0AB;
+  --color-primary-500:  #0C7C88;
+  --color-primary-600:  #0A626C;
+  --color-primary-700:  #084E56;
+  --color-primary-800:  #073E44;
+  --color-primary-900:  #062F34;
+  --ring: 0 0 0 3px rgba(12,124,136,.16);   /* focus ring = primario al 16% */
+
+  /* ── Color SECUNDARIO / autoridad (heros, texto fuerte, estructura) ── */
+  --color-navy:     #16234A;
+  --color-navy-700: #0F1933;
+  --color-ink:      #142037;       /* tinta de titulares */
+
+  /* ── Acento premium (uso MUY puntual: sellos, líneas de gala) ── */
+  --color-brass: #B8893B;
+
+  /* ── Los 3 trazos del símbolo (logo.js los lee) ──────────────── */
+  --logo-1: #16234A;   /* trazo inferior  — navy */
+  --logo-2: #0C7C88;   /* trazo medio     — teal/primario */
+  --logo-3: #2E9B73;   /* trazo superior  — verde/éxito */
+
+  /* ── Fuentes de marca ─────────────────────────────────────────
+     Tríada: Newsreader (serif editorial) + Hanken Grotesk (UI).
+     Si el cliente usa otras, cambialas acá y ajustá el @import del HTML. */
+  --font-serif: 'Newsreader', Georgia, 'Times New Roman', serif;
+  --font-sans:  'Hanken Grotesk', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  --font-mono:  'JetBrains Mono', 'IBM Plex Mono', ui-monospace, monospace;
+}
+
+/* Ajuste del primario en tema oscuro (teal más brillante).
+   Si cambiás el primario de un cliente, ajustá también esta versión. */
+[data-theme="dark"] {
+  --color-primary:      #2BBCC4;
+  --color-primary-hover:#1E9AA2;
+  --color-navy:         #2C3E72;
+  --color-brass:        #CBA15A;
+  --ring: 0 0 0 3px rgba(43,188,196,.22);
+}

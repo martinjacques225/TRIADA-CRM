@@ -1,0 +1,94 @@
+/* ============================================================================
+   TRÍADA RESTAURANT CRM · Design Tokens
+   Fuente: docs/TRIADA_BRAND_SYSTEM.md §16 (fuente única de verdad de marca).
+   Regla: usar SIEMPRE tokens, nunca HEX sueltos. Teal = acento (~10%).
+   ========================================================================== */
+
+:root {
+  /* ---- Marca ---- */
+  --color-primary: #0C7C88;       /* teal-500 */
+  --color-primary-hover: #0A626C; /* teal-600 */
+  --color-primary-50: #ECF7F8;
+  --color-primary-100: #D3EBED;
+  --color-primary-200: #A8D8DC;
+  --color-primary-300: #6FBEC5;
+  --color-primary-400: #2BA0AB;
+  --color-primary-500: #0C7C88;
+  --color-primary-600: #0A626C;
+  --color-primary-700: #084E56;
+
+  --color-navy: #16234A;          /* navy-600 */
+  --color-navy-700: #0F1933;
+  --color-ink: #142037;
+
+  /* ---- Semánticos ---- */
+  --color-success: #2E9B73;  --color-success-soft: #E4F2EB; --color-success-fg: #1F7A57;
+  --color-warning: #C2871A;  --color-warning-soft: #F8F0DD; --color-warning-fg: #9A6B12;
+  --color-error:   #C04F3F;  --color-error-soft:   #F9E9E6; --color-error-fg: #B23A2A;
+  --color-info:    #5160C0;  --color-info-soft:    #ECEEFA; --color-info-fg: #3F4CA8;
+  --color-brass:   #B8893B;
+
+  /* ---- Neutrales minerales ---- */
+  --color-bg: #F4F6F8;
+  --color-surface: #FFFFFF;
+  --color-surface-2: #F0F2F6;
+  --color-surface-3: #E7EBF1;
+  --color-border: #E5E9F0;
+  --color-border-2: #D6DCE6;
+  --color-text: #2A3553;
+  --color-text-2: #5E6A85;
+  --color-text-3: #94A0B6;
+
+  /* ---- Tipografía ---- */
+  --font-sans: 'Hanken Grotesk', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  --font-serif: 'Newsreader', Georgia, 'Times New Roman', serif;
+  --font-mono: 'JetBrains Mono', 'IBM Plex Mono', ui-monospace, monospace;
+
+  /* ---- Espaciado (base 4px) ---- */
+  --space-1: 4px;  --space-2: 8px;  --space-3: 12px; --space-4: 16px;
+  --space-5: 20px; --space-6: 24px; --space-8: 32px; --space-10: 40px;
+  --space-12: 48px; --space-16: 64px; --space-20: 80px; --space-24: 96px;
+
+  /* ---- Radios ---- */
+  --radius-xs: 7px; --radius-sm: 10px; --radius-md: 14px;
+  --radius-lg: 20px; --radius-xl: 28px; --radius-full: 9999px;
+
+  /* ---- Sombras (tintadas navy, nunca negro duro) ---- */
+  --shadow-sm: 0 1px 2px rgba(20,32,55,.05), 0 1px 1px rgba(20,32,55,.03);
+  --shadow:    0 4px 14px rgba(20,32,55,.07), 0 1px 3px rgba(20,32,55,.05);
+  --shadow-lg: 0 18px 48px rgba(20,32,55,.16), 0 6px 16px rgba(20,32,55,.08);
+  --ring:      0 0 0 3px rgba(12,124,136,.16);
+
+  /* ---- Movimiento ---- */
+  --ease: cubic-bezier(.22,.61,.36,1);
+  --ease-ui: cubic-bezier(.4,0,.2,1);
+  --dur-fast: 120ms; --dur-base: 180ms; --dur-med: 280ms; --dur-slow: 400ms;
+
+  /* ---- Layout ---- */
+  --container-max: 1400px;
+}
+
+/* ============================================================================
+   Tema oscuro canónico (§5.5 / §16). Recomendado para Cocina/KDS.
+   Selector de atributo: aplica a cualquier subárbol con [data-theme="dark"],
+   no solo a :root — así Cocina puede ser oscuro mientras Cajero queda claro.
+   ========================================================================== */
+[data-theme="dark"] {
+  --color-bg: #0B1220;        --color-surface: #111A2C;
+  --color-surface-2: #16223A; --color-surface-3: #1E2C48;
+  --color-border: #233351;    --color-border-2: #2E4063;
+  --color-ink: #ECF1FA;       --color-text: #C5D0E4;
+  --color-text-2: #8C99B5;    --color-text-3: #5C6B8A;
+  --color-primary: #2BBCC4;   --color-primary-hover: #1E9AA2;
+  --color-primary-50: #16223A; --color-primary-100: #1E2C48; --color-primary-200: #2E4063;
+  --color-navy: #2C3E72;
+  --color-success: #3FB587;   --color-success-soft: rgba(63,181,135,.15); --color-success-fg: #6FD3AB;
+  --color-warning: #DDA73A;   --color-warning-soft: rgba(221,167,58,.15); --color-warning-fg: #E8C271;
+  --color-error: #E0705F;     --color-error-soft: rgba(224,112,95,.15);   --color-error-fg: #ED9586;
+  --color-info: #7C8AE0;      --color-info-soft: rgba(124,138,224,.15);   --color-info-fg: #A2ADEC;
+  --color-brass: #CBA15A;
+  --shadow-sm: 0 1px 2px rgba(0,0,0,.3);
+  --shadow:    0 4px 16px rgba(0,0,0,.4);
+  --shadow-lg: 0 18px 50px rgba(0,0,0,.55);
+  --ring:      0 0 0 3px rgba(43,188,196,.22);
+}

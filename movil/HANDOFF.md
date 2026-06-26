@@ -33,8 +33,13 @@ movil/
   js/informe.js     · ⭐ Informe PDF (reutiliza computeInforme + buildReportDoc del CRM)
   js/tria.js        · asistente trIA (reglas sobre datos reales)
   js/campana.js     · panel de recordatorios
-  js/screens/       · auth · hoy · leads · captura · ficha · pipeline · diagnostico · agenda · cita · propuesta · perfil
+  js/screens/       · auth · hoy · leads · captura · ficha · pipeline · diagnostico · agenda · cita · propuesta · perfil · demos
 ```
+
+> **Vitrina de demos:** `demos/screens.js` lista plantillas (constante `DEMOS`) y abre cada una a
+> pantalla completa. Las demos viven **vendorizadas en `../demos/<id>/`** (FUERA de `movil/`, en la
+> raíz del repo → mismo despliegue de GitHub Pages, sin Vercel ni terceros). Hoy: `demos/restaurant/`
+> y `demos/barberia/`. Ver `demos/README.md` para cómo refrescar un snapshot.
 
 **Costura de datos:** todo cruce a `../../js/` y `../../modules/` pasa SOLO por `js/core.js`.
 Reutiliza del CRM: `js/{supabase,db,utils,format,icons,realtime}.js`, `modules/informe-ejecutivo/*`,
@@ -55,6 +60,7 @@ y en preview los mocks `/_preview/mock-{supabase,db}.js` (vía import-map de `pr
 | **trIA** | Asistente de reglas (sin IA externa) sobre datos reales: reunión de hoy / pasos del pipeline / resumen / redactar+enviar WhatsApp. Cada respuesta trae acción. Rotulado IA |
 | **Campana** | Recordatorios: reuniones de hoy con cuenta regresiva + leads por contactar; badge condicional |
 | **Multiusuario** | Mismo Auth + RLS/roles que el CRM. Alta del equipo guiada (ver §3) |
+| **⭐ Demos** | Más → **Demos**: vitrina de plantillas try-before-buy que se abren a pantalla completa, con todas sus funciones (botón Abrir + Compartir enlace por share nativo). **CRM de Restaurantes** (4 roles) y **Barbería Triada** (web·reservas·cursos·CRM), ambas vendorizadas en `../demos/` y servidas por GitHub Pages. Verificado 2026-06-25 (boot real de las 2, cero overflow a 375px, cero errores de consola) |
 | **PWA** | Instalable (íconos PNG), tema claro/oscuro/matrix, **responsive verificado 320–360px (cero desbordes)** |
 
 ## 3. Supabase — SQL a correr y estado del equipo
@@ -97,3 +103,14 @@ y en preview los mocks `/_preview/mock-{supabase,db}.js` (vía import-map de `pr
 - **`.action-bar` (footer de formularios) — RESUELTO globalmente (2026-06-25):** la clase usaba `position:absolute;bottom:0` anclada a `#screen` (scroll container) → `bottom:0` se resolvía contra la altura **visible**, no la del contenido, así que en cualquier form más alto que el viewport el botón flotaba a media lista y se iba al scrollear. **Fix:** `.action-bar{position:sticky}` + las 4 pantallas de formulario (diagnóstico/cita/captura/propuesta) con `.screen{display:flex;flex-direction:column}` y `.pad-form{flex:1}` → el botón queda SIEMPRE de footer abajo (pinned al viewport en todo scroll, sin tapar el último campo). Verificado en las 4. **Ojo de verificación:** la animación de entrada `.screen{animation:scrn}` hace un `translateY(8px)` y la pestaña del preview EN SEGUNDO PLANO la congela (gotcha de [[reference_preview_mcp_gotchas]]) → al medir la barra sale 8px corrida; forzar `animation:none` antes de medir (en el dispositivo real la animación termina y queda exacta).
 - **`.fab--create` (botón "+"):** el ícono usa `currentColor`; la clase no fijaba `color`, así que el "+" salía **negro** sobre el botón navy (muddy). Fix: `color:#fff` → "+" blanco nítido (como el logo claro del FAB de trIA sobre teal).
 - **Compartir PDFs (cotización + informe) — helpers en `js/pdfshare.js`:** `wa.me`/`mailto` NO adjuntan archivos → el único camino web para "enviar el PDF" es `navigator.share({files})` (share nativo del teléfono). El PDF-archivo se genera con **html2canvas + jsPDF** (CDN, `import()` dinámico — no hay CSP en el móvil). **Dos estrategias según el documento:** (a) **cotización** = una hoja A4 **auto-contenida** (tokens `--rep-*` inline + ancho 794px, SIN la clase `.report-page`) → la media query responsive de informe.css no la afecta; paginación con clamp (si `imgH ≤ 297mm+2` va a 1 hoja, evita 2ª página vacía por redondeo). (b) **informe** = SÍ usa toda `informe.css` (no se puede auto-contener) → se captura cada `.report-page` con **`html2canvas({windowWidth:1120})`**, que simula ventana de escritorio y **derrota el breakpoint <880px** (sin esto, una hoja A4 ~794px se reflowea a móvil). `pdfshare.nodeToA4Pdf(node, {perPage, windowWidth})` cubre ambos. El "Descargar PDF" (window.print → @media print) es vector y separado del share. El informe (8 hojas) tarda ~13s+ → estado de carga en el botón.
+- **Demo Barbería — portón de login (¡ojo al re-vendorizar!):** la app de la Barbería bloquea TODA la
+  demo tras un login real **solo cuando hay Supabase conectado** (`app.js`: `v.locked = BT_DB.ready && !authed`).
+  Por eso la copia de la vitrina corre en **modo demo local**: `demos/barberia/assets/js/config.js` tiene las
+  llaves **vacías** a propósito → `BT_DB.ready=false` → sin portón → toda la plataforma navegable (datos de
+  ejemplo). Si refrescas el snapshot copiando el front canónico encima, **vuelve a quedar el `config.js` con
+  backend real y reaparece el login** → hay que volver a vaciar las llaves. El repo canónico BARBER-TEMPLATE
+  conserva su backend; acá NO se vendoriza credencial alguna.
+- **Demos vendorizadas bajo subpath:** ambas plantillas son front 100% estático con **rutas e imports
+  relativos** (Restaurant: ES modules + hash-router; Barbería: cargador con `assets/…`), por eso corren bien
+  bajo `…/TRIADA-CRM/demos/<id>/`. `movil/js/screens/demos.js` resuelve la URL con `new URL('../demos/<id>/', location.href)`
+  → correcto tanto en `…/movil/` (prod) como en `/movil/preview` (verificación).

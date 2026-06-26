@@ -1,0 +1,54 @@
+/* ============================================================
+   BARBERÍA TRIADA · app.css
+   "Chrome" del showcase + puente al Foundation Kit.
+   Carga DESPUÉS de theme.css → brand.css → components.css.
+
+   El showcase usa su propio set de variables (--accent, --app-bg,
+   --surface, --ink, …) que app.js sobreescribe en runtime según la
+   paleta / tema elegidos. Acá las INICIALIZAMOS desde los tokens del
+   Foundation Kit (brand.css / theme.css), así la marca por defecto es
+   la del kit y re-skinear = editar brand.css (no este archivo).
+   ============================================================ */
+:root {
+  --accent:      var(--color-primary, #0C7C88);
+  --accent-h:    var(--color-primary-hover, #0A626C);
+  --accent-soft: var(--color-primary-50, #ECF7F8);
+  --accent-100:  var(--color-primary-100, #D3EBED);
+  --accent-700:  var(--color-primary-700, #084E56);
+  --accent-fg:   #fff;
+
+  --app-bg:   var(--color-bg, #F4F6F8);
+  --surface:  var(--color-surface, #FFFFFF);
+  --surface2: var(--color-surface-2, #F0F2F6);
+  --ink:      var(--color-ink, #142037);
+  --txt:      var(--color-text, #2A3553);
+  --txt2:     var(--color-text-2, #5E6A85);
+  --txt3:     var(--color-text-3, #94A0B6);
+  --border:   var(--color-border, #E5E9F0);
+  --border2:  var(--color-border-2, #D6DCE6);
+  --hair:     #EEF0F4;
+
+  --tile-bg: var(--accent-soft);
+  --tile-fg: var(--accent-700);
+  --ease:    cubic-bezier(.22, .61, .36, 1);
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+/* Lienzo oscuro del showcase (el wrapper interno pinta su propio degradado). */
+body {
+  font-family: 'Hanken Grotesk', system-ui, -apple-system, sans-serif;
+  background: #0B1326;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+input, button { font-family: inherit; }
+
+/* Scrollbars ocultas (riel, marcos, carruseles). */
+.scr { scrollbar-width: none; }
+.scr::-webkit-scrollbar { display: none; }
+
+@keyframes triaBreath { 0%, 100% { transform: translateY(0) scale(1); opacity: .7 } 50% { transform: translateY(-1.5px) scale(1.05); opacity: .95 } }
+@keyframes pulseRing  { 0% { transform: scale(.85); opacity: .55 } 100% { transform: scale(1.7); opacity: 0 } }
+
+@media (prefers-reduced-motion: reduce) { * { animation: none !important; } }

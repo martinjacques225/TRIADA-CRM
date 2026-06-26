@@ -1,0 +1,97 @@
+/* ============================================================
+   FOUNDATION KIT · Pilar MARCA · theme.css
+   ⚙️ EL SISTEMA — NO editar por cliente. Esto da la calidad Tríada.
+   ============================================================
+   Neutrales minerales, semánticos, escala de espaciado (base 4px),
+   radios, sombras tintadas en navy, tipografía y motion. Estable entre
+   TODOS los productos. Lo que cambia por cliente vive en brand.css.
+
+   Carga:  theme.css  →  brand.css  →  components.css
+   Fuentes (en el <head> del HTML, antes que estos CSS):
+   <link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700;800&family=Newsreader:opsz,wght@6..72,400;6..72,500;6..72,600&display=swap" rel="stylesheet">
+   ============================================================ */
+
+:root {
+  /* ── Neutrales minerales (la base ~60% de la UI) ── */
+  --color-bg:        #F4F6F8;
+  --color-surface:   #FFFFFF;
+  --color-surface-2: #F0F2F6;
+  --color-surface-3: #E7EBF1;
+  --color-border:    #E5E9F0;
+  --color-border-2:  #D6DCE6;
+  --color-text:      #2A3553;
+  --color-text-2:    #5E6A85;
+  --color-text-3:    #94A0B6;
+
+  /* ── Semánticos (estado; iguales en todos los productos) ── */
+  --color-success: #2E9B73;  --color-success-soft: #E4F2EB;
+  --color-warning: #C2871A;  --color-warning-soft: #F8F0DD;
+  --color-error:   #C04F3F;  --color-error-soft:   #F9E9E6;
+  --color-info:    #5160C0;  --color-info-soft:    #ECEEFA;
+
+  /* ── Espaciado (base 4px = Tailwind 1:1) ── */
+  --space-1: 4px;  --space-2: 8px;  --space-3: 12px; --space-4: 16px;
+  --space-5: 20px; --space-6: 24px; --space-8: 32px; --space-10: 40px;
+  --space-12: 48px; --space-16: 64px; --space-20: 80px; --space-24: 96px;
+
+  /* ── Radios ── */
+  --radius-xs: 7px; --radius-sm: 10px; --radius-md: 14px;
+  --radius-lg: 20px; --radius-xl: 28px; --radius-full: 9999px;
+
+  /* ── Sombras tintadas en navy (nunca negro duro) ── */
+  --shadow-sm: 0 1px 2px rgba(20,32,55,.05), 0 1px 1px rgba(20,32,55,.03);
+  --shadow:    0 4px 14px rgba(20,32,55,.07), 0 1px 3px rgba(20,32,55,.05);
+  --shadow-lg: 0 18px 48px rgba(20,32,55,.16), 0 6px 16px rgba(20,32,55,.08);
+
+  /* ── Motion ── */
+  --ease:    cubic-bezier(.22,.61,.36,1);   /* entrada / marca */
+  --ease-ui: cubic-bezier(.4,0,.2,1);       /* UI general */
+  --dur-fast: 120ms; --dur-base: 180ms; --dur-med: 280ms; --dur-slow: 400ms;
+
+  /* ── Layout ── */
+  --container-max: 1400px;
+  --nav-w: 260px;
+}
+
+/* ── Tema oscuro canónico (neutrales; el primario lo ajusta brand.css) ── */
+[data-theme="dark"] {
+  --color-bg:        #0B1220;
+  --color-surface:   #111A2C;
+  --color-surface-2: #16223A;
+  --color-surface-3: #1E2C48;
+  --color-border:    #233351;
+  --color-border-2:  #2E4063;
+  --color-ink:       #ECF1FA;
+  --color-text:      #C5D0E4;
+  --color-text-2:    #8C99B5;
+  --color-text-3:    #5C6B8A;
+  --color-success:   #3FB587;  --color-warning: #DDA73A;
+  --color-error:     #E0705F;  --color-info:    #7C8AE0;
+  --shadow:    0 4px 16px rgba(0,0,0,.4);
+  --shadow-lg: 0 18px 50px rgba(0,0,0,.55);
+}
+
+/* ── Reset mínimo + base tipográfica ── */
+*, *::before, *::after { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font-sans);
+  font-size: 15px;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+}
+h1, h2, h3 { font-family: var(--font-serif); color: var(--color-ink); line-height: 1.15; margin: 0 0 .4em; }
+h1 { font-size: 40px; font-weight: 600; letter-spacing: -.01em; }
+h2 { font-size: 30px; font-weight: 600; }
+h3 { font-size: 24px; font-weight: 600; }
+h4, h5 { font-family: var(--font-sans); color: var(--color-ink); font-weight: 700; margin: 0 0 .4em; }
+h4 { font-size: 19px; } h5 { font-size: 16px; }
+.overline { font-size: 11px; font-weight: 700; letter-spacing: .18em; text-transform: uppercase; color: var(--color-text-3); }
+.num { font-variant-numeric: tabular-nums; }   /* KPIs, precios, tablas */
+a { color: var(--color-primary); text-decoration: none; }
+a:hover { text-decoration: underline; }
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: .001ms !important; transition-duration: .001ms !important; }
+}

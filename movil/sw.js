@@ -3,7 +3,7 @@
    Actualización LIMPIA: la versión nueva NO se activa sola — espera, la app avisa
    "nueva versión disponible", y solo al tocar "Actualizar" toma el control (SKIP_WAITING).
    Solo se registra en producción (https, no localhost) — ver js/app.js. */
-const CACHE = 'triada-movil-v2';
+const CACHE = 'triada-movil-v3';
 const SHELL = [
   './', './index.html',
   './css/tokens.css', './css/app.css',

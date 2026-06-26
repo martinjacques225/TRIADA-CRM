@@ -1,0 +1,114 @@
+/* ============================================================
+   FOUNDATION KIT · Pilar MARCA · components.css
+   Componentes base sobre tokens. Mismo look en todos los productos.
+   Carga:  theme.css  →  brand.css  →  components.css
+   ============================================================ */
+
+/* ── Botones ───────────────────────────────────────────────── */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  font-family: var(--font-sans); font-weight: 600; font-size: 14px;
+  padding: 0 16px; height: 40px; border-radius: var(--radius-sm);
+  border: 1.5px solid transparent; cursor: pointer;
+  transition: background var(--dur-base) var(--ease-ui),
+              transform var(--dur-fast) var(--ease-ui),
+              box-shadow var(--dur-base) var(--ease-ui);
+}
+.btn:focus-visible { outline: none; box-shadow: var(--ring); }
+.btn:disabled { opacity: .45; cursor: not-allowed; box-shadow: none; }
+.btn-sm { height: 32px; font-size: 13px; padding: 0 12px; }
+.btn-lg { height: 48px; font-size: 15px; padding: 0 22px; }   /* CTA de landing */
+
+.btn-primary {
+  background: var(--color-primary); color: #fff;
+  box-shadow: 0 2px 8px color-mix(in srgb, var(--color-primary) 30%, transparent);
+}
+.btn-primary:hover:not(:disabled) { background: var(--color-primary-hover); transform: translateY(-1px); }
+
+.btn-secondary {
+  background: var(--color-surface); color: var(--color-ink); border-color: var(--color-border-2);
+}
+.btn-secondary:hover:not(:disabled) { background: var(--color-surface-2); }
+
+.btn-ghost { background: transparent; color: var(--color-text); }
+.btn-ghost:hover:not(:disabled) { background: var(--color-surface-2); }
+
+.btn-danger { background: var(--color-error); color: #fff; }
+
+/* ── Inputs / Textareas / Selects ──────────────────────────── */
+.field { display: flex; flex-direction: column; gap: 6px; }
+.field > label { font-size: 13px; font-weight: 600; color: var(--color-text-2); }
+.input, .textarea, .select {
+  width: 100%; background: var(--color-surface); color: var(--color-ink);
+  border: 1.5px solid var(--color-border-2); border-radius: var(--radius-sm);
+  padding: 10px 13px; font-family: inherit; font-size: 15px;
+  transition: border-color var(--dur-base), box-shadow var(--dur-base);
+}
+.input::placeholder { color: var(--color-text-3); }
+.input:focus, .textarea:focus, .select:focus {
+  outline: none; border-color: var(--color-primary); box-shadow: var(--ring);
+}
+.field.has-error .input { border-color: var(--color-error); }
+.field .help { font-size: 12.5px; color: var(--color-text-3); }
+
+/* ── Cards ─────────────────────────────────────────────────── */
+.card {
+  background: var(--color-surface); border: 1px solid var(--color-border);
+  border-radius: var(--radius-md); padding: var(--space-6); box-shadow: var(--shadow);
+}
+.card-interactive { transition: transform var(--dur-base) var(--ease-ui), box-shadow var(--dur-base); cursor: pointer; }
+.card-interactive:hover { transform: translateY(-2px); box-shadow: var(--shadow-lg); }
+.kpi .kpi-label { font-size: 11px; font-weight: 700; letter-spacing: .18em; text-transform: uppercase; color: var(--color-text-3); }
+.kpi .kpi-value { font-family: var(--font-serif); font-size: 34px; font-weight: 600; color: var(--color-ink); font-variant-numeric: tabular-nums; }
+
+/* ── Badges / Pills (estado nunca solo por color → llevan texto) ── */
+.badge {
+  display: inline-flex; align-items: center; gap: 5px;
+  font-size: 12px; font-weight: 600; padding: 3px 10px; border-radius: var(--radius-full);
+  background: var(--color-surface-3); color: var(--color-text-2);
+}
+.badge-success { background: var(--color-success-soft); color: var(--color-success); }
+.badge-warning { background: var(--color-warning-soft); color: var(--color-warning); }
+.badge-error   { background: var(--color-error-soft);   color: var(--color-error); }
+.badge-info    { background: var(--color-info-soft);    color: var(--color-info); }
+
+/* ── Tabla ─────────────────────────────────────────────────── */
+.table { width: 100%; border-collapse: collapse; }
+.table th {
+  text-align: left; font-size: 11px; font-weight: 700; letter-spacing: .06em;
+  text-transform: uppercase; color: var(--color-text-3);
+  padding: 10px 12px; border-bottom: 1px solid var(--color-border);
+}
+.table td { padding: 13px 12px; border-bottom: 1px solid var(--color-border); }
+.table tbody tr:hover { background: var(--color-surface-2); }
+.table .num { text-align: right; }
+
+/* ── Modal ─────────────────────────────────────────────────── */
+.modal-overlay {
+  position: fixed; inset: 0; z-index: 1000;
+  background: color-mix(in srgb, var(--color-navy) 55%, transparent);
+  backdrop-filter: blur(4px);
+  display: flex; align-items: center; justify-content: center; padding: 24px;
+  animation: fade var(--dur-med) var(--ease);
+}
+.modal {
+  background: var(--color-surface); border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg); width: min(560px, 100%); padding: var(--space-6);
+  animation: pop var(--dur-med) var(--ease);
+}
+@keyframes fade { from { opacity: 0 } to { opacity: 1 } }
+@keyframes pop  { from { opacity: 0; transform: scale(.96) } to { opacity: 1; transform: none } }
+
+/* ── Sidebar (apps / CRM) ──────────────────────────────────── */
+.sidebar { width: var(--nav-w); background: var(--color-surface); border-right: 1px solid var(--color-border); padding: var(--space-4); }
+.nav-item {
+  display: flex; align-items: center; gap: 12px; padding: 10px 14px;
+  border-radius: var(--radius-sm); color: var(--color-text-2); font-weight: 600; font-size: 14px;
+  position: relative; cursor: pointer; transition: background var(--dur-base);
+}
+.nav-item:hover { background: var(--color-surface-2); }
+.nav-item.active { background: var(--color-primary-50); color: var(--color-primary); }
+.nav-item.active::before {
+  content: ""; position: absolute; left: 0; top: 8px; bottom: 8px; width: 3px;
+  border-radius: 0 3px 3px 0; background: var(--color-primary);
+}
