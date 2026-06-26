@@ -77,6 +77,14 @@ export function leadToSupa(data) {
 }
 
 // ─── DIAGNÓSTICOS ─────────────────────────────────────────────
+// Pilares del Diagnóstico 360 (8). El jsonb `scores` se indexa por estos ids.
+const DIAG_KEYS = ['direccion','operacion','tecnologia','ventas','marketing','finanzas','seguridad','oportunidades'];
+function _scoresFrom(sc) {
+  const out = {};
+  DIAG_KEYS.forEach(k => { out[k] = sc[k] || []; });
+  return out;
+}
+
 export function diagFromSupa(row) {
   if (!row) return null;
   const sc = row.scores || {};
@@ -84,6 +92,8 @@ export function diagFromSupa(row) {
     id:             row.id,
     correlativo:    row.codigo,
     prospectoId:    row.lead_id,
+    scores:         _scoresFrom(sc),
+    // Alias retrocompatibles para tarjetas/consumidores antiguos (3 áreas):
     scoresTec:      sc.tecnologia  || [],
     scoresVentas:   sc.ventas      || [],
     scoresFinanzas: sc.finanzas    || [],
@@ -96,13 +106,15 @@ export function diagFromSupa(row) {
 }
 
 export function diagToSupa(data) {
+  // Shape nuevo: data.scores (objeto por pilar). Fallback al viejo (scoresTec/Ventas/Finanzas).
+  const scores = data.scores || {
+    tecnologia: data.scoresTec      || [],
+    ventas:     data.scoresVentas   || [],
+    finanzas:   data.scoresFinanzas || [],
+  };
   return clean({
     lead_id:      data.prospectoId,
-    scores: {
-      tecnologia: data.scoresTec      || [],
-      ventas:     data.scoresVentas   || [],
-      finanzas:   data.scoresFinanzas || [],
-    },
+    scores,
     hallazgos:    data.hallazgos,
     oportunidades: data.oportunidades,
     estado:       data.estado || 'borrador',
@@ -220,6 +232,7 @@ export function autodiagFromSupa(row) {
   return {
     id:           row.id,
     prospectoId:  row.lead_id,
+    scores:       _scoresFrom(sc),
     scoresTec:    sc.tecnologia || [],
     scoresVentas: sc.ventas     || [],
     scoresFinanzas: sc.finanzas || [],

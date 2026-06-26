@@ -33,11 +33,17 @@ function tabDiag() {
     return `<div class="card" style="text-align:center;padding:26px 18px"><div class="empty__icon" style="margin:0 auto 12px">${ic('diag360', { size: 26 })}</div><div class="empty__t" style="font-size:15px">Sin diagnóstico aún</div><div class="empty__d">Levanta el 360 oficial durante la reunión.</div><button class="btn btn--navy btn--sm" data-act="diag" style="margin-top:6px">Hacer Diagnóstico 360</button></div>`;
   }
   const d = _diags[0];
-  const sc = { tec: scorePct(d.scoresTec), ventas: scorePct(d.scoresVentas), finanzas: scorePct(d.scoresFinanzas) };
-  const cell = (area, n) => { const a = DIAG_AREAS.find((x) => x.id === area); return `<div style="flex:1;text-align:center;background:${a.color}1A;border-radius:var(--radius-sm);padding:12px 6px"><div class="serif tabular" style="font-size:24px;font-weight:600;color:${a.color}">${n}</div><div style="font-size:10.5px;color:var(--text2);margin-top:3px">${a.label}</div></div>`; };
+  const arrOf = (a) => (d.scores && d.scores[a.id]) || [];
+  const sc = Object.fromEntries(DIAG_AREAS.map((a) => [a.id, scorePct(arrOf(a))]));
+  const ev = DIAG_AREAS.filter((a) => arrOf(a).some((x) => x !== null && x !== undefined));
+  const base = ev.length ? ev : DIAG_AREAS;
+  const overall = Math.round(base.reduce((s, a) => s + sc[a.id], 0) / base.length);
+  const oc = overall >= 80 ? 'var(--green)' : overall >= 50 ? 'var(--amber)' : 'var(--danger)';
+  const cell = (a) => `<div style="text-align:center;background:${a.color}1A;border-radius:var(--radius-sm);padding:9px 4px;min-width:0"><div class="serif tabular" style="font-size:18px;font-weight:600;color:${a.color}">${sc[a.id]}</div><div style="font-size:9px;color:var(--text2);margin-top:2px;line-height:1.12">${e(a.label)}</div></div>`;
   return `<div class="card" style="padding:16px">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px"><span style="font-weight:700;font-size:14px;color:var(--ink)">Diagnóstico 360${d.correlativo ? ' · ' + e(d.correlativo) : ''}</span><span class="badge" style="color:var(--green);background:var(--green-l)">${e(d.estado || 'borrador')}</span></div>
-    <div style="display:flex;gap:10px">${cell('tec', sc.tec)}${cell('ventas', sc.ventas)}${cell('finanzas', sc.finanzas)}</div>
+    <div style="display:flex;align-items:center;gap:6px;margin-bottom:12px"><span class="serif tabular" style="font-size:30px;font-weight:600;color:${oc};line-height:1">${overall}</span><span style="font-size:12px;color:var(--text3)">/100 · Índice general</span></div>
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px">${base.map(cell).join('')}</div>
     <button class="btn btn--ghost" data-act="informe" data-diag="${e(d.id)}" style="width:100%;margin-top:14px;height:42px;color:var(--teal)">${ic('fileText', { size: 17 })} Abrir informe completo</button>
   </div>`;
 }

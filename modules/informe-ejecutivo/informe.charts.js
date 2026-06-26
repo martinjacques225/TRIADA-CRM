@@ -47,10 +47,14 @@ export function radarChart(areas, opts = {}) {
 
   const dataPts = areas.map((a, i) => { const p = pt(i, a.score / 100); return `${p.x.toFixed(1)},${p.y.toFixed(1)}`; }).join(' ');
   const dots = areas.map((a, i) => { const p = pt(i, a.score / 100); return `<circle cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="5" fill="${a.color}" stroke="#fff" stroke-width="2"/>`; }).join('');
+  // Etiquetas: ancla dinámica según el ángulo para que los rótulos horizontales
+  // (izquierda/derecha) crezcan hacia adentro y no se recorten contra el borde del SVG.
   const labels = areas.map((a, i) => {
-    const p = pt(i, 1.24);
-    return `<text x="${p.x.toFixed(1)}" y="${p.y.toFixed(1)}" text-anchor="middle" dominant-baseline="middle" style="font-size:12.5px;font-weight:700;fill:#14222E">${a.short}</text>
-            <text x="${p.x.toFixed(1)}" y="${(p.y + 16).toFixed(1)}" text-anchor="middle" dominant-baseline="middle" style="font-size:12px;font-weight:700;fill:${a.color}">${a.score}</text>`;
+    const p = pt(i, 1.18);
+    const c = Math.cos(ang(i));
+    const anchor = c > 0.3 ? 'end' : c < -0.3 ? 'start' : 'middle';
+    return `<text x="${p.x.toFixed(1)}" y="${p.y.toFixed(1)}" text-anchor="${anchor}" dominant-baseline="middle" style="font-size:12px;font-weight:700;fill:#14222E">${a.short}</text>
+            <text x="${p.x.toFixed(1)}" y="${(p.y + 15).toFixed(1)}" text-anchor="${anchor}" dominant-baseline="middle" style="font-size:12px;font-weight:700;fill:${a.color}">${a.score}</text>`;
   }).join('');
 
   return `<svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}" class="chart-radar" role="img" aria-label="Radar de madurez por área">

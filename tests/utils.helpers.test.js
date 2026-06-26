@@ -87,7 +87,7 @@ test('memberColor: es estable y cicla sobre la paleta', () => {
 
 // ─── areaIcon (sin window → cae al emoji) ────────────────────
 test('areaIcon: en node (sin window.icon) cae al emoji del área', () => {
-  assert.equal(areaIcon('tec'), '🖥️');
-  assert.equal(areaIcon('Ventas'), '📈'); // también acepta el label
+  assert.equal(areaIcon('tecnologia'), '🖥️');
+  assert.equal(areaIcon('Finanzas'), '💰'); // también acepta el label
   assert.equal(areaIcon('inexistente'), '');
 });

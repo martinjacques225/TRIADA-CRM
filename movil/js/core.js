@@ -25,6 +25,7 @@ export {
   PROP_ESTADOS, propEstadoLabel,
   RUBROS, TAMANOS, DOLORES, ORIGENES,
   DIAG_AREAS, areaIcon, answerValue, scorePct, DIAG_PREGUNTAS, DIAG_GRUPOS,
+  MADUREZ, ratingToFrac, fracToRating,
   MEETING_TYPES, toMeetingTipo, meetingType,
   REMINDER_OPTS, RECUR_OPTS, DUR_OPTS, ESTADOS_CITA, memberColor,
 } from '../../js/utils.js';

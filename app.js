@@ -22,7 +22,7 @@ async function _setArea(area) {
   }
 }
 import { S } from './js/state.js';
-import { toast, escHtml, PIPELINE_STAGES, DIAG_AREAS, DIAG_PREGUNTAS, scorePct } from './js/utils.js';
+import { toast, escHtml, PIPELINE_STAGES, DIAG_AREAS, DIAG_PREGUNTAS, scorePct, fracToRating } from './js/utils.js';
 
 import * as ModHome          from './modules/home/home.js';
 import * as ModPipeline      from './modules/pipeline/pipeline.js';
@@ -297,11 +297,7 @@ async function init() {
       const prospecto = diag.prospectoId ? await prospectos.get(diag.prospectoId) : null;
       const empresa   = prospecto?.empresa || prospecto?.nombre || 'Cliente';
 
-      const scores = {
-        tec:      scorePct(diag.scoresTec),
-        ventas:   scorePct(diag.scoresVentas),
-        finanzas: scorePct(diag.scoresFinanzas),
-      };
+      const scores = Object.fromEntries(DIAG_AREAS.map(a => [a.id, scorePct(diag.scores && diag.scores[a.id])]));
 
       _openSimpleModal('Compartir diagnóstico por área', `
         <p style="font-size:13px;color:var(--text3);margin-bottom:14px">
@@ -325,15 +321,15 @@ async function init() {
       const prospecto = diag?.prospectoId ? await prospectos.get(diag.prospectoId) : null;
       const empresa   = prospecto?.empresa || prospecto?.nombre || 'Cliente';
       const area      = DIAG_AREAS.find(a => a.id === areaId);
-      const areaScores = areaId === 'tec' ? diag?.scoresTec : areaId === 'ventas' ? diag?.scoresVentas : diag?.scoresFinanzas;
+      const areaScores = (diag?.scores && diag.scores[areaId]) || [];
       const score     = scorePct(areaScores);
       const nivel     = score >= 80 ? 'Maduro ✅' : score >= 50 ? 'En desarrollo ⚠️' : 'Crítico 🔴';
       const preguntas = DIAG_PREGUNTAS[areaId] || [];
 
       const lineasPreg = preguntas.map((q, i) => {
-        const resp = (areaScores || [])[i];
-        const mark = (resp === true || resp === 1) ? '✅' : resp === 0.5 ? '◐' : (resp === false || resp === 0) ? '❌' : '⬜';
-        return `${mark} ${q}`;
+        const resp = areaScores[i];
+        const tag = (resp === null || resp === undefined) ? '⬜' : `${fracToRating(resp)}/5`;
+        return `${tag}  ${q}`;
       });
 
       const hallazgos    = (diag?.hallazgos    || []).slice(0, 5);

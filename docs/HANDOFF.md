@@ -1,6 +1,6 @@
 # HANDOFF — TRIADA CRM
 > **Documento vivo. Fuente de verdad del estado del proyecto.**
-> Última actualización: **2026-06-17**
+> Última actualización: **2026-06-26**
 
 ---
 
@@ -33,7 +33,24 @@
 
 ---
 
-## 1. Estado actual (al 2026-06-23)
+## 1. Estado actual (al 2026-06-26)
+
+### 🆕 Rediseño completo del Diagnóstico 360 → 8 pilares + escala de madurez 1-5 (2026-06-26)
+> El cuestionario pasó de **3 áreas (Tec/Ventas/Finanzas) en No/Parcial/Sí** a **8 pilares
+> estratégicos** calificados con una **escala de madurez 1-5** (1 Muy deficiente … 5 Excelente).
+> Pilares: **Dirección Estratégica · Operación y Procesos · Tecnología y Automatización ·
+> Ventas y Desarrollo Comercial · Marketing y Posicionamiento · Finanzas · Seguridad Digital ·
+> Oportunidades Perdidas** (45 preguntas, redactadas como afirmaciones conversacionales que
+> revelan dolores, estilo consultora ejecutiva). El motor del Informe (8 pilares, semáforo,
+> radar octagonal, **nueva página "Recomendaciones Tríada"** que mapea cada pilar débil a
+> servicios — CRM/ERP/Landing/SEO/IA/etc., prioridad Alta/Media/Baja) es **compartido por PC y
+> móvil** → ambos quedan idénticos. **Sin migración de BD**: `scores` es jsonb flexible; las
+> respuestas se guardan como fracción 0..1 → **100% retrocompatible** (diagnósticos viejos de 3
+> áreas siguen renderizando, solo muestran sus áreas evaluadas). Archivos: `js/utils.js`
+> (8 pilares + `MADUREZ`/`ratingToFrac`), `informe.engine.js`/`.view.js`/`.charts.js`/`.benchmarks.js`,
+> `modules/diagnosticos/*`, `movil/js/screens/diagnostico.js`, `js/mappers.js` (+alias legacy),
+> consumidores de tarjetas (modals/ficha/app/informes). Verificado: 37/37 tests, render E2E en
+> node + preview con mocks (PC modal 225 botones, móvil 8 pilares, informe 9 págs). Detalle en §7.
 
 ### 🆕 Fix del PDF del Informe 360 — ya no se desordena al imprimir (2026-06-23)
 > El visor se veía bien pero el **PDF se desordenaba por completo** (8 págs → 16, con contenido
@@ -457,6 +474,38 @@ Columnas del calendario agregadas a `citas` y verificadas en vivo. Persistencia 
 ---
 
 ## 7. Bitácora de sesiones (más reciente arriba)
+
+### 2026-06-26 — Rediseño completo del Diagnóstico 360 (8 pilares + madurez 1-5) en PC y móvil
+- **Pedido:** rediseñar por completo el cuestionario para que el dueño "descubra dónde pierde
+  dinero, tiempo y oportunidades"; provocar reflexión, no auditar; estilo gran consultora.
+- **Qué se hizo:**
+  - **8 pilares** (Dirección · Operación · Tecnología · Ventas · Marketing · Finanzas · Seguridad ·
+    Oportunidades Perdidas), **45 preguntas** como afirmaciones conversacionales en `js/utils.js`
+    (`DIAG_AREAS`/`DIAG_PREGUNTAS`/`DIAG_GRUPOS`).
+  - **Escala de madurez 1-5** (`MADUREZ` + `ratingToFrac`/`fracToRating`) reemplaza No/Parcial/Sí.
+    Se guarda como **fracción 0..1** → `scorePct`/`answerValue` intactos y **retrocompatibles**.
+  - **Motor del Informe** reescrito a 8 pilares: clasificación por umbral (≥0.75 fortaleza, ≤0.25
+    hallazgo, 3=neutral), `evaluada` por pilar (omite vacíos en informes viejos), narrativa
+    generalizada, **recomendaciones inteligentes** (servicios Tríada por pilar <60) y **tiers de
+    prioridad** (Alta/Media/Baja). Catálogos STRENGTHS/FINDINGS/OPPS curados para los 45 ítems.
+  - **Vista** (9 págs): portada con 8 chips, **semáforo** por pilar, **radar octagonal** (etiquetas
+    con ancla dinámica para no recortarse), nueva **página Recomendaciones Tríada**, badges de
+    prioridad. `benchmarks.js`: BASE/TILT/VALOR_FACTOR para 8 pilares + `SERVICIOS`.
+  - **UIs duplicadas** actualizadas: modal PC (`modules/diagnosticos/*`, 5 botones de escala +
+    leyenda + grilla de 8) y pantalla móvil (`movil/js/screens/diagnostico.js`, idem). Guardan
+    `scores: {pilar:[…]}`. Tarjetas/consumidores (modals, ficha móvil, app share, dashboard
+    `informes.js`) leen `d.scores[id]` y muestran índice general sobre evaluados.
+  - **Datos:** `js/mappers.js` expone `scores` unificado (8 keys) **+ alias legacy**
+    `scoresTec/Ventas/Finanzas`; `diagToSupa` acepta el shape nuevo con fallback al viejo.
+    **Sin migración** (jsonb).
+- **Verificación:** 37/37 tests (`node --test`), `node --check` de los 13 módulos, render E2E en
+  node (8 pilares + retrocompat 3 áreas = 9 págs) y **preview con mocks** (modal PC: 8 áreas, 225
+  botones, scoring en vivo; informe: 9 págs, radar 8, recomendaciones; móvil: 8 pilares, fill de
+  color por rating). Sin errores de consola.
+- **Decisiones técnicas (autónomas):** guardar fracción 0..1 (no el 1-5 crudo) por
+  retrocompatibilidad sin ambigüedad; añadir página de recomendaciones (informe 8→9 págs);
+  preservar alias legacy para no tocar tarjetas una a una. La página pública
+  `diagnostico-publico.html` (autocontenida, 3 áreas) quedó **fuera de alcance**, intacta.
 
 ### 2026-06-23 (cont. 2) — Fix del PDF del Informe 360 (se desordenaba al imprimir)
 - El usuario reportó que el PDF "se desordena por completo y pierde calidad". **Causa raíz:** el

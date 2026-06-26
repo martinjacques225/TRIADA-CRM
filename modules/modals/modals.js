@@ -163,18 +163,19 @@ export async function openProspectoDetail(id) {
 
     ${autos.length ? (() => {
       const a = autos[0]; // el más reciente
-      const sc = {
-        tec:     scorePct(a.scoresTec),
-        ventas:  scorePct(a.scoresVentas),
-        finanzas:scorePct(a.scoresFinanzas),
-      };
+      const arrOf = (ar) => (a.scores && a.scores[ar.id]) || [];
+      const sc = Object.fromEntries(DIAG_AREAS.map(ar => [ar.id, scorePct(arrOf(ar))]));
+      const ev = DIAG_AREAS.filter(ar => arrOf(ar).some(x => x !== null && x !== undefined));
+      const base = ev.length ? ev : DIAG_AREAS;
+      const overall = Math.round(base.reduce((s, ar) => s + sc[ar.id], 0) / base.length);
       return `<div style="background:var(--amber-l);border:1px solid var(--amber);border-radius:10px;padding:12px;margin-bottom:16px;font-size:13px">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
           <span style="font-weight:700;color:var(--amber)">📋 Autodiagnóstico del cliente <span style="font-weight:500;font-size:11.5px">(referencia, no oficial)</span></span>
           <span style="font-size:11.5px;color:var(--text3)">${new Date(a.fecha).toLocaleDateString('es-CL')}</span>
         </div>
-        <div style="display:flex;gap:14px">
-          ${DIAG_AREAS.map(ar => `<div style="flex:1;text-align:center"><div style="font-size:11px;color:var(--text3)">${ar.label}</div><div style="font-size:17px;font-weight:800;color:${ar.color}">${sc[ar.id]}%</div></div>`).join('')}
+        <div style="display:flex;align-items:baseline;gap:6px;margin-bottom:8px"><span style="font-size:22px;font-weight:800;color:var(--amber)">${overall}</span><span style="font-size:11px;color:var(--text3)">/100 índice general</span></div>
+        <div style="display:flex;flex-wrap:wrap;gap:6px 12px">
+          ${base.map(ar => `<span style="font-size:11.5px;color:var(--text3)"><span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:${ar.color};margin-right:4px"></span>${ar.label}: <b style="color:${ar.color}">${sc[ar.id]}%</b></span>`).join('')}
         </div>
         <div style="font-size:11.5px;color:var(--text3);margin-top:8px">El diagnóstico oficial se realiza desde el CRM (botón "+ Diagnóstico") y genera el Informe Ejecutivo 360.</div>
       </div>`;
@@ -183,19 +184,20 @@ export async function openProspectoDetail(id) {
     <h4 style="font-size:14px;font-weight:700;color:var(--navy);margin-bottom:10px">Diagnósticos (${diags.length})</h4>
     ${diags.length===0?`<p style="font-size:13px;color:var(--text3)">Sin diagnósticos aún.</p>`:
       diags.map(d=>{
-        const scores = {
-          tec:     scorePct(d.scoresTec),
-          ventas:  scorePct(d.scoresVentas),
-          finanzas:scorePct(d.scoresFinanzas),
-        };
+        const arrOf = (ar) => (d.scores && d.scores[ar.id]) || [];
+        const sc = Object.fromEntries(DIAG_AREAS.map(ar => [ar.id, scorePct(arrOf(ar))]));
+        const ev = DIAG_AREAS.filter(ar => arrOf(ar).some(x => x !== null && x !== undefined));
+        const base = ev.length ? ev : DIAG_AREAS;
+        const overall = Math.round(base.reduce((s, ar) => s + sc[ar.id], 0) / base.length);
+        const oc = overall>=80?'#2E9B73':overall>=50?'#C2871A':'#C04F3F';
         return `<div style="background:var(--surface2);border-radius:10px;padding:12px;margin-bottom:8px;font-size:13px">
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
             <div style="font-weight:600;color:var(--navy)">${new Date(d.fecha).toLocaleDateString('es-CL')}${d.correlativo?` · <span style="font-size:11px;color:var(--text3);font-weight:700">${escHtml(d.correlativo)}</span>`:''}</div>
             <button class="btn btn-navy btn-sm" onclick="window._app.openInformeEjecutivo('${d.id}')">${window.icon?window.icon('fileText'):''} Informe 360</button>
           </div>
-          <div style="display:flex;gap:14px">
-            ${[{l:'Tec',ic:'cpu',v:scores.tec,c:'#5160C0'},{l:'Ventas',ic:'trending',v:scores.ventas,c:'#0C7C88'},{l:'Fin',ic:'coins',v:scores.finanzas,c:'#2E9B73'}].map(a=>
-              `<div style="flex:1;text-align:center"><div style="font-size:11px;color:var(--text3);display:inline-flex;align-items:center;gap:5px">${window.icon?window.icon(a.ic,'',13):''} ${a.l}</div><div style="font-size:18px;font-weight:800;color:${a.c}">${a.v}%</div></div>`).join('')}
+          <div style="display:flex;align-items:baseline;gap:6px;margin-bottom:8px"><span style="font-size:22px;font-weight:800;color:${oc}">${overall}</span><span style="font-size:11px;color:var(--text3)">/100 índice general</span></div>
+          <div style="display:flex;flex-wrap:wrap;gap:6px 12px">
+            ${base.map(ar=>`<span style="font-size:11.5px;color:var(--text3)"><span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:${ar.color};margin-right:4px"></span>${ar.label}: <b style="color:${ar.color}">${sc[ar.id]}%</b></span>`).join('')}
           </div>
         </div>`;
       }).join('')}

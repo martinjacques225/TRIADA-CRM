@@ -1,32 +1,30 @@
 // ============================================================================
 // screens/diagnostico.js — ⭐ Diagnóstico 360 en terreno.
 // IDÉNTICO al de PC en contenido Y forma: usa DIAG_PREGUNTAS / DIAG_GRUPOS /
-// answerValue / scorePct del CRM (js/utils.js) y guarda en la MISMA tabla
-// `diagnosticos` con el mismo shape (scoresTec/Ventas/Finanzas 0/0.5/1) + hallazgos
-// y oportunidades → el informe sale igual.
-// UX móvil: las 3 áreas (27 preguntas) en UN SOLO scroll, como el PC. Los tabs de
+// MADUREZ / scorePct del CRM (js/utils.js) y guarda en la MISMA tabla
+// `diagnosticos` con el mismo shape (scores = {pilar: [fracciones 0..1]}, escala de
+// madurez 1-5) + hallazgos y oportunidades → el informe sale igual.
+// UX móvil: los 8 pilares (45 preguntas) en UN SOLO scroll, como el PC. Los tabs de
 // arriba son salto rápido a cada área (con su puntaje en vivo) + scroll-spy. El
 // botón Guardar es un footer sticky (en flujo) → siempre abajo, nunca a media lista.
 // ============================================================================
-import { db, DIAG_AREAS, DIAG_PREGUNTAS, DIAG_GRUPOS, scorePct, areaIcon, escHtml } from '../core.js';
+import { db, DIAG_AREAS, DIAG_PREGUNTAS, DIAG_GRUPOS, scorePct, areaIcon, escHtml, MADUREZ } from '../core.js';
 import { ic, toast } from '../ui.js';
 
 const e = escHtml;
-const TOTAL = DIAG_AREAS.reduce((s, a) => s + DIAG_PREGUNTAS[a.id].length, 0); // 27
-// Colores del puntaje sobre el fondo navy del resumen (variantes claras).
-const SUM_COLOR = { tec: '#7C8AE0', ventas: '#2BBCC4', finanzas: '#3FB587' };
-const OPT_C = { 0: ['var(--danger)', 'var(--danger-l)'], 0.5: ['var(--amber)', 'var(--amber-l)'], 1: ['var(--green)', 'var(--green-l)'] };
+const TOTAL = DIAG_AREAS.reduce((s, a) => s + DIAG_PREGUNTAS[a.id].length, 0); // 45 (8 pilares)
+const SCALE = MADUREZ; // escala de madurez 1-5 [{v,frac,label,short,color}]
 
 let _ans = {}, _leadId = null, _lead = null, _io = null;
 
-function optStyle(v, sel) {
-  const base = 'flex:1;height:42px;border:1px solid;border-radius:var(--radius-sm);font-family:var(--font);font-weight:700;font-size:13px;cursor:pointer;transition:var(--tr);';
-  if (sel) { const [c, bg] = OPT_C[v]; return base + `border-color:${c};background:${bg};color:${c}`; }
-  return base + 'border-color:var(--border);background:var(--surface2);color:var(--text2)';
+function optStyle(m, sel) {
+  const base = 'flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;gap:1px;padding:8px 2px;border:1px solid;border-radius:var(--radius-sm);font-family:var(--font);cursor:pointer;transition:var(--tr);';
+  if (sel) return base + `border-color:transparent;background:${m.color};color:#fff`;
+  return base + 'border-color:var(--border);background:var(--surface2);color:var(--text3)';
 }
-function optBtn(area, i, v, label) {
-  const sel = _ans[area][i] === v;
-  return `<button type="button" class="dg-opt" data-area="${area}" data-i="${i}" data-v="${v}" role="radio" aria-checked="${sel}" style="${optStyle(v, sel)}">${label}</button>`;
+function optBtn(area, i, m) {
+  const sel = _ans[area][i] === m.frac;
+  return `<button type="button" class="dg-opt" data-area="${area}" data-i="${i}" data-v="${m.frac}" data-r="${m.v}" role="radio" aria-checked="${sel}" title="${m.label}" style="${optStyle(m, sel)}"><span style="font-size:15px;font-weight:800;line-height:1">${m.v}</span><span style="font-size:9px;font-weight:600;line-height:1.1">${m.short}</span></button>`;
 }
 
 // Bloque de UN área: título con ícono + puntaje en vivo, luego sus subgrupos y preguntas.
@@ -40,7 +38,7 @@ function areaBlock(area) {
     for (let k = 0; k < g.n; k++, i++) {
       qs += `<div class="card" style="padding:14px">
         <div style="font-size:13.5px;color:var(--text);line-height:1.5;margin-bottom:12px">${e(preguntas[i])}</div>
-        <div class="dg-opts" style="display:flex;gap:7px" role="radiogroup">${optBtn(area, i, 0, 'No')}${optBtn(area, i, 0.5, 'Parcial')}${optBtn(area, i, 1, 'Sí')}</div>
+        <div class="dg-opts" style="display:flex;gap:5px" role="radiogroup">${SCALE.map((m) => optBtn(area, i, m)).join('')}</div>
       </div>`;
     }
     groups += `<div style="margin-bottom:16px">
@@ -74,7 +72,7 @@ export default {
     _lead = _leadId ? await db.prospectos.get(_leadId).catch(() => null) : null;
     const empresa = (_lead && (_lead.empresa || _lead.nombre)) || 'Sin prospecto';
 
-    const sumCell = (id, label) => `<div style="flex:1;text-align:center"><div class="serif tabular" id="dgSum-${id}" style="font-size:30px;font-weight:600;color:${SUM_COLOR[id]}">0</div><div style="font-size:10.5px;color:#9FB0D4;margin-top:3px">${label}</div></div>`;
+    const sumCell = (a) => `<div style="text-align:center;min-width:0"><div class="serif tabular" id="dgSum-${a.id}" style="font-size:23px;font-weight:600;color:#fff;line-height:1">0</div><div style="width:18px;height:3px;border-radius:2px;background:${a.color};margin:4px auto 4px"></div><div style="font-size:9.5px;color:#9FB0D4;line-height:1.15">${e(a.label)}</div></div>`;
 
     return `
     <section class="screen" style="display:flex;flex-direction:column">
@@ -85,6 +83,7 @@ export default {
           <div style="text-align:right"><div class="tabular" style="font-size:16px;font-weight:700;color:var(--ink)"><span id="dgCount">0</span><span style="color:var(--text3);font-weight:500">/${TOTAL}</span></div></div>
         </div>
         <div style="height:6px;border-radius:3px;background:var(--surface2);overflow:hidden"><div id="dgProgress" style="height:100%;border-radius:3px;background:linear-gradient(90deg,var(--violet),var(--teal),var(--green));width:0;transition:width .3s var(--ease)"></div></div>
+        <div style="display:flex;flex-wrap:wrap;gap:2px 10px;margin-top:9px">${SCALE.map((m) => `<span style="font-size:10px;color:var(--text3)"><b style="color:${m.color};font-variant-numeric:tabular-nums">${m.v}</b> ${m.label}</span>`).join('')}</div>
         <div class="chip-row" id="dgTabs" style="gap:7px;margin-top:12px;padding:0">${tabsHtml()}</div>
       </header>
 
@@ -92,8 +91,8 @@ export default {
         ${DIAG_AREAS.map((a) => areaBlock(a.id)).join('')}
 
         <div style="background:linear-gradient(150deg,var(--navy),var(--navy-d));border-radius:var(--radius);padding:18px;color:#fff;margin-bottom:18px">
-          <div style="font-size:11px;font-weight:700;letter-spacing:.12em;color:#9FB0D4;text-transform:uppercase;margin-bottom:14px">Puntaje por área</div>
-          <div style="display:flex;gap:12px">${sumCell('tec', 'Tecnología')}${sumCell('ventas', 'Ventas')}${sumCell('finanzas', 'Finanzas')}</div>
+          <div style="font-size:11px;font-weight:700;letter-spacing:.12em;color:#9FB0D4;text-transform:uppercase;margin-bottom:14px">Puntaje por pilar</div>
+          <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px 8px">${DIAG_AREAS.map(sumCell).join('')}</div>
         </div>
 
         <div class="field"><label class="field__label field__label--opt" for="dgHallazgos">Hallazgos clave <span>· uno por línea</span></label><textarea id="dgHallazgos" class="textarea" rows="3" placeholder="Ej: No usan CRM&#10;Sin control de costos variables"></textarea></div>
@@ -138,8 +137,8 @@ export default {
       const area = b.dataset.area, i = +b.dataset.i, v = parseFloat(b.dataset.v);
       _ans[area][i] = v;
       b.parentElement.querySelectorAll('.dg-opt').forEach((x) => {
-        const xv = parseFloat(x.dataset.v), sel = _ans[area][i] === xv;
-        x.style.cssText = optStyle(xv, sel);
+        const m = SCALE.find((s) => s.v === +x.dataset.r), sel = _ans[area][i] === m.frac;
+        x.style.cssText = optStyle(m, sel);
         x.setAttribute('aria-checked', sel);
       });
       updateLive();
@@ -159,7 +158,7 @@ export default {
       }, { root: host, rootMargin: `-${hdr.offsetHeight + 10}px 0px -55% 0px`, threshold: 0 });
       secs.forEach((s) => _io.observe(s));
     }
-    setActive('tec');
+    setActive(DIAG_AREAS[0].id);
 
     host.querySelector('#dgSave').addEventListener('click', async (ev) => {
       const answered = DIAG_AREAS.reduce((s, a) => s + _ans[a.id].filter((x) => x !== null).length, 0);
@@ -169,7 +168,7 @@ export default {
       try {
         await db.diagnosticos.add({
           prospectoId: _leadId,
-          scoresTec: _ans.tec, scoresVentas: _ans.ventas, scoresFinanzas: _ans.finanzas,
+          scores: _ans,
           hallazgos: parse('#dgHallazgos'), oportunidades: parse('#dgOportunidades'),
         });
         toast('Diagnóstico 360 guardado ✓', 'ok');

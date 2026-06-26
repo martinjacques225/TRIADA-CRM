@@ -86,10 +86,19 @@ export const TAMANOS = ['1 a 5','6 a 20','21 a 50','Más de 50'];
 export const DOLORES = ['Vender más','Ordenar procesos','Controlar finanzas','Automatizar / tecnología','No sé por dónde partir'];
 export const ORIGENES = ['Manual','Landing Web','Meta Ads','Google Ads','WhatsApp','Referido'];
 
+// Diagnóstico Empresarial 360 — 8 pilares de evaluación estratégica.
+// El orden y los ids son la columna vertebral del sistema: el motor del Informe
+// Ejecutivo (informe.engine.js) y los benchmarks indexan sus catálogos por estos ids,
+// y las respuestas se guardan en scores[<id>] (jsonb). NO renombrar ids sin migrar.
 export const DIAG_AREAS = [
-  { id: 'tec',      label: 'Tecnología',   icon: '🖥️', iconName: 'cpu',      color: '#5160C0' },
-  { id: 'ventas',   label: 'Ventas',       icon: '📈', iconName: 'trending', color: '#0C7C88' },
-  { id: 'finanzas', label: 'Finanzas',     icon: '💰', iconName: 'coins',    color: '#2E9B73' },
+  { id: 'direccion',     label: 'Dirección Estratégica',       icon: '🧭', iconName: 'compass',   color: '#16466B' },
+  { id: 'operacion',     label: 'Operación y Procesos',        icon: '⚙️', iconName: 'workflow',  color: '#3D6E92' },
+  { id: 'tecnologia',    label: 'Tecnología y Automatización', icon: '🖥️', iconName: 'cpu',       color: '#5160C0' },
+  { id: 'ventas',        label: 'Ventas y Desarrollo Comercial', icon: '📈', iconName: 'trending', color: '#0C7C88' },
+  { id: 'marketing',     label: 'Marketing y Posicionamiento', icon: '📣', iconName: 'megaphone', color: '#2F8C93' },
+  { id: 'finanzas',      label: 'Finanzas',                    icon: '💰', iconName: 'coins',     color: '#2E9B73' },
+  { id: 'seguridad',     label: 'Seguridad Digital',           icon: '🛡️', iconName: 'shield',    color: '#6E59C0' },
+  { id: 'oportunidades', label: 'Oportunidades Perdidas',      icon: '🎯', iconName: 'crosshair', color: '#C0892F' },
 ];
 
 // Ícono de línea de un área (por id o por label); cae al emoji si la lib no cargó
@@ -99,15 +108,29 @@ export function areaIcon(area, size = 16) {
   return (typeof window !== 'undefined' && window.icon) ? window.icon(a.iconName, '', size) : a.icon;
 }
 
-// Valor 0..1 de una respuesta del diagnóstico. Escala graduada:
-//   Sí = 1 · Parcial = 0.5 · No = 0 · sin responder (null) = 0.
-// Retrocompatible con diagnósticos viejos en Sí/No (booleanos): true→1, false→0.
+// ── Escala de Madurez Empresarial (1 a 5) ──
+// Reemplaza el viejo No/Parcial/Sí. Cada nivel se almacena como una FRACCIÓN 0..1
+// (frac) en los arreglos de respuestas → el cálculo de puntaje queda intacto y
+// retrocompatible con diagnósticos antiguos en {0, 0.5, 1, true, false}.
+export const MADUREZ = [
+  { v: 1, frac: 0,    label: 'Muy deficiente', short: 'Muy def.', color: '#C04F3F' },
+  { v: 2, frac: 0.25, label: 'Deficiente',     short: 'Defic.',   color: '#D2802B' },
+  { v: 3, frac: 0.5,  label: 'Aceptable',      short: 'Acept.',   color: '#C2A11A' },
+  { v: 4, frac: 0.75, label: 'Bueno',          short: 'Bueno',    color: '#5FA86A' },
+  { v: 5, frac: 1,    label: 'Excelente',      short: 'Excel.',   color: '#2E9B73' },
+];
+// Nivel (1-5) → fracción 0..1 que se guarda. Fracción 0..1 → nivel (1-5) para mostrar.
+export const ratingToFrac = (v) => (Math.max(1, Math.min(5, v)) - 1) / 4;
+export const fracToRating = (f) => Math.round(Math.max(0, Math.min(1, f ?? 0)) * 4) + 1;
+
+// Valor 0..1 de una respuesta del diagnóstico (crédito graduado).
+//   Escala 1-5 → fracción ya guardada (0, .25, .5, .75, 1) · sin responder (null) = 0.
+// Retrocompatible: Sí/Parcial/No viejos (1 / 0.5 / 0) y booleanos (true→1, false→0).
 export const answerValue = (x) =>
   x === true ? 1 : (typeof x === 'number' ? Math.max(0, Math.min(1, x)) : 0);
 
 // Puntaje 0-100 de un área a partir de su arreglo de respuestas.
-// Dinámico por largo real (5, 9 o N preguntas) y por valor (crédito parcial).
-// Devuelve 0 si aún no hay respuestas.
+// Dinámico por largo real y por valor (crédito parcial). 0 si aún no hay respuestas.
 export const scorePct = (arr) => {
   const a = arr || [];
   if (!a.length) return 0;
@@ -115,73 +138,110 @@ export const scorePct = (arr) => {
   return Math.round((sum / a.length) * 100);
 };
 
-// Diagnóstico 360 — cuestionario oficial del CRM (9 preguntas por área, 27 en total).
-// El orden importa: el motor del Informe Ejecutivo (informe.engine.js) tiene catálogos
-// de fortalezas/hallazgos/oportunidades en paralelo, indexados 1:1 contra estas preguntas.
-// Si agregas/quitas/reordenas una pregunta, ajusta también ese catálogo y DIAG_GRUPOS.
+// Diagnóstico 360 — cuestionario oficial del CRM. Preguntas redactadas como
+// AFIRMACIONES de madurez que el dueño califica de 1 (Muy deficiente) a 5 (Excelente).
+// Buscan provocar reflexión y revelar dolores, no auditar. El orden importa: el motor
+// del Informe (informe.engine.js) tiene catálogos de fortalezas/hallazgos/oportunidades
+// indexados 1:1 contra estas preguntas. Si cambias una, ajusta ese catálogo y DIAG_GRUPOS.
 export const DIAG_PREGUNTAS = {
-  tec: [
-    // Sistemas y datos
-    '¿Los sistemas internos (ventas, finanzas, operación) están integrados y comparten información?',
-    '¿La información del negocio está centralizada y accesible para quien la necesita?',
-    '¿Se toman decisiones con datos e indicadores, y no solo por intuición?',
-    // Automatización y herramientas
-    '¿El equipo trabaja con herramientas digitales en vez de planillas sueltas o papel?',
-    '¿Se automatizan tareas repetitivas (facturación, reportes, recordatorios)?',
-    // Presencia y seguridad digital
-    '¿La empresa tiene presencia digital activa (web, redes, Google) acorde a su rubro?',
-    '¿Existen respaldos automáticos de la información crítica del negocio?',
-    '¿Los accesos, contraseñas y permisos se gestionan de forma segura?',
-    '¿Hay alguien (interno o externo) a cargo del soporte y la mejora tecnológica?',
+  direccion: [
+    'La empresa tiene objetivos claros y escritos para este año, conocidos por el equipo.',
+    'Existe una forma definida de medir si el negocio está creciendo (no solo la sensación de que va bien).',
+    'Las decisiones importantes se toman con datos e información, más que por intuición o experiencia.',
+    'Se revisan los indicadores clave del negocio de forma periódica (semanal o mensual).',
+    'El dueño tiene identificados los tres mayores desafíos del negocio y un plan para enfrentarlos.',
+  ],
+  operacion: [
+    'La información se ingresa una sola vez; el equipo no reescribe los mismos datos en varios lugares.',
+    'El equipo encuentra la información que necesita rápido, sin perder tiempo buscándola.',
+    'Las tareas repetitivas de la semana (facturar, reportar, agendar) están ordenadas y bajo control de tiempo.',
+    'Los procesos clave están documentados y no dependen de que una sola persona los recuerde.',
+    'Si un colaborador clave falta una semana, el negocio sigue funcionando con normalidad.',
+    'El dueño dedica pocas horas a tareas administrativas y puede enfocarse en hacer crecer el negocio.',
+  ],
+  tecnologia: [
+    'El negocio trabaja con herramientas digitales adecuadas, no con planillas sueltas, papel o WhatsApp como sistema.',
+    'Los distintos sistemas (ventas, finanzas, operación) comparten información entre sí.',
+    'La información de los clientes está ordenada en un solo lugar y no dispersa en libretas, correos o cabezas.',
+    'Hay procesos automatizados que funcionan solos (recordatorios, facturación, reportes) sin intervención manual.',
+    'El dueño tiene claro qué tareas le gustaría dejar de hacer a mano y automatizar.',
   ],
   ventas: [
-    // Generación de demanda
-    '¿La empresa genera prospectos de forma constante (no solo por recomendación o boca a boca)?',
-    '¿Se invierte en marketing o difusión de forma planificada y medida?',
-    // Proceso y cierre
-    '¿Existe un proceso de ventas documentado que el equipo sigue?',
-    '¿Se hace seguimiento estructurado a cada prospecto y cotización?',
-    '¿Se usa un CRM o herramienta para gestionar clientes y oportunidades?',
-    '¿Se mide la tasa de conversión (cuántas cotizaciones se cierran)?',
-    '¿El equipo comercial tiene metas claras y seguimiento regular?',
-    // Clientes y crecimiento
-    '¿Existe un proceso de postventa para retener y hacer crecer a los clientes actuales?',
-    '¿Se conoce cuánto cuesta conseguir un cliente y cuánto deja en el tiempo?',
+    'Llegan prospectos nuevos de forma constante y predecible, no solo por recomendación o suerte.',
+    'Cuando un cliente deja de responder, alguien retoma el contacto de forma sistemática y no se pierde la oportunidad.',
+    'Se hace seguimiento ordenado a cada cotización enviada, hasta que se gana o se pierde.',
+    'La empresa rara vez pierde una venta importante por no responder a tiempo.',
+    'El dueño sabe en cualquier momento cuántos prospectos activos tiene y en qué etapa está cada uno.',
+    'Se sabe qué porcentaje de las cotizaciones se transforma en venta, y se trabaja para mejorarlo.',
+    'Están identificados los mejores clientes y se sabe cuánto vale cada uno durante toda su relación con la empresa.',
+  ],
+  marketing: [
+    'La empresa genera demanda por canales propios; no quedaría sin clientes si mañana se cortaran las recomendaciones.',
+    'El dueño está satisfecho con la cantidad de oportunidades comerciales que genera hoy.',
+    'Se sabe qué canales o campañas traen los mejores clientes, y se invierte en consecuencia.',
+    'Si alguien busca la empresa en Google, encuentra una presencia profesional y actualizada.',
+    'La empresa está presente y activa donde están sus clientes (redes, Google, web).',
+    'Existe una estrategia para que los clientes vuelvan a comprar, no solo para captar nuevos.',
   ],
   finanzas: [
-    // Control y caja
-    '¿Las finanzas del negocio están separadas de las personales del dueño?',
-    '¿El flujo de caja se proyecta con al menos 3 meses de anticipación?',
-    '¿Se revisan los resultados (estado de resultados) mensualmente?',
-    // Rentabilidad y costos
-    '¿Se conoce el margen real de cada producto o servicio?',
-    '¿Los costos fijos y variables están claramente identificados?',
-    '¿Existen indicadores de rentabilidad por línea de negocio o cliente?',
-    // Formalidad y planificación
-    '¿La empresa está al día con sus obligaciones tributarias y contables (SII)?',
-    '¿Existe un presupuesto anual contra el cual se compara el desempeño?',
-    '¿La empresa accede a financiamiento o capital de trabajo cuando lo necesita?',
+    'Las finanzas del negocio están separadas de las personales del dueño.',
+    'Se conoce con claridad qué productos o servicios generan utilidad y cuáles no.',
+    'Se conoce el margen real de cada producto o servicio, no solo su precio de venta.',
+    'Es posible proyectar el flujo de caja de los próximos tres meses con confianza.',
+    'El negocio sabría cómo reaccionar si las ventas bajaran un 20% el próximo mes.',
+    'Se revisan los resultados financieros mensualmente contra un presupuesto o plan.',
+  ],
+  seguridad: [
+    'Si hoy se perdiera toda la información del negocio (robo, falla o error), existe forma de recuperarla.',
+    'Existen respaldos automáticos y periódicos de la información crítica.',
+    'Hay alguien claramente a cargo de la seguridad informática del negocio.',
+    'Los accesos y permisos de cada colaborador están controlados: cada quien ve solo lo que le corresponde.',
+    'Cuando un colaborador deja la empresa, sus accesos se revocan de inmediato.',
+  ],
+  oportunidades: [
+    'El dueño sabe con precisión cuántos clientes o ventas pierde cada mes; no es un número desconocido.',
+    'Son muy pocas las ventas que se dejan de cerrar por falta de seguimiento.',
+    'El negocio aprovecha la mayoría de las oportunidades que llegan; casi ninguna queda sin atender.',
+    'El tiempo que el equipo pierde en tareas repetitivas es mínimo.',
+    'Están identificados los principales cuellos de botella del negocio y se está trabajando en ellos.',
   ],
 };
 
-// Sub-dimensiones de cada área, para agrupar las preguntas en el modal del diagnóstico.
+// Sub-dimensiones de cada área, para agrupar las preguntas en el cuestionario.
 // La suma de `n` debe igualar la cantidad de preguntas del área en DIAG_PREGUNTAS y el
 // orden debe coincidir (se recorren en secuencia sobre el arreglo plano de preguntas).
 export const DIAG_GRUPOS = {
-  tec: [
-    { label: 'Sistemas y datos',              n: 3 },
-    { label: 'Automatización y herramientas', n: 2 },
-    { label: 'Presencia y seguridad digital', n: 4 },
+  direccion: [
+    { label: 'Rumbo y metas',          n: 2 },
+    { label: 'Decisiones e indicadores', n: 3 },
+  ],
+  operacion: [
+    { label: 'Eficiencia y duplicación',   n: 3 },
+    { label: 'Dependencia y continuidad',  n: 3 },
+  ],
+  tecnologia: [
+    { label: 'Sistemas e integración', n: 3 },
+    { label: 'Automatización',         n: 2 },
   ],
   ventas: [
-    { label: 'Generación de demanda', n: 2 },
-    { label: 'Proceso y cierre',      n: 5 },
-    { label: 'Clientes y crecimiento', n: 2 },
+    { label: 'Flujo y seguimiento',       n: 4 },
+    { label: 'Conocimiento del cliente',  n: 3 },
+  ],
+  marketing: [
+    { label: 'Generación de demanda',     n: 3 },
+    { label: 'Presencia y fidelización',  n: 3 },
   ],
   finanzas: [
-    { label: 'Control y caja',             n: 3 },
-    { label: 'Rentabilidad y costos',      n: 3 },
-    { label: 'Formalidad y planificación', n: 3 },
+    { label: 'Control y rentabilidad', n: 3 },
+    { label: 'Caja y proyección',      n: 3 },
+  ],
+  seguridad: [
+    { label: 'Respaldo y continuidad', n: 2 },
+    { label: 'Accesos y control',      n: 3 },
+  ],
+  oportunidades: [
+    { label: 'Fugas comerciales', n: 3 },
+    { label: 'Costo operativo',   n: 2 },
   ],
 };
 

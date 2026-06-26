@@ -1,6 +1,6 @@
 // modules/diagnosticos/diagnosticos.js
 import { diagnosticos, prospectos } from '../../js/db.js';
-import { escHtml, formatDate, DIAG_AREAS, DIAG_PREGUNTAS, DIAG_GRUPOS, areaIcon, toast, scorePct } from '../../js/utils.js';
+import { escHtml, formatDate, DIAG_AREAS, DIAG_PREGUNTAS, DIAG_GRUPOS, areaIcon, toast, scorePct, MADUREZ } from '../../js/utils.js';
 
 const _i = (n, s) => (window.icon ? window.icon(n, '', s) : '');
 
@@ -43,12 +43,11 @@ function _scoreLabel(score) {
 }
 
 function _diagCard(d, p) {
-  const scores = {
-    tec:      scorePct(d.scoresTec),
-    ventas:   scorePct(d.scoresVentas),
-    finanzas: scorePct(d.scoresFinanzas),
-  };
-  const overall = Math.round((scores.tec + scores.ventas + scores.finanzas) / 3);
+  const arrOf = (a) => (d.scores && d.scores[a.id]) || [];
+  const scores = Object.fromEntries(DIAG_AREAS.map(a => [a.id, scorePct(arrOf(a))]));
+  const evaluadas = DIAG_AREAS.filter(a => arrOf(a).some(x => x !== null && x !== undefined));
+  const base = evaluadas.length ? evaluadas : DIAG_AREAS;
+  const overall = Math.round(base.reduce((s, a) => s + scores[a.id], 0) / base.length);
   const oc = _scoreColor(overall);
 
   return `<div class="diag-card card card-pad">
@@ -63,7 +62,7 @@ function _diagCard(d, p) {
       </div>
     </div>
     <div class="diag-areas-row">
-      ${DIAG_AREAS.map(a => {
+      ${base.map(a => {
         const s = scores[a.id];
         const c = _scoreColor(s);
         return `<div class="diag-area-mini">
@@ -103,13 +102,12 @@ export function renderDiagnosticoModal(prospectoId, onSave) {
       cont.innerHTML = grupos.map(g => {
         let filas = '';
         for (let k = 0; k < g.n; k++, i++) {
+          const cur = answers[a.id][i];
           filas += `
-            <div class="score-question">
-              <div class="score-q-text" id="${a.id}-q-${i}">${escHtml(preguntas[i])}</div>
-              <div class="score-q-btns" role="radiogroup" aria-labelledby="${a.id}-q-${i}">
-                <button type="button" role="radio" aria-checked="${answers[a.id][i]===0}"   class="score-q-btn ${answers[a.id][i]===0?'active-no':''}"    data-a="${a.id}" data-i="${i}" data-v="0">No</button>
-                <button type="button" role="radio" aria-checked="${answers[a.id][i]===0.5}" class="score-q-btn ${answers[a.id][i]===0.5?'active-mid':''}" data-a="${a.id}" data-i="${i}" data-v="0.5">Parcial</button>
-                <button type="button" role="radio" aria-checked="${answers[a.id][i]===1}"   class="score-q-btn ${answers[a.id][i]===1?'active-yes':''}"   data-a="${a.id}" data-i="${i}" data-v="1">Sí</button>
+            <div class="diag-q">
+              <div class="diag-q-text" id="${a.id}-q-${i}">${escHtml(preguntas[i])}</div>
+              <div class="diag-scale" role="radiogroup" aria-labelledby="${a.id}-q-${i}">
+                ${MADUREZ.map(m => `<button type="button" role="radio" aria-checked="${cur===m.frac}" class="diag-scale-btn ${cur===m.frac?'is-on':''}" data-a="${a.id}" data-i="${i}" data-v="${m.frac}" data-r="${m.v}" title="${m.label}"><span class="dsb-n">${m.v}</span><span class="dsb-l">${m.short}</span></button>`).join('')}
               </div>
             </div>`;
         }
@@ -120,15 +118,15 @@ export function renderDiagnosticoModal(prospectoId, onSave) {
       }).join('');
     });
     // Listeners una sola vez; al hacer clic solo se actualiza el botón tocado (sin re-render total)
-    body.querySelectorAll('.score-q-btn').forEach(btn => {
+    body.querySelectorAll('.diag-scale-btn').forEach(btn => {
       btn.addEventListener('click', () => {
         const a = btn.dataset.a, i = +btn.dataset.i, v = parseFloat(btn.dataset.v);
         answers[a][i] = v;
-        btn.parentElement.querySelectorAll('.score-q-btn').forEach(b => {
-          b.classList.remove('active-yes', 'active-no', 'active-mid');
+        btn.parentElement.querySelectorAll('.diag-scale-btn').forEach(b => {
+          b.classList.remove('is-on');
           b.setAttribute('aria-checked', 'false');
         });
-        btn.classList.add(v === 1 ? 'active-yes' : v === 0 ? 'active-no' : 'active-mid');
+        btn.classList.add('is-on');
         btn.setAttribute('aria-checked', 'true');
         _updateScores();
       });
@@ -168,6 +166,11 @@ export function renderDiagnosticoModal(prospectoId, onSave) {
       <span class="diag-progress-label" id="diagProgressLabel">0/${totalPreguntas} respondidas</span>
     </div>
 
+    <div class="diag-scale-legend">
+      <span class="dsl-title">Escala de madurez</span>
+      <div class="dsl-items">${MADUREZ.map(m => `<span class="dsl-item"><b style="color:${m.color}">${m.v}</b> ${escHtml(m.label)}</span>`).join('')}</div>
+    </div>
+
     ${DIAG_AREAS.map(a=>`
       <section class="diag-area-block">
         <header class="diag-area-title"><span class="diag-area-title-ic" style="color:${a.color}">${areaIcon(a.id,18)}</span>${escHtml(a.label)}</header>
@@ -186,14 +189,14 @@ export function renderDiagnosticoModal(prospectoId, onSave) {
   _renderAnswers();
 
   document.getElementById('modalSave').onclick = async () => {
-    const respondidas = [...answers.tec, ...answers.ventas, ...answers.finanzas].filter(x => x !== null).length;
+    const respondidas = DIAG_AREAS.reduce((s, a) => s + answers[a.id].filter(x => x !== null).length, 0);
     if (respondidas === 0) { toast('Responde al menos una pregunta antes de guardar', 'error'); return; }
     const hallazgos    = (document.getElementById('diagHallazgos')?.value    || '').split('\n').map(s=>s.trim()).filter(Boolean);
     const oportunidades= (document.getElementById('diagOportunidades')?.value || '').split('\n').map(s=>s.trim()).filter(Boolean);
     try {
       const newId = await diagnosticos.add({
         prospectoId,
-        scoresTec: answers.tec, scoresVentas: answers.ventas, scoresFinanzas: answers.finanzas,
+        scores: answers,
         hallazgos, oportunidades,
       });
       if (onSave) onSave(newId);

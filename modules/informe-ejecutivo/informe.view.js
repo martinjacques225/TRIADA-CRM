@@ -1,5 +1,6 @@
 // modules/informe-ejecutivo/informe.view.js
 // Render del Informe Ejecutivo Tríada 360 + visor a pantalla completa + impresión.
+// 9 páginas (portada + 8 secciones), 8 pilares de madurez.
 import { computeInforme } from './informe.engine.js';
 import { ringGauge, radarChart, areaBar, impactEffortMatrix, maturityMap } from './informe.charts.js';
 
@@ -17,6 +18,14 @@ function fmtMonto(n) {
   return '$' + Math.round(n).toLocaleString('es-CL');
 }
 
+// Pilares efectivamente evaluados (para informes antiguos de 3 áreas, omite los vacíos).
+function evaluadas(rep) {
+  const ev = rep.areas.filter(a => a.evaluada);
+  return ev.length ? ev : rep.areas;
+}
+
+const TOTAL_PAGES = 9;
+
 const LOGO = `<svg viewBox="0 0 120 120" fill="none" class="report-logo">
   <path d="M26 90 L60 62 L94 90" stroke="currentColor" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/>
   <path d="M26 73 L60 45 L94 73" stroke="currentColor" stroke-width="11" stroke-linecap="round" stroke-linejoin="round" opacity=".72"/>
@@ -33,21 +42,20 @@ function footer(rep, n) {
   return `<div class="report-footer">
     <span class="rf-brand">TRÍADA · Diagnóstico Empresarial 360</span>
     <span class="rf-code">${esc(rep.codigo)}</span>
-    <span class="rf-page">${n} / 8</span>
+    <span class="rf-page">${n} / ${TOTAL_PAGES}</span>
   </div>`;
 }
 
 // ════════ PÁGINAS ════════
 
 function pageCover(rep) {
+  const A = evaluadas(rep);
   return `<section class="report-page cover-page">
     <div class="cover-aura"></div>
     <div class="cover-top">
       <div class="cover-brand">${LOGO}<span>TRÍADA</span></div>
-      <div class="cover-areas">
-        <span><i style="background:#3D6E92"></i>Tecnología</span>
-        <span><i style="background:#2F8C93"></i>Ventas</span>
-        <span><i style="background:#5E9E7E"></i>Finanzas</span>
+      <div class="cover-areas cover-areas--grid">
+        ${A.map(a => `<span><i style="background:${a.color}"></i>${esc(a.short)}</span>`).join('')}
       </div>
     </div>
 
@@ -71,7 +79,16 @@ function pageCover(rep) {
   </section>`;
 }
 
+function pageHead(num, title) {
+  return `<div class="report-head">
+    <span class="rh-num">${num}</span>
+    <h2 class="rh-title">${title}</h2>
+    <span class="rh-rule"></span>
+  </div>`;
+}
+
 function pageResumen(rep) {
+  const A = evaluadas(rep);
   return `<section class="report-page">
     ${pageHead('01', 'Resumen Ejecutivo')}
     <div class="resumen-grid">
@@ -90,7 +107,7 @@ function pageResumen(rep) {
         <h3 class="rt-title">Lectura del diagnóstico</h3>
         <p class="rt-body">${esc(rep.resumenEjecutivo)}</p>
         <div class="rt-areas">
-          ${rep.areas.map(a => `<div class="rt-area-mini">
+          ${A.map(a => `<div class="rt-area-mini">
             <span class="rt-area-dot" style="background:${a.color}"></span>
             <span class="rt-area-name">${a.short}</span>
             <span class="rt-area-score" style="color:${a.color}">${a.score}</span>
@@ -108,35 +125,35 @@ function pageResumen(rep) {
       <div class="rv-areas">
         ${rep.economia.porArea.map(p => `<span class="rv-chip"><i style="background:${p.color}"></i>${esc(p.area)}: ${p.alto ? `${fmtMonto(p.bajo)}–${fmtMonto(p.alto)}` : 'sin brecha'}</span>`).join('')}
       </div>
-      <div class="rv-note">Estimación de referencia sobre la facturación anual informada y el potencial de mejora de cada área. Dimensiona la oportunidad; no es una promesa de resultado y debe validarse con el cliente.</div>
+      <div class="rv-note">Estimación de referencia sobre la facturación anual informada y el potencial de mejora de cada pilar. Dimensiona la oportunidad; no es una promesa de resultado y debe validarse con el cliente.</div>
     </div>` : ''}
     ${footer(rep, 2)}
   </section>`;
 }
 
-function pageHead(num, title) {
-  return `<div class="report-head">
-    <span class="rh-num">${num}</span>
-    <h2 class="rh-title">${title}</h2>
-    <span class="rh-rule"></span>
-  </div>`;
-}
-
 function pageResultados(rep) {
+  const A = evaluadas(rep);
   return `<section class="report-page">
-    ${pageHead('02', 'Resultados por Área')}
+    ${pageHead('02', 'Resultados por Pilar')}
+    <div class="semaforo-row">
+      ${A.map(a => `<div class="sem-item">
+        <span class="sem-dot sem-${a.nivel.semaforo}"></span>
+        <span class="sem-name">${esc(a.short)}</span>
+        <span class="sem-score" style="color:${a.color}">${a.score}</span>
+      </div>`).join('')}
+    </div>
     <div class="resultados-grid">
       <div class="resultados-bars">
-        ${rep.areas.map(areaBar).join('')}
+        ${A.map(areaBar).join('')}
       </div>
       <div class="resultados-radar">
-        ${radarChart(rep.areas, { size: 300, showBenchmark: rep.benchmarkContext })}
+        ${radarChart(A, { size: 320, showBenchmark: rep.benchmarkContext })}
         ${rep.benchmarkContext ? `<div class="radar-legend"><span class="rl-you">Tu empresa</span><span class="rl-ref">Referencia rubro</span></div>` : ''}
         <div class="radar-caption">Perfil de madurez vs. la referencia estimada de tu rubro</div>
       </div>
     </div>
     <div class="area-detail-list">
-      ${rep.areas.map(a => `<div class="area-detail">
+      ${A.map(a => `<div class="area-detail">
         <div class="ad-head">
           <span class="ad-dot" style="background:${a.color}"></span>
           <span class="ad-name">${esc(a.label)}</span>
@@ -152,7 +169,7 @@ function pageResultados(rep) {
         <div class="ad-cols">
           <div class="ad-col">
             <div class="ad-col-h ad-pos">Fortalezas</div>
-            ${a.fortalezas.length ? a.fortalezas.map(f => `<div class="ad-item ad-item-pos">✓ ${esc(f)}</div>`).join('') : `<div class="ad-empty">Sin fortalezas destacadas en esta área.</div>`}
+            ${a.fortalezas.length ? a.fortalezas.map(f => `<div class="ad-item ad-item-pos">✓ ${esc(f)}</div>`).join('') : `<div class="ad-empty">Sin fortalezas destacadas en este pilar.</div>`}
           </div>
           <div class="ad-col">
             <div class="ad-col-h ad-neg">Debilidades</div>
@@ -173,7 +190,7 @@ const RIESGO_STYLE = {
 
 function pageHallazgos(rep) {
   return `<section class="report-page">
-    ${pageHead('03', 'Hallazgos Principales')}
+    ${pageHead('03', 'Hallazgos y Riesgos Críticos')}
     <p class="page-intro">Los siguientes hallazgos representan los puntos de mayor atención detectados en el diagnóstico, ordenados por nivel de riesgo para el negocio.</p>
     <div class="hallazgos-list">
       ${rep.hallazgos.length ? rep.hallazgos.map((h, i) => {
@@ -191,7 +208,7 @@ function pageHallazgos(rep) {
             </div>
           </div>
         </div>`;
-      }).join('') : `<div class="report-empty">La empresa no presenta hallazgos críticos. Su base operativa es sólida en las tres áreas evaluadas.</div>`}
+      }).join('') : `<div class="report-empty">La empresa no presenta hallazgos críticos. Su base operativa es sólida en los pilares evaluados.</div>`}
     </div>
     ${footer(rep, 4)}
   </section>`;
@@ -207,19 +224,29 @@ const IMP_STYLE = {
   Medio: { color:'#3D6E92', label:'Impacto medio' },
   Bajo:  { color:'#8A90A3', label:'Impacto bajo' },
 };
+const PRIO_STYLE = {
+  Alta:  { color:'#B4524A', bg:'#F6EAE6' },
+  Media: { color:'#C0892F', bg:'#F4ECDA' },
+  Baja:  { color:'#3D6E92', bg:'#E7EEF3' },
+};
 
 function pageOportunidades(rep) {
   return `<section class="report-page">
     ${pageHead('04', 'Oportunidades de Mejora')}
+    <p class="page-intro">Cada oportunidad responde a un hallazgo y se clasifica por prioridad —según su impacto y el esfuerzo de implementación— para enfocar primero lo que más rinde.</p>
     <div class="oport-grid">
       <div class="oport-list">
         ${rep.oportunidades.length ? rep.oportunidades.map((o, i) => {
           const d = DIF_STYLE[o.esfuerzo] || DIF_STYLE.Medio;
           const m = IMP_STYLE[o.impacto] || IMP_STYLE.Medio;
+          const pr = PRIO_STYLE[o.tier] || PRIO_STYLE.Media;
           return `<div class="oport-card">
             <div class="op-num" style="background:${o.areaColor}">${i + 1}</div>
             <div class="op-body">
-              <div class="op-title">${esc(o.titulo)}</div>
+              <div class="op-title-row">
+                <span class="op-title">${esc(o.titulo)}</span>
+                <span class="op-prio" style="color:${pr.color};background:${pr.bg}">Prioridad ${o.tier || 'Media'}</span>
+              </div>
               <div class="op-benef"><strong>Beneficio:</strong> ${esc(o.beneficio)}</div>
               <div class="op-tags">
                 <span class="op-tag" style="color:${m.color}"><i style="background:${m.color}"></i>${m.label}</span>
@@ -240,9 +267,32 @@ function pageOportunidades(rep) {
   </section>`;
 }
 
-function pageMapa(rep) {
+function pageRecomendaciones(rep) {
   return `<section class="report-page">
-    ${pageHead('05', 'Mapa de Madurez Empresarial')}
+    ${pageHead('05', 'Recomendaciones Tríada')}
+    <p class="page-intro">A partir de los pilares con mayor brecha, estas son las soluciones Tríada de mayor impacto. Cada una responde directamente a una debilidad detectada en el diagnóstico.</p>
+    ${rep.recomendaciones.length ? `<div class="reco-list">
+      ${rep.recomendaciones.map((r, i) => `<div class="reco-card" style="border-left-color:${r.color}">
+        <div class="reco-head">
+          <span class="reco-rank" style="background:${r.color}">${i + 1}</span>
+          <span class="reco-area">${esc(r.short)}</span>
+          <span class="reco-score" style="color:${r.color}">${r.score}<small>/100</small></span>
+          <span class="reco-nivel" style="color:${r.nivel.color};background:${r.nivel.bg}">${r.nivel.id}</span>
+        </div>
+        <div class="reco-servicios">
+          ${r.servicios.map(s => `<span class="reco-chip" style="border-color:${r.color}">${esc(s)}</span>`).join('')}
+        </div>
+      </div>`).join('')}
+    </div>` : `<div class="report-empty">La empresa no presenta pilares bajo el umbral de atención prioritaria. Recomendamos sostener y optimizar las buenas prácticas actuales.</div>`}
+    <div class="reco-note">Las soluciones se priorizan según la brecha detectada en cada pilar. El alcance, la secuencia y la inversión se afinan en una sesión de trabajo con el equipo Tríada.</div>
+    ${footer(rep, 6)}
+  </section>`;
+}
+
+function pageMapa(rep) {
+  const A = evaluadas(rep);
+  return `<section class="report-page">
+    ${pageHead('06', 'Mapa de Madurez Empresarial')}
     <p class="page-intro">Posición actual de la empresa en la escala de madurez y el nivel objetivo alcanzable con la implementación del plan recomendado.</p>
     <div class="mapa-wrap">
       ${maturityMap(rep.overall, rep.target)}
@@ -265,7 +315,7 @@ function pageMapa(rep) {
       </div>
     </div>
     <div class="mapa-areas">
-      ${rep.areas.map(a => `<div class="ma-row">
+      ${A.map(a => `<div class="ma-row">
         <span class="ma-name"><i style="background:${a.color}"></i>${a.short}</span>
         <div class="ma-track">
           <div class="ma-fill-now" style="width:${a.score}%;background:${a.color}"></div>
@@ -274,7 +324,7 @@ function pageMapa(rep) {
         <span class="ma-vals"><b style="color:${a.color}">${a.score}</b> → <b style="color:#2E9B73">${a.targetScore}</b></span>
       </div>`).join('')}
     </div>
-    ${footer(rep, 6)}
+    ${footer(rep, 7)}
   </section>`;
 }
 
@@ -294,20 +344,20 @@ function pagePlan(rep) {
   </div>`;
 
   return `<section class="report-page">
-    ${pageHead('06', 'Plan de Acción Recomendado')}
+    ${pageHead('07', 'Plan de Acción Recomendado')}
     <p class="page-intro">Hoja de ruta priorizada. Cada acción responde directamente a los hallazgos detectados y avanza de las victorias rápidas hacia los cambios de mayor alcance.</p>
     <div class="plan-grid">
       ${fase('Corto Plazo', '0 – 30 días', rep.plan.corto, '#5E9E7E')}
       ${fase('Mediano Plazo', '30 – 90 días', rep.plan.mediano, '#2F8C93')}
       ${fase('Largo Plazo', '90 – 180 días', rep.plan.largo, '#3D6E92')}
     </div>
-    ${footer(rep, 7)}
+    ${footer(rep, 8)}
   </section>`;
 }
 
 function pageConclusion(rep) {
   return `<section class="report-page">
-    ${pageHead('07', 'Conclusión Ejecutiva')}
+    ${pageHead('08', 'Conclusión Ejecutiva')}
     <div class="conclusion-body">
       ${rep.conclusion.map(p => `<p>${esc(p)}</p>`).join('')}
     </div>
@@ -333,14 +383,14 @@ function pageConclusion(rep) {
     <div class="conclusion-cta">
       <strong>Próximo paso sugerido:</strong> revisar en conjunto este diagnóstico y priorizar las acciones de mayor impacto para tu empresa.
     </div>
-    ${footer(rep, 8)}
+    ${footer(rep, 9)}
   </section>`;
 }
 
 // ════════ CONSTRUCTOR DE DOCUMENTO (reutilizable: visor + PDF headless) ════════
-// Devuelve el HTML de las 8 páginas a partir de un modelo `rep` ya computado.
+// Devuelve el HTML de las 9 páginas a partir de un modelo `rep` ya computado.
 export function buildReportDoc(rep) {
-  return `${pageCover(rep)}${pageResumen(rep)}${pageResultados(rep)}${pageHallazgos(rep)}${pageOportunidades(rep)}${pageMapa(rep)}${pagePlan(rep)}${pageConclusion(rep)}`;
+  return `${pageCover(rep)}${pageResumen(rep)}${pageResultados(rep)}${pageHallazgos(rep)}${pageOportunidades(rep)}${pageRecomendaciones(rep)}${pageMapa(rep)}${pagePlan(rep)}${pageConclusion(rep)}`;
 }
 
 // ════════ VISOR ════════

@@ -77,6 +77,18 @@ test('diagFromSupa: scores.* → scoresTec/Ventas/Finanzas (vacío si falta)', (
   assert.deepEqual(ui.scoresTec, []);
   assert.equal(ui.prospectoId, 'p1');
 });
+test('diagToSupa: shape nuevo (data.scores con 8 pilares) pasa tal cual', () => {
+  const scores = { direccion: [1, 0.5], operacion: [], tecnologia: [], ventas: [0.75], marketing: [], finanzas: [], seguridad: [], oportunidades: [] };
+  const out = diagToSupa({ prospectoId: 'p1', scores });
+  assert.deepEqual(out.scores, scores);
+});
+test('diagFromSupa: expone scores unificado con los 8 pilares', () => {
+  const ui = diagFromSupa({ id: 'd2', lead_id: 'p1', scores: { direccion: [1], ventas: [0.5] } });
+  assert.deepEqual(ui.scores.direccion, [1]);
+  assert.deepEqual(ui.scores.ventas, [0.5]);
+  assert.deepEqual(ui.scores.seguridad, []); // pilar ausente → arreglo vacío
+  assert.equal(Object.keys(ui.scores).length, 8);
+});
 
 // ─── citas: payload base vs extendido (fallback 42703) ───────
 test('citaToSupaBase NO incluye columnas del calendario; citaToSupa SÍ', () => {
