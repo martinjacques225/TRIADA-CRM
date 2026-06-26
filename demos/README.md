@@ -32,5 +32,14 @@ cp -r BARBER-TEMPLATE/{index.html,assets} TRIADA-CRM/demos/barberia/
 > canónico encima, vuelve el `config.js` con backend real y **reaparece el muro de login**:
 > deja `supabaseUrl` y `supabaseAnonKey` en `''`.
 
+> ⚠️ **Barbería — el snapshot trae un fix de móvil que NO está en el canónico (2026-06-25).**
+> El showcase canónico era solo de escritorio (riel + marco de dispositivo de ancho fijo) y se
+> desordenaba/​desbordaba en el teléfono (y el modo "Notebook" colapsaba). Esta copia agrega un
+> **modo compacto** (`window.innerWidth < 820`) en `assets/js/app.js` (`compute`) y
+> `assets/js/app.render2.js` (`buildCompact`/`compactTopBar`/`compactMenu` + `ACT.menu/closeMenu/navMenu`
+> + listener de `resize`): a pantalla completa, sin riel ni marco, con navegación y personalización
+> en una hoja "Menú". **Si re-vendorizas desde el canónico se pierde** → vuelve a aplicarlo (o, mejor,
+> portar el fix al repo `BARBER-TEMPLATE` primero).
+
 > La lista de demos que aparece en la app se controla en `movil/js/screens/demos.js`
 > (constante `DEMOS`). Agregar una demo = vendorizar su front acá + una entrada ahí.

@@ -52,7 +52,7 @@
   // ── App ──────────────────────────────────────────────────────
   var App = {
     state: {
-      route: 'launcher', palette: 'teal', theme: 'mineral', iconStyle: 'acento', device: 'mobile',
+      route: 'launcher', palette: 'teal', theme: 'mineral', iconStyle: 'acento', device: 'mobile', menuOpen: false,
       bStep: 1, svc: null, day: 0, slot: null, bName: '', bPhone: '', confirmed: false,
       crmTab: 'resumen', client: null, q: '', aday: 3,
       enrollOpen: false, enrollDone: false, enName: '', enEmail: '', enPlan: 'contado',
@@ -94,9 +94,14 @@
   // ── compute(): equivalente a renderVals() del prototipo ──────
   function compute() {
     var st = App.state, shop = D.SHOP, shopName = shop.name, showTria = true;
-    var desk = st.device === 'notebook';
+    // Vista "compacta": cuando la ventana es angosta (teléfono / tablet en vertical)
+    // el showcase de escritorio (riel lateral + marco de dispositivo) NO cabe → la
+    // demo se rinde a PANTALLA COMPLETA. Además, en compacto NUNCA aplica "notebook"
+    // (su marco de ~880px rompía el layout en el teléfono).
+    var compact = typeof window !== 'undefined' && window.innerWidth > 0 && window.innerWidth < 820;
+    var desk = st.device === 'notebook' && !compact;
     var A = 'var(--accent)', ASOFT = 'var(--accent-soft)', AFG = 'var(--accent-fg)';
-    var v = { st: st, shop: shop, shopName: shopName, showTria: showTria, desk: desk };
+    var v = { st: st, shop: shop, shopName: shopName, showTria: showTria, desk: desk, compact: compact };
 
     // rail nav
     var railBase = 'display:flex;align-items:center;gap:11px;padding:11px 13px;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;border:0;background:transparent;width:100%;text-align:left;font-family:inherit;transition:background .18s;';

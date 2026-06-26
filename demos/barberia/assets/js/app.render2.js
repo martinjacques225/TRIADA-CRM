@@ -311,8 +311,68 @@
       '<div style="max-width:392px;width:100%;padding:0 6px"><div style="font-family:\'Newsreader\',serif;font-size:21px;font-weight:600;color:#fff">' + esc(v.pt[0]) + '</div><div style="font-size:12px;color:#8C99B5;margin-top:1px">' + esc(v.pt[1]) + '</div></div>' +
       '<div style="display:flex;flex-direction:column;align-items:center"><div style="' + v.frameStyle + '">' + screen + '</div>' + laptopBase + '</div></main>';
   }
+  // ── COMPACTO (teléfono / ventana angosta): pantalla completa ──
+  // El riel y el marco de dispositivo son "muebles" de escritorio. En el teléfono
+  // estorban (no caben → desbordan), así que se rinden: la plataforma —que YA es una
+  // UI móvil— ocupa toda la pantalla. La navegación y la personalización (paleta /
+  // tema / íconos) viven en una hoja "Menú" que abre la barra superior.
+  function compactTopBar(v) {
+    return '<div style="flex:none;height:54px;display:flex;align-items:center;justify-content:space-between;padding:0 12px 0 15px;background:var(--surface);border-bottom:1px solid var(--hair);z-index:7;position:relative">' +
+      '<div style="display:flex;align-items:center;gap:10px;min-width:0">' +
+      '<div style="width:32px;height:32px;flex:none;border-radius:9px;background:linear-gradient(150deg,var(--accent-soft),var(--surface));display:flex;align-items:center;justify-content:center;border:1px solid var(--border)">' + logoFull(19) + '</div>' +
+      '<div style="min-width:0;line-height:1.05"><div style="font-family:\'Newsreader\',serif;font-size:16px;font-weight:600;color:var(--ink)">Tríada<span style="color:var(--accent)">·</span></div>' +
+      '<div style="font-size:9px;letter-spacing:.13em;text-transform:uppercase;color:var(--txt3);font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + esc(v.pt[0]) + '</div></div>' +
+      '</div>' +
+      '<button ' + aAttr('menu') + ' style="flex:none;display:flex;align-items:center;gap:7px;height:38px;padding:0 14px;border-radius:11px;border:1px solid var(--border);background:var(--surface);color:var(--ink);font-family:inherit;font-size:13px;font-weight:700;cursor:pointer" data-hover="background:var(--surface2)">' +
+      '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg>Menú</button>' +
+      '</div>';
+  }
+  function compactMenu(v) {
+    var st = App.state;
+    if (!st.menuOpen) return '';
+    var nav = [
+      ['launcher', 'Inicio · Hub', ic('home', 18)], ['web', 'Sitio web', ic('web', 18)],
+      ['booking', 'Reservas', ic('cal', 18)], ['courses', 'Cursos', ic('cap', 18)], ['crm', 'CRM', ic('grid', 18)]
+    ].map(function (n) { return '<button style="' + v.rs(n[0]) + '" ' + aAttr('navMenu', n[0]) + '>' + n[2] + n[1] + '</button>'; }).join('');
+    var pals = D.PORDER.map(function (k) { return '<button title="' + esc(D.PAL[k].name) + '" style="' + v.sw(k) + '" ' + aAttr('setPalette', k) + '></button>'; }).join('');
+    var ths = D.THORDER.map(function (k) { return '<button title="' + esc(D.THEMES[k].name) + '" style="' + v.thsw(k) + '" ' + aAttr('setTheme', k) + '></button>'; }).join('');
+    var icos = D.IORDER.map(function (k) { return '<button ' + aAttr('setIcons', k) + ' style="' + v.icoBtn(k) + '"><span style="' + v.icoChip(k) + '"></span>' + esc(D.ICONS[k].name) + '</button>'; }).join('');
+    var sec = function (label, inner) { return '<div style="margin-top:18px"><div style="font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:#6E7CA3;font-weight:700;margin-bottom:9px;padding-left:2px">' + label + '</div>' + inner + '</div>'; };
+    return '<div ' + aAttr('closeMenu') + ' style="position:fixed;inset:0;z-index:50;background:rgba(7,12,24,.6);backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);display:flex;align-items:flex-end;justify-content:center">' +
+      '<div data-stop class="scr" style="width:100%;max-width:460px;max-height:90vh;overflow-y:auto;background:#101A30;border:1px solid rgba(255,255,255,.08);border-bottom:0;border-radius:22px 22px 0 0;padding:8px 20px calc(24px + env(safe-area-inset-bottom));box-shadow:0 -16px 50px rgba(0,0,0,.5);color:#fff">' +
+      '<div style="width:40px;height:4px;border-radius:2px;background:rgba(255,255,255,.18);margin:8px auto 4px"></div>' +
+      '<div style="display:flex;align-items:center;justify-content:space-between;gap:11px;padding:8px 2px 2px">' +
+      '<div style="display:flex;align-items:center;gap:11px">' +
+      '<div style="width:38px;height:38px;flex:none;border-radius:11px;background:linear-gradient(150deg,rgba(43,160,171,.22),rgba(255,255,255,.03));display:flex;align-items:center;justify-content:center;border:1px solid rgba(255,255,255,.1)">' + logoFull(22) + '</div>' +
+      '<div><div style="font-family:\'Newsreader\',serif;font-size:18px;font-weight:600">Tríada<span style="color:var(--accent)">·</span></div><div style="font-size:9.5px;letter-spacing:.16em;text-transform:uppercase;color:#8C99B5;margin-top:1px">Plataforma · Demo</div></div>' +
+      '</div>' +
+      '<button ' + aAttr('closeMenu') + ' aria-label="Cerrar" style="width:34px;height:34px;flex:none;border-radius:9px;border:1px solid rgba(255,255,255,.12);background:transparent;color:#9FB0CC;cursor:pointer;display:flex;align-items:center;justify-content:center"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button>' +
+      '</div>' +
+      sec('Explora la plataforma', '<nav style="display:flex;flex-direction:column;gap:3px">' + nav + '</nav>') +
+      sec('Color de acento', '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px">' + pals + '</div>') +
+      sec('Fondo / tema', '<div style="display:grid;grid-template-columns:repeat(5,1fr);gap:8px">' + ths + '</div>') +
+      sec('Estilo de íconos', '<div style="display:flex;gap:6px">' + icos + '</div>') +
+      '<div style="margin-top:18px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:13px;padding:12px 13px;display:flex;gap:10px;align-items:flex-start">' +
+      '<div style="width:26px;height:26px;flex:none;color:var(--accent)">' + tria(26) + '</div>' +
+      '<div style="font-size:11.5px;line-height:1.5;color:#9FB0CC">Cambia el color, el tema y los íconos y mira cómo se adapta la plataforma en vivo. <span style="color:#C5D0E4">La firma de Tríada.</span></div>' +
+      '</div>' +
+      '</div></div>';
+  }
+  function buildCompact(v) {
+    var st = App.state;
+    var bottomBar = (st.route === 'crm' && st.client == null) ? crmBottomBar(v) : '';
+    return '<div style="height:100vh;height:100dvh;display:flex;flex-direction:column;background:var(--app-bg);color:var(--ink);overflow:hidden">' +
+      compactTopBar(v) +
+      '<div style="flex:1;min-height:0;display:flex;flex-direction:column;position:relative;background:var(--app-bg)">' +
+      '<div class="scr" id="bt-scroll" style="flex:1;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;background:var(--app-bg)">' + activeSection(v) + '</div>' +
+      bottomBar + stickyCTA(v) + overlays(v) +
+      '</div>' +
+      compactMenu(v) +
+      '</div>';
+  }
   function buildAll(v) {
     if (v.locked) return appLogin(v); // portón de acceso a toda la demo
+    if (v.compact) return buildCompact(v); // teléfono / ventana angosta: pantalla completa
     return '<div style="min-height:100vh;background:radial-gradient(1100px 560px at 82% -8%, rgba(43,160,171,.12), transparent 58%), radial-gradient(900px 500px at 12% 110%, rgba(20,32,55,.5), transparent 60%), linear-gradient(150deg,#16234A,#0F1933);display:flex;align-items:stretch;color:#fff">' +
       R1.renderRail(v) + buildStage(v) + '</div>';
   }
@@ -338,6 +398,9 @@
       else App.go(a);
     },
     dev: function (a) { App.setState({ device: a }); },
+    menu: function () { App.setState({ menuOpen: true }); },
+    closeMenu: function () { App.setState({ menuOpen: false }); },
+    navMenu: function (a) { App.state.menuOpen = false; ACT.nav(a); },
     setPalette: function (a) { App.applyPalette(a); App.setState({ palette: a }); },
     setTheme: function (a) { App.applyTheme(a); App.setState({ theme: a }); },
     setIcons: function (a) { App.applyIcons(a); App.setState({ iconStyle: a }); },
@@ -450,6 +513,13 @@
       if (e.key !== 'Enter') return;
       var f = e.target.dataset && e.target.dataset.field;
       if (f === 'authEmail' || f === 'authPass') { e.preventDefault(); ACT.login(); }
+    });
+    // Re-render solo al CRUZAR el umbral compacto↔escritorio (girar el teléfono,
+    // redimensionar la ventana) — no en cada píxel.
+    var wasCompact = window.innerWidth < 820;
+    window.addEventListener('resize', function () {
+      var now = window.innerWidth < 820;
+      if (now !== wasCompact) { wasCompact = now; if (App.state.menuOpen) App.state.menuOpen = false; App.render(); }
     });
     App.render();
     // Bootstrap de sesión (login real del CRM)
