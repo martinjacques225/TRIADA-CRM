@@ -11,6 +11,7 @@ import {
   autodiagFromSupa,
   facturaFromSupa, toFactEstado, facturaToSupa,
   presupFromSupa, presupToSupa,
+  docFromSupa,
 } from './mappers.js';
 
 // Reexport para no romper a quien importe isMissingTable desde db.js (módulos
@@ -18,8 +19,23 @@ import {
 export { isMissingTable } from './mappers.js';
 
 let _uid = null;
-export function setCurrentUser(uid) { _uid = uid; }
+let _orgId = null;
+export function setCurrentUser(uid) { _uid = uid; _orgId = null; }
 export function getCurrentUserId() { return _uid; }
+
+// org_id del usuario actual — necesario para la RUTA del archivo en Storage
+// (bucket privado org-scoped: {org_id}/…). La FILA se auto-estampa con el trigger
+// set_org_id, pero el path del objeto lo arma el cliente. Cacheado; la RLS de
+// profiles permite leer el propio perfil.
+async function _getOrgId() {
+  if (_orgId) return _orgId;
+  if (!_uid) throw new Error('Sin sesión para resolver la organización');
+  const { data, error } = await supabase.from('profiles').select('org_id').eq('id', _uid).single();
+  _throw(error);
+  _orgId = data?.org_id || null;
+  if (!_orgId) throw new Error('El perfil no tiene organización asignada');
+  return _orgId;
+}
 
 export function initDB() { return Promise.resolve(); }
 
@@ -374,6 +390,63 @@ export const presupuestos = {
   byCliente: async (clienteId) => {
     const { data, error } = await supabase.from('presupuestos').select('*').eq('cliente_id', clienteId).order('created_at', { ascending: false });
     _throw(error); return data.map(presupFromSupa);
+  },
+};
+
+// ─── BIBLIOTECA DE DOCUMENTOS (M4 "Bóveda" del Plan Maestro) ──
+// Repositorio documental de la organización. Los metadatos viven en la tabla
+// `documentos`; el archivo en el bucket PRIVADO 'biblioteca' bajo {org_id}/{uuid}.{ext}.
+// Leer + subir = cualquier miembro de la org. Borrar = solo admin (lo impone la RLS).
+// Descarga vía URL firmada temporal (el bucket no es público).
+export const documentos = {
+  getAll: async () => _cachedAll('documentos', async () => {
+    const { data, error } = await supabase.from('documentos').select('*').order('created_at', { ascending: false });
+    _throw(error); return data.map(docFromSupa);
+  }),
+  // Sube el archivo y crea la fila. Si la fila falla, revierte el archivo para no
+  // dejar huérfanos en el bucket.
+  add: async ({ file, nombre, descripcion, categoria }) => {
+    if (!file) throw new Error('No hay archivo para subir');
+    const orgId = await _getOrgId();
+    const ext = (file.name.split('.').pop() || 'bin').toLowerCase().replace(/[^a-z0-9]+/g, '').slice(0, 8) || 'bin';
+    const path = `${orgId}/${crypto.randomUUID()}.${ext}`;
+    const { error: upErr } = await supabase.storage.from('biblioteca')
+      .upload(path, file, { contentType: file.type || undefined, upsert: false });
+    _throw(upErr);
+    const payload = {
+      nombre:       (nombre || file.name || 'Documento').slice(0, 200),
+      descripcion:  descripcion || null,
+      categoria:    categoria || 'General',
+      storage_path: path,
+      mime_type:    file.type || null,
+      size_bytes:   Number.isFinite(file.size) ? file.size : null,
+    };
+    const { data: row, error } = await supabase.from('documentos').insert(payload).select('id').single();
+    if (error) {
+      try { await supabase.storage.from('biblioteca').remove([path]); } catch (_) {}
+      _throw(error);
+    }
+    _invalidate('documentos'); return row.id;
+  },
+  update: async ({ id, nombre, descripcion, categoria }) => {
+    const patch = clean({ nombre, descripcion, categoria, updated_at: new Date().toISOString() });
+    const { error } = await supabase.from('documentos').update(patch).eq('id', id);
+    _throw(error); _invalidate('documentos');
+  },
+  // Borra la fila (RLS: solo admin) y luego limpia el archivo del bucket.
+  remove: async (id, storagePath) => {
+    const { error } = await supabase.from('documentos').delete().eq('id', id);
+    _throw(error);
+    if (storagePath) {
+      try { await supabase.storage.from('biblioteca').remove([storagePath]); }
+      catch (err) { console.warn('Documento borrado, pero no se pudo limpiar el archivo de Storage:', err?.message || err); }
+    }
+    _invalidate('documentos');
+  },
+  // URL firmada temporal para ver/descargar (bucket privado). Default 1 hora.
+  signedUrl: async (storagePath, expiresIn = 3600) => {
+    const { data, error } = await supabase.storage.from('biblioteca').createSignedUrl(storagePath, expiresIn);
+    _throw(error); return data.signedUrl;
   },
 };
 

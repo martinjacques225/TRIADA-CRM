@@ -37,6 +37,7 @@ import * as ModLeads         from './modules/leads/leads.js';
 import * as ModProspectos    from './modules/prospectos/prospectos.js';
 import * as ModClientes      from './modules/clientes/clientes.js';
 import * as ModPresupuestos  from './modules/presupuestos/presupuestos.js';
+import * as ModBiblioteca    from './modules/biblioteca/biblioteca.js';
 
 import {
   closeModal,
@@ -75,6 +76,9 @@ const NAV_SECTIONS = [
   { label: 'Desarrollo', items: [
     { id: 'ai-commander', icon: _icoAi(),         label: 'Director de Orquesta' },
   ]},
+  { label: 'Recursos', items: [
+    { id: 'biblioteca',   icon: _icoBiblioteca(), label: 'Biblioteca' },
+  ]},
   { label: 'Análisis', items: [
     { id: 'informes',     icon: _icoChart(),      label: 'Informes' },
   ]},
@@ -100,6 +104,7 @@ async function refreshCenter() {
     presupuestos: ModPresupuestos.render,
     clientes:     ModClientes.render,
     facturacion:  ModFacturacion.render,
+    biblioteca:   ModBiblioteca.render,
     'ai-commander': ModAiCommander.render,
     informes:     ModInformes.render,
     config:       ModConfig.render,
@@ -471,5 +476,6 @@ function _icoLeads()  { return _ln('<path d="M3 5h18M3 5v6a9 9 0 0 0 18 0V5"/><p
 function _icoProspectos(){ return _ln('<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c0-3.5 3-5.5 6.5-5.5s6.5 2 6.5 5.5"/><path d="M17 8h4M19 6v4"/>'); }
 function _icoClientes(){ return _ln('<circle cx="12" cy="8" r="3.5"/><path d="M5 20c0-3.9 3.1-6.5 7-6.5s7 2.6 7 6.5"/><path d="m15.5 9 1.4 1.4 2.6-2.6"/>'); }
 function _icoPresup() { return _ln('<rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 7h8M8 11h8M8 15h5"/><path d="M16.5 16.5 18 18l3-3"/>'); }
+function _icoBiblioteca(){ return _ln('<path d="M4 4.8A2.8 2.8 0 0 1 6.8 2H20v15H6.8A2.8 2.8 0 0 0 4 19.8z"/><path d="M20 17v5H6.8A2.8 2.8 0 0 1 4 19.2"/><path d="M8 6.5h7M8 9.5h5"/>'); }
 
 document.addEventListener('DOMContentLoaded', init);

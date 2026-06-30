@@ -1,0 +1,86 @@
+/* modules/biblioteca/biblioteca.css — Biblioteca de documentos (M4 Bóveda) */
+
+.bib-sub { margin: 2px 0 0; font-size: 13px; color: var(--text3); }
+.bib-loading { padding: 40px 0; text-align: center; color: var(--text3); font-size: 14px; }
+
+/* ── Toolbar: búsqueda + filtros ── */
+.bib-toolbar {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 14px; flex-wrap: wrap; margin-bottom: 18px;
+}
+.bib-search {
+  display: flex; align-items: center; gap: 8px;
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: var(--radius-sm); padding: 8px 12px; min-width: 240px; flex: 1 1 240px; max-width: 360px;
+  color: var(--text3); transition: var(--tr);
+}
+.bib-search:focus-within { border-color: var(--teal); color: var(--teal); }
+.bib-search input {
+  border: none; background: transparent; outline: none; flex: 1; min-width: 0;
+  font-size: 13.5px; color: var(--text);
+}
+.bib-filters { display: flex; flex-wrap: wrap; gap: 7px; }
+.bib-fchip {
+  padding: 6px 13px; border-radius: 999px; border: 1px solid var(--border);
+  background: transparent; color: var(--text3); font-size: 12.5px; font-weight: 600;
+  cursor: pointer; transition: var(--tr); white-space: nowrap;
+}
+.bib-fchip:hover { color: var(--text2); border-color: var(--text3); }
+.bib-fchip.active { background: var(--teal); color: #fff; border-color: transparent; }
+
+/* ── Grilla de documentos ── */
+.bib-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 14px;
+}
+.bib-card {
+  display: flex; align-items: flex-start; gap: 13px;
+  background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+  padding: 15px; transition: var(--tr);
+}
+.bib-card:hover { box-shadow: var(--shadow-sm); border-color: var(--text3); }
+.bib-card__icon {
+  width: 46px; height: 54px; border-radius: 10px; flex: none;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px;
+}
+.bib-ext { font-size: 8.5px; font-weight: 800; letter-spacing: .03em; }
+.bib-card__main { flex: 1; min-width: 0; }
+.bib-card__name {
+  font-weight: 600; font-size: 14.5px; color: var(--text); line-height: 1.3;
+  word-break: break-word;
+}
+.bib-card__meta {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 6px 9px;
+  margin-top: 6px; font-size: 12px; color: var(--text3);
+}
+.bib-tag { font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 999px; }
+.bib-card__desc {
+  margin-top: 7px; font-size: 12.5px; color: var(--text2); line-height: 1.45;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+}
+.bib-card__actions {
+  margin-left: auto; display: flex; flex-direction: column; gap: 6px; align-items: stretch; flex: none;
+}
+.bib-card__actions .btn-icon { display: inline-flex; align-items: center; justify-content: center; }
+
+.bib-empty-filter {
+  display: flex; align-items: center; justify-content: center; gap: 9px;
+  padding: 34px 0; color: var(--text3); font-size: 13.5px;
+}
+
+/* ── Dropzone del modal de subida ── */
+.bib-drop {
+  display: flex; flex-direction: column; align-items: center; gap: 9px; text-align: center;
+  padding: 26px 18px; margin-bottom: 16px; cursor: pointer;
+  border: 2px dashed var(--border); border-radius: var(--radius);
+  background: var(--surface2); color: var(--text3); transition: var(--tr);
+}
+.bib-drop:hover { border-color: var(--teal); color: var(--teal); }
+.bib-drop--over { border-color: var(--teal); background: var(--teal-l); color: var(--teal); }
+.bib-drop__ic { display: flex; }
+.bib-drop__t { font-size: 14px; font-weight: 600; color: var(--text2); }
+.bib-drop__d { font-size: 12.5px; color: var(--text3); }
+
+@media (max-width: 600px) {
+  .bib-grid { grid-template-columns: 1fr; }
+  .bib-card__actions { flex-direction: row; }
+}

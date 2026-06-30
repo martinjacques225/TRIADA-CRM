@@ -19,6 +19,7 @@ import cita from './screens/cita.js';
 import propuesta from './screens/propuesta.js';
 import perfil from './screens/perfil.js';
 import demos from './screens/demos.js';
+import biblioteca from './screens/biblioteca.js';
 
 // ── Registro de pantallas ───────────────────────────────────────────────────
 // Las aún no construidas usan un placeholder para que el nav nunca quede sin salida.
@@ -51,7 +52,7 @@ function stub(title, sub, chrome = false) {
 const SCREENS = {
   splash: auth.splash, login: auth.login, crearpass: auth.crearpass,
   hoy, leads, captura, ficha, pipeline, diagnostico,
-  agenda, cita, propuesta, perfil, demos,
+  agenda, cita, propuesta, perfil, demos, biblioteca,
   overview:    stub('Mapa de pantallas', '', true),
 };
 
@@ -191,6 +192,7 @@ const app = {
       <div class="sheet__body">
         <div class="sheet__title">Más</div>
         ${installRow}
+        ${row('biblioteca', 'fileText', 'Biblioteca')}
         ${row('demos', 'appWindow', 'Demos')}
         ${row('perfil', 'user', 'Mi perfil')}
         ${row('propuesta', 'fileText', 'Propuestas')}

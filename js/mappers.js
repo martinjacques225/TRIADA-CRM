@@ -315,3 +315,19 @@ export function presupToSupa(data) {
     notas:         data.notas,
   });
 }
+
+// ─── BIBLIOTECA DE DOCUMENTOS ─────────────────────────────────
+export function docFromSupa(row) {
+  if (!row) return null;
+  return {
+    id:          row.id,
+    nombre:      row.nombre,
+    descripcion: row.descripcion || '',
+    categoria:   row.categoria || 'General',
+    storagePath: row.storage_path,
+    mimeType:    row.mime_type || '',
+    sizeBytes:   row.size_bytes || 0,
+    subidoPor:   row.subido_por || null,
+    fecha:       row.created_at,
+  };
+}

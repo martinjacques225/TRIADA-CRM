@@ -35,6 +35,27 @@
 
 ## 1. Estado actual (al 2026-06-30)
 
+### 🆕 Biblioteca de documentos (Ola 0 del Plan Maestro) (2026-06-30 cont.)
+> Repositorio documental compartido de la organización — **primer uso de Supabase Storage**.
+> Parte del **Plan Maestro** (`PLAN-MAESTRO-TRIADA.md` en la raíz de PROYECTO CONSULTORIA): motor **M4 "Bóveda"**.
+> - **Backend** (migración `biblioteca_documentos` aplicada por MCP; espejo en `supabase/biblioteca.sql`):
+>   tabla `public.documentos` (org_id auto-estampado con `set_org_id`, RLS multitenant `auth_org_id()` +
+>   subselect) + bucket **PRIVADO** `biblioteca` con RLS por `{org_id}/…`. Leer + subir = cualquier
+>   miembro de la org; **borrar = solo admin** (`is_admin()`). Descarga por **URL firmada** temporal.
+> - **PC:** módulo `modules/biblioteca/` (nueva sección **Recursos** en el nav) — KPIs, buscador, filtros
+>   por categoría, **subida multi-archivo con arrastrar-soltar**, descargar/editar/borrar.
+> - **Móvil:** pantalla `movil/js/screens/biblioteca.js` (**Más → Biblioteca**), paridad total; reutiliza
+>   el mismo `db.documentos`.
+> - **Capa de datos:** `js/db.js` repo `documentos` (getAll cacheado, add con rollback del archivo si
+>   falla la fila, update, remove, signedUrl) + `_getOrgId()` + mapper `docFromSupa` (`js/mappers.js`).
+> - **Verificado:** ✅ `node --check` (6 archivos) · ✅ 44/44 tests · ✅ advisors de seguridad sin hueco
+>   nuevo (`documentos` con políticas; no aparece en `rls_enabled_no_policy`).
+> - 🟡 **Falta prueba funcional real del usuario:** subir un PDF logueado y descargarlo. No se pudo
+>   verificar por navegador desde acá (requiere login a Supabase).
+> - ⬜ **Pendiente inmediato:** el usuario sube los **17 PDF de `05-VENTAS`** (Biblioteca → Subir →
+>   arrastrar la carpeta). No los subí yo: el bucket es privado y requiere su sesión autenticada.
+> - **Siguiente de la Ola 0:** activar **Director de Orquesta** (correr `supabase/ai_commander.sql` + seam IA).
+
 ### 🆕 Equipo (cargo+áreas+editor) + Notificaciones de reunión (in-app + Web Push) (2026-06-30 cont.)
 > Tres cambios pedidos por el usuario, **todos EN VIVO** (commits `b2d2295`, `3609f12`, `1c43d31`):
 > - **Cargo por persona + áreas.** Nueva columna `profiles.cargo` (puesto visible: CEO/CTO/Gerenta
