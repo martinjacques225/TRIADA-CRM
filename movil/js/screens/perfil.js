@@ -4,6 +4,15 @@
 // ============================================================================
 import { db, store, escHtml, initials, memberColor, areaLabel } from '../core.js';
 import { ic, toast, openSheet, closeSheet, supabaseUpdatePassword } from '../ui.js';
+import { pushState, enablePush, disablePush } from '../push.js';
+
+const PUSH_LABEL = {
+  on: 'Activadas en este dispositivo',
+  off: 'Recibe un aviso cuando te suman a una reunión',
+  granted: 'Recibe un aviso cuando te suman a una reunión',
+  denied: 'Bloqueadas en el navegador — actívalas en los ajustes del sitio',
+  unsupported: 'No disponibles en este dispositivo',
+};
 
 const e = escHtml;
 const THEMES = [['light', 'Claro'], ['dark', 'Oscuro'], ['matrix', 'Matrix']];
@@ -15,6 +24,7 @@ export default {
     const nombre = me.nombre || (store.user && store.user.email) || 'Consultor';
     const email = (store.user && store.user.email) || me.email || '—';
     const team = await db.profiles.getAll().catch(() => []);
+    const pState = await pushState().catch(() => 'unsupported');
 
     // Cada botón lleva data-theme → los tokens de ese tema aplican DENTRO del botón,
     // así cada uno es un "swatch" que previsualiza su tema. El activo va con anillo + check.
@@ -48,6 +58,18 @@ export default {
         ${sectionTitle('Cuenta')}
         <div class="card" style="padding:0;overflow:hidden">${acctRow('email', 'mail', 'Cambiar correo')}<div style="height:1px;background:var(--border)"></div>${acctRow('pass', 'lock', 'Cambiar contraseña')}</div>
 
+        ${sectionTitle('Notificaciones')}
+        <div class="card" style="padding:14px 15px">
+          <div style="display:flex;align-items:center;gap:11px">
+            <span style="width:38px;height:38px;border-radius:11px;background:var(--teal-l);color:var(--teal);display:flex;align-items:center;justify-content:center;flex:none">${ic('bell', { size: 19 })}</span>
+            <div style="flex:1;min-width:0">
+              <div style="font-size:14px;font-weight:600;color:var(--ink)">Avisos de reuniones</div>
+              <div style="font-size:12px;color:var(--text2)">${e(PUSH_LABEL[pState] || PUSH_LABEL.off)}</div>
+            </div>
+            ${pState === 'unsupported' || pState === 'denied' ? '' : `<button class="btn btn--sm ${pState === 'on' ? 'btn--ghost' : 'btn--primary'}" id="pfPush">${pState === 'on' ? 'Desactivar' : 'Activar'}</button>`}
+          </div>
+        </div>
+
         ${sectionTitle('Tema')}
         <div style="display:flex;gap:8px">${THEMES.map(themeBtn).join('')}</div>
 
@@ -64,6 +86,16 @@ export default {
     host.querySelector('#pfClose').addEventListener('click', () => app.navigate('hoy'));
     host.querySelectorAll('.pf-theme').forEach((b) => b.addEventListener('click', () => { app.setTheme(b.getAttribute('data-theme')); app.renderScreen(); }));
     host.querySelector('#pfLogout').addEventListener('click', () => app.signOut());
+    const pushBtn = host.querySelector('#pfPush');
+    if (pushBtn) pushBtn.addEventListener('click', async () => {
+      pushBtn.disabled = true;
+      try {
+        const st = await pushState();
+        if (st === 'on') { await disablePush(); toast('Notificaciones desactivadas', 'info'); }
+        else { await enablePush(); toast('Notificaciones activadas ✓', 'ok'); }
+        app.renderScreen();
+      } catch (err) { console.error('push toggle', err); toast(err?.message || 'No se pudo cambiar', 'err'); pushBtn.disabled = false; }
+    });
     host.querySelectorAll('.pf-acct').forEach((b) => b.addEventListener('click', () => {
       const k = b.getAttribute('data-acct');
       if (k === 'pass') openChangePassword(app);

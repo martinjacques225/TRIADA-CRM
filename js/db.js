@@ -136,6 +136,15 @@ function _warnCalendarSql() {
   console.warn('citas: faltan columnas del calendario — ejecuta supabase/calendar.sql para persistir participantes/recordatorios/recurrencia.');
 }
 
+// Dispara el push del sistema a los participantes (Edge Function notify-meeting).
+// Fire-and-forget: jamás bloquea ni rompe el guardado de la cita.
+async function notifyMeeting(citaId) {
+  try {
+    if (!citaId || !supabase?.functions?.invoke) return;
+    await supabase.functions.invoke('notify-meeting', { body: { citaId } });
+  } catch (err) { console.warn('notify-meeting (push) no crítico:', err?.message || err); }
+}
+
 export const citas = {
   getAll:      async ()    => _cachedAll('citas', async () => {
     const { data, error } = await supabase.from('citas').select('*').order('fecha', { ascending: true });
@@ -153,7 +162,9 @@ export const citas = {
       _warnCalendarSql();
       ({ data: row, error } = await supabase.from('citas').insert(citaToSupaBase({ ...data, responsable: payload.responsable })).select('id').single());
     }
-    _throw(error); _invalidate('citas'); return row.id;
+    _throw(error); _invalidate('citas');
+    notifyMeeting(row.id);          // push del sistema a los participantes (no bloquea)
+    return row.id;
   },
   update:      async (data) => {
     const { id, ...rest } = data;
@@ -208,6 +219,22 @@ export const profiles = {
     const patch = clean({ nombre, cargo, area, activo });
     const { error } = await supabase.from('profiles').update(patch).eq('id', id);
     _throw(error); _invalidate('profiles');
+  },
+};
+
+// ─── PUSH (suscripciones Web Push del usuario) ───────────────
+// Cada dispositivo/navegador guarda su endpoint. La Edge Function notify-meeting
+// (service_role) las lee para enviar el push del sistema a los participantes.
+export const pushSubs = {
+  upsert: async ({ endpoint, p256dh, auth, userAgent }) => {
+    if (!_uid) throw new Error('Sin sesión para guardar la suscripción push');
+    const { error } = await supabase.from('push_subscriptions')
+      .upsert({ user_id: _uid, endpoint, p256dh, auth, user_agent: userAgent }, { onConflict: 'endpoint' });
+    _throw(error);
+  },
+  remove: async (endpoint) => {
+    const { error } = await supabase.from('push_subscriptions').delete().eq('endpoint', endpoint);
+    _throw(error);
   },
 };
 

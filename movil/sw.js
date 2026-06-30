@@ -3,7 +3,7 @@
    Actualización LIMPIA: la versión nueva NO se activa sola — espera, la app avisa
    "nueva versión disponible", y solo al tocar "Actualizar" toma el control (SKIP_WAITING).
    Solo se registra en producción (https, no localhost) — ver js/app.js. */
-const CACHE = 'triada-movil-v3';
+const CACHE = 'triada-movil-v4';
 const SHELL = [
   './', './index.html',
   './css/tokens.css', './css/app.css',
@@ -26,6 +26,35 @@ self.addEventListener('activate', (e) => {
 // La app pide activar la versión nueva al tocar "Actualizar".
 self.addEventListener('message', (e) => {
   if (e.data && e.data.type === 'SKIP_WAITING') self.skipWaiting();
+});
+
+// ── Web Push: notificación del sistema (app cerrada o en segundo plano) ──
+self.addEventListener('push', (e) => {
+  let d = {};
+  try { d = e.data ? e.data.json() : {}; } catch (_) { d = { body: e.data && e.data.text() }; }
+  const title = d.title || 'Tríada CRM';
+  const body = d.titulo ? `${d.body || 'Nueva reunión'} · ${d.titulo}` : (d.body || 'Tienes una novedad');
+  e.waitUntil(self.registration.showNotification(title, {
+    body,
+    icon: './icon-192.png',
+    badge: './icon-192.png',
+    tag: d.tag || 'triada',
+    data: { url: d.url || './' },
+    vibrate: [60, 40, 60],
+  }));
+});
+
+// Tocar la notificación → enfoca la app (o la abre) y navega a la Agenda.
+self.addEventListener('notificationclick', (e) => {
+  e.notification.close();
+  const url = (e.notification.data && e.notification.data.url) || './';
+  e.waitUntil((async () => {
+    const all = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
+    for (const c of all) {
+      if ('focus' in c) { try { c.postMessage({ type: 'nav', screen: 'agenda' }); } catch (_) {} return c.focus(); }
+    }
+    if (self.clients.openWindow) return self.clients.openWindow(url);
+  })());
 });
 
 self.addEventListener('fetch', (e) => {

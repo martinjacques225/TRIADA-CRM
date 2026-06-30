@@ -6,6 +6,7 @@ import { store, db, supabase, startRealtime, stopRealtime, PIPELINE_STAGES, escH
 import { logo, ic, toast, openSheet, closeSheet, haptic } from './ui.js';
 import { openTria as openTriaSheet } from './tria.js';
 import { openCampana as openCampanaSheet } from './campana.js';
+import { syncPushIfGranted } from './push.js';
 import * as auth from './screens/auth.js';
 import hoy from './screens/hoy.js';
 import leads from './screens/leads.js';
@@ -254,6 +255,7 @@ const app = {
       store.profile = team.find((p) => p.id === user.id) || team[0] || null;
     } catch (_) { store.profile = null; }
     startRealtime(() => this._onRemoteChange(), (payload) => this._onRealtimeEvent(payload)); // sync + notificaciones
+    syncPushIfGranted(); // si ya dio permiso antes, re-suscribe en silencio (no pide nada)
     const dest = this._bootScreen || 'hoy';
     const params = this._bootParams || {};
     this._bootScreen = null; this._bootParams = {};
@@ -377,6 +379,13 @@ const app = {
 };
 
 window._m = app; // acceso para depurar en consola
+
+// Al tocar una notificación push, el SW pide enfocar la app y navegar a la Agenda.
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.addEventListener('message', (e) => {
+    if (e.data && e.data.type === 'nav' && e.data.screen) app.navigate(e.data.screen);
+  });
+}
 
 // Captura el evento de instalación (Android/Chrome) para ofrecer un botón "Instalar app".
 window.addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); app._installPrompt = e; });
