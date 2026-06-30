@@ -11,7 +11,10 @@ const TABLES = ['leads', 'citas', 'propuestas', 'diagnosticos', 'clientes'];
 let _channel = null;
 let _timer = null;
 
-export async function startRealtime(onChange) {
+// onChange(table): refresco debounced de la vista actual (coalesce ráfagas).
+// onEvent(payload): OPCIONAL, se dispara de inmediato por CADA cambio (sin debounce);
+//   úsalo para reaccionar a un INSERT puntual (p.ej. notificar "te sumaron a una reunión").
+export async function startRealtime(onChange, onEvent) {
   // Sin cliente real de Realtime (mock del preview) → no hace nada.
   if (!supabase || typeof supabase.channel !== 'function') return false;
   stopRealtime();
@@ -27,7 +30,9 @@ export async function startRealtime(onChange) {
   const ch = supabase.channel('triada-crm-sync');
   for (const table of TABLES) {
     ch.on('postgres_changes', { event: '*', schema: 'public', table }, (payload) => {
-      // Debounce: coalesce ráfagas (varias filas) en un solo refresco.
+      // Inmediato (sin debounce): reacción por-evento (notificaciones).
+      if (onEvent) { try { onEvent(payload); } catch (e) { console.error('realtime onEvent', e); } }
+      // Debounce: coalesce ráfagas (varias filas) en un solo refresco de la vista.
       clearTimeout(_timer);
       _timer = setTimeout(() => { try { onChange(payload && payload.table); } catch (e) { console.error('realtime onChange', e); } }, 400);
     });

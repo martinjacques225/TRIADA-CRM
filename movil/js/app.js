@@ -99,6 +99,41 @@ const app = {
     if (LIVE.includes(store.screen)) this.renderScreen({ preserveScroll: true });
   },
 
+  // Reacción por-evento (Realtime): si OTRA persona crea una reunión que me incluye
+  // como participante, muestro una burbuja in-app. El push del sistema (app cerrada)
+  // lo dispara la Edge Function notify-meeting; esto es el aviso cuando la app está abierta.
+  _onRealtimeEvent(payload) {
+    if (!payload || payload.table !== 'citas' || payload.eventType !== 'INSERT') return;
+    const row = payload.new; if (!row) return;
+    const me = store.user && store.user.id; if (!me) return;
+    const parts = Array.isArray(row.participantes) ? row.participantes : [];
+    if (!parts.includes(me) || row.responsable === me) return; // no me incluye o la creé yo
+    this.showMeetingBubble(row);
+  },
+
+  // Burbuja de notificación in-app (se desliza desde arriba; toca → Agenda).
+  showMeetingBubble(row) {
+    try { haptic(18); } catch (_) {}
+    const host = document.getElementById('app'); if (!host) return;
+    const prev = document.getElementById('notif-bubble'); if (prev) prev.remove();
+    clearTimeout(this._notifTimer);
+    const b = document.createElement('button');
+    b.id = 'notif-bubble'; b.type = 'button'; b.className = 'notif-bubble';
+    b.innerHTML = `
+      <span class="nb-ic">${ic('calendar', { size: 20 })}</span>
+      <span class="nb-main">
+        <span class="nb-eyebrow">${ic('bell', { size: 11 })} Nueva reunión</span>
+        <span class="nb-title">${escHtml(row.titulo || 'Reunión')}</span>
+        <span class="nb-sub">Se ha generado una reunión con tu participación</span>
+      </span>`;
+    host.appendChild(b);
+    void b.offsetWidth;          // fuerza reflow → la transición corre sin depender de rAF
+    b.classList.add('show');
+    const dismiss = () => { b.classList.remove('show'); setTimeout(() => b.remove(), 280); };
+    b.addEventListener('click', () => { dismiss(); this.navigate('agenda'); });
+    this._notifTimer = setTimeout(dismiss, 7000);
+  },
+
   // — Chrome (bottom nav + FABs) —
   renderChrome(show) {
     const root = document.getElementById('chrome');
@@ -218,7 +253,7 @@ const app = {
       const team = await db.profiles.getAll();
       store.profile = team.find((p) => p.id === user.id) || team[0] || null;
     } catch (_) { store.profile = null; }
-    startRealtime(() => this._onRemoteChange()); // sincronización en vivo móvil↔PC
+    startRealtime(() => this._onRemoteChange(), (payload) => this._onRealtimeEvent(payload)); // sync + notificaciones
     const dest = this._bootScreen || 'hoy';
     const params = this._bootParams || {};
     this._bootScreen = null; this._bootParams = {};
