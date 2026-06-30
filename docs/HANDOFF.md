@@ -1,6 +1,6 @@
 # HANDOFF — TRIADA CRM
 > **Documento vivo. Fuente de verdad del estado del proyecto.**
-> Última actualización: **2026-06-26**
+> Última actualización: **2026-06-30**
 
 ---
 
@@ -33,7 +33,33 @@
 
 ---
 
-## 1. Estado actual (al 2026-06-26)
+## 1. Estado actual (al 2026-06-30)
+
+### 🆕 Atribución de citas en la Agenda compartida — "¿de quién es esta cita?" (2026-06-30)
+> Pedido del usuario: en la agenda (compartida por todo el equipo), cuando se crea una cita debe
+> verse **quién la creó**, y si hay **2 citas a la misma hora** debe distinguirse de quién es cada una.
+> - **Hallazgo:** los datos YA estaban. `citas.responsable` se guarda solo al crear (`js/db.js`
+>   `citas.add` → `responsable = usuario actual`; `setCurrentUser` se llama al login en PC `app.js:184`
+>   y móvil `movil/js/app.js:216`), viaja de vuelta en `citaFromSupa` (`js/mappers.js`) y se preserva
+>   al editar. La agenda **ya era compartida** (`citas.getAll()` sin filtro por usuario). Faltaba solo
+>   **mostrarlo**. **Sin migración de BD** (la columna `responsable` ya existe; calendar.sql ya corrido).
+> - **Trabajo (solo presentación), `modules/agenda/agenda.js` + `agenda.css`:**
+>   - Avatar del **creador** (color estable por miembro + iniciales + tooltip "Creada por X") en cada
+>     evento de **Mes** y **Semana**, en el popover **"+N más"** del día, y línea "· Creada por X" en **Lista**.
+>   - **Detalle** de la reunión: línea destacada "Creada por [avatar] Nombre · Rol".
+>   - **Modal crear/editar:** banner "Organiza esta reunión / Creada por …" + chip **"Agenda compartida
+>     del equipo"** (deja explícito que todos la ven).
+>   - **Vista Semana — reparto de solapes:** dos citas a la misma hora ya **no se tapaban** entre sí;
+>     ahora se reparten **lado a lado** (nueva fn pura `packOverlaps` en `js/utils.js`, con tests).
+> - **Verificado** (preview con mocks, 2026-06-30): Mes (avatares por evento + colisión 09:00 apilada),
+>   Semana (colisiones 09:00 y 15:00 lado a lado, c/u con su creador), Detalle ("Creada por Martín
+>   Jacques · Consultor"), modal crear ("Organiza… · tú" + "Agenda compartida del equipo"), Lista
+>   ("Empresa · Creada por X"). Tests **44/44** (7 nuevos de `packOverlaps`), `node --check` OK.
+>   *(El screenshot del preview se cuelga con modal/timers abiertos — gotcha headless conocido; el
+>   contenido se verificó por extracción de DOM.)*
+> - ⬜ **Pendiente:** (1) **pushear** (queda sin commitear). (2) **App móvil** captura el creador
+>   (mismo db.js) pero **no lo muestra** aún en `movil/js/screens/agenda.js`/`cita.js` — replicar el
+>   display si se quiere paridad. (3) Citas viejas sin `responsable` no muestran avatar (degradación ok).
 
 ### 🆕 Rediseño completo del Diagnóstico 360 → 8 pilares + escala de madurez 1-5 (2026-06-26)
 > El cuestionario pasó de **3 áreas (Tec/Ventas/Finanzas) en No/Parcial/Sí** a **8 pilares
@@ -474,6 +500,30 @@ Columnas del calendario agregadas a `citas` y verificadas en vivo. Persistencia 
 ---
 
 ## 7. Bitácora de sesiones (más reciente arriba)
+
+### 2026-06-30 — Atribución de citas en la Agenda ("¿de quién es esta cita?")
+- **Pedido:** agenda compartida; al crear una cita ver quién la crea; con 2 citas a la misma hora,
+  distinguir de quién es cada una.
+- **Diagnóstico:** la atribución ya existía en datos (`citas.responsable` poblado al crear, leído en
+  `citaFromSupa`, preservado al editar) y la agenda ya era compartida (sin filtro por usuario).
+  El hueco era **100% de presentación**. Sin migración de BD.
+- **Qué se hizo (`modules/agenda/agenda.js` + `agenda.css`):** avatar del creador en Mes/Semana,
+  popover "+N más" y línea "Creada por X" en Lista; línea destacada en el Detalle; banner
+  "Organiza esta reunión" + chip "Agenda compartida del equipo" en el modal crear/editar. Helpers
+  `ownerOf`/`ownerMini`. En **Semana**, fix de solapes: citas a la misma hora se reparten lado a lado
+  (nueva fn pura `packOverlaps` en `js/utils.js`).
+- **Tests:** `tests/utils.overlaps.test.js` (7 casos de `packOverlaps`). Suite **44/44** verde,
+  `node --check` OK (agenda.js, utils.js, db.js).
+- **Verificación (preview/mocks):** Mes con avatares + colisión 09:00 apilada; Semana con colisiones
+  09:00 y 15:00 lado a lado por creador; Detalle "Creada por Martín Jacques · Consultor"; modal crear
+  con banner + chip compartida; Lista "Empresa · Creada por X". `_preview/mock-db.js` (gitignored) se
+  ajustó con creadores distintos + 2 colisiones de hora para poder verlo. Screenshot del preview se
+  cuelga con modal/timers (gotcha headless) → verificado por DOM.
+- **Decisiones (autónomas):** "de quién es" = **creador (`responsable`)**, no participantes (que ya
+  se muestran como stack aparte); avatar coloreado por miembro como desambiguador + nombre completo
+  donde hay espacio (Lista/Detalle/modal). Sin tocar el modelo de datos.
+- **Pendiente:** pushear (sin commitear); replicar el display en la **app móvil** (captura el creador
+  vía el mismo db.js pero no lo muestra); citas viejas sin `responsable` no muestran avatar.
 
 ### 2026-06-26 — Rediseño completo del Diagnóstico 360 (8 pilares + madurez 1-5) en PC y móvil
 - **Pedido:** rediseñar por completo el cuestionario para que el dueño "descubra dónde pierde

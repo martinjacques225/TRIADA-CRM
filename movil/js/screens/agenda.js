@@ -2,13 +2,21 @@
 // screens/agenda.js — calendario de terreno: Lista (agrupada por día) + Día.
 // Filtro por tipo de reunión (leyenda interactiva). Tarjetas → editar cita.
 // ============================================================================
-import { db, MEETING_TYPES, meetingType, todayStr, formatDateShort, escHtml } from '../core.js';
+import { db, MEETING_TYPES, meetingType, todayStr, formatDateShort, escHtml, memberColor, initials } from '../core.js';
 import { ic, toast } from '../ui.js';
 
 const e = escHtml;
 let _view = 'lista';
 const _hidden = new Set();
-let _citas = [], _leadMap = {};
+let _citas = [], _leadMap = {}, _memberMap = {};
+
+// Creador (responsable) de la cita → para ver "de quién es" en la agenda compartida.
+const ownerOf = (c) => (c && c.responsable && _memberMap[c.responsable]) || null;
+function ownerChip(c) {
+  const o = ownerOf(c);
+  if (!o) return '';
+  return `<span style="display:inline-flex;align-items:center;gap:5px;font-size:11px;color:var(--text2)" title="Creada por ${e(o.nombre)}"><span style="width:18px;height:18px;border-radius:50%;background:${o.color};color:#fff;display:inline-flex;align-items:center;justify-content:center;font-weight:700;font-size:8.5px;flex:none">${e(initials(o.nombre))}</span>${e(o.nombre.split(' ')[0])}</span>`;
+}
 
 function dayLabel(fecha) {
   if (!fecha) return '—';
@@ -49,6 +57,7 @@ function citaCard(c) {
         <span style="font-size:10.5px;font-weight:600;color:${t.color};background:${t.color}1A;padding:3px 8px;border-radius:20px">${e(t.label)}</span>
         <span style="font-size:11px;color:var(--text2)">${modoDe(c.lugar)}</span>
         ${c.estado ? `<span style="font-size:11px;color:var(--text3)">· ${e(c.estado)}</span>` : ''}
+        ${ownerChip(c)}
       </div>
     </div>
   </div>`;
@@ -67,6 +76,7 @@ function diaHtml() {
         <div class="card--tap" data-cita="${e(c.id)}" style="flex:1;margin-bottom:14px;background:var(--surface);border:1px solid var(--border);border-left:3px solid ${t.color};border-radius:var(--radius);padding:12px 14px;box-shadow:var(--shadow-sm)">
           <div class="ell" style="font-weight:700;font-size:13.5px;color:var(--ink)">${e(c.titulo || t.label)}</div>
           <div class="ell" style="font-size:11.5px;color:var(--text2);margin-top:2px">${emp ? e(emp) + ' · ' : ''}${c.durMin || 60} min · ${modoDe(c.lugar)}</div>
+          ${ownerChip(c) ? `<div style="margin-top:6px">${ownerChip(c)}</div>` : ''}
         </div>
       </div>`;
     }).join('')}</div>`;
@@ -79,9 +89,14 @@ function emptyHtml(msg) {
 export default {
   chrome: true,
   async render() {
-    const [citas, leads] = await Promise.all([db.citas.getAll(), db.prospectos.getAll().catch(() => [])]);
+    const [citas, leads, team] = await Promise.all([
+      db.citas.getAll(),
+      db.prospectos.getAll().catch(() => []),
+      db.profiles.getAll().catch(() => []),
+    ]);
     _citas = citas;
     _leadMap = Object.fromEntries(leads.map((l) => [l.id, l.empresa || l.nombre]));
+    _memberMap = Object.fromEntries(team.map((m, i) => [m.id, { nombre: m.nombre, color: memberColor(i) }]));
     const seg = (id, label) => `<button class="ag-seg seg__item ${_view === id ? 'seg__item--on' : ''}" data-view="${id}" style="flex:1;height:36px">${label}</button>`;
     const chip = (t) => { const off = _hidden.has(t.id); return `<button class="ag-chip" data-type="${t.id}" style="flex:none;display:flex;align-items:center;gap:6px;border:1px solid ${off ? 'var(--border)' : t.color + '55'};background:${off ? 'var(--surface)' : t.color + '14'};color:${off ? 'var(--text3)' : t.color};border-radius:20px;padding:6px 11px;font-size:11.5px;font-weight:600;cursor:pointer;white-space:nowrap;opacity:${off ? '.55' : '1'};transition:var(--tr)"><span style="width:7px;height:7px;border-radius:50%;background:${off ? 'var(--text3)' : t.color}"></span>${e(t.label)}</button>`; };
 

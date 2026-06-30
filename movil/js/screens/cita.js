@@ -17,6 +17,7 @@ function fresh(app) {
     prospectoId: app.params.leadId || null,
     fecha: todayStr(), hora: '10:00', durMin: 60,
     modo: 'Presencial', lugar: '', participantes: [], recordatorios: [30], recurrencia: 'none', estado: 'Confirmada',
+    responsable: null,
   };
 }
 const val = (id) => (document.getElementById(id)?.value || '');
@@ -43,12 +44,18 @@ export default {
       if (app.params.citaId) {
         const c = await db.citas.get(app.params.citaId).catch(() => null);
         _form = c
-          ? { id: c.id, titulo: c.titulo || '', tipo: c.tipo || 'diagnostico', prospectoId: c.prospectoId || null, fecha: c.fecha || todayStr(), hora: c.hora || '10:00', durMin: c.durMin || 60, modo: /https?:|zoom|meet/i.test(c.lugar || '') ? 'Zoom' : 'Presencial', lugar: c.lugar || '', participantes: c.participantes || [], recordatorios: c.recordatorios || [30], recurrencia: c.recurrencia || 'none', estado: c.estado || 'Confirmada' }
+          ? { id: c.id, titulo: c.titulo || '', tipo: c.tipo || 'diagnostico', prospectoId: c.prospectoId || null, fecha: c.fecha || todayStr(), hora: c.hora || '10:00', durMin: c.durMin || 60, modo: /https?:|zoom|meet/i.test(c.lugar || '') ? 'Zoom' : 'Presencial', lugar: c.lugar || '', participantes: c.participantes || [], recordatorios: c.recordatorios || [30], recurrencia: c.recurrencia || 'none', estado: c.estado || 'Confirmada', responsable: c.responsable || null }
           : fresh(app);
       } else _form = fresh(app);
       _formKey = key;
     }
     _lead = _form.prospectoId ? await db.prospectos.get(_form.prospectoId).catch(() => null) : null;
+
+    // Creador de la cita (responsable): nuevo = usuario actual; editar = quien la creó.
+    const meId = (() => { try { return db.getCurrentUserId(); } catch (_) { return null; } })();
+    const _cIdx = _team.findIndex((m) => m.id === (_form.responsable || meId));
+    const creator = _cIdx >= 0 ? { nombre: _team[_cIdx].nombre, color: memberColor(_cIdx) } : { nombre: 'Tú', color: '#0C7C88' };
+    const creatorIsMe = !_form.id || !_form.responsable || _form.responsable === meId;
 
     const tipoChip = (t) => `<button type="button" class="ct-chip" data-g="tipo" data-v="${t.id}" style="flex:none;display:flex;align-items:center;gap:6px;border:1px solid ${_form.tipo === t.id ? t.color : 'var(--border)'};background:${_form.tipo === t.id ? t.color + '18' : 'var(--surface)'};color:${_form.tipo === t.id ? t.color : 'var(--text2)'};border-radius:20px;padding:7px 12px;font-size:12.5px;font-weight:600;cursor:pointer;white-space:nowrap"><span style="width:8px;height:8px;border-radius:50%;background:${t.color}"></span>${e(t.label)}</button>`;
     const plainChip = (g, v, label) => `<button type="button" class="ct-chip" data-g="${g}" data-v="${e(String(v))}" style="flex:none;border:1px solid ${_form[g] === v ? 'var(--teal)' : 'var(--border)'};background:${_form[g] === v ? 'var(--teal-l)' : 'var(--surface)'};color:${_form[g] === v ? 'var(--teal-d)' : 'var(--text2)'};border-radius:20px;padding:8px 14px;font-size:12.5px;font-weight:600;cursor:pointer;white-space:nowrap;font-variant-numeric:tabular-nums">${e(label)}</button>`;
@@ -65,6 +72,14 @@ export default {
       </header>
 
       <div class="pad-form">
+        <div style="display:flex;align-items:center;gap:10px;padding:10px 12px;margin-bottom:16px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm)">
+          <span style="width:32px;height:32px;border-radius:50%;background:${creator.color};color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;flex:none">${e(initials(creator.nombre))}</span>
+          <div style="flex:1;min-width:0">
+            <div style="font-size:10px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--text3)">${_form.id ? 'Creada por' : 'Organiza esta reunión'}</div>
+            <div class="ell" style="font-size:13.5px;font-weight:600;color:var(--ink)">${e(creator.nombre)}${creatorIsMe ? ' · tú' : ''}</div>
+          </div>
+          <span style="font-size:10px;font-weight:600;color:var(--teal-d);background:var(--teal-l);padding:5px 9px;border-radius:20px;flex:none">Compartida</span>
+        </div>
         ${L('Título')}<input id="ctTitulo" class="input" placeholder="Ej: Diagnóstico 360 · San Andrés" value="${e(_form.titulo)}" style="margin-bottom:16px">
         ${L('Tipo de reunión')}<div class="chip-row" id="ct-tipo" style="padding:0 0 16px;gap:7px">${MEETING_TYPES.map(tipoChip).join('')}</div>
         ${L('Prospecto')}<button type="button" id="ctProspecto" style="width:100%;display:flex;align-items:center;gap:11px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:11px 13px;cursor:pointer;margin-bottom:16px;text-align:left">${prospectoBtn()}${ic('next', { size: 18, sw: 1.9 })}</button>

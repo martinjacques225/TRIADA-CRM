@@ -303,6 +303,37 @@ export const ESTADOS_CITA = ['Pendiente', 'Confirmada', 'Realizada', 'Cancelada'
 const MEMBER_COLORS = ['#5160C0', '#0C7C88', '#2E9B73', '#7C6FD0', '#2BA9B2', '#46B488', '#C2871A', '#B8893B'];
 export function memberColor(i) { return MEMBER_COLORS[i % MEMBER_COLORS.length]; }
 
+// Reparte en columnas los eventos que se solapan en el tiempo (vista Semana):
+// dos reuniones a la misma hora se muestran lado a lado en vez de taparse, para
+// que se vea de quién es cada una. Cada item necesita { start, end } numéricos
+// (en horas). Devuelve los mismos items ordenados por inicio, anotados con:
+//   .col  = índice de columna (0-based) dentro de su grupo de solape
+//   .cols = total de columnas de ese grupo (ancho = 100% / cols)
+// Pura (sin DOM ni fechas reales) → testeable en node.
+export function packOverlaps(items) {
+  const sorted = items.slice().sort((a, b) => a.start - b.start || a.end - b.end);
+  let cluster = [], clusterEnd = -Infinity;
+  const flush = () => {
+    const colEnds = [];                 // fin del último evento colocado en cada columna
+    cluster.forEach((it) => {
+      let placed = false;
+      for (let c = 0; c < colEnds.length; c++) {
+        if (it.start >= colEnds[c]) { it.col = c; colEnds[c] = it.end; placed = true; break; }
+      }
+      if (!placed) { it.col = colEnds.length; colEnds.push(it.end); }
+    });
+    cluster.forEach((it) => { it.cols = colEnds.length; });
+    cluster = [];
+  };
+  sorted.forEach((it) => {
+    if (cluster.length && it.start >= clusterEnd) flush();
+    cluster.push(it);
+    clusterEnd = Math.max(clusterEnd, it.end);
+  });
+  flush();
+  return sorted;
+}
+
 export function stageBadge(estado) {
   const st = PIPELINE_STAGES.find(s => s.id === estado);
   if (!st) return `<span class="badge">${escHtml(estado)}</span>`;

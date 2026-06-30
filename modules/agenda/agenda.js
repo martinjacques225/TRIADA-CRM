@@ -5,7 +5,7 @@ import { citas, prospectos, profiles, getCurrentUserId } from '../../js/db.js';
 import {
   escHtml, todayStr, toast, formatDateShort,
   MEETING_TYPES, meetingType, toMeetingTipo,
-  REMINDER_OPTS, RECUR_OPTS, DUR_OPTS, ESTADOS_CITA, memberColor,
+  REMINDER_OPTS, RECUR_OPTS, DUR_OPTS, ESTADOS_CITA, memberColor, packOverlaps,
 } from '../../js/utils.js';
 
 const _i = (n, s) => (window.icon ? window.icon(n, '', s) : '');
@@ -75,6 +75,17 @@ function memberStack(ids, size = 26, max = 4) {
   const ov = Math.round(size*0.32);
   if (!shown.length) return '';
   return `<div class="av-stack" style="display:flex">${shown.map((m,i)=>`<div title="${escHtml(m.nombre)}" style="margin-left:${i?-ov:0}px;border:2px solid var(--surface);border-radius:50%">${avatarOf(m.nombre,m.color,size)}</div>`).join('')}${rest>0?`<div style="margin-left:${-ov}px;width:${size}px;height:${size}px;border-radius:50%;border:2px solid var(--surface);background:var(--surface3);color:var(--text2);display:flex;align-items:center;justify-content:center;font-size:${Math.round(size*0.36)}px;font-weight:700">+${rest}</div>`:''}</div>`;
+}
+
+/* ── creador / dueño de la reunión (citas.responsable) ──
+   Resuelve "¿de quién es esta cita?" cuando hay varias el mismo día/hora.
+   El creador se guarda al crear (js/db.js: citas.add → responsable = usuario actual)
+   y se preserva al editar. Si la cita es vieja (sin responsable) no muestra avatar. */
+const ownerOf = (m) => (m && m.responsable) ? member(m.responsable) : null;
+function ownerMini(m, size = 15) {
+  const o = ownerOf(m);
+  if (!o) return '';
+  return `<span class="ev-owner" title="Creada por ${escHtml(o.nombre)}">${avatarOf(o.nombre, o.color, size)}</span>`;
 }
 
 /* ── expandir recurrencias en un rango [start, end) ── */
@@ -185,7 +196,7 @@ function _month() {
     cells += `<div class="cal-cell${other?' other':''}${isToday?' today':''}" data-day="${key}">
       <div style="display:flex;align-items:center"><span class="cal-daynum">${dte.getDate()}</span></div>
       <button class="cal-add" data-add="${key}" title="Nueva reunión">${_i('plus',13)}</button>
-      ${shown.map(o => { const t = meetingType(o.m.tipo); return `<div class="cal-ev" data-mid="${o.m.id}" style="--evc:${t.color}"><span class="evt tnum">${horaOf(o.m)}</span><span class="evname">${escHtml(o.m.titulo || t.label)}</span></div>`; }).join('')}
+      ${shown.map(o => { const t = meetingType(o.m.tipo); return `<div class="cal-ev" data-mid="${o.m.id}" style="--evc:${t.color}">${ownerMini(o.m,15)}<span class="evt tnum">${horaOf(o.m)}</span><span class="evname">${escHtml(o.m.titulo || t.label)}</span></div>`; }).join('')}
       ${rest > 0 ? `<span class="cal-more" data-more="${key}">+${rest} más</span>` : ''}
     </div>`;
   }
@@ -213,13 +224,21 @@ function _week() {
 
   const cols = days.map(dte => {
     const evs = occ.filter(o => sameDay(o.date, dte));
-    const blocks = evs.map(o => {
-      const t = meetingType(o.m.tipo);
-      const sh = parseHora(horaOf(o.m));
-      const top = Math.max(0, (sh - START_H) * HOUR_PX);
+    // Reparte en columnas las que se solapan (citas a la misma hora → lado a lado).
+    const items = evs.map(o => {
+      const start = parseHora(horaOf(o.m));
+      const dur = Math.max((o.m.durMin || 60) / 60, 0.34); // mínimo ~20 min para que el solape sea visible
+      return { o, start, end: start + dur };
+    });
+    const blocks = packOverlaps(items).map(it => {
+      const o = it.o, t = meetingType(o.m.tipo);
+      const top = Math.max(0, (it.start - START_H) * HOUR_PX);
       const h = Math.max(22, ((o.m.durMin||60)/60) * HOUR_PX - 2);
-      return `<div class="wk-ev" data-mid="${o.m.id}" style="top:${top}px;height:${h}px;background:${t.color}">
-        <div class="wk-ev-t tnum">${horaOf(o.m)}</div><div class="wk-ev-n">${escHtml(o.m.titulo || t.label)}</div>
+      const wPct = 100 / it.cols;
+      const left = `calc(${it.col * wPct}% + 3px)`;
+      const width = `calc(${wPct}% - ${it.cols > 1 ? 5 : 6}px)`;
+      return `<div class="wk-ev${it.cols>1?' split':''}" data-mid="${o.m.id}" style="top:${top}px;height:${h}px;left:${left};width:${width};right:auto;background:${t.color}">
+        <div class="wk-ev-head"><span class="wk-ev-t tnum">${horaOf(o.m)}</span>${ownerMini(o.m,15)}</div><div class="wk-ev-n">${escHtml(o.m.titulo || t.label)}</div>
       </div>`;
     }).join('');
     return `<div class="wk-col${sameDay(dte,now)?' today':''}" data-day="${ymd(dte)}" style="height:${(END_H-START_H)*HOUR_PX}px">${blocks}</div>`;
@@ -250,13 +269,14 @@ function _list() {
       ${byDay[k].map(o => {
         const m = o.m, t = meetingType(m.tipo);
         const rem = (m.recordatorios||[]).length;
+        const own = ownerOf(m);
         return `<div class="cal-row" data-mid="${m.id}">
           <div class="tnum" style="font-size:14px;font-weight:700;color:var(--ink);width:52px;text-align:center;flex-shrink:0">${horaOf(m) || '—'}</div>
           <div style="width:3px;align-self:stretch;border-radius:3px;background:${t.color}"></div>
           <div style="width:40px;height:40px;border-radius:11px;background:color-mix(in srgb, ${t.color} 14%, var(--surface));color:${t.color};display:flex;align-items:center;justify-content:center;flex-shrink:0">${_i(t.icon,19)}</div>
           <div style="flex:1;min-width:0">
             <div class="cal-row-title">${escHtml(m.titulo || t.label)}${o.recurs?` <span style="color:var(--text3)">${_i('repeat',12)}</span>`:''}</div>
-            <div class="cal-row-sub">${_i('building',12)} ${escHtml(empresaDe(m))}</div>
+            <div class="cal-row-sub">${_i('building',12)} ${escHtml(empresaDe(m))}${own ? ` · ${_i('user',12)} Creada por ${escHtml(own.nombre)}` : ''}</div>
           </div>
           ${memberStack(m.participantes, 26)}
           ${rem ? `<span class="chip">${_i('bell',12)} ${rem}</span>` : ''}
@@ -326,10 +346,11 @@ function _dayModal(key) {
     title: cap(d.toLocaleDateString('es-CL',{weekday:'long',day:'numeric',month:'long'})),
     showSave: true, saveLabel: 'Nueva reunión', cancelLabel: 'Cerrar',
     body: `<div style="display:flex;flex-direction:column;gap:8px">
-      ${occ.map(o => { const m=o.m, t=meetingType(m.tipo); return `<div class="cal-row" data-mid="${m.id}" style="border-radius:var(--radius-sm);border-bottom:none;background:var(--surface2)">
+      ${occ.map(o => { const m=o.m, t=meetingType(m.tipo), own=ownerOf(m); return `<div class="cal-row" data-mid="${m.id}" style="border-radius:var(--radius-sm);border-bottom:none;background:var(--surface2)">
         <div class="tnum" style="font-size:13.5px;font-weight:700;color:var(--ink);width:48px;text-align:center">${horaOf(m) || '—'}</div>
         <div style="width:34px;height:34px;border-radius:9px;background:${t.color};color:#fff;display:flex;align-items:center;justify-content:center;flex-shrink:0">${_i(t.icon,17)}</div>
-        <div style="flex:1;min-width:0"><div class="cal-row-title">${escHtml(m.titulo || t.label)}</div><div class="cal-row-sub">${escHtml(empresaDe(m))}</div></div>
+        <div style="flex:1;min-width:0"><div class="cal-row-title">${escHtml(m.titulo || t.label)}</div><div class="cal-row-sub">${escHtml(empresaDe(m))}${own ? ` · Creada por ${escHtml(own.nombre)}` : ''}</div></div>
+        ${own ? `<span class="ev-owner" title="Creada por ${escHtml(own.nombre)}">${avatarOf(own.nombre, own.color, 26)}</span>` : ''}
       </div>`; }).join('') || '<div style="color:var(--text3);text-align:center;padding:16px;font-size:13px">Sin reuniones.</div>'}
     </div>`,
     onSave: () => { _closeModal(); openMeetingModal({ date: key }); },
@@ -344,6 +365,7 @@ export async function openMeetingDetail(id) {
   if (!m) return;
   const t = meetingType(m.tipo);
   const pros = m.prospectoId ? _pMap[m.prospectoId] : null;
+  const own = ownerOf(m);
   const recur = (RECUR_OPTS.find(r => r.id === (m.recurrencia||'none'))||{}).label || 'No se repite';
   const rems = (m.recordatorios||[]).map(min => (REMINDER_OPTS.find(r=>r.min===min)||{label:min+' min antes'}).label);
   const meta = (ic, k, v) => `<div class="mt-meta"><span class="mt-meta-ic">${_i(ic,16)}</span><div><div class="mt-meta-k">${k}</div><div class="mt-meta-v">${v}</div></div></div>`;
@@ -362,6 +384,7 @@ export async function openMeetingDetail(id) {
             <span class="chip" style="background:color-mix(in srgb, ${t.color} 14%, var(--surface));color:${t.color}">${_i(t.icon,12)} ${t.label}</span>
             <span class="badge" style="color:${estadoColor};border-color:currentColor">${escHtml(m.estado || 'Pendiente')}</span>
           </div>
+          ${own ? `<div class="mt-by">${avatarOf(own.nombre, own.color, 22)}<span>Creada por <b>${escHtml(own.nombre)}</b>${own.rol ? ` · ${escHtml(own.rol)}` : ''}</span></div>` : ''}
         </div>
       </div>
       <div class="mt-meta-grid">
@@ -414,6 +437,8 @@ export async function openMeetingModal(opt = {}) {
   if (!_equipo.length || !_pros.length) await _load();
   const edit = opt.edit ? (typeof opt.edit === 'string' ? (_citas.find(x => x.id === opt.edit) || await citas.get(opt.edit)) : opt.edit) : null;
   const uid = getCurrentUserId();
+  const creator = (edit ? member(edit.responsable) : null) || member(uid) || { nombre: 'Tú', color: '#0C7C88', rol: '' };
+  const creatorIsMe = !edit || !edit.responsable || edit.responsable === uid;
   const st = {
     tipo:  toMeetingTipo(edit?.tipo) || 'diagnostico',
     parts: new Set(edit?.participantes?.length ? edit.participantes : (uid && member(uid) ? [uid] : [_equipo[0]?.id].filter(Boolean))),
@@ -425,6 +450,14 @@ export async function openMeetingModal(opt = {}) {
   const defPros = edit?.prospectoId || opt.prospectoId || '';
 
   const body = `
+    <div class="mt-creator">
+      ${avatarOf(creator.nombre, creator.color, 34)}
+      <div>
+        <div class="mt-creator-k">${edit ? 'Creada por' : 'Organiza esta reunión'}</div>
+        <div class="mt-creator-v">${escHtml(creator.nombre)}${creatorIsMe ? ' · tú' : ''}</div>
+      </div>
+      <span class="mt-shared">${_i('users',13)} Agenda compartida del equipo</span>
+    </div>
     <div class="form-group"><label>Título de la reunión</label><input id="m_tit" placeholder="Ej: Diagnóstico 360 · Empresa" value="${edit?escHtml(edit.titulo||''):''}"></div>
 
     <label style="display:block;font-size:12px;font-weight:600;color:var(--text2);margin-bottom:7px">Tipo de reunión</label>
