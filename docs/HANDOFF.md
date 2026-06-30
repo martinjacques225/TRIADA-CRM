@@ -57,9 +57,10 @@
 >   ("Empresa · Creada por X"). Tests **44/44** (7 nuevos de `packOverlaps`), `node --check` OK.
 >   *(El screenshot del preview se cuelga con modal/timers abiertos — gotcha headless conocido; el
 >   contenido se verificó por extracción de DOM.)*
-> - ⬜ **Pendiente:** (1) **pushear** (queda sin commitear). (2) **App móvil** captura el creador
->   (mismo db.js) pero **no lo muestra** aún en `movil/js/screens/agenda.js`/`cita.js` — replicar el
->   display si se quiere paridad. (3) Citas viejas sin `responsable` no muestran avatar (degradación ok).
+> - ✅ **PUSHEADO Y EN VIVO** (commit `224d453`, 2026-06-30) en PC **y app móvil** (paridad incluida en
+>   el mismo commit: `movil/js/screens/agenda.js` muestra el creador en cada tarjeta de Lista/Día;
+>   `movil/js/screens/cita.js` el banner de organizador + chip "Compartida").
+> - ⬜ Único pendiente menor: citas viejas sin `responsable` no muestran avatar (degradación esperada).
 
 ### 🆕 Rediseño completo del Diagnóstico 360 → 8 pilares + escala de madurez 1-5 (2026-06-26)
 > El cuestionario pasó de **3 áreas (Tec/Ventas/Finanzas) en No/Parcial/Sí** a **8 pilares
@@ -522,8 +523,9 @@ Columnas del calendario agregadas a `citas` y verificadas en vivo. Persistencia 
 - **Decisiones (autónomas):** "de quién es" = **creador (`responsable`)**, no participantes (que ya
   se muestran como stack aparte); avatar coloreado por miembro como desambiguador + nombre completo
   donde hay espacio (Lista/Detalle/modal). Sin tocar el modelo de datos.
-- **Pendiente:** pushear (sin commitear); replicar el display en la **app móvil** (captura el creador
-  vía el mismo db.js pero no lo muestra); citas viejas sin `responsable` no muestran avatar.
+- **Pusheado y EN VIVO** (commit `224d453`), con **paridad móvil** incluida en el mismo commit
+  (`movil/js/screens/agenda.js` + `cita.js`). Único pendiente menor: citas viejas sin `responsable`
+  no muestran avatar (degradación esperada).
 
 ### 2026-06-26 — Rediseño completo del Diagnóstico 360 (8 pilares + madurez 1-5) en PC y móvil
 - **Pedido:** rediseñar por completo el cuestionario para que el dueño "descubra dónde pierde
