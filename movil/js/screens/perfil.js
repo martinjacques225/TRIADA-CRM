@@ -2,7 +2,7 @@
 // screens/perfil.js — Mi cuenta (sincronizada con el perfil del CRM).
 // Identidad · cuenta · tema (claro/oscuro/matrix) · equipo · cerrar sesión.
 // ============================================================================
-import { db, store, escHtml, initials, memberColor } from '../core.js';
+import { db, store, escHtml, initials, memberColor, areaLabel } from '../core.js';
 import { ic, toast, openSheet, closeSheet, supabaseUpdatePassword } from '../ui.js';
 
 const e = escHtml;
@@ -22,7 +22,7 @@ export default {
       const on = store.theme === id;
       return `<button class="pf-theme" data-theme="${id}" style="flex:1;height:48px;border:1px solid var(--border);background:var(--surface);color:var(--text);border-radius:var(--radius-sm);font-family:var(--font);font-weight:700;font-size:13px;cursor:pointer;position:relative;transition:var(--tr);${on ? 'border-color:var(--teal);box-shadow:0 0 0 2px var(--teal)' : ''}">${label}${on ? `<span style="position:absolute;top:5px;right:7px;color:var(--teal);display:flex">${ic('check', { size: 13, sw: 2.8 })}</span>` : ''}</button>`;
     };
-    const teamRow = (m, i, last) => `<div style="display:flex;align-items:center;gap:12px;padding:12px 15px;${last ? '' : 'border-bottom:1px solid var(--border)'}"><span style="width:38px;height:38px;border-radius:50%;background:${memberColor(i)};color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;flex:none">${e(initials(m.nombre))}</span><div style="flex:1;min-width:0"><div class="ell" style="font-size:14px;font-weight:600;color:var(--ink)">${e(m.nombre)}</div><div class="ell" style="font-size:11.5px;color:var(--text2);text-transform:capitalize">${e(m.rol || 'consultor')}${m.area ? ' · ' + e(m.area) : ''}</div></div></div>`;
+    const teamRow = (m, i, last) => `<div style="display:flex;align-items:center;gap:12px;padding:12px 15px;${last ? '' : 'border-bottom:1px solid var(--border)'}"><span style="width:38px;height:38px;border-radius:50%;background:${memberColor(i)};color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;flex:none">${e(initials(m.nombre))}</span><div style="flex:1;min-width:0"><div class="ell" style="font-size:14px;font-weight:600;color:var(--ink)">${e(m.nombre)}</div><div class="ell" style="font-size:11.5px;color:var(--text2)">${e(m.cargo || m.rol || 'Consultor')}${m.area ? ' · ' + e(areaLabel(m.area)) : ''}</div></div></div>`;
     const acctRow = (id, icon, label) => `<button class="pf-acct" data-acct="${id}" style="width:100%;display:flex;align-items:center;gap:12px;padding:14px 15px;background:none;border:0;cursor:pointer;text-align:left">${ic(icon, { size: 19, sw: 1.7 })}<span style="flex:1;font-size:14px;font-weight:600;color:var(--ink)">${label}</span>${ic('next', { size: 17, sw: 2 })}</button>`;
     const sectionTitle = (t) => `<div style="font-size:11.5px;font-weight:700;letter-spacing:.06em;color:var(--text3);text-transform:uppercase;margin:22px 4px 9px">${t}</div>`;
 
@@ -39,8 +39,8 @@ export default {
           <div class="serif" style="font-size:21px;font-weight:600;color:var(--ink)">${e(nombre)}</div>
           <div class="ell" style="font-size:13px;color:var(--text2);margin-top:2px">${e(email)}</div>
           <div style="display:flex;align-items:center;justify-content:center;gap:7px;margin-top:11px;flex-wrap:wrap">
-            <span style="font-size:11px;font-weight:700;color:var(--navy);background:var(--navy-l);padding:4px 11px;border-radius:20px;text-transform:capitalize">${e(me.rol || 'consultor')}</span>
-            ${me.area ? `<span style="font-size:11px;font-weight:700;color:var(--teal);background:var(--teal-l);padding:4px 11px;border-radius:20px;text-transform:capitalize">${e(me.area)}</span>` : ''}
+            <span style="font-size:11px;font-weight:700;color:var(--navy);background:var(--navy-l);padding:4px 11px;border-radius:20px">${e(me.cargo || me.rol || 'Consultor')}</span>
+            ${me.area ? `<span style="font-size:11px;font-weight:700;color:var(--teal);background:var(--teal-l);padding:4px 11px;border-radius:20px">${e(areaLabel(me.area))}</span>` : ''}
           </div>
           <div style="display:flex;align-items:center;justify-content:center;gap:6px;margin-top:14px;font-size:11.5px;color:var(--text3)">${ic('refresh', { size: 14, sw: 1.8 })}Sincronizado con tu cuenta de Tríada CRM</div>
         </div>

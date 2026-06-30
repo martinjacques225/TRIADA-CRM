@@ -1,6 +1,6 @@
 // modules/configuracion/configuracion.js
-import { config, citas, clientes } from '../../js/db.js';
-import { toast, escHtml } from '../../js/utils.js';
+import { config, citas, clientes, profiles, getCurrentUserId } from '../../js/db.js';
+import { toast, escHtml, TEAM_AREAS, areaLabel, memberColor } from '../../js/utils.js';
 import { supabase } from '../../js/supabase.js';
 import { mascotaEnabled, mascotaTipo, mascotasDisponibles } from '../mascota/mascota.js';
 import { exportInformePDF } from '../informes/informes.js';
@@ -25,10 +25,40 @@ export async function render() {
   let acctEmail = '';
   try { acctEmail = (await supabase.auth.getUser())?.data?.user?.email || ''; }
   catch (err) { console.warn('No se pudo leer el email de la cuenta:', err); }
+
+  // Equipo (tabla profiles). El editor solo se muestra a admins; igual la RLS
+  // y el trigger guard_profile_privesc protegen del lado del servidor.
+  let team = [], isAdmin = false;
+  try {
+    team = await profiles.listAll();
+    const uid = getCurrentUserId();
+    isAdmin = team.some(m => m.id === uid && m.rol === 'admin');
+  } catch (err) { console.warn('No se pudo cargar el equipo:', err); }
+
   const dens = densidad || 'comfortable';
   const th   = tema || 'light';
   const fs   = fontScale || '1';
   const ico = (n, s = 16) => (window.icon ? window.icon(n, '', s) : '');
+
+  // ── Editor de Equipo (solo admin) ──
+  const _ini = (n) => String(n || '?').trim().split(/\s+/).slice(0, 2).map(w => w[0]?.toUpperCase() || '').join('');
+  const _areaOpts = (cur) => [...new Set([...TEAM_AREAS, cur].filter(Boolean))]
+    .map(a => `<option value="${escHtml(a)}"${a === cur ? ' selected' : ''}>${escHtml(areaLabel(a))}</option>`).join('');
+  const _memberRow = (m, i) => `
+    <div class="cfg-member" data-id="${escHtml(m.id)}" style="display:flex;align-items:center;gap:9px;padding:10px 0;border-bottom:1px solid var(--border);flex-wrap:wrap">
+      <div class="avatar" style="width:34px;height:34px;background:${memberColor(i)};font-size:12.5px">${escHtml(_ini(m.nombre))}</div>
+      <input class="m-nombre" value="${escHtml(m.nombre)}" placeholder="Nombre" style="flex:2;min-width:130px">
+      <input class="m-cargo" value="${escHtml(m.cargo)}" placeholder="Cargo (Ej: CEO)" style="flex:2;min-width:130px">
+      <select class="m-area" style="flex:1;min-width:120px">${_areaOpts(m.area)}</select>
+      <label style="display:flex;align-items:center;gap:5px;font-size:12.5px;color:var(--text2);white-space:nowrap"><input type="checkbox" class="m-activo"${m.activo ? ' checked' : ''}> Activo</label>
+      <button class="btn btn-sm btn-primary m-save" type="button">Guardar</button>
+    </div>`;
+  const teamCard = isAdmin ? `
+    <div class="card card-pad" style="margin-bottom:18px">
+      <h3 class="cfg-h">Equipo</h3>
+      <p style="font-size:13px;color:var(--text3);margin-bottom:14px">Nombre, cargo y área de cada persona. El cargo y el área se ven en la agenda, en los participantes de cada reunión y en la app móvil.</p>
+      <div id="cfgTeamList">${team.map(_memberRow).join('') || '<div style="color:var(--text3);font-size:13px">Sin miembros.</div>'}</div>
+    </div>` : '';
 
   const center = document.getElementById('center');
   center.innerHTML = `<div class="view-animate" style="max-width:680px">
@@ -59,6 +89,8 @@ export async function render() {
       </div>
       <button class="btn btn-primary btn-sm" onclick="_changePassword()">Cambiar contraseña</button>
     </div>
+
+    ${teamCard}
 
     <div class="card card-pad" style="margin-bottom:18px">
       <h3 class="cfg-h">Apariencia</h3>
@@ -188,6 +220,27 @@ export async function render() {
   };
 
   window._exportInformePDF = () => exportInformePDF();
+
+  // ── Editor de Equipo: guardar cada miembro (delegación, sin onclick inline) ──
+  const teamList = document.getElementById('cfgTeamList');
+  if (teamList) teamList.addEventListener('click', async (e) => {
+    const btn = e.target.closest('.m-save'); if (!btn) return;
+    const row = btn.closest('.cfg-member'); if (!row) return;
+    const id = row.dataset.id;
+    const nombre = row.querySelector('.m-nombre').value.trim();
+    const cargo  = row.querySelector('.m-cargo').value.trim();
+    const area   = row.querySelector('.m-area').value;
+    const activo = row.querySelector('.m-activo').checked;
+    if (!nombre) { toast('El nombre no puede quedar vacío', 'error'); return; }
+    btn.disabled = true; btn.textContent = 'Guardando…';
+    try {
+      await profiles.update({ id, nombre, cargo, area, activo });
+      toast('Miembro actualizado', 'success');
+    } catch (err) {
+      console.error('No se pudo actualizar el miembro del equipo:', err);
+      toast(err?.message || 'No se pudo actualizar (¿tienes permisos de admin?)', 'error');
+    } finally { btn.disabled = false; btn.textContent = 'Guardar'; }
+  });
 }
 
 // ── Helpers ────────────────────────────────────────────────────────────────

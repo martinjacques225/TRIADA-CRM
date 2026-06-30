@@ -5,7 +5,7 @@ import { citas, prospectos, profiles, getCurrentUserId } from '../../js/db.js';
 import {
   escHtml, todayStr, toast, formatDateShort,
   MEETING_TYPES, meetingType, toMeetingTipo,
-  REMINDER_OPTS, RECUR_OPTS, DUR_OPTS, ESTADOS_CITA, memberColor, packOverlaps,
+  REMINDER_OPTS, RECUR_OPTS, DUR_OPTS, ESTADOS_CITA, memberColor, packOverlaps, areaLabel,
 } from '../../js/utils.js';
 
 const _i = (n, s) => (window.icon ? window.icon(n, '', s) : '');
@@ -28,12 +28,6 @@ const parseHora    = (h) => { const [H,M] = (h||'0:0').split(':').map(Number); r
 
 const WD = ['Lun','Mar','Mié','Jue','Vie','Sáb','Dom'];
 const START_H = 8, END_H = 20, HOUR_PX = 52;
-
-const AREA_LABEL = {
-  comercial:'Comercial', finanzas:'Finanzas', desarrollo:'Desarrollo', rrhh:'RRHH',
-  operaciones:'Operaciones', tecnologia:'Tecnología', ventas:'Ventas',
-};
-const areaLabel = (a) => AREA_LABEL[a] || a || '';
 
 const cal = {
   view:   localStorage.getItem(LSV) || 'mes',
@@ -384,7 +378,7 @@ export async function openMeetingDetail(id) {
             <span class="chip" style="background:color-mix(in srgb, ${t.color} 14%, var(--surface));color:${t.color}">${_i(t.icon,12)} ${t.label}</span>
             <span class="badge" style="color:${estadoColor};border-color:currentColor">${escHtml(m.estado || 'Pendiente')}</span>
           </div>
-          ${own ? `<div class="mt-by">${avatarOf(own.nombre, own.color, 22)}<span>Creada por <b>${escHtml(own.nombre)}</b>${own.rol ? ` · ${escHtml(own.rol)}` : ''}</span></div>` : ''}
+          ${own ? `<div class="mt-by">${avatarOf(own.nombre, own.color, 22)}<span>Creada por <b>${escHtml(own.nombre)}</b>${(own.cargo || own.rol) ? ` · ${escHtml(own.cargo || own.rol)}` : ''}</span></div>` : ''}
         </div>
       </div>
       <div class="mt-meta-grid">
@@ -403,7 +397,7 @@ export async function openMeetingDetail(id) {
       <div>
         ${(m.participantes||[]).map(uid => { const u = member(uid); if(!u) return ''; return `<div class="mt-part">
           ${avatarOf(u.nombre, u.color, 36)}
-          <div><div class="mt-part-name">${escHtml(u.nombre)}</div><div class="mt-part-role">${escHtml(u.rol)}${u.area?' · '+escHtml(u.area):''}</div></div>
+          <div><div class="mt-part-name">${escHtml(u.nombre)}</div><div class="mt-part-role">${escHtml(u.cargo || u.rol)}${u.area?' · '+escHtml(u.area):''}</div></div>
           <span class="mt-part-alert">${_i('bellRing',14)} Alerta activa</span>
         </div>`; }).join('') || '<div style="color:var(--text3);font-size:12.5px">Sin participantes registrados.</div>'}
       </div>

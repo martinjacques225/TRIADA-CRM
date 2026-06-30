@@ -28,6 +28,7 @@ export {
   MADUREZ, ratingToFrac, fracToRating,
   MEETING_TYPES, toMeetingTipo, meetingType,
   REMINDER_OPTS, RECUR_OPTS, DUR_OPTS, ESTADOS_CITA, memberColor,
+  areaLabel,
 } from '../../js/utils.js';
 
 // ── Estado de la app (en memoria, una sola instancia) ──────────────────────

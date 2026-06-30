@@ -1,6 +1,7 @@
 // js/db.js — Supabase data layer (same interface as IndexedDB version)
 import { supabase } from './supabase.js';
 import {
+  clean,
   isMissingCol,
   leadFromSupa, leadToSupa,
   diagFromSupa, diagToSupa,
@@ -173,19 +174,41 @@ export const citas = {
   },
 };
 
-// ─── PROFILES (equipo de consultores) ────────────────────────
+// ─── PROFILES (equipo) ────────────────────────────────────────
+// `rol` = rol técnico de permisos (admin/consultor, RBAC). `cargo` = puesto que se
+// muestra (CEO, CTO, Gerenta de Finanzas, Diseñadora…). Son cosas distintas.
+function _profileFromRow(p) {
+  return {
+    id:     p.id,
+    nombre: p.nombre || p.email || 'Consultor',
+    rol:    p.role || 'Consultor',
+    cargo:  p.cargo || '',
+    area:   p.area || '',
+    email:  p.email || '',
+  };
+}
 export const profiles = {
+  // Equipo ACTIVO (pickers de participantes, avatares). Cacheado.
   getAll: async () => _cachedAll('profiles', async () => {
     const { data, error } = await supabase.from('profiles')
-      .select('id, nombre, email, role, area, activo').order('nombre');
+      .select('id, nombre, email, role, area, activo, cargo').order('nombre');
     _throw(error);
-    return data.filter(p => p.activo !== false).map(p => ({
-      id:     p.id,
-      nombre: p.nombre || p.email || 'Consultor',
-      rol:    p.role || 'Consultor',
-      area:   p.area || '',
-    }));
+    return data.filter(p => p.activo !== false).map(_profileFromRow);
   }),
+  // Todo el equipo (incluye inactivos) para el editor de Configuración (admin).
+  listAll: async () => {
+    const { data, error } = await supabase.from('profiles')
+      .select('id, nombre, email, role, area, activo, cargo').order('nombre');
+    _throw(error);
+    return data.map(p => ({ ..._profileFromRow(p), activo: p.activo !== false }));
+  },
+  // Editar nombre/cargo/area/activo. RLS: solo admin puede tocar a otros; el
+  // trigger guard_profile_privesc bloquea cambios de role/org/activo a no-admin.
+  update: async ({ id, nombre, cargo, area, activo }) => {
+    const patch = clean({ nombre, cargo, area, activo });
+    const { error } = await supabase.from('profiles').update(patch).eq('id', id);
+    _throw(error); _invalidate('profiles');
+  },
 };
 
 // ─── PROPUESTAS ──────────────────────────────────────────────

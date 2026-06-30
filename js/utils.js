@@ -303,6 +303,15 @@ export const ESTADOS_CITA = ['Pendiente', 'Confirmada', 'Realizada', 'Cancelada'
 const MEMBER_COLORS = ['#5160C0', '#0C7C88', '#2E9B73', '#7C6FD0', '#2BA9B2', '#46B488', '#C2871A', '#B8893B'];
 export function memberColor(i) { return MEMBER_COLORS[i % MEMBER_COLORS.length]; }
 
+// Áreas de trabajo (enum area_t). Etiqueta para mostrar el slug guardado en profiles.area.
+export const AREA_LABELS = {
+  desarrollo: 'Desarrollo', comercial: 'Comercial', finanzas: 'Finanzas', diseno: 'Diseño',
+  rrhh: 'RRHH', operaciones: 'Operaciones', tecnologia: 'Tecnología', ventas: 'Ventas',
+};
+export function areaLabel(a) { return AREA_LABELS[a] || a || ''; }
+// Áreas que usa el equipo de Tríada (para el selector del editor de Equipo).
+export const TEAM_AREAS = ['desarrollo', 'comercial', 'finanzas', 'diseno'];
+
 // Reparte en columnas los eventos que se solapan en el tiempo (vista Semana):
 // dos reuniones a la misma hora se muestran lado a lado en vez de taparse, para
 // que se vea de quién es cada una. Cada item necesita { start, end } numéricos
