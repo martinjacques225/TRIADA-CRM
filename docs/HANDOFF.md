@@ -35,6 +35,31 @@
 
 ## 1. Estado actual (al 2026-06-30)
 
+### 🆕 Equipo (cargo+áreas+editor) + Notificaciones de reunión (in-app + Web Push) (2026-06-30 cont.)
+> Tres cambios pedidos por el usuario, **todos EN VIVO** (commits `b2d2295`, `3609f12`, `1c43d31`):
+> - **Cargo por persona + áreas.** Nueva columna `profiles.cargo` (puesto visible: CEO/CTO/Gerenta
+>   de Finanzas/Diseñadora) **separada de `role`** (permisos admin/consultor). Nueva área **Diseño**
+>   (`area_t += 'diseno'`). Equipo fijado: Martín CEO/Desarrollo (admin), Vicente CTO/Comercial,
+>   Ignacia Gerenta de Finanzas/Finanzas, Jeinny Diseñadora/Diseño. El cargo+área se ven en la
+>   agenda (creador y participantes) y en la app móvil (perfil). `js/utils.js` `AREA_LABELS`/
+>   `areaLabel`/`TEAM_AREAS` (etiquetas compartidas).
+> - **Editor de Equipo** en CRM → Configuración → **Equipo** (solo admin): edita nombre/cargo/área/
+>   activo sin SQL. `js/db.js` `profiles.listAll`/`profiles.update`; RLS `profiles_self_update`
+>   (admin edita a todos) + trigger guard ya protegían del lado servidor.
+> - **Notificación al sumarte a una reunión** (móvil): (1) **burbuja in-app** vía Realtime cuando
+>   la app está abierta ("Se ha generado una reunión con tu participación"); (2) **push del sistema
+>   con la app cerrada** (Web Push real): tablas `push_subscriptions`+`app_config`, llaves VAPID en
+>   BD (privada solo service_role), **Edge Function `notify-meeting`** (la dispara `citas.add`),
+>   `movil/sw.js` con handlers push/notificationclick, botón "Activar" en Mi perfil.
+> - **Migración + Edge Function aplicadas por MCP de Supabase** (no SQL manual). Verificado: cripto
+>   de `web-push` corre en Deno (generateRequestDetails produce request cifrado+firmado), función
+>   autentica (401 sin sesión), editor guarda, cargos se muestran (PC+móvil) — todo por DOM/MCP.
+> - ⬜ **Lo único pendiente = test del usuario en el teléfono:** instalar/actualizar la PWA, Mi
+>   perfil → **Activar notificaciones** (dar permiso; en iOS requiere la app instalada), y crear una
+>   cita con un participante para ver llegar el push. Cada miembro del equipo debe activar 1 vez.
+> - Backlog futuro opcional: replicar la **burbuja in-app en PC** (hoy solo móvil; el push igual les
+>   llega al celular); push también para otros eventos (lead asignado, etc.).
+
 ### 🆕 Atribución de citas en la Agenda compartida — "¿de quién es esta cita?" (2026-06-30)
 > Pedido del usuario: en la agenda (compartida por todo el equipo), cuando se crea una cita debe
 > verse **quién la creó**, y si hay **2 citas a la misma hora** debe distinguirse de quién es cada una.
@@ -501,6 +526,35 @@ Columnas del calendario agregadas a `citas` y verificadas en vivo. Persistencia 
 ---
 
 ## 7. Bitácora de sesiones (más reciente arriba)
+
+### 2026-06-30 (cont.) — Equipo (cargo/áreas/editor) + Notificaciones de reunión
+- **Pedido:** (1) áreas Desarrollo/Comercial/Finanzas (+ Diseño para Jeinny) y que el cargo de cada
+  persona sea el de su perfil (CEO/CTO/Gerenta de Finanzas/Diseñadora); (2) al sumar a alguien a una
+  reunión, que le llegue una notificación a su app móvil (burbuja) — el usuario pidió además push del
+  sistema con la app cerrada.
+- **Hecho (3 fases, 3 commits, todo en vivo):**
+  - **F1** `b2d2295`: `profiles.cargo` (≠ `role`), `area_t += diseno`, equipo fijado por MCP;
+    `AREA_LABELS`/`areaLabel`/`TEAM_AREAS` en utils; agenda y perfil móvil muestran cargo+área;
+    **editor de Equipo** en Configuración (admin) con `profiles.listAll`/`update`.
+  - **F2** `3609f12`: burbuja in-app móvil vía `realtime.js` `onEvent`; `_onRealtimeEvent` filtra
+    INSERT de citas donde soy participante y no creador; `showMeetingBubble` (reflow, sin rAF);
+    campana con sección "Nuevas reuniones contigo".
+  - **F3** `1c43d31`: Web Push real. Tablas `push_subscriptions`+`app_config` (RLS), VAPID en BD,
+    Edge Function `notify-meeting` (deploy por MCP), `movil/js/push.js`, `sw.js` push/click (cache
+    v4), botón Activar en perfil, `citas.add` dispara la función. Fuente y SQL en `supabase/`.
+- **Infra por MCP de Supabase** (proyecto pqrjndirqtucoumijben): `apply_migration`, `execute_sql`,
+  `deploy_edge_function`. Sin SQL manual del usuario.
+- **Verificación:** preview por DOM (editor guarda; cargos en PC+móvil; burbuja aparece solo para
+  participantes ≠ creador; sección de notificaciones renderiza). Edge Function: 401 sin sesión
+  (carga OK con `jsr:@supabase/supabase-js` + `npm:web-push`); **auto-test transitorio** confirmó que
+  `web-push.generateRequestDetails` cifra+firma en Deno (luego se redesplegó la versión real
+  verify_jwt=true, hash idéntico a v1). Tests 44/44. `node --check` OK.
+- **Pendiente (test del usuario, no codificable aquí):** en el teléfono, actualizar la PWA → Mi
+  perfil → Activar notificaciones (permiso) → crear cita con participante → ver el push. Cada miembro
+  activa 1 vez. Gotcha screenshots del preview: se cuelgan toda la sesión (timers del CRM) → se
+  verificó por DOM.
+- **Decisiones (usuario):** áreas Martín=Desarrollo, Vicente=Comercial, Ignacia=Finanzas,
+  Jeinny=Diseño; gestión vía editor en la app; notificación = burbuja **+** push del sistema.
 
 ### 2026-06-30 — Atribución de citas en la Agenda ("¿de quién es esta cita?")
 - **Pedido:** agenda compartida; al crear una cita ver quién la crea; con 2 citas a la misma hora,
