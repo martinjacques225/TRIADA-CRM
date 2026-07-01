@@ -413,7 +413,7 @@ index.html
 > El módulo está **EN VIVO en PC** (automático con Gemini + manual de respaldo; informe con la piel del Informe 360). Lo que falta:
 - [x] ~~**Paridad móvil**~~ ✅ **(2026-06-30)** — `movil/js/screens/financiero.js` (lista + flujo automático/manual + informe), registrada en `movil/js/app.js` (import + SCREENS + row "Análisis Financiero" en "Más") + `financiero.css` en `movil/index.html` y `movil/preview.html`. Reusa `db.analisisFinancieros` + dominio + `openFinReport` vía `core.js`. Gancho móvil: adjuntar F29/foto con la cámara. Verificado: `node --check` + import+render de la screen en el preview móvil real. **⬜ Falta la prueba logueada en teléfono (protocolo móvil).**
 - [ ] **Prueba con documento real** (F29 / liquidación) en modo *adjuntar documentos* — validar el multimodal de Gemini con un PDF real (hasta ahora probado con cifras tipeadas).
-- [~] **Demos Ola 1 sobre M2** — ✅ **D13 Detección de Fugas** (genérica, `demos/fugas/index.html`, standalone sin backend; en la vitrina móvil "Más → Demos", primera). ⬜ Faltan **D12 Gemelo** (proyecciones "¿y si…?") y **D11 Auditor** de imagen corporativa.
+- [~] **Demos Ola 1 sobre M2** — ✅ **D13 Detección de Fugas** (`demos/fugas/`) + ✅ **D12 Gemelo Virtual** (`demos/gemelo/`, simulador interactivo: base editable + palancas con sliders que recalculan la utilidad/margen/proyección 12m en vivo). Ambas standalone, en la vitrina "Más → Demos". ⬜ Falta **D11 Auditor** de imagen corporativa.
 - [ ] (Opcional) Para datos de **clientes**, pasar Google AI a **tier de pago** (no entrena con los datos); evaluar velocidad (~13 s hoy con 2.5-flash).
 
 ### 4.0 · PLAN DE AUDITORÍA 360 (2026-06-17) — checklist vivo entre sesiones
@@ -583,6 +583,10 @@ Columnas del calendario agregadas a `citas` y verificadas en vivo. Persistencia 
 ---
 
 ## 7. Bitácora de sesiones (más reciente arriba)
+
+### 2026-07-01 (cont.) — D12 Gemelo Virtual (simulador interactivo) + refinamiento de D13
+- **Refinamiento D13 Fugas** (commit `9b921dc`): montos editables (inputs con formato de miles) + fugas recalculadas como % de cada base; **fix del bug de barras invisibles** (`.bfill`/`.btrack` eran `<span>` inline → `display:block`); nombres completos en las barras. Pedido del usuario tras verlo funcionando.
+- **D12 "Gemelo Virtual"** (commit `5bae88f`), 2ª cosecha del Motor 2, **interactivo en vivo** (como pidió el usuario): `demos/gemelo/index.html` standalone. Base editable (ventas, margen contribución, costos fijos) + **4 palancas (sliders)**: precio (con elasticidad precio→volumen), impulso de ventas, contratar (0-3 personas), costos fijos. Todo **recalcula al mover** (sin botón): utilidad hoy vs simulada, veredicto verde/rojo, margen, punto de equilibrio, y proyección a 12 meses con **ramp de maduración** (el crecimiento madura en ~3 meses). Verificado en preview: precio +10%→+61% utilidad, combo→+$26M/año, labels de palancas, gráfico con ramp (rAF forzado, congelado en headless pero corre en real). Registrada en la vitrina + README. ⬜ Falta D11.
 
 ### 2026-07-01 — Paridad móvil del Financiero + 1ª demo Ola 1 (D13 Detección de Fugas)
 - **Paridad móvil** (commit `fc2fc1f`): `movil/js/screens/financiero.js` (lista + flujo automático/manual + informe), reusa el motor vía `movil/js/core.js`, registrada en "Más → Análisis Financiero". Gancho: adjuntar el F29 con la cámara. Verificado `node --check` + import/render en el harness móvil.
