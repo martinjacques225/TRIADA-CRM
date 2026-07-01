@@ -516,6 +516,33 @@ export const analisisFinancieros = {
     const { error } = await supabase.storage.from('financiero').remove([path]);
     _throw(error);
   },
+  // Análisis AUTOMÁTICO: invoca la Edge Function 'analizar-financiero' (Gemini, sin
+  // exponer la llave). Devuelve el texto (JSON) para parsearlo con parseFinanceReport.
+  // Si la IA no está configurada, la función responde 503 code:'no_key' → se propaga
+  // en err.code para que el front caiga al modo copy-paste con un mensaje claro.
+  analizar: async (prompt, archivos = []) => {
+    const { data, error } = await supabase.functions.invoke('analizar-financiero', { body: { prompt, archivos } });
+    if (error) {
+      let code = null, msg = error.message || 'No se pudo generar el análisis';
+      try { const body = await error.context?.json?.(); if (body) { code = body.code || null; msg = body.error || msg; } } catch (_) { /* body no-JSON */ }
+      const e = new Error(msg); e.code = code; throw e;
+    }
+    if (data?.error) { const e = new Error(data.error); e.code = data.code || null; throw e; }
+    return data?.texto || '';
+  },
+  // Baja un adjunto del bucket y lo devuelve en base64 (para adjuntarlo a Gemini).
+  docBase64: async (path) => {
+    const url = await analisisFinancieros.signedUrl(path);
+    const res = await fetch(url);
+    if (!res.ok) throw new Error('No se pudo bajar el adjunto');
+    const blob = await res.blob();
+    return await new Promise((resolve, reject) => {
+      const fr = new FileReader();
+      fr.onload = () => resolve(String(fr.result).split(',')[1] || '');
+      fr.onerror = () => reject(new Error('No se pudo leer el adjunto'));
+      fr.readAsDataURL(blob);
+    });
+  },
 };
 
 // ─── Landing leads import ─────────────────────────────────────

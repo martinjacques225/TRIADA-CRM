@@ -77,12 +77,14 @@ export class FinancieroFlow {
         ${a.modoEntrada === 'documentos' ? this._docsHtml(tipo) : this._cifrasHtml(tipo, a.cifras)}
 
         <div class="fin-actions">
-          <button type="button" class="btn btn-primary" id="finGen">✨ ${a.prompt ? 'Regenerar' : 'Generar'} prompt-director</button>
+          <button type="button" class="btn btn-primary" id="finAuto">✨ Generar informe</button>
+          <button type="button" class="btn btn-ghost btn-sm" id="finManual">o hacerlo manual (copiar/pegar)</button>
         </div>
+        <p class="form-hint" id="finAutoHint">La IA lee tus datos y arma el informe sola. Si aún no está configurada, usa el modo manual.</p>
       </div>
 
-      ${a.prompt ? this._promptHtml(a) : ''}
-      ${a.prompt ? this._infHtml(a) : ''}
+      ${a.manual ? this._promptHtml(a) : ''}
+      ${a.manual ? this._infHtml(a) : ''}
     </div>`;
 
     this._wire();
@@ -128,6 +130,7 @@ export class FinancieroFlow {
       <div class="fin-actions">
         <button type="button" class="btn btn-ghost btn-sm" id="finCopy">📋 Copiar prompt</button>
         <a class="btn btn-ghost btn-sm" href="${escHtml(LECTOR.url)}" target="_blank" rel="noopener">Abrir ${escHtml(LECTOR.label)} ↗</a>
+        <button type="button" class="btn btn-ghost btn-sm" id="finGen">↻ Regenerar</button>
       </div>
     </div>`;
   }
@@ -180,6 +183,8 @@ export class FinancieroFlow {
       drop.addEventListener('drop', (e) => { e.preventDefault(); if (e.dataTransfer?.files?.length) this._uploadFiles([...e.dataTransfer.files]); });
     }
 
+    c.querySelector('#finAuto')?.addEventListener('click', () => this._generateAuto());
+    c.querySelector('#finManual')?.addEventListener('click', () => this._generate());
     c.querySelector('#finGen')?.addEventListener('click', () => this._generate());
     c.querySelector('#finCopy')?.addEventListener('click', (e) => this._copy(this._a.prompt, e.currentTarget));
     c.querySelector('#finReport')?.addEventListener('click', () => this._showReport());
@@ -210,13 +215,53 @@ export class FinancieroFlow {
     this.render(this._c);
   }
 
-  _generate() {
+  // Valida la entrada y arma el prompt-director en la instancia. Devuelve el prompt o null.
+  _buildPromptOrToast() {
     this._sync();
     const a = this._a;
-    if (!a.periodo.trim()) { toast('Indica el período (ej: Junio 2026)', 'error'); return; }
-    if (a.modoEntrada === 'documentos' && !a.documentos.length) { toast('Adjunta al menos un documento, o cambia a “Tipear cifras”', 'error'); return; }
+    if (!a.periodo.trim()) { toast('Indica el período (ej: Junio 2026)', 'error'); return null; }
+    if (a.modoEntrada === 'documentos' && !a.documentos.length) { toast('Adjunta al menos un documento, o usa “Tipear cifras”', 'error'); return null; }
     a.prompt = buildFinancePrompt({ tipo: a.tipo, periodo: a.periodo, contexto: a.contexto, modo: a.modoEntrada, cifras: a.cifras });
-    if (a.estado === 'borrador') a.estado = 'generado';
+    return a.prompt;
+  }
+
+  // Modo AUTOMÁTICO: la IA (Edge Function → Gemini) analiza y arma el informe sola.
+  async _generateAuto() {
+    const prompt = this._buildPromptOrToast();
+    if (!prompt) return;
+    const a = this._a;
+    const btn = this._c.querySelector('#finAuto');
+    const hint = this._c.querySelector('#finAutoHint');
+    if (btn) { btn.disabled = true; btn.textContent = '⏳ Analizando con IA…'; }
+    if (hint) hint.textContent = a.modoEntrada === 'documentos' ? 'Leyendo tus documentos y analizando…' : 'Analizando las cifras…';
+    try {
+      const archivos = [];
+      if (a.modoEntrada === 'documentos') {
+        for (const d of a.documentos) {
+          try { archivos.push({ mime: d.mime || 'application/octet-stream', data: await analisisFinancieros.docBase64(d.path) }); }
+          catch (e) { console.warn('No se pudo adjuntar el documento', d.nombre, e); }
+        }
+      }
+      const texto = await analisisFinancieros.analizar(prompt, archivos);
+      const res = parseFinanceReport(texto);
+      if (!res.ok) throw new Error(res.error || 'La IA no devolvió un informe válido');
+      a.reporte = res.report; a.respuestaRaw = texto; a.estado = 'analizado';
+      openFinReport(res.report, this._meta());
+      await this._save();            // auto-guarda (persiste + refresca la vista)
+    } catch (err) {
+      console.error('Análisis automático falló:', err);
+      if (err.code === 'no_key') toast('La IA aún no está configurada. Puedes hacerlo manual abajo.', 'info');
+      else toast('No se pudo generar automático: ' + (err.message || 'error') + '. Prueba el modo manual.', 'error');
+      a.manual = true;               // cae al copy-paste, con el prompt ya listo
+      this.render(this._c);
+    }
+  }
+
+  // Modo MANUAL (copy-paste): entra al flujo y (re)genera el prompt-director.
+  _generate() {
+    if (!this._buildPromptOrToast()) return;
+    this._a.manual = true;
+    if (this._a.estado === 'borrador') this._a.estado = 'generado';
     this.render(this._c);
     this._c.querySelector('#finPrompt')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
   }

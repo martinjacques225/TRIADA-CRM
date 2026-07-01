@@ -89,12 +89,18 @@ Pre-commit recomendado: escaneo de secretos (Gitleaks o equivalente) cuando se a
 
 ---
 
-## 7. IA (AI Commander)
+## 7. IA (LLM)
 
-- Estado actual: **sin conexión a LLM** (`AI_CONFIG.edgeFunctionUrl = null`).
-- Para activar: desplegar Edge Function `ai-complete` con clave server-side.
-- No enviar PII de clientes a LLM sin política de retención acordada.
-- Registrar prompts/respuestas en audit según diseño existente.
+### AI Commander / Mesa de Orquesta
+- **Sin conexión a LLM** (`AI_CONFIG.edgeFunctionUrl = null`) — por diseño (decisión de presupuesto). Orquesta multi-IA por copy-paste manual, no llama API.
+
+### Módulo Financiero trIA (Edge Function `analizar-financiero`)
+- **Conectado a Gemini** vía Edge Function (modo automático del módulo financiero).
+- La **`GEMINI_API_KEY` vive solo en los secrets de la Edge Function** (`Deno.env`), nunca en el front ni en git. Si falta, la función responde `503 code:'no_key'` y el front cae al modo copy-paste.
+- `verify_jwt = true` → solo usuarios autenticados la invocan.
+- **Privacidad:** los datos financieros (cifras y documentos adjuntos) se envían a Google por la API — igual que si el usuario los pegara en Gemini web. Para datos de clientes, usar el tier **de pago** de Google AI (no entrena con los datos) o desactivar el uso para entrenamiento; el tier gratis puede usarlos. Documentar la decisión con el cliente.
+- El modo copy-paste (manual) **no** manda nada por el CRM: el usuario decide qué pega en su chat.
+- No hay retención server-side de los datos financieros más allá de lo que el usuario guarde en `analisis_financieros` (su propia org, RLS).
 
 ---
 
