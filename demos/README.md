@@ -7,6 +7,7 @@ con todas sus funciones, sin depender de terceros (Vercel, etc.).
 
 | Carpeta | Demo | Repo canónico |
 |---|---|---|
+| `auditor/`    | Auditor de Imagen Corporativa con trIA (demo del Motor 2 · autodiagnóstico interactivo → informe con puntaje, sin backend) | — (standalone, `demos/auditor/index.html`) |
 | `gemelo/`     | Gemelo Virtual con trIA (demo del Motor 2 · simulador interactivo de decisiones, sin backend) | — (standalone, `demos/gemelo/index.html`) |
 | `fugas/`      | Detección de Fugas con trIA (demo del Motor 2 · datos de ejemplo, sin backend) | — (standalone, `demos/fugas/index.html`) |
 | `restaurant/` | CRM de Restaurantes (4 roles: Admin · Mesero · Cocina KDS · Cajero) | `TRIADA-CRM-RESTAURANT-TEMPLATE` |

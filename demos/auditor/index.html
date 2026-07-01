@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="es-CL">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0C1B26">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta name="description" content="Auditor de Imagen Corporativa con trIA — Tríada. Responde unas preguntas y trIA audita tu logo, tu web, tus redes y tu presencia: puntaje, hallazgos y un plan para verte de nivel.">
+  <title>Tríada · Auditor de Imagen Corporativa con trIA</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Spectral:ital,wght@0,400;0,500;0,600;0,700;1,500&family=Hanken+Grotesk:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --paper:#FBF9F3; --cream:#F4F1E9; --cream-2:#EFEBDF;
+      --ink:#14222E; --body:#46555F; --muted:#6B7780; --faint:#8A90A3;
+      --line:#E5DFD0; --petrol:#0C1B26; --petrol-2:#16466B;
+      --teal:#1C7A82; --teal-2:#2F8C93; --teal-l:#E6F1F0;
+      --green:#5E9E7E; --amber:#C2871A; --red:#B4524A;
+      --serif:'Spectral',Georgia,serif; --sans:'Hanken Grotesk',system-ui,-apple-system,sans-serif;
+    }
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:var(--sans);background:var(--paper);color:var(--ink);line-height:1.5;-webkit-font-smoothing:antialiased}
+    .wrap{max-width:920px;margin:0 auto;padding:0 20px}
+    .serif{font-family:var(--serif)}
+
+    header{background:var(--petrol);color:#fff}
+    .hd{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:16px 0}
+    .brand{display:flex;align-items:center;gap:11px;font-family:var(--serif);font-size:21px;font-weight:600;letter-spacing:.04em}
+    .badge{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--teal-2);border:1px solid rgba(127,208,204,.4);border-radius:999px;padding:5px 12px;white-space:nowrap}
+
+    .hero{background:radial-gradient(120% 100% at 85% 0%,#15384a 0%,#0C1B26 55%,#0A1620 100%);color:#fff;padding:44px 0 54px}
+    .kick{font-size:12px;font-weight:700;letter-spacing:.28em;text-transform:uppercase;color:var(--teal-2);margin-bottom:16px}
+    .hero h1{font-family:var(--serif);font-size:clamp(30px,6vw,52px);font-weight:600;line-height:1.04;letter-spacing:-.01em;max-width:17ch}
+    .hero p{margin-top:16px;font-size:clamp(15px,2.4vw,18px);color:rgba(234,229,216,.82);max-width:54ch}
+
+    .card{background:#fff;border:1px solid var(--line);border-radius:18px;box-shadow:0 20px 40px -30px rgba(12,27,38,.4)}
+    .demo-panel{margin-top:-34px;position:relative;z-index:2;padding:22px}
+    .demo-tag{display:inline-flex;align-items:center;gap:7px;font-size:12px;font-weight:700;color:var(--teal);background:var(--teal-l);border-radius:999px;padding:5px 12px;margin-bottom:14px}
+    .demo-tag i{width:7px;height:7px;border-radius:50%;background:var(--teal)}
+
+    /* Marcador en vivo */
+    .live{display:flex;align-items:center;gap:20px;background:linear-gradient(120deg,var(--cream),var(--cream-2));border:1px solid var(--line);border-radius:16px;padding:18px 20px;margin-top:4px}
+    .ring{position:relative;width:96px;height:96px;flex:none}
+    .ring svg{width:100%;height:100%;transform:rotate(-90deg)}
+    .ring .track{stroke:var(--cream-2)}
+    .ring .prog{stroke:var(--teal);stroke-linecap:round;transition:stroke-dashoffset .6s cubic-bezier(.4,0,.2,1),stroke .3s}
+    .ring .num{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1}
+    .ring .num b{font-family:var(--serif);font-size:28px;font-weight:600;font-variant-numeric:tabular-nums}
+    .ring .num small{font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-top:3px}
+    .live .lvl{font-family:var(--serif);font-size:20px;font-weight:600;color:var(--ink)}
+    .live .lvd{font-size:13px;color:var(--body);margin-top:4px;line-height:1.45}
+
+    /* Cuestionario */
+    .quiz{margin-top:20px;display:flex;flex-direction:column;gap:18px}
+    .pilar{border:1px solid var(--line);border-radius:14px;padding:16px 17px;background:#fff}
+    .ph{display:flex;align-items:center;gap:11px;margin-bottom:13px}
+    .ph .pic{width:38px;height:38px;flex:none;border-radius:11px;display:flex;align-items:center;justify-content:center;color:var(--teal);background:var(--teal-l)}
+    .ph .pn{font-family:var(--serif);font-size:17px;font-weight:600;color:var(--ink)}
+    .ask{margin-top:13px}
+    .ask:first-of-type{margin-top:0}
+    .qtext{font-size:13.5px;font-weight:600;color:var(--body);margin-bottom:8px}
+    .opts{display:flex;flex-wrap:wrap;gap:8px}
+    .opt{font-family:var(--sans);font-size:12.5px;font-weight:600;color:var(--body);background:#fff;border:1px solid var(--line);border-radius:999px;padding:8px 14px;cursor:pointer;transition:background .14s,color .14s,border-color .14s}
+    .opt:hover{border-color:var(--teal-2)}
+    .opt.on{background:var(--teal);color:#fff;border-color:var(--teal);box-shadow:0 6px 14px -8px var(--teal)}
+
+    .cta-row{margin-top:20px;display:flex;flex-wrap:wrap;gap:12px;align-items:center}
+    .btn{font-family:var(--sans);font-size:15px;font-weight:700;border:none;border-radius:12px;padding:14px 22px;cursor:pointer;display:inline-flex;align-items:center;gap:9px;text-decoration:none;transition:transform .12s,box-shadow .12s}
+    .btn-primary{background:var(--teal);color:#fff;box-shadow:0 10px 24px -12px var(--teal)}
+    .btn-primary:hover{transform:translateY(-1px);box-shadow:0 14px 28px -12px var(--teal)}
+    .btn-ghost{background:transparent;color:var(--teal);border:1px solid var(--line)}
+    .btn-ghost:hover{background:var(--teal-l)}
+    .edit-hint{font-size:12px;color:var(--faint);margin-top:12px;display:flex;align-items:center;gap:6px}
+
+    /* Escaneo */
+    .scan{display:none;padding:32px 22px;text-align:center}
+    .scan.on{display:block}
+    .scan .spin{width:52px;height:52px;margin:0 auto 16px;border-radius:50%;border:4px solid var(--cream-2);border-top-color:var(--teal);animation:spin .8s linear infinite}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    .scan h3{font-family:var(--serif);font-size:21px;font-weight:600}
+    .scan .step{margin-top:8px;font-size:14px;color:var(--muted);min-height:21px}
+    .bar{height:8px;background:var(--cream-2);border-radius:999px;overflow:hidden;margin:18px auto 0;max-width:420px}
+    .bar span{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--teal),var(--green));border-radius:999px;transition:width .3s ease}
+
+    /* Resultado */
+    .result{display:none;padding-top:30px;padding-bottom:20px}
+    .result.on{display:block;animation:fade .5s ease}
+    @keyframes fade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+    .total{background:linear-gradient(120deg,var(--petrol),#143a4a);color:#fff;border-radius:18px;padding:26px 24px;display:flex;align-items:center;gap:26px}
+    .total .ring2{position:relative;width:132px;height:132px;flex:none}
+    .total .ring2 svg{width:100%;height:100%;transform:rotate(-90deg)}
+    .total .ring2 .track{stroke:rgba(255,255,255,.12)}
+    .total .ring2 .prog{stroke-linecap:round;transition:stroke-dashoffset 1s cubic-bezier(.4,0,.2,1)}
+    .total .ring2 .num{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1}
+    .total .ring2 .num b{font-family:var(--serif);font-size:40px;font-weight:600;font-variant-numeric:tabular-nums}
+    .total .ring2 .num small{font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;color:rgba(234,229,216,.7);margin-top:4px}
+    .total .l{font-size:12px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--teal-2)}
+    .total .lvl2{font-family:var(--serif);font-size:clamp(24px,5vw,32px);font-weight:600;line-height:1.05;margin:6px 0 8px}
+    .total .verdict{font-size:14.5px;color:rgba(234,229,216,.85);line-height:1.5}
+
+    .sec-h{display:flex;align-items:center;gap:14px;margin:32px 0 16px}
+    .sec-h .n{font-family:var(--serif);font-weight:600;color:var(--teal);background:var(--teal-l);border-radius:8px;padding:5px 12px;font-size:14px}
+    .sec-h h2{font-family:var(--serif);font-size:23px;font-weight:600}
+    .sec-h .rule{flex:1;height:1px;background:linear-gradient(90deg,var(--line),transparent)}
+
+    /* Barras por dimensión */
+    .bars{display:flex;flex-direction:column;gap:15px}
+    .bhead{display:flex;align-items:baseline;justify-content:space-between;gap:14px;margin-bottom:7px}
+    .bn{font-size:13.5px;font-weight:600;color:var(--ink)}
+    .bv{font-family:var(--serif);font-size:16px;font-weight:600;font-variant-numeric:tabular-nums;white-space:nowrap}
+    .btrack{display:block;height:13px;background:var(--cream-2);border-radius:999px;overflow:hidden}
+    .bfill{display:block;height:100%;width:0;border-radius:999px;transition:width 1s cubic-bezier(.4,0,.2,1)}
+
+    /* Hallazgos */
+    .finds{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    .find{border:1px solid var(--line);border-left:4px solid var(--sev);border-radius:14px;padding:15px 16px;background:#fff;opacity:0;transform:translateY(10px)}
+    .find.in{opacity:1;transform:none;transition:opacity .4s ease,transform .4s ease}
+    .find .top{display:flex;align-items:baseline;justify-content:space-between;gap:10px}
+    .find .cat{font-weight:700;font-size:15px;color:var(--ink)}
+    .find .sev{display:inline-block;font-size:10.5px;font-weight:700;letter-spacing:.03em;text-transform:uppercase;color:var(--sev);background:color-mix(in srgb,var(--sev) 12%,#fff);border-radius:999px;padding:2px 9px;white-space:nowrap}
+    .find .desc{font-size:13px;color:var(--body);line-height:1.55;margin-top:9px}
+    .find .fix{font-size:12.5px;color:var(--muted);line-height:1.5;margin-top:8px;padding-top:8px;border-top:1px dashed var(--line)}
+    .find .fix b{color:var(--teal)}
+
+    /* Fortalezas */
+    .wins{display:flex;flex-wrap:wrap;gap:10px}
+    .win{display:flex;align-items:center;gap:9px;font-size:13.5px;font-weight:600;color:var(--ink);background:#EAF3EC;border:1px solid #CFE6D6;border-radius:12px;padding:11px 15px}
+    .win svg{color:var(--green);flex:none}
+
+    .final{margin-top:34px;background:linear-gradient(120deg,var(--teal-l),var(--cream-2));border:1px solid var(--line);border-radius:18px;padding:26px 24px;text-align:center}
+    .final h3{font-family:var(--serif);font-size:23px;font-weight:600;max-width:26ch;margin:0 auto}
+    .final p{font-size:14.5px;color:var(--body);margin:10px auto 18px;max-width:48ch}
+
+    footer{border-top:1px solid var(--line);margin-top:40px;padding:24px 0;color:var(--faint);font-size:12.5px}
+    .foot{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px}
+    .foot .fb{display:flex;align-items:center;gap:9px;font-family:var(--serif);font-weight:600;color:var(--muted)}
+
+    @media (max-width:640px){
+      .live{gap:15px;padding:16px}
+      .ring{width:82px;height:82px}
+      .ring .num b{font-size:23px}
+      .finds{grid-template-columns:1fr}
+      .total{flex-direction:column;text-align:center;gap:16px;padding:24px 20px}
+      .demo-panel{margin-top:-26px;padding:18px}
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="wrap hd">
+      <span class="brand">
+        <svg viewBox="0 0 120 120" width="30" height="30" fill="none" aria-hidden="true">
+          <path d="M26 90 L60 62 L94 90" stroke="#fff" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M26 73 L60 45 L94 73" stroke="#2F8C93" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M26 56 L60 28 L94 56" stroke="#6BA083" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        Tríada
+      </span>
+      <span class="badge">trIA · Auditor de imagen</span>
+    </div>
+  </header>
+
+  <section class="hero">
+    <div class="wrap">
+      <div class="kick">Lector IA · Tríada</div>
+      <h1 class="serif">¿Qué dice tu imagen antes de que digas una palabra?</h1>
+      <p>Tu logo, tu web, tus redes y tu presencia hablan por ti todo el día. Responde el autodiagnóstico y trIA audita tu imagen corporativa — con un puntaje, los hallazgos y un plan para verte a la altura de tu trabajo.</p>
+    </div>
+  </section>
+
+  <div class="wrap">
+    <!-- Autodiagnóstico -->
+    <div class="card demo-panel" id="panel">
+      <div class="demo-tag"><i></i>Tu autodiagnóstico de imagen</div>
+
+      <div class="live">
+        <div class="ring" id="ring">
+          <svg viewBox="0 0 120 120" aria-hidden="true">
+            <circle class="track" cx="60" cy="60" r="52" fill="none" stroke-width="12"/>
+            <circle class="prog" id="ringProg" cx="60" cy="60" r="52" fill="none" stroke-width="12" stroke-dasharray="326.7" stroke-dashoffset="326.7"/>
+          </svg>
+          <div class="num"><b id="ringNum">0</b><small>de 100</small></div>
+        </div>
+        <div>
+          <div class="lvl" id="liveLvl">Responde para ver tu puntaje</div>
+          <div class="lvd" id="liveDesc">Ajusta cada respuesta a tu realidad y mira cómo cambia tu puntaje. Cuando quieras, deja que trIA arme el informe completo.</div>
+        </div>
+      </div>
+
+      <div class="quiz" id="quiz"></div>
+
+      <div class="cta-row">
+        <button class="btn btn-primary" id="go">⚡ Auditar mi imagen con trIA</button>
+        <button class="btn btn-ghost" id="reset">Usar ejemplo</button>
+      </div>
+      <div class="edit-hint">Demo con criterios de referencia · no se envía nada a ningún servidor.</div>
+    </div>
+
+    <!-- Escaneo -->
+    <div class="card scan" id="scan" style="margin-top:18px">
+      <div class="spin"></div>
+      <h3 class="serif">trIA está auditando tu imagen…</h3>
+      <div class="step" id="step">Revisando tu identidad visual…</div>
+      <div class="bar"><span id="barfill"></span></div>
+    </div>
+
+    <!-- Resultado -->
+    <div class="result" id="result">
+      <div class="total">
+        <div class="ring2">
+          <svg viewBox="0 0 120 120" aria-hidden="true">
+            <circle class="track" cx="60" cy="60" r="52" fill="none" stroke-width="11"/>
+            <circle class="prog" id="ring2Prog" cx="60" cy="60" r="52" fill="none" stroke-width="11" stroke-dasharray="326.7" stroke-dashoffset="326.7"/>
+          </svg>
+          <div class="num"><b id="ring2Num">0</b><small>de 100</small></div>
+        </div>
+        <div>
+          <div class="l">Puntaje de imagen</div>
+          <div class="lvl2 serif" id="rLvl">—</div>
+          <div class="verdict" id="rVerdict"></div>
+        </div>
+      </div>
+
+      <div class="sec-h"><span class="n">01</span><h2 class="serif">Tu imagen por dimensión</h2><span class="rule"></span></div>
+      <div class="bars" id="bars"></div>
+
+      <div class="sec-h"><span class="n">02</span><h2 class="serif">Hallazgos y plan de acción</h2><span class="rule"></span></div>
+      <div class="finds" id="finds"></div>
+
+      <div id="winsWrap" style="display:none">
+        <div class="sec-h"><span class="n">03</span><h2 class="serif">Lo que ya tienes a favor</h2><span class="rule"></span></div>
+        <div class="wins" id="wins"></div>
+      </div>
+
+      <div class="final">
+        <h3 class="serif">Este es un vistazo con tus respuestas. ¿Llevamos tu imagen al siguiente nivel?</h3>
+        <p>Con una revisión real de tu logo, tu web, tus redes y tu presencia, Tríada arma una auditoría a fondo y un plan para que tu imagen venda por ti.</p>
+        <a class="btn btn-primary" href="https://grupotriada.cl" target="_blank" rel="noopener">Conversemos con Tríada →</a>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    <div class="wrap foot">
+      <span class="fb">
+        <svg viewBox="0 0 120 120" width="20" height="20" fill="none" aria-hidden="true">
+          <path d="M26 90 L60 62 L94 90" stroke="#3D6E92" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M26 71 L60 43 L94 71" stroke="#2F8C93" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        Tríada · Consultoría 360
+      </span>
+      <span>Demo · criterios de referencia · trIA no reemplaza asesoría profesional</span>
+    </div>
+  </footer>
+
+  <script>
+    // ── Íconos de pilar (viewBox 24, stroke currentColor) ──────────────────
+    var PIC = {
+      ident:  '<path d="M12 3l2 5 5 2-5 2-2 5-2-5-5-2 5-2 2-5Z"/>',
+      web:    '<rect x="2.5" y="4.5" width="19" height="15" rx="2.5"/><path d="M2.5 9.5h19M6 7h.01M8.5 7h.01"/>',
+      rrss:   '<circle cx="9" cy="8" r="3.2"/><path d="M3.5 19c0-3 2.5-5 5.5-5s5.5 2 5.5 5"/><path d="M16 6.5a3 3 0 0 1 0 5.5M17.5 19c0-2-.8-3.6-2-4.6"/>',
+      coher:  '<path d="M12 3 3 8l9 5 9-5-9-5Z"/><path d="M3 13l9 5 9-5"/>',
+      local:  '<path d="M3 9l1.6-4.5A1 1 0 0 1 5.5 4h13a1 1 0 0 1 .9.5L21 9"/><path d="M4 9v10a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1V9"/><path d="M9 20v-6h6v6"/><path d="M3 9a3 3 0 0 0 6 0 3 3 0 0 0 6 0 3 3 0 0 0 6 0"/>'
+    };
+    function svg(name){ return '<svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+(PIC[name]||'')+'</svg>'; }
+
+    // ── Definición de la auditoría ─────────────────────────────────────────
+    // Cada pilar tiene 2 preguntas; cada opción vale 0..1. def = índice preseleccionado.
+    var PILARES = [
+      { id:'ident', nom:'Identidad visual', pic:'ident',
+        preguntas:[
+          { q:'¿Tienes un logo profesional?', def:2,
+            ops:[['No tengo',0],['Es casero',0.33],['Profesional, algo antiguo',0.67],['Profesional y actual',1]] },
+          { q:'¿Lo tienes en varios formatos (vector, versiones, fondos)?', def:1,
+            ops:[['No',0],['Solo una imagen',0.5],['Sí, kit completo',1]] }
+        ],
+        weak:'Tu logo es lo primero que ve un cliente. Si se ve casero, desactualizado o solo lo tienes en una foto de baja calidad, resta confianza antes de que muestres tu trabajo.',
+        fix:'Crear o renovar un logo vectorial con sus variantes (color, blanco, ícono) y un mini-manual de uso.',
+        strong:'Tu identidad visual está a la altura y transmite profesionalismo de entrada.' },
+
+      { id:'web', nom:'Sitio web', pic:'web',
+        preguntas:[
+          { q:'¿Tienes un sitio web propio?', def:1,
+            ops:[['No, solo redes',0],['Sí, básico',0.5],['Sí, profesional',1]] },
+          { q:'¿Se ve bien en el celular?', def:1,
+            ops:[['No / no sé',0],['Más o menos',0.5],['Sí, perfecto',1]] }
+        ],
+        weak:'Hoy la mayoría te busca desde el teléfono. Sin web propia (o con una que se ve mal en el celular) pierdes credibilidad y clientes que no logran encontrarte o contactarte.',
+        fix:'Un sitio propio, rápido y responsive, con tu propuesta clara y un botón de contacto directo.',
+        strong:'Tu web se ve profesional y funciona bien en el celular: una base sólida para captar.' },
+
+      { id:'rrss', nom:'Redes sociales', pic:'rrss',
+        preguntas:[
+          { q:'¿Publicas con constancia?', def:1,
+            ops:[['Casi nunca',0],['A veces',0.5],['Seguido y con plan',1]] },
+          { q:'¿Tus redes se ven coherentes (misma línea visual)?', def:1,
+            ops:[['No',0],['Más o menos',0.5],['Sí, muy cuidadas',1]] }
+        ],
+        weak:'Unas redes abandonadas o sin línea visual dan la sensación de un negocio que "ya no está". La constancia y una estética coherente construyen confianza y recordación.',
+        fix:'Un calendario simple de contenido y plantillas con tu identidad para publicar parejo y prolijo.',
+        strong:'Tus redes están activas y cuidadas: mantienes presencia y coherencia.' },
+
+      { id:'coher', nom:'Coherencia de marca', pic:'coher',
+        preguntas:[
+          { q:'¿Usas siempre los mismos colores y tipografías?', def:1,
+            ops:[['No',0],['A veces',0.5],['Siempre',1]] },
+          { q:'¿Tienes un manual de marca?', def:0,
+            ops:[['No',0],['Informal',0.5],['Sí, formal',1]] }
+        ],
+        weak:'Cuando cada pieza usa colores y tipografías distintas, la marca se ve improvisada y cuesta que la recuerden. La coherencia es lo que hace que "se note" que todo es tuyo.',
+        fix:'Definir una paleta, tipografías y un manual de marca corto que todos apliquen igual.',
+        strong:'Tu marca es coherente en todos lados: se ve ordenada y se recuerda.' },
+
+      { id:'local', nom:'Presencia y materiales', pic:'local',
+        preguntas:[
+          { q:'¿Tu local, oficina, vehículos o uniformes reflejan tu marca?', def:1,
+            ops:[['No / poco',0],['Algo',0.5],['Bien cuidado',1]] },
+          { q:'¿Tu material (tarjetas, cotizaciones, correos) lleva tu identidad?', def:1,
+            ops:[['No',0],['A veces',0.5],['Siempre',1]] }
+        ],
+        weak:'Los puntos de contacto físicos y tus documentos son parte de la imagen. Una cotización o un correo sin identidad desaprovechan una oportunidad de verte serio y profesional.',
+        fix:'Aplicar tu marca a señalética, uniformes y plantillas de cotización, correo y presentación.',
+        strong:'Tu presencia y tus materiales llevan tu sello: cuidas cada punto de contacto.' }
+    ];
+
+    // Estado de respuestas: answers[pilarIdx] = [v0, v1]
+    var answers = PILARES.map(function(p){ return p.preguntas.map(function(q){ return q.ops[q.def][1]; }); });
+
+    var C = 2 * Math.PI * 52;   // circunferencia de los anillos (r=52)
+    var $ = function(id){ return document.getElementById(id); };
+
+    function colorFor(s){            // s en 0..1
+      if (s < 0.40) return '#B4524A';
+      if (s < 0.65) return '#C2871A';
+      if (s < 0.85) return '#1C7A82';
+      return '#5E9E7E';
+    }
+    function levelFor(score){        // score en 0..100
+      if (score < 40) return { lvl:'Imagen en riesgo',  col:'#B4524A',
+        desc:'Tu imagen está frenando tu negocio. Hay que ordenarla desde la base.' };
+      if (score < 65) return { lvl:'Imagen funcional',  col:'#C2871A',
+        desc:'Se defiende, pero con vacíos que te hacen ver menos profesional de lo que eres.' };
+      if (score < 85) return { lvl:'Imagen sólida',     col:'#1C7A82',
+        desc:'Vas bien. Con unos ajustes finos pasas a una imagen de nivel premium.' };
+      return { lvl:'Imagen premium', col:'#5E9E7E',
+        desc:'Tu imagen está a la altura. El foco ahora es mantener y capitalizar esa ventaja.' };
+    }
+    function pilarScore(i){          // promedio del pilar en 0..1
+      var a = answers[i]; return a.reduce(function(s,v){ return s+v; },0) / a.length;
+    }
+    function globalScore(){          // 0..100
+      var t = 0; for (var i=0;i<PILARES.length;i++) t += pilarScore(i);
+      return Math.round(t / PILARES.length * 100);
+    }
+
+    // ── Construir el cuestionario ──────────────────────────────────────────
+    (function buildQuiz(){
+      $('quiz').innerHTML = PILARES.map(function(p, pi){
+        var asks = p.preguntas.map(function(q, qi){
+          var opts = q.ops.map(function(o, oi){
+            var on = oi === q.def ? ' on' : '';
+            return '<button class="opt'+on+'" data-p="'+pi+'" data-q="'+qi+'" data-v="'+o[1]+'">'+o[0]+'</button>';
+          }).join('');
+          return '<div class="ask"><div class="qtext">'+q.q+'</div><div class="opts">'+opts+'</div></div>';
+        }).join('');
+        return '<div class="pilar"><div class="ph"><span class="pic">'+svg(p.pic)+'</span>'
+             + '<span class="pn">'+p.nom+'</span></div>'+asks+'</div>';
+      }).join('');
+
+      $('quiz').addEventListener('click', function(ev){
+        var b = ev.target.closest('.opt'); if (!b) return;
+        var pi = +b.getAttribute('data-p'), qi = +b.getAttribute('data-q');
+        answers[pi][qi] = +b.getAttribute('data-v');
+        // marcar activa dentro de su grupo
+        b.parentNode.querySelectorAll('.opt').forEach(function(o){ o.classList.remove('on'); });
+        b.classList.add('on');
+        updateLive();
+      });
+    })();
+
+    // ── Marcador en vivo ───────────────────────────────────────────────────
+    function updateLive(){
+      var score = globalScore(), lv = levelFor(score);
+      $('ringNum').textContent = score;
+      $('ringProg').style.strokeDashoffset = C * (1 - score/100);
+      $('ringProg').style.stroke = lv.col;
+      $('liveLvl').textContent = lv.lvl;
+      $('liveLvl').style.color = lv.col;
+      $('liveDesc').textContent = lv.desc;
+    }
+
+    // ── Reset a ejemplo ────────────────────────────────────────────────────
+    $('reset').addEventListener('click', function(){
+      PILARES.forEach(function(p, pi){
+        p.preguntas.forEach(function(q, qi){ answers[pi][qi] = q.ops[q.def][1]; });
+      });
+      $('quiz').querySelectorAll('.opts').forEach(function(grp, gi){
+        var pi = Math.floor(gi/2), qi = gi%2, def = PILARES[pi].preguntas[qi].def;
+        grp.querySelectorAll('.opt').forEach(function(o, oi){ o.classList.toggle('on', oi === def); });
+      });
+      updateLive();
+    });
+
+    // ── Escaneo → informe ──────────────────────────────────────────────────
+    var STEPS = ['Revisando tu identidad visual…','Analizando tu sitio web…','Mirando tus redes sociales…','Cruzando la coherencia de tu marca…','Ordenando hallazgos y plan…'];
+    $('go').addEventListener('click', function(){
+      $('scan').classList.add('on');
+      $('result').classList.remove('on');
+      var i = 0, fill = $('barfill'), step = $('step');
+      step.textContent = STEPS[0]; fill.style.width = '12%';
+      var t = setInterval(function(){
+        i++;
+        if (i < STEPS.length){ step.textContent = STEPS[i]; fill.style.width = (12 + i*20) + '%'; }
+        else { clearInterval(t); fill.style.width = '100%'; setTimeout(reveal, 380); }
+      }, 460);
+    });
+
+    function reveal(){
+      $('scan').classList.remove('on');
+      $('result').classList.add('on');
+
+      var score = globalScore(), lv = levelFor(score);
+
+      // Anillo grande + conteo animado
+      $('rLvl').textContent = lv.lvl; $('rLvl').style.color = '#fff';
+      $('rVerdict').textContent = lv.desc;
+      $('ring2Prog').style.stroke = lv.col;
+      $('ring2Prog').style.strokeDashoffset = C * (1 - score/100);
+      var big = $('ring2Num'), start = null, dur = 1000;
+      requestAnimationFrame(function run(ts){
+        if (!start) start = ts;
+        var p = Math.min(1, (ts - start)/dur), eased = 1 - Math.pow(1-p, 3);
+        big.textContent = Math.round(score * eased);
+        if (p < 1) requestAnimationFrame(run); else big.textContent = score;
+      });
+
+      // Barras por dimensión (orden natural de los pilares)
+      var barsEl = $('bars');
+      barsEl.innerHTML = PILARES.map(function(p, i){
+        var s = pilarScore(i), pct = Math.round(s*100), col = colorFor(s);
+        return '<div class="brow">'
+          + '<div class="bhead"><span class="bn">'+p.nom+'</span><span class="bv" style="color:'+col+'">'+pct+'/100</span></div>'
+          + '<span class="btrack"><span class="bfill" data-w="'+Math.max(4,pct)+'" style="background:'+col+'"></span></span>'
+          + '</div>';
+      }).join('');
+      var fills = barsEl.querySelectorAll('.bfill');
+      void barsEl.offsetWidth;
+      requestAnimationFrame(function(){ fills.forEach(function(b){ b.style.width = b.getAttribute('data-w') + '%'; }); });
+
+      // Hallazgos (pilares con score < 0.85) ordenados por severidad (peor primero)
+      var finds = [];
+      PILARES.forEach(function(p, i){
+        var s = pilarScore(i);
+        if (s >= 0.85) return;
+        var sev, sevL;
+        if (s < 0.40){ sev = '#B4524A'; sevL = 'Prioridad alta'; }
+        else if (s < 0.65){ sev = '#C2871A'; sevL = 'Prioridad media'; }
+        else { sev = '#1C7A82'; sevL = 'A pulir'; }
+        finds.push({ cat:p.nom, sev:sev, sevL:sevL, desc:p.weak, fix:p.fix, order:s });
+      });
+      finds.sort(function(a,b){ return a.order - b.order; });
+      var findsEl = $('finds');
+      findsEl.innerHTML = finds.map(function(f){
+        return '<article class="find" style="--sev:'+f.sev+'">'
+          + '<div class="top"><span class="cat">'+f.cat+'</span><span class="sev">'+f.sevL+'</span></div>'
+          + '<div class="desc">'+f.desc+'</div>'
+          + '<div class="fix"><b>Qué hacer:</b> '+f.fix+'</div>'
+          + '</article>';
+      }).join('');
+      findsEl.querySelectorAll('.find').forEach(function(c, idx){ setTimeout(function(){ c.classList.add('in'); }, 100 + idx*80); });
+
+      // Fortalezas (pilares con score >= 0.85)
+      var wins = [];
+      PILARES.forEach(function(p, i){ if (pilarScore(i) >= 0.85) wins.push(p.strong); });
+      var check = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>';
+      if (wins.length){
+        $('winsWrap').style.display = 'block';
+        $('wins').innerHTML = wins.map(function(w){ return '<span class="win">'+check+w+'</span>'; }).join('');
+      } else {
+        $('winsWrap').style.display = 'none';
+      }
+
+      $('result').scrollIntoView({ behavior:'smooth', block:'start' });
+    }
+
+    // Arranque
+    updateLive();
+  </script>
+</body>
+</html>

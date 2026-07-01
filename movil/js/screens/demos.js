@@ -13,6 +13,16 @@ const e = escHtml;
 // que servimos nosotros, o absoluta si algún día una vive en otro dominio.
 const DEMOS = [
   {
+    id: 'auditor',
+    nombre: 'Auditor de Imagen',
+    tagline: 'Cómo te ve un cliente antes de que hables',
+    desc: 'Responde un autodiagnóstico rápido —logo, web, redes, coherencia y presencia— y trIA audita tu imagen corporativa: un puntaje de 0 a 100, los hallazgos por dimensión y un plan concreto para verte a la altura de tu trabajo.',
+    chips: ['Logo', 'Web', 'Redes', 'Coherencia'],
+    url: '../demos/auditor/',
+    icon: 'eye',
+    grad: ['var(--teal)', 'var(--navy)'],
+  },
+  {
     id: 'gemelo',
     nombre: 'Gemelo Virtual',
     tagline: 'Simula tus decisiones antes de tomarlas',
