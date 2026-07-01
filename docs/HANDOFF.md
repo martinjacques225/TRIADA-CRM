@@ -42,7 +42,7 @@
 > - **Arquitectura (Clean, reusada):** `domain/orchestration.js` (puro) + `presentation/orquesta.view.js` (autocableada) + wiring en `ai-commander.js` (tab first + default `orquesta`) + `ui.js` (ícono) + `ai-commander.css`.
 > - **Verificado:** ✅ `node --check` (5) · ✅ **50/50 tests** (6 nuevos de orquestación) · 🟡 falta la mirada visual del usuario en la app.
 > - **Descartado por presupuesto:** Edge Function `ai-complete`/API keys. `AI_CONFIG.edgeFunctionUrl=null` sigue a propósito (el Prompt Builder viejo queda en `no_conectado`).
-> - **Próximos incrementos (opcionales):** guardar sesiones de orquesta en `ai_prompts`/`ai_responses` (historial) + carpeta local por proyecto.
+> - **✅ Incrementos hechos (commit `dbb2aca`):** (1) **Guardar sesión** → persiste prompts+respuestas+síntesis+plan final al proyecto (auto-crea proyecto desde el objetivo), visible en Historial IA (`AIService.saveManualResponse`, sin API); (2) **Descargar carpeta (.zip)** por proyecto (botón en Proyectos y en la Mesa) → `README.md` + `tareas.md` + `orquesta/*.md`, JSZip por CDN (`presentation/project-export.js`). +5 tests (55/55).
 
 ### 🆕 Biblioteca de documentos (Ola 0 del Plan Maestro) (2026-06-30 cont.)
 > Repositorio documental compartido de la organización — **primer uso de Supabase Storage**.
