@@ -413,7 +413,7 @@ index.html
 > El módulo está **EN VIVO en PC** (automático con Gemini + manual de respaldo; informe con la piel del Informe 360). Lo que falta:
 - [x] ~~**Paridad móvil**~~ ✅ **(2026-06-30)** — `movil/js/screens/financiero.js` (lista + flujo automático/manual + informe), registrada en `movil/js/app.js` (import + SCREENS + row "Análisis Financiero" en "Más") + `financiero.css` en `movil/index.html` y `movil/preview.html`. Reusa `db.analisisFinancieros` + dominio + `openFinReport` vía `core.js`. Gancho móvil: adjuntar F29/foto con la cámara. Verificado: `node --check` + import+render de la screen en el preview móvil real. **⬜ Falta la prueba logueada en teléfono (protocolo móvil).**
 - [ ] **Prueba con documento real** (F29 / liquidación) en modo *adjuntar documentos* — validar el multimodal de Gemini con un PDF real (hasta ahora probado con cifras tipeadas).
-- [ ] **Demos Ola 1 sobre M2** (D13 Fugas / D12 Gemelo / D11 Auditor) — cosechar el motor en `TRIADA-CRM/demos/` (falta decidir vertical/alcance con el usuario).
+- [~] **Demos Ola 1 sobre M2** — ✅ **D13 Detección de Fugas** (genérica, `demos/fugas/index.html`, standalone sin backend; en la vitrina móvil "Más → Demos", primera). ⬜ Faltan **D12 Gemelo** (proyecciones "¿y si…?") y **D11 Auditor** de imagen corporativa.
 - [ ] (Opcional) Para datos de **clientes**, pasar Google AI a **tier de pago** (no entrena con los datos); evaluar velocidad (~13 s hoy con 2.5-flash).
 
 ### 4.0 · PLAN DE AUDITORÍA 360 (2026-06-17) — checklist vivo entre sesiones
@@ -583,6 +583,10 @@ Columnas del calendario agregadas a `citas` y verificadas en vivo. Persistencia 
 ---
 
 ## 7. Bitácora de sesiones (más reciente arriba)
+
+### 2026-07-01 — Paridad móvil del Financiero + 1ª demo Ola 1 (D13 Detección de Fugas)
+- **Paridad móvil** (commit `fc2fc1f`): `movil/js/screens/financiero.js` (lista + flujo automático/manual + informe), reusa el motor vía `movil/js/core.js`, registrada en "Más → Análisis Financiero". Gancho: adjuntar el F29 con la cámara. Verificado `node --check` + import/render en el harness móvil.
+- **Demo D13 "Detección de Fugas"** (commit `dc1985a`), cosecha del Motor 2, **genérica** (decisión del usuario): `demos/fugas/index.html` standalone (HTML+CSS+JS inline, marca Tríada, sin backend/auth). Flujo: empresa de ejemplo → "Detectar fugas con trIA" → animación → informe con total anual **$31.560.000** (6 fugas: sobrecostos/mermas/horas/precios/postventa/gastos hormiga, con monto·severidad·"qué hacer") + barras por impacto + CTA a grupotriada.cl. Registrada en `movil/js/screens/demos.js` (array `DEMOS`, primera) + `demos/README.md`. Verificado en preview: carga + `reveal()` (total, 6 fugas, 6 barras, CTA); animación por timers no corre en el preview headless (gotcha conocido) pero sí en navegador real. **Refinada (2026-07-01, commit `<push>`):** los 4 montos (ventas/compras/gastos/remuneraciones) son **inputs editables** con formato de miles, y las fugas se **recalculan** como % de cada base (compras/ventas/gastos/remun) al pulsar Detectar; **fix del bug de barras invisibles** (`.bfill`/`.btrack` eran `span` inline → `display:block`) + relleno animado por reflow (no setTimeout); **nombres completos** en las barras (antes se cortaban a 2 palabras). ⬜ Faltan D12/D11.
 
 ### 2026-06-30 (cont. 4) — Automático EN VIVO + unificación del informe con la piel del 360
 - **Unificación del informe:** el usuario pidió que el informe se vea como cualquier otro informe Tríada. `informe-fin.view.js` reescrito para reusar la piel del Informe 360 (`.informe-viewer`/`.report-page`/`.cover-page` + tokens `--rep-*` + `ringGauge`); `financiero.css` bajó a solo `.fin-kpi`. Verificado en preview (viewerClass=informe-viewer, portada petróleo, gauge, `--rep-teal` heredado). Commit `8aeaf56`.
