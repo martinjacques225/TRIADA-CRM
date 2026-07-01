@@ -31,6 +31,7 @@ import { ProjectsView } from './presentation/projects.view.js';
 import { BoardView } from './presentation/board.view.js';
 import { PromptBuilderView } from './presentation/prompt-builder.view.js';
 import { HistoryView } from './presentation/history.view.js';
+import { OrquestaView } from './presentation/orquesta.view.js';
 import { ICONS, escHtml, setupNotice } from './presentation/ui.js';
 
 // ── COMPOSITION ROOT — inyección de dependencias (DIP) ───────────────────────
@@ -48,6 +49,7 @@ const aiService        = new AIService(promptRepo, responseRepo, registry, audit
 const dashboardService = new DashboardService(projectRepo, taskRepo, promptRepo, responseRepo, audit);
 
 const views = {
+  orquesta:  new OrquestaView(S),
   dashboard: new DashboardView(dashboardService),
   proyectos: new ProjectsView(projectService, taskService),
   tablero:   new BoardView(projectService, taskService, S),
@@ -56,6 +58,7 @@ const views = {
 };
 
 const TABS = [
+  { id: 'orquesta',  label: 'Mesa de Orquesta', icon: ICONS.orquesta },
   { id: 'dashboard', label: 'Dashboard',      icon: ICONS.dashboard },
   { id: 'proyectos', label: 'Proyectos',      icon: ICONS.project },
   { id: 'tablero',   label: 'Tablero',        icon: ICONS.board },
@@ -68,7 +71,7 @@ const AREAS = ['desarrollo', 'tecnologia', 'operaciones', 'comercial', 'finanzas
 // ── Contrato del módulo: render() (lo llama app.js) ──────────────────────────
 export async function render() {
   _setupApi();
-  const view = views[S.aicView] ? S.aicView : (S.aicView = 'dashboard');
+  const view = views[S.aicView] ? S.aicView : (S.aicView = 'orquesta');
 
   const center = document.getElementById('center');
   center.innerHTML = `<div class="view-animate">
