@@ -604,6 +604,12 @@ Columnas del calendario agregadas a `citas` y verificadas en vivo. Persistencia 
 
 ## 7. Bitácora de sesiones (más reciente arriba)
 
+### 2026-07-01 (cont. 9) — 📋 Ola 4: D8 Encuestas (satisfacción + NPS)
+- 3ª demo de la Ola 4. `demos/encuestas/` (commit `5e066ae`, EN VIVO `/demos/encuestas/`): **encuesta + dashboard de resultados**, standalone, **sin imágenes ni backend** (demo de datos).
+- Dos vistas en **pestañas**: **Responder** — estrellas 1-5 + **NPS 0-10** + opciones múltiples + comentario, con **validación** (envío bloqueado hasta responder satisfacción y NPS). **Resultados** — al enviar, la respuesta se **suma a los 142 sembrados** (→143), recalcula satisfacción promedio y NPS, y el comentario propio aparece **marcado** arriba.
+- Dashboard: KPIs (respuestas · satisfacción /5 · **NPS = %promotores − %detractores**) + **resumen de trIA** de las respuestas + distribución de satisfacción (barras 5→1) + **split de NPS** (promotores/pasivos/detractores) + "lo más valorado" (barras) + comentarios recientes.
+- Nuevo ícono **`clipboard`** en `movil/js/ui.js`. Registrada en la vitrina (7ª) + `demos/README.md`. Verificado por render (Preview MCP, tab fresco): validación, enviar→resultados +1 y NPS actualizado, dashboard, cambio de pestañas, **responsive 375px sin desborde**, **0 errores** + **77/77 tests**. Ojo de marca: el `.ik` del insight con `text-transform:uppercase` volvía "trIA"→"TRIA" → envuelto en `<span style="text-transform:none">` (patrón ya usado en remodela/tienda). **Faltan de la Ola 4:** D2 Compras, D3 Proyectos, D4 Centro doc, D6 Analizador, D14 Contratación, D15 Pedidos.
+
 ### 2026-07-01 (cont. 8) — 📦 Ola 4: D1 Control de Inventario
 - 2ª demo de la Ola 4 (el usuario pidió seguir por Inventario). `demos/inventario/` (commit `bbecbfa`, EN VIVO `/demos/inventario/`): **panel de stock**, standalone, **sin imágenes ni backend** (demo de datos → no toca el bloqueo de créditos de imágenes).
 - **KPIs en vivo**: valor del inventario (Σ stock·precio), N° de SKUs, productos por agotarse (stock ≤ mínimo) y en quiebre (stock 0). **Banner de trIA** con **reposición sugerida** (unidades a pedir + costo estimado, `target = min·2`). **Tabla** con **buscador** (nombre/SKU) + **filtro por categoría**, estado color-codificado (En stock/Por agotarse/Quiebre), y **stepper +/−** por producto que recalcula estado + KPIs + alertas al instante; **Reponer** por fila y **Reponer lo sugerido** global.
