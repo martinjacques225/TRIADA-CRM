@@ -113,6 +113,16 @@ const DEMOS = [
     grad: ['#4A5D7E', 'var(--navy)'],
   },
   {
+    id: 'contratacion',
+    nombre: 'Contratación Inteligente',
+    tagline: 'trIA rankea a tus candidatos',
+    desc: 'Sube CV, pruebas y entrevistas y trIA evalúa a cada candidato y arma un ranking según lo que valoras. Mueve el peso de cada criterio —experiencia, habilidades, prueba, entrevista— y mira el ranking reordenarse en vivo, con la ficha de cada persona (fortalezas, banderas y resumen de trIA). Demo con candidatos de ejemplo.',
+    chips: ['Ranking', 'CV + pruebas', 'Criterios', 'Fichas'],
+    url: '../demos/contratacion/',
+    icon: 'userPlus',
+    grad: ['#6B5B95', 'var(--navy)'],
+  },
+  {
     id: 'auditor',
     nombre: 'Auditor de Imagen',
     tagline: 'Cómo te ve un cliente antes de que hables',

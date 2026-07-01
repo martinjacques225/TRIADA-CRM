@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="es-CL">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0C1B26">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta name="description" content="Contratación Inteligente con trIA — Tríada. Sube los CV, las pruebas y las entrevistas y trIA rankea a tus candidatos según lo que tú valoras. Ajusta el peso de cada criterio y mira el ranking reordenarse en vivo.">
+  <title>Tríada · Contratación Inteligente con trIA</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Spectral:ital,wght@0,400;0,500;0,600;0,700;1,500&family=Hanken+Grotesk:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --paper:#FBF9F3; --cream:#F4F1E9; --cream-2:#EFEBDF;
+      --ink:#14222E; --body:#46555F; --muted:#6B7780; --faint:#8A90A3;
+      --line:#E5DFD0; --petrol:#0C1B26; --petrol-2:#16466B;
+      --teal:#1C7A82; --teal-2:#2F8C93; --teal-l:#E6F1F0;
+      --green:#5E9E7E; --green-l:#EAF3EC; --amber:#C2871A; --amber-l:#F6EFDC;
+      --red:#B4524A; --red-l:#F6E9E7; --plum:#6B5B95;
+      --serif:'Spectral',Georgia,serif; --sans:'Hanken Grotesk',system-ui,-apple-system,sans-serif;
+    }
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:var(--sans);background:var(--paper);color:var(--ink);line-height:1.5;-webkit-font-smoothing:antialiased}
+    .wrap{max-width:960px;margin:0 auto;padding:0 20px}
+    .serif{font-family:var(--serif)}
+
+    header{background:var(--petrol);color:#fff}
+    .hd{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:16px 0}
+    .brand{display:flex;align-items:center;gap:11px;font-family:var(--serif);font-size:21px;font-weight:600;letter-spacing:.04em}
+    .badge{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--teal-2);border:1px solid rgba(127,208,204,.4);border-radius:999px;padding:5px 12px;white-space:nowrap}
+
+    .hero{background:radial-gradient(120% 100% at 85% 0%,#15384a 0%,#0C1B26 55%,#0A1620 100%);color:#fff;padding:44px 0 54px}
+    .kick{font-size:12px;font-weight:700;letter-spacing:.28em;text-transform:uppercase;color:var(--teal-2);margin-bottom:16px}
+    .hero h1{font-family:var(--serif);font-size:clamp(30px,6vw,52px);font-weight:600;line-height:1.04;letter-spacing:-.01em;max-width:16ch}
+    .hero p{margin-top:16px;font-size:clamp(15px,2.4vw,18px);color:rgba(234,229,216,.82);max-width:56ch}
+
+    .card{background:#fff;border:1px solid var(--line);border-radius:18px;box-shadow:0 20px 40px -30px rgba(12,27,38,.4)}
+    .panel{margin-top:-34px;position:relative;z-index:2;padding:22px}
+    .tag{display:inline-flex;align-items:center;gap:7px;font-size:12px;font-weight:700;color:var(--teal);background:var(--teal-l);border-radius:999px;padding:5px 12px;margin-bottom:14px}
+    .tag i{width:7px;height:7px;border-radius:50%;background:var(--teal);animation:blink 1.6s ease-in-out infinite}
+    @keyframes blink{0%,100%{opacity:1}50%{opacity:.35}}
+    .p-title{font-family:var(--serif);font-size:22px;font-weight:600}
+    .p-sub{font-size:13.5px;color:var(--muted);margin-top:3px}
+
+    /* Ponderadores */
+    .wl-h{font-size:12.5px;color:var(--body);margin:18px 0 2px;font-weight:600}
+    .wl-h span{color:var(--faint);font-weight:500}
+    .levers{margin-top:12px;display:grid;grid-template-columns:1fr 1fr;gap:18px 26px}
+    .lever .lv-top{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin-bottom:8px}
+    .lever .lv-name{font-size:13.5px;font-weight:600;color:var(--ink);display:flex;align-items:center;gap:7px}
+    .lever .lv-name svg{color:var(--teal)}
+    .lever .lv-val{font-family:var(--serif);font-size:16px;font-weight:600;color:var(--teal);font-variant-numeric:tabular-nums;white-space:nowrap}
+    input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:6px;border-radius:999px;background:var(--cream-2);outline:none;cursor:pointer}
+    input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;height:22px;border-radius:50%;background:var(--teal);cursor:pointer;border:3px solid #fff;box-shadow:0 2px 8px rgba(28,122,130,.45)}
+    input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;background:var(--teal);cursor:pointer;border:3px solid #fff;box-shadow:0 2px 8px rgba(28,122,130,.45)}
+    .levers-foot{grid-column:1/-1;display:flex;justify-content:flex-end}
+    .btn-ghost{font-family:var(--sans);font-size:13.5px;font-weight:700;background:transparent;color:var(--teal);border:1px solid var(--line);border-radius:11px;padding:9px 16px;cursor:pointer}
+    .btn-ghost:hover{background:var(--teal-l)}
+
+    /* Banner trIA */
+    .tria{margin-top:18px;display:flex;align-items:center;gap:13px;border:1px solid var(--line);border-radius:14px;padding:14px 16px;background:linear-gradient(120deg,var(--teal-l),#F3F7F2)}
+    .tria .ti{width:38px;height:38px;flex:none;border-radius:11px;background:var(--petrol);color:#fff;display:flex;align-items:center;justify-content:center}
+    .tria .tt{flex:1;min-width:0}
+    .tria .tk{font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--teal)}
+    .tria .tm{font-size:13.5px;color:var(--body);line-height:1.45;margin-top:2px}
+    .tria .tm b{color:var(--ink)}
+
+    /* Ranking de candidatos */
+    .rank-h{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin:22px 2px 12px}
+    .rank-h h2{font-family:var(--serif);font-size:19px;font-weight:600}
+    .rank-h .cnt{font-size:12.5px;color:var(--muted)}
+    .cands{display:flex;flex-direction:column;gap:11px}
+    .cand{display:flex;align-items:center;gap:15px;border:1px solid var(--line);border-radius:15px;padding:15px 17px;background:#fff;transition:box-shadow .16s,transform .16s,border-color .2s}
+    .cand:hover{box-shadow:0 16px 30px -24px rgba(12,27,38,.5)}
+    .cand.top{border-color:var(--teal);background:linear-gradient(120deg,var(--teal-l),#fff 60%);box-shadow:0 14px 30px -20px rgba(28,122,130,.5)}
+    .cand .pos{font-family:var(--serif);font-size:22px;font-weight:600;color:var(--faint);width:26px;text-align:center;flex:none;font-variant-numeric:tabular-nums}
+    .cand.top .pos{color:var(--teal)}
+    .avatar{width:50px;height:50px;flex:none;border-radius:14px;display:flex;align-items:center;justify-content:center;color:#fff;font-family:var(--serif);font-weight:600;font-size:18px}
+    .cinfo{flex:1;min-width:0}
+    .cname{font-weight:700;font-size:15px;color:var(--ink);display:flex;align-items:center;gap:9px;flex-wrap:wrap}
+    .crown{font-size:10px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--teal);background:#fff;border:1px solid var(--teal);border-radius:999px;padding:2px 8px}
+    .cmeta{font-size:12px;color:var(--muted);margin-top:2px}
+    .chips{display:flex;flex-wrap:wrap;gap:5px;margin-top:8px}
+    .chip{font-size:11px;font-weight:600;color:var(--body);background:var(--cream);border:1px solid var(--line);border-radius:7px;padding:3px 9px}
+    .cright{flex:none;width:132px;text-align:right}
+    .cmatch{font-family:var(--serif);font-size:26px;font-weight:600;line-height:1;font-variant-numeric:tabular-nums}
+    .cmatch small{font-size:11px;color:var(--faint);font-family:var(--sans);font-weight:600}
+    .mbar{height:7px;background:var(--cream-2);border-radius:999px;overflow:hidden;margin:7px 0 8px}
+    .mfill{display:block;height:100%;width:0;border-radius:999px;transition:width .6s cubic-bezier(.4,0,.2,1)}
+    .cbadge{display:inline-block;font-size:10.5px;font-weight:700;letter-spacing:.02em;text-transform:uppercase;border-radius:999px;padding:3px 9px;margin-bottom:9px}
+    .ver{font-family:var(--sans);font-size:12px;font-weight:700;color:var(--teal);background:none;border:1px solid var(--line);border-radius:9px;padding:6px 12px;cursor:pointer;transition:background .13s,border-color .13s;width:100%}
+    .ver:hover{background:var(--teal-l);border-color:var(--teal-2)}
+    .empty{padding:30px;text-align:center;color:var(--faint);font-size:13.5px;border:1px dashed var(--line);border-radius:14px;background:#fff}
+
+    /* Modal */
+    .overlay{position:fixed;inset:0;background:rgba(12,27,38,.55);display:none;align-items:center;justify-content:center;padding:20px;z-index:50}
+    .overlay.on{display:flex;animation:fade .2s ease}
+    @keyframes fade{from{opacity:0}to{opacity:1}}
+    .modal{background:#fff;border-radius:18px;max-width:500px;width:100%;max-height:92vh;overflow-y:auto;box-shadow:0 30px 60px -20px rgba(0,0,0,.4);animation:pop .22s cubic-bezier(.2,.8,.3,1)}
+    @keyframes pop{from{opacity:0;transform:translateY(14px) scale(.98)}to{opacity:1;transform:none}}
+    .mh{display:flex;align-items:center;gap:14px;padding:18px 20px;border-bottom:1px solid var(--line)}
+    .mh .mt{flex:1;min-width:0}
+    .mh .mtt{font-family:var(--serif);font-size:19px;font-weight:600;color:var(--ink);line-height:1.15}
+    .mh .mts{font-size:12.5px;color:var(--muted);margin-top:2px}
+    .mx{width:34px;height:34px;flex:none;border:none;background:var(--cream);border-radius:9px;color:var(--muted);cursor:pointer;display:flex;align-items:center;justify-content:center}
+    .mx:hover{background:var(--cream-2)}
+    .mb{padding:18px 20px}
+    .mscore{display:flex;align-items:center;gap:16px;background:linear-gradient(120deg,var(--petrol),#143a4a);color:#fff;border-radius:14px;padding:16px 18px;margin-bottom:18px}
+    .mscore .mn{font-family:var(--serif);font-size:38px;font-weight:600;line-height:1;font-variant-numeric:tabular-nums}
+    .mscore .mn small{font-size:12px;color:rgba(234,229,216,.7);font-family:var(--sans)}
+    .mscore .ml{font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--teal-2)}
+    .mscore .mbdg{font-family:var(--serif);font-size:18px;font-weight:600;margin-top:3px}
+    .crit{display:flex;flex-direction:column;gap:12px;margin-bottom:6px}
+    .crow .ch{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin-bottom:5px}
+    .crow .cn{font-size:13px;font-weight:600;color:var(--ink)}
+    .crow .cv{font-family:var(--serif);font-size:14px;font-weight:600;font-variant-numeric:tabular-nums}
+    .ctrack{height:9px;background:var(--cream-2);border-radius:999px;overflow:hidden}
+    .cfill{display:block;height:100%;width:0;border-radius:999px;transition:width .7s cubic-bezier(.4,0,.2,1)}
+    .lists{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:18px}
+    .lists h4{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:9px}
+    .lists li{list-style:none;font-size:12.5px;color:var(--body);line-height:1.4;display:flex;gap:7px;margin-bottom:7px}
+    .lists li svg{flex:none;margin-top:2px}
+    .lists .good svg{color:var(--green)} .lists .warn svg{color:var(--amber)}
+    .tsum{margin-top:18px;background:var(--teal-l);border:1px solid #CBE3E1;border-radius:12px;padding:13px 15px;font-size:13px;color:var(--body);line-height:1.5}
+    .tsum b{color:var(--teal);font-weight:700}
+    .mf{display:flex;align-items:center;justify-content:flex-end;gap:10px;padding:16px 20px;border-top:1px solid var(--line)}
+    .btn{font-family:var(--sans);font-size:14px;font-weight:700;border:none;border-radius:11px;padding:11px 17px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:8px;transition:transform .12s,box-shadow .12s}
+    .btn-primary{background:var(--teal);color:#fff;box-shadow:0 10px 22px -12px var(--teal)}
+    .btn-primary:hover{transform:translateY(-1px)}
+    .btn-soft{background:var(--cream);color:var(--body);border:1px solid var(--line)}
+    .btn-soft:hover{background:var(--cream-2)}
+
+    /* Toast */
+    .toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%) translateY(20px);opacity:0;background:var(--petrol);color:#fff;padding:12px 18px;border-radius:12px;font-size:13.5px;font-weight:600;z-index:60;transition:opacity .2s,transform .2s;pointer-events:none;max-width:90%;box-shadow:0 16px 30px -14px rgba(0,0,0,.5);display:flex;align-items:center;gap:9px}
+    .toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
+    .toast svg{flex:none;color:#7FE7A6}
+
+    /* Beneficios */
+    .sec{padding:52px 0 8px}
+    .sec-k{font-size:12px;font-weight:700;letter-spacing:.22em;text-transform:uppercase;color:var(--teal);text-align:center}
+    .sec-hh{font-family:var(--serif);font-size:clamp(24px,4vw,34px);font-weight:600;text-align:center;margin-top:10px;max-width:22ch;margin-inline:auto;line-height:1.1}
+    .bens{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:32px}
+    .ben{border:1px solid var(--line);border-radius:16px;padding:22px;background:#fff;transition:transform .16s,box-shadow .16s}
+    .ben:hover{transform:translateY(-2px);box-shadow:0 20px 34px -26px rgba(12,27,38,.5)}
+    .ben .bi{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;color:var(--teal);background:var(--teal-l);margin-bottom:14px}
+    .ben h3{font-family:var(--serif);font-size:18px;font-weight:600;color:var(--ink)}
+    .ben p{font-size:13.5px;color:var(--body);line-height:1.55;margin-top:8px}
+
+    /* Contratación */
+    .hire{margin:56px 0 10px;background:linear-gradient(140deg,var(--petrol),#143a4a);color:#fff;border-radius:22px;padding:clamp(28px,5vw,44px);position:relative;overflow:hidden}
+    .hire::after{content:"";position:absolute;right:-80px;top:-80px;width:280px;height:280px;border-radius:50%;background:radial-gradient(circle,rgba(47,140,147,.35),transparent 70%)}
+    .hire .hk{font-size:12px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:var(--teal-2)}
+    .hire h2{font-family:var(--serif);font-size:clamp(23px,4vw,32px);font-weight:600;margin:12px 0 12px;max-width:24ch;line-height:1.12;position:relative}
+    .hire p{font-size:15px;color:rgba(234,229,216,.82);max-width:60ch;line-height:1.6;position:relative}
+    .hire .act{display:grid;grid-template-columns:1.1fr 1fr;gap:26px;margin-top:26px;position:relative}
+    .acts h4{font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--teal-2);margin-bottom:14px}
+    .acts ul{list-style:none;display:flex;flex-direction:column;gap:12px}
+    .acts li{display:flex;gap:11px;font-size:14px;color:rgba(234,229,216,.92);line-height:1.45}
+    .acts li svg{color:#7FE7A6;flex:none;margin-top:2px}
+    .hire-cta{align-self:center;background:rgba(255,255,255,.05);border:1px solid rgba(127,208,204,.28);border-radius:16px;padding:22px;text-align:center}
+    .hire-cta p{font-size:13.5px;color:rgba(234,229,216,.85);margin-bottom:16px;max-width:none}
+    .hire-cta .btn{width:100%;background:var(--teal);color:#fff}
+    .hire-note{margin-top:16px;font-size:12px;color:rgba(234,229,216,.6);display:flex;gap:8px;align-items:flex-start;position:relative}
+    .hire-note svg{flex:none;margin-top:1px;color:var(--teal-2)}
+
+    footer{border-top:1px solid var(--line);margin-top:48px;padding:26px 0;color:var(--faint);font-size:12.5px}
+    .foot{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px}
+    .foot .fb{display:flex;align-items:center;gap:9px;font-family:var(--serif);font-weight:600;color:var(--muted)}
+
+    @media (max-width:820px){ .bens{grid-template-columns:1fr 1fr} .hire .act{grid-template-columns:1fr;gap:20px} }
+    @media (max-width:640px){
+      .levers{grid-template-columns:1fr}
+      .cand{flex-wrap:wrap;gap:12px}
+      .cright{width:100%;text-align:left;display:flex;align-items:center;gap:14px}
+      .cright .mbar{flex:1;margin:0}
+      .cright .cmatch{order:-1}
+      .ver{width:auto}
+      .lists{grid-template-columns:1fr}
+      .panel{margin-top:-26px;padding:18px}
+    }
+    @media (max-width:520px){ .bens{grid-template-columns:1fr} .avatar{width:44px;height:44px;font-size:16px} }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="wrap hd">
+      <span class="brand">
+        <svg viewBox="0 0 120 120" width="30" height="30" fill="none" aria-hidden="true">
+          <path d="M26 90 L60 62 L94 90" stroke="#fff" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M26 73 L60 45 L94 73" stroke="#2F8C93" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M26 56 L60 28 L94 56" stroke="#6BA083" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        Tríada
+      </span>
+      <span class="badge"><span style="text-transform:none">trIA</span> · Contratación</span>
+    </div>
+  </header>
+
+  <section class="hero">
+    <div class="wrap">
+      <div class="kick">Lector IA · Tríada</div>
+      <h1 class="serif">¿A quién contratas? Deja que trIA ordene la fila.</h1>
+      <p>Sube los CV, las pruebas y las entrevistas, y trIA evalúa a cada candidato y los rankea según lo que tú valoras. Ajusta el peso de cada criterio y mira el ranking reordenarse al instante.</p>
+    </div>
+  </section>
+
+  <div class="wrap">
+    <div class="card panel">
+      <div class="tag"><i></i>Proceso de selección · ejemplo</div>
+      <div class="p-title serif">Ejecutivo/a Comercial Senior</div>
+      <div class="p-sub">7 candidatos evaluados · CV + prueba técnica + entrevista · Santiago, modalidad híbrida</div>
+
+      <div class="wl-h">¿Qué pesa más para este cargo? <span>Mueve los pesos y el ranking se reordena solo.</span></div>
+      <div class="levers">
+        <div class="lever">
+          <div class="lv-top"><span class="lv-name">Experiencia</span><span class="lv-val" id="vExp">35%</span></div>
+          <input type="range" id="wExp" min="0" max="100" step="5" value="35">
+        </div>
+        <div class="lever">
+          <div class="lv-top"><span class="lv-name">Habilidades</span><span class="lv-val" id="vSkl">25%</span></div>
+          <input type="range" id="wSkl" min="0" max="100" step="5" value="25">
+        </div>
+        <div class="lever">
+          <div class="lv-top"><span class="lv-name">Prueba técnica</span><span class="lv-val" id="vTest">25%</span></div>
+          <input type="range" id="wTest" min="0" max="100" step="5" value="25">
+        </div>
+        <div class="lever">
+          <div class="lv-top"><span class="lv-name">Entrevista / encaje</span><span class="lv-val" id="vEntr">15%</span></div>
+          <input type="range" id="wEntr" min="0" max="100" step="5" value="15">
+        </div>
+        <div class="levers-foot"><button class="btn-ghost" id="reset">↺ Pesos por defecto</button></div>
+      </div>
+
+      <div class="tria" id="tria"></div>
+
+      <div class="rank-h"><h2 class="serif">Ranking de candidatos</h2><span class="cnt" id="cnt"></span></div>
+      <div class="cands" id="cands"></div>
+    </div>
+
+    <!-- Beneficios -->
+    <section class="sec">
+      <div class="sec-k">Lo que hace por ti</div>
+      <h2 class="sec-hh serif">Contrata mejor, en la mitad del tiempo</h2>
+      <div class="bens" id="bens"></div>
+    </section>
+
+    <!-- Contratación -->
+    <section class="hire">
+      <div class="hk">De la demo a tu empresa</div>
+      <h2 class="serif">Esto es una demostración. Al contratar, evaluamos a TUS postulantes.</h2>
+      <p>Conectamos tu proceso: trIA lee cada CV, resume las pruebas y las entrevistas, y arma un ranking objetivo según los criterios que definas para el cargo — sin sesgos y con todo documentado. Tú tomas la decisión final, pero con la fila ya ordenada.</p>
+      <div class="act">
+        <div class="acts">
+          <h4>Qué se activa al contratar</h4>
+          <ul>
+            <li><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>Lectura automática de <b>CV, pruebas y entrevistas</b>.</li>
+            <li><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg><b>Ranking configurable</b> según los criterios de cada cargo.</li>
+            <li><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>Ficha por candidato con <b>fortalezas y banderas</b>.</li>
+            <li><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>Agenda de entrevistas y <b>comunicación con postulantes</b>.</li>
+          </ul>
+        </div>
+        <div class="hire-cta">
+          <p>Cuéntanos qué cargo buscas y te ayudamos a elegir mejor y más rápido.</p>
+          <a class="btn" href="https://grupotriada.cl" target="_blank" rel="noopener">Quiero contratar mejor →</a>
+        </div>
+      </div>
+      <div class="hire-note">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 8h.01M11 12h1v4h1"/></svg>
+        Los candidatos y sus datos son un ejemplo. trIA asiste la decisión; la contratación final siempre es humana.
+      </div>
+    </section>
+  </div>
+
+  <footer>
+    <div class="wrap foot">
+      <span class="fb">
+        <svg viewBox="0 0 120 120" width="20" height="20" fill="none" aria-hidden="true">
+          <path d="M26 90 L60 62 L94 90" stroke="#3D6E92" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M26 71 L60 43 L94 71" stroke="#2F8C93" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        Tríada · Consultoría 360
+      </span>
+      <span>Demo · candidatos de ejemplo · trIA no reemplaza el criterio humano</span>
+    </div>
+  </footer>
+
+  <div class="overlay" id="overlay"><div class="modal" id="modal"></div></div>
+  <div class="toast" id="toast"></div>
+
+  <script>
+    var $ = function(id){ return document.getElementById(id); };
+    function esc(s){ return String(s==null?'':s).replace(/[&<>"]/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
+    function svg(p, s){ s = s || 22; return '<svg width="'+s+'" height="'+s+'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+p+'</svg>'; }
+
+    // ── Criterios y candidatos (datos sembrados) ────────────────────────────
+    var CRIT = [
+      { k:'exp',  n:'Experiencia' },
+      { k:'skl',  n:'Habilidades' },
+      { k:'test', n:'Prueba técnica' },
+      { k:'entr', n:'Entrevista / encaje' }
+    ];
+    var DEF_W = { exp:35, skl:25, test:25, entr:15 };
+
+    var CANDS = [
+      { id:'c1', nom:'Camila Rojas', ini:'CR', color:'#1C7A82', meta:'8 años · Ing. Comercial',
+        chips:['Ventas B2B','CRM','Negociación','Liderazgo'], s:{exp:92,skl:80,test:70,entr:85},
+        sum:'Perfil senior sólido: 8 años cerrando ventas B2B. Su fuerte es la experiencia y el trato con clientes; la prueba técnica quedó en la media. Aporta desde el día uno.' },
+      { id:'c2', nom:'Diego Fuentes', ini:'DF', color:'#6B5B95', meta:'3 años · Téc. en Administración',
+        chips:['Prospección','CRM','Excel avanzado','Inglés'], s:{exp:55,skl:88,test:95,entr:75},
+        sum:'Talento joven de alto techo: la mejor prueba técnica del proceso y muy buenas habilidades. Le falta rodaje, pero aprende rápido. Una apuesta a futuro.' },
+      { id:'c3', nom:'Valentina Soto', ini:'VS', color:'#2F8C93', meta:'6 años · Ing. Comercial',
+        chips:['Ventas consultivas','KAM','CRM','Reporting'], s:{exp:78,skl:82,test:84,entr:88},
+        sum:'La más pareja del proceso: buena en todo, sin puntos débiles. 6 años de experiencia y excelente encaje en la entrevista. Opción de bajo riesgo.' },
+      { id:'c4', nom:'Matías Herrera', ini:'MH', color:'#C2871A', meta:'10 años · Enseñanza media',
+        chips:['Ventas terreno','Cartera','Cobranza'], s:{exp:95,skl:70,test:58,entr:65},
+        sum:'El más experimentado (10 años), pero la prueba y la entrevista quedaron bajo lo esperado. Aporta oficio de calle; conviene validar motivación y actualización.' },
+      { id:'c5', nom:'Fernanda Díaz', ini:'FD', color:'#5E9E7E', meta:'2 años · Téc. en Marketing',
+        chips:['Atención cliente','Postventa','Trabajo en equipo'], s:{exp:45,skl:72,test:80,entr:95},
+        sum:'Encaje cultural sobresaliente y muy buena actitud, aunque con poca experiencia. Ideal si buscas formar a alguien alineado con el equipo.' },
+      { id:'c6', nom:'Joaquín Vera', ini:'JV', color:'#3D6E92', meta:'5 años · Administración',
+        chips:['Ventas retail','Caja','Inventario'], s:{exp:70,skl:68,test:66,entr:70},
+        sum:'Perfil estable y promedio en todos los criterios. Cumple sin destacar; puede funcionar bien en un rol de menor exigencia o con acompañamiento.' },
+      { id:'c7', nom:'Antonia Muñoz', ini:'AM', color:'#B4524A', meta:'4 años · Ing. en Marketing',
+        chips:['Ventas B2B','Analytics','CRM','Inglés'], s:{exp:62,skl:90,test:88,entr:72},
+        sum:'Muy fuerte en habilidades y prueba técnica, con 4 años de experiencia. Buen balance entre capacidad y costo. Candidata a seguir de cerca.' }
+    ];
+    var alive = CANDS.map(function(c){ return c.id; });   // no descartados
+
+    function weights(){ return { exp:+$('wExp').value, skl:+$('wSkl').value, test:+$('wTest').value, entr:+$('wEntr').value }; }
+    function scoreOf(c, w){
+      var W = w.exp + w.skl + w.test + w.entr;
+      if (W <= 0) W = 1, w = { exp:1, skl:1, test:1, entr:1 };
+      return (c.s.exp*w.exp + c.s.skl*w.skl + c.s.test*w.test + c.s.entr*w.entr) / (w.exp+w.skl+w.test+w.entr);
+    }
+    function ranked(){
+      var w = weights();
+      return CANDS.filter(function(c){ return alive.indexOf(c.id)!==-1; })
+        .map(function(c){ return { c:c, score:Math.round(scoreOf(c, w)) }; })
+        .sort(function(a,b){ return b.score - a.score; });
+    }
+    function tierColor(s){ if (s>=80) return '#5E9E7E'; if (s>=72) return '#1C7A82'; if (s>=64) return '#C2871A'; return '#B4524A'; }
+    function tierLabel(s){ if (s>=80) return 'Top match'; if (s>=72) return 'Recomendado'; if (s>=64) return 'A considerar'; return 'Bajo perfil'; }
+    function tierBg(s){ if (s>=80) return 'var(--green-l)'; if (s>=72) return 'var(--teal-l)'; if (s>=64) return 'var(--amber-l)'; return 'var(--red-l)'; }
+
+    // ── Beneficios ──────────────────────────────────────────────────────────
+    var BENS = [
+      { ic:'<path d="M4 5h16M4 12h16M4 19h9"/>', h:'La fila ya viene ordenada', p:'trIA lee todo y rankea a los candidatos según lo que definas. Dejas de leer 80 CV a mano para encontrar 3 buenos.' },
+      { ic:'<path d="M12 3l8 4v5c0 5-3.5 8-8 9-4.5-1-8-4-8-9V7l8-4Z"/><path d="M9 12l2 2 4-4"/>', h:'Decisiones sin sesgo', p:'Cada candidato se mide con la misma vara y criterios explícitos. Menos “me cayó bien” y más evidencia.' },
+      { ic:'<path d="M12 8v4l3 2"/><circle cx="12" cy="12" r="9"/>', h:'Contrata más rápido', p:'Del montón de postulantes a una lista corta en minutos, no en semanas. El buen candidato no se te enfría.' },
+      { ic:'<rect x="3" y="4.5" width="18" height="15" rx="2.5"/><path d="M3 9.5h18"/>', h:'Ficha clara por persona', p:'Fortalezas, banderas y un resumen de trIA para cada candidato. Llegas a la entrevista sabiendo qué preguntar.' },
+      { ic:'<path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/>', h:'Criterios a tu medida', p:'Cada cargo pesa distinto: experiencia, prueba técnica, encaje… Tú defines la receta y trIA la aplica pareja.' },
+      { ic:'<path d="M9 11a3 3 0 1 0 0-6 3 3 0 0 0 0 6ZM3 20c0-3 2.7-5 6-5M16 11l2 2 4-4"/>', h:'Menos malas contrataciones', p:'Elegir bien la primera vez ahorra el costo enorme de una rotación temprana: reinducir, recapacitar, recontratar.' }
+    ];
+    $('bens').innerHTML = BENS.map(function(b){
+      return '<div class="ben"><div class="bi">'+svg(b.ic,23)+'</div><h3 class="serif">'+b.h+'</h3><p>'+b.p+'</p></div>';
+    }).join('');
+
+    // ── Banner trIA ─────────────────────────────────────────────────────────
+    function renderTria(list){
+      var w = weights();
+      var top = CRIT.slice().sort(function(a,b){ return w[b.k]-w[a.k]; })[0];
+      var msg;
+      if (!list.length){
+        msg = 'Descartaste a todos los candidatos. Pulsa <b>Pesos por defecto</b> para reiniciar el proceso.';
+      } else {
+        var best = list[0];
+        msg = 'Con el foco en <b>'+top.n.toLowerCase()+'</b>, trIA recomienda a <b>'+best.c.nom+'</b> ('+best.score+'/100). '
+          + list.filter(function(x){return x.score>=72;}).length + ' de ' + list.length + ' candidatos calzan bien con el perfil.';
+      }
+      $('tria').innerHTML = '<span class="ti"><svg width="20" height="20" viewBox="0 0 120 120" fill="none" aria-hidden="true"><path d="M30 82 L60 58 L90 82" stroke="#fff" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/><path d="M30 66 L60 42 L90 66" stroke="#6BA083" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/></svg></span>'
+        + '<div class="tt"><div class="tk">trIA · recomendación</div><div class="tm">'+msg+'</div></div>';
+    }
+
+    // ── Ranking ─────────────────────────────────────────────────────────────
+    function render(){
+      // etiquetas de pesos
+      $('vExp').textContent = $('wExp').value+'%';
+      $('vSkl').textContent = $('wSkl').value+'%';
+      $('vTest').textContent = $('wTest').value+'%';
+      $('vEntr').textContent = $('wEntr').value+'%';
+
+      var list = ranked();
+      $('cnt').textContent = list.length + ' candidato' + (list.length===1?'':'s');
+      renderTria(list);
+
+      if (!list.length){ $('cands').innerHTML = '<div class="empty">No quedan candidatos en el proceso.</div>'; return; }
+      $('cands').innerHTML = list.map(function(x, i){
+        var c = x.c, col = tierColor(x.score);
+        return '<article class="cand'+(i===0?' top':'')+'" data-id="'+c.id+'">'
+          + '<div class="pos">'+(i+1)+'</div>'
+          + '<div class="avatar" style="background:'+c.color+'">'+c.ini+'</div>'
+          + '<div class="cinfo">'
+          +   '<div class="cname">'+esc(c.nom)+(i===0?'<span class="crown">★ Recomendado</span>':'')+'</div>'
+          +   '<div class="cmeta">'+esc(c.meta)+'</div>'
+          +   '<div class="chips">'+c.chips.map(function(t){ return '<span class="chip">'+esc(t)+'</span>'; }).join('')+'</div>'
+          + '</div>'
+          + '<div class="cright">'
+          +   '<div class="cmatch" style="color:'+col+'">'+x.score+'<small> /100</small></div>'
+          +   '<div class="mbar"><span class="mfill" data-w="'+x.score+'" style="background:'+col+'"></span></div>'
+          +   '<div class="cbadge" style="color:'+col+';background:'+tierBg(x.score)+'">'+tierLabel(x.score)+'</div>'
+          +   '<button class="ver" data-ver="'+c.id+'">Ver perfil</button>'
+          + '</div></article>';
+      }).join('');
+      var fills = $('cands').querySelectorAll('.mfill');
+      void $('cands').offsetWidth;
+      requestAnimationFrame(function(){ fills.forEach(function(b){ b.style.width = b.getAttribute('data-w') + '%'; }); });
+    }
+
+    ['wExp','wSkl','wTest','wEntr'].forEach(function(id){ $(id).addEventListener('input', render); });
+    $('reset').addEventListener('click', function(){
+      $('wExp').value = DEF_W.exp; $('wSkl').value = DEF_W.skl; $('wTest').value = DEF_W.test; $('wEntr').value = DEF_W.entr;
+      alive = CANDS.map(function(c){ return c.id; });
+      render();
+    });
+
+    // ── Perfil (modal) ──────────────────────────────────────────────────────
+    $('cands').addEventListener('click', function(ev){
+      var b = ev.target.closest('[data-ver]'); var art = ev.target.closest('.cand');
+      var id = b ? b.getAttribute('data-ver') : (art ? art.getAttribute('data-id') : null);
+      if (!id) return;
+      var c = CANDS.find(function(x){ return x.id===id; }); if (c) openProfile(c);
+    });
+
+    function openProfile(c){
+      var w = weights(), score = Math.round(scoreOf(c, w)), col = tierColor(score);
+      var crit = CRIT.map(function(cr){
+        var v = c.s[cr.k], cc = tierColor(v);
+        return '<div class="crow"><div class="ch"><span class="cn">'+cr.n+'</span><span class="cv" style="color:'+cc+'">'+v+'/100</span></div>'
+          + '<div class="ctrack"><span class="cfill" data-w="'+v+'" style="background:'+cc+'"></span></div></div>';
+      }).join('');
+      var strong = CRIT.filter(function(cr){ return c.s[cr.k] >= 82; });
+      var weak   = CRIT.filter(function(cr){ return c.s[cr.k] < 66; });
+      var chk = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>';
+      var wr  = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 3.2 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.2a2 2 0 0 0-3.4 0Z"/><path d="M12 9v4M12 17h.01"/></svg>';
+      var strongHtml = strong.length ? strong.map(function(cr){ return '<li class="good">'+chk+'<span>'+cr.n+' — '+c.s[cr.k]+'/100</span></li>'; }).join('') : '<li class="good">'+chk+'<span>Perfil parejo, sin picos marcados.</span></li>';
+      var weakHtml = weak.length ? weak.map(function(cr){ return '<li class="warn">'+wr+'<span>'+cr.n+' — '+c.s[cr.k]+'/100</span></li>'; }).join('') : '<li class="warn">'+wr+'<span>Sin banderas relevantes.</span></li>';
+
+      $('modal').innerHTML =
+        '<div class="mh"><div class="avatar" style="background:'+c.color+'">'+c.ini+'</div>'
+        + '<div class="mt"><div class="mtt">'+esc(c.nom)+'</div><div class="mts">'+esc(c.meta)+'</div></div>'
+        + '<button class="mx" data-close="1" aria-label="Cerrar">'+svg('<path d="M18 6 6 18M6 6l12 12"/>',18)+'</button></div>'
+        + '<div class="mb">'
+        +   '<div class="mscore"><div class="mn">'+score+'<small> /100</small></div>'
+        +     '<div><div class="ml">Match con el cargo</div><div class="mbdg serif">'+tierLabel(score)+'</div></div></div>'
+        +   '<div class="crit">'+crit+'</div>'
+        +   '<div class="lists"><div><h4>Fortalezas</h4><ul>'+strongHtml+'</ul></div>'
+        +     '<div><h4>A considerar</h4><ul>'+weakHtml+'</ul></div></div>'
+        +   '<div class="tsum"><b>trIA:</b> '+esc(c.sum)+'</div>'
+        + '</div>'
+        + '<div class="mf"><button class="btn btn-soft" data-discard="'+c.id+'">Descartar</button>'
+        + '<button class="btn btn-primary" data-agendar="1">'+svg('<rect x="3" y="4.5" width="18" height="16" rx="2.5"/><path d="M3 9.5h18M8 2.5v4M16 2.5v4"/>',16)+'Agendar entrevista</button></div>';
+      openModal();
+      var cf = $('modal').querySelectorAll('.cfill');
+      requestAnimationFrame(function(){ cf.forEach(function(b){ b.style.width = b.getAttribute('data-w')+'%'; }); });
+    }
+
+    // ── Modal + toast ───────────────────────────────────────────────────────
+    function openModal(){ $('overlay').classList.add('on'); }
+    function closeModal(){ $('overlay').classList.remove('on'); }
+    $('overlay').addEventListener('click', function(ev){
+      if (ev.target===$('overlay') || ev.target.closest('[data-close]')) { closeModal(); return; }
+      var ag = ev.target.closest('[data-agendar]'), ds = ev.target.closest('[data-discard]');
+      if (ag){ closeModal(); toast('Entrevista solicitada ✓ · trIA le escribirá al candidato'); }
+      else if (ds){
+        var id = ds.getAttribute('data-discard'); var c = CANDS.find(function(x){return x.id===id;});
+        alive = alive.filter(function(x){ return x!==id; });
+        closeModal(); render(); toast((c?c.nom:'Candidato')+' descartado del proceso');
+      }
+    });
+    document.addEventListener('keydown', function(ev){ if (ev.key==='Escape') closeModal(); });
+
+    var toastT;
+    function toast(msg){
+      var t = $('toast'); t.className = 'toast on';
+      t.innerHTML = svg('<path d="M20 6 9 17l-5-5"/>',16) + '<span>'+esc(msg)+'</span>';
+      clearTimeout(toastT); toastT = setTimeout(function(){ t.classList.remove('on'); }, 2600);
+    }
+
+    // ── Arranque ────────────────────────────────────────────────────────────
+    render();
+  </script>
+</body>
+</html>
