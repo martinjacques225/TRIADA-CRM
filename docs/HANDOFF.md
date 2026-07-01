@@ -35,6 +35,17 @@
 
 ## 1. Estado actual (al 2026-06-30)
 
+### 🆕 Módulo Financiero trIA (M2 "Lector IA" del Plan Maestro) — análisis financiero SIN API (2026-06-30 cont.)
+> **Flagship de la Ola 1.** Mismo enfoque "dirigir en vez de llamar" de la Mesa de Orquesta, especializado en finanzas. **Construido y verificado en preview (E2E por DOM); falta la mirada logueada del usuario + un F29 real.**
+> - **Qué hace:** subes/tipeas tus datos financieros → el CRM genera un **prompt-director** a medida → lo llevas a tu IA (Gemini/Claude, que ya pagas) con tus documentos → pegas el JSON → el CRM lo renderiza como **Informe Financiero A4 con la marca Tríada** (imprimible a PDF). **Cero API, cero costo** — el CRM dirige, no llama.
+> - **3 tipos de análisis** (decisión del usuario: los 3 desde el inicio): **Cierre de mes**, **IVA / F29** y **Remuneraciones**, cada uno con documentos sugeridos + formulario de cifras (contexto chileno: F29, PPM, Previred, IVA 19%, gratificación legal). **2 modos de entrada** (decisión: ambos): adjuntar documentos (a la bóveda) o tipear cifras.
+> - **Backend** (migración `modulo_financiero` aplicada por MCP; espejo `supabase/financiero.sql`): tabla `analisis_financieros` (org_id auto-estampado, correlativo `FIN-`, enums `fin_tipo`/`fin_estado`/`fin_modo`, RLS multitenant `auth_org_id()`, borrar = admin **o** el creador) + bucket **PRIVADO** `financiero` con RLS por `{org_id}/`. Verificado en vivo: 18 columnas, 4+4 policies, `next_correlativo` es SECURITY DEFINER (el `FIN-` funciona bajo la RLS de `correlativos`), advisors **sin hueco nuevo** (`analisis_financieros` no aparece en `rls_enabled_no_policy`).
+> - **Arquitectura** (capas, patrón `ai-commander`): `modules/financiero/domain/analisis.js` (**PURO**: `FIN_TIPOS` + `buildFinancePrompt` + `parseFinanceReport`) · `presentation/financiero.view.js` (flujo 3 fases, delegación, sin onclick inline) · `presentation/informe-fin.view.js` (visor A4, `buildFinReportDoc` puro) · `financiero.js` (root: lista + KPIs). Capa de datos: `js/db.js` repo `analisisFinancieros` (getAll cacheado, add/update/remove, `uploadDoc`/`signedUrl`/`removeDoc` al bucket) + mapper `finFromSupa`/`finToSupa` (`js/mappers.js`, con guards de enum). Nav: sección **Análisis → Análisis Financiero**.
+> - **El contrato de salida:** el prompt pide a la IA un JSON con estructura fija (resumen, salud {nivel,puntaje,titular}, indicadores, hallazgos, riesgos, recomendaciones, proyección). `parseFinanceReport` es **tolerante**: extrae de ` ```json `, del `{…}` suelto, comas colgantes y comillas tipográficas; si viene inválido, no pierde el texto crudo (fallback con toast).
+> - **Verificado:** ✅ `node --check` (7 archivos) · ✅ **77/77 tests** (22 nuevos: prompt, parser, armado del informe, mappers) · ✅ **flujo E2E en preview** (elegir tipo → modo cifras → prompt de 2617 chars con contrato → pegar JSON en ` ```json ` → informe A4 de 4 págs [portada+salud, 4 KPIs, hallazgos, recomendaciones, proyección] → guardar → aparece en la lista con botón "Informe"). 🟡 falta la mirada del usuario logueado + probar con un F29/liquidación real.
+> - **Gotcha del harness resuelto (de paso):** `_preview/mock-db.js` **no exportaba `documentos`** (quedó sin actualizar desde la Biblioteca) → `app.js` no booteaba en el preview (nada de esto afecta producción, que usa el `db.js` real). Se agregó `documentos` + `analisisFinancieros` al mock (gitignored) y los 2 `<link>` CSS que faltaban en `preview.html`.
+> - **Seguridad:** datos financieros = sensibles → bucket privado + RLS por org (patrón Biblioteca). La UI deja **explícito** que el usuario lleva SUS datos a SU chat (no el CRM por detrás). Coherente con "sin API" y con `SECURITY.md §7`.
+
 ### 🆕 Director de Orquesta — Mesa de Orquesta (orquestación multi-IA SIN API) (2026-06-30 cont.)
 > El usuario **no quiere pagar API** (gasto grande). Solución construida: el Director **dirige** en vez de llamar. Motor M5 del Plan Maestro. Commit `c696518`, **EN VIVO**.
 > - **Hallazgo:** la DB del módulo (`ai_commander.sql`) **ya estaba aplicada** y verificada (4 tablas + 5 enums + RLS `*_org` + `aic_audit_row`). La memoria decía "falta correr" — era falso; NO había SQL pendiente.
@@ -364,6 +375,8 @@
 - **`propuestas`:** id, codigo, lead_id, cliente_id, servicios(jsonb), valor, estado, vigencia, notas, created_at.
 - **`citas`:** id, lead_id, titulo, tipo, estado, fecha, hora, lugar, notas, responsable, created_at.
 - **`profiles`:** id(=auth.users), nombre, email, role, area, activo, created_at. · **`servicios`**, **`correlativos`**, **`actividad`** también existen.
+- **`documentos`** (Biblioteca): id, org_id, nombre, descripcion, categoria, storage_path, mime_type, size_bytes, subido_por, created_at, updated_at. Bucket privado `biblioteca`.
+- **`analisis_financieros`** (Financiero trIA): id, org_id, **codigo** (`FIN-`), tipo(`fin_tipo`), periodo, titulo, cliente_id, modo_entrada(`fin_modo`), contexto, cifras(jsonb), documentos(jsonb), prompt, respuesta_raw, respuesta_json(jsonb), estado(`fin_estado`), created_by, created_at, updated_at. Bucket privado `financiero`. Enums: `fin_tipo`(cierre/iva/remuneraciones), `fin_estado`(borrador/generado/analizado), `fin_modo`(documentos/cifras).
 - **Triggers:** `set_codigo('PREFIJO')` autollenan `codigo`; `set_updated_at`; `handle_new_user` crea `profiles` al registrar usuario.
 - **RLS:** autenticados leen/escriben todo; **anon solo puede INSERT en `leads` con `origen='landing'`**. Por eso todo INSERT manual exige sesión autenticada.
 
@@ -559,6 +572,20 @@ Columnas del calendario agregadas a `citas` y verificadas en vivo. Persistencia 
 ---
 
 ## 7. Bitácora de sesiones (más reciente arriba)
+
+### 2026-06-30 (cont.) — Ola 1: Módulo Financiero trIA (M2 "Lector IA") construido
+- **Contexto:** siguiente del Plan Maestro tras cerrar Ola 0 + Director de Orquesta. Objetivo: módulo financiero del CRM (cierres/IVA/liquidaciones → informe Tríada) con el **mismo enfoque "dirigir en vez de llamar" (sin API)** de la Mesa de Orquesta.
+- **Decisiones del usuario (AskUserQuestion):** (1) los **3 tipos** desde el inicio (cierre/IVA-F29/remuneraciones); (2) **ambos modos** de entrada (adjuntar documentos **y** tipear cifras); (3) informe **A4 con marca Tríada** (la IA devuelve JSON, el CRM lo renderiza); (4) **tabla dedicada** `analisis_financieros`.
+- **Verificación previa (no confiar en el handoff a ciegas):** contrastado el handoff ↔ DB real por MCP — todo cuadró (`documentos`=19 filas, tablas AI Commander `proyectos/tareas/ai_prompts/ai_responses`, `profiles`=4, `orgs`=1). Nota: las tablas del Director son `proyectos/tareas/ai_prompts/ai_responses`, **no** `aic_*`.
+- **Hecho (1 sesión):**
+  - **Backend** por MCP (migración `modulo_financiero`, espejo `supabase/financiero.sql`): tabla `analisis_financieros` + 3 enums + correlativo `FIN` + bucket privado `financiero`, RLS multitenant (borrar = admin o creador). Verificado en vivo (18 cols, 4+4 policies, advisors sin hueco nuevo).
+  - **Dominio puro** `domain/analisis.js`: 3 tipos con contenido chileno (F29/PPM/Previred), `buildFinancePrompt` (método Tríada + contrato JSON), `parseFinanceReport` tolerante (fences/`{…}`/comas colgantes/comillas tipográficas → fallback).
+  - **Capa de datos** `db.js` repo `analisisFinancieros` + mapper `finFromSupa/finToSupa` (guards de enum, patrón `documentos`).
+  - **Presentación:** flujo 3 fases `financiero.view.js` (delegación, sin onclick inline) + visor A4 `informe-fin.view.js` (`buildFinReportDoc` puro, marca Tríada, `@media print` con la lección del fix de PDF: `@media screen and`, `min-height`, `box-sizing`; clase de body propia `has-fin-report` para no chocar con el Informe 360) + root `financiero.js` (lista+KPIs). CSS `financiero.css`.
+  - **Integración:** `app.js` (import + nav "Análisis → Análisis Financiero" + ruta + ícono), `index.html` (link CSS).
+- **Verificado:** `node --check` (7 archivos) · **77/77 tests** (`tests/financiero.test.js`, 22 nuevos) · **E2E en preview por DOM** (crear→tipo→cifras→prompt 2617 chars→pegar JSON→informe A4 4 págs→guardar→lista). Screenshot se colgó (gotcha headless de timers ya conocido) → verificado por DOM.
+- **Gotcha resuelto:** el `_preview/mock-db.js` no exportaba `documentos` (deuda desde la Biblioteca) → `app.js` no booteaba en el preview; se agregó `documentos`+`analisisFinancieros` al mock y 2 CSS a `preview.html`.
+- **Pendiente:** mirada del usuario logueado + probar con un F29/liquidación real; **paridad móvil** (como Biblioteca) queda para una próxima iteración; demos Ola 1 (D13/D12/D11) sobre este motor.
 
 ### 2026-06-30 (cont.) — Plan Maestro: Biblioteca + Director de Orquesta (Mesa de Orquesta)
 - **Contexto:** el usuario armó una visión grande (16 demos + ERP + Director de Orquesta + biblioteca + módulo financiero + WhatsApp + SaaS + contenido). Se ordenó en el **Plan Maestro** (`PLAN-MAESTRO-TRIADA.md`, raíz de PROYECTO CONSULTORIA): 5 motores / 5 pistas / 4 olas. Ola 0 elegida.

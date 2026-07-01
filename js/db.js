@@ -12,6 +12,7 @@ import {
   facturaFromSupa, toFactEstado, facturaToSupa,
   presupFromSupa, presupToSupa,
   docFromSupa,
+  finFromSupa, finToSupa,
 } from './mappers.js';
 
 // Reexport para no romper a quien importe isMissingTable desde db.js (módulos
@@ -447,6 +448,73 @@ export const documentos = {
   signedUrl: async (storagePath, expiresIn = 3600) => {
     const { data, error } = await supabase.storage.from('biblioteca').createSignedUrl(storagePath, expiresIn);
     _throw(error); return data.signedUrl;
+  },
+};
+
+// ─── ANÁLISIS FINANCIEROS (Módulo Financiero trIA · M2 "Lector IA") ───────────
+// Guarda el prompt-director, los adjuntos (bucket privado 'financiero') y el
+// informe parseado. La org_id la auto-estampa el trigger; el path del archivo lo
+// arma el cliente ({org_id}/…). Sin API — el análisis lo hace la IA del usuario.
+export const analisisFinancieros = {
+  getAll: async () => _cachedAll('analisis_financieros', async () => {
+    const { data, error } = await supabase.from('analisis_financieros')
+      .select('*').order('created_at', { ascending: false });
+    _throw(error); return data.map(finFromSupa);
+  }),
+  get: async (id) => {
+    const { data, error } = await supabase.from('analisis_financieros').select('*').eq('id', id).single();
+    _throw(error); return finFromSupa(data);
+  },
+  add: async (data) => {
+    const payload = finToSupa(data);
+    if (!payload.periodo) throw new Error('El período es obligatorio');
+    const { data: row, error } = await supabase.from('analisis_financieros')
+      .insert(payload).select('*').single();
+    _throw(error); _invalidate('analisis_financieros'); return finFromSupa(row);
+  },
+  update: async (id, data) => {
+    const patch = finToSupa(data);
+    const { data: row, error } = await supabase.from('analisis_financieros')
+      .update(patch).eq('id', id).select('*').single();
+    _throw(error); _invalidate('analisis_financieros'); return finFromSupa(row);
+  },
+  // Borra la fila (RLS: admin o creador) y limpia sus adjuntos del bucket (best-effort).
+  remove: async (id, docs = []) => {
+    const { error } = await supabase.from('analisis_financieros').delete().eq('id', id);
+    _throw(error);
+    const paths = (docs || []).map((d) => d?.path).filter(Boolean);
+    if (paths.length) {
+      try { await supabase.storage.from('financiero').remove(paths); }
+      catch (err) { console.warn('Análisis borrado, pero no se pudieron limpiar los adjuntos:', err?.message || err); }
+    }
+    _invalidate('analisis_financieros');
+  },
+  // Sube un adjunto al bucket privado 'financiero'. Devuelve el descriptor para el jsonb.
+  uploadDoc: async (file) => {
+    if (!file) throw new Error('No hay archivo para subir');
+    const orgId = await _getOrgId();
+    const ext = (file.name.split('.').pop() || 'bin').toLowerCase().replace(/[^a-z0-9]+/g, '').slice(0, 8) || 'bin';
+    const path = `${orgId}/${crypto.randomUUID()}.${ext}`;
+    const { error } = await supabase.storage.from('financiero')
+      .upload(path, file, { contentType: file.type || undefined, upsert: false });
+    _throw(error);
+    return {
+      path,
+      nombre: (file.name || 'archivo').slice(0, 200),
+      size:   Number.isFinite(file.size) ? file.size : null,
+      mime:   file.type || null,
+    };
+  },
+  // URL firmada temporal para ver/descargar un adjunto (bucket privado). Default 1 hora.
+  signedUrl: async (path, expiresIn = 3600) => {
+    const { data, error } = await supabase.storage.from('financiero').createSignedUrl(path, expiresIn);
+    _throw(error); return data.signedUrl;
+  },
+  // Borra un adjunto suelto del bucket (al quitarlo antes de guardar el análisis).
+  // RLS: borrar objeto = admin; para un consultor puede fallar → el llamador lo trata best-effort.
+  removeDoc: async (path) => {
+    const { error } = await supabase.storage.from('financiero').remove([path]);
+    _throw(error);
   },
 };
 

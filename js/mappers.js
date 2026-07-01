@@ -331,3 +331,54 @@ export function docFromSupa(row) {
     fecha:       row.created_at,
   };
 }
+
+// ─── ANÁLISIS FINANCIEROS (Módulo Financiero trIA · M2) ───────
+// Guards de enum: mandar un valor fuera del enum rompe el INSERT con 22P02.
+const VALID_FIN_TIPO   = new Set(['cierre', 'iva', 'remuneraciones']);
+const VALID_FIN_MODO   = new Set(['documentos', 'cifras']);
+const VALID_FIN_ESTADO = new Set(['borrador', 'generado', 'analizado']);
+export const toFinTipo   = (v) => VALID_FIN_TIPO.has(v)   ? v : 'cierre';
+export const toFinModo   = (v) => VALID_FIN_MODO.has(v)   ? v : 'documentos';
+export const toFinEstado = (v) => VALID_FIN_ESTADO.has(v) ? v : 'borrador';
+
+export function finFromSupa(row) {
+  if (!row) return null;
+  return {
+    id:                 row.id,
+    correlativo:        row.codigo,
+    tipo:               row.tipo || 'cierre',
+    periodo:            row.periodo || '',
+    titulo:             row.titulo || '',
+    clienteId:          row.cliente_id || null,
+    modoEntrada:        row.modo_entrada || 'documentos',
+    contexto:           row.contexto || '',
+    cifras:             row.cifras || {},
+    documentos:         row.documentos || [],   // [{path,nombre,size,mime}]
+    prompt:             row.prompt || '',
+    respuestaRaw:       row.respuesta_raw || '',
+    reporte:            row.respuesta_json || null, // informe ya parseado (contrato de salida)
+    estado:             row.estado || 'borrador',
+    creadoPor:          row.created_by || null,
+    fecha:              row.created_at,
+    fechaActualizacion: row.updated_at,
+  };
+}
+
+// Solo columnas reales; clean() quita undefined (permite updates parciales). Los
+// enums se blindan solo si vienen definidos (si no, se dejan al default de la tabla).
+export function finToSupa(data) {
+  return clean({
+    tipo:           data.tipo        !== undefined ? toFinTipo(data.tipo)        : undefined,
+    periodo:        data.periodo,
+    titulo:         data.titulo,
+    cliente_id:     data.clienteId,
+    modo_entrada:   data.modoEntrada !== undefined ? toFinModo(data.modoEntrada) : undefined,
+    contexto:       data.contexto,
+    cifras:         data.cifras,
+    documentos:     data.documentos,
+    prompt:         data.prompt,
+    respuesta_raw:  data.respuestaRaw,
+    respuesta_json: data.reporte,
+    estado:         data.estado      !== undefined ? toFinEstado(data.estado)    : undefined,
+  });
+}
