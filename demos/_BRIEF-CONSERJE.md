@@ -1,7 +1,13 @@
-# 🛎️ BRIEF — Demo "Conserje IA" (Ola 2 · Motor 1) — LISTA PARA EMPEZAR
+# 🛎️ BRIEF — Demo "Conserje IA" (Ola 2 · Motor 1) — ✅ CONSTRUIDA
 
-> **Estado:** ⬜ por construir · brief aprobado por el usuario 2026-07-01.
-> **Carpeta destino:** `demos/conserje/index.html` (standalone, patrón de `demos/auditor|gemelo|fugas`).
+> **Estado:** ✅ **construida y verificada 2026-07-01** · `demos/conserje/index.html` (standalone, 1 archivo).
+> Los **6 escenarios** (1 Atención 24/7, 2 Agendar cita, 3 Capturar lead, 4 Recordatorio+reagenda,
+> 5 Llamada→resumen, 6 Cotiza/deriva) van completos — se superó el mínimo viable (1·2·3·5).
+> Mockup de teléfono con chat WhatsApp guionizado (typing + delays) + panel CRM que se llena en vivo
+> (cita / lead / resumen+tarea / reagenda con hora tachada / derivación). Cero API, cero backend, cero red
+> (salvo Google Fonts). Registrada en `movil/js/screens/demos.js` (1ª del array, ícono `whatsapp`) + `README.md`.
+> Verificado por render (Preview MCP: 6 escenarios, responsive 375px sin desborde, consola limpia) + 77/77 tests.
+> **Carpeta:** `demos/conserje/index.html` (standalone, patrón de `demos/auditor|gemelo|fugas`).
 > **Leer junto a:** `PLAN-MAESTRO-TRIADA.md` (§6 Ola 2, §5 estándares) y el principio "Demo simulada, API diferida" del HANDOFF.
 
 ---

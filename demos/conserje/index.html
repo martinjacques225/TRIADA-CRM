@@ -1,0 +1,649 @@
+<!DOCTYPE html>
+<html lang="es-CL">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0C1B26">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta name="description" content="Conserje IA de Tríada — trIA contesta tu WhatsApp y tu teléfono 24/7: responde, agenda, cotiza y deja cada lead y cada cita en tu CRM. Míralo en acción con conversaciones de ejemplo.">
+  <title>Tríada · Conserje IA con trIA</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Spectral:ital,wght@0,400;0,500;0,600;0,700;1,500&family=Hanken+Grotesk:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --paper:#FBF9F3; --cream:#F4F1E9; --cream-2:#EFEBDF;
+      --ink:#14222E; --body:#46555F; --muted:#6B7780; --faint:#8A90A3;
+      --line:#E5DFD0; --petrol:#0C1B26; --petrol-2:#16466B;
+      --teal:#1C7A82; --teal-2:#2F8C93; --teal-l:#E6F1F0;
+      --green:#5E9E7E; --amber:#C2871A; --red:#B4524A;
+      --wa:#1C7A82; --wa-2:#14636A; --wa-bg:#E9E2D3; --wa-out:#D8F2DD; --wa-in:#FFFFFF;
+      --serif:'Spectral',Georgia,serif; --sans:'Hanken Grotesk',system-ui,-apple-system,sans-serif;
+    }
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:var(--sans);background:var(--paper);color:var(--ink);line-height:1.5;-webkit-font-smoothing:antialiased}
+    .wrap{max-width:1040px;margin:0 auto;padding:0 20px}
+    .serif{font-family:var(--serif)}
+
+    header{background:var(--petrol);color:#fff}
+    .hd{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:16px 0}
+    .brand{display:flex;align-items:center;gap:11px;font-family:var(--serif);font-size:21px;font-weight:600;letter-spacing:.04em}
+    .badge{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--teal-2);border:1px solid rgba(127,208,204,.4);border-radius:999px;padding:5px 12px;white-space:nowrap}
+
+    .hero{background:radial-gradient(120% 100% at 85% 0%,#15384a 0%,#0C1B26 55%,#0A1620 100%);color:#fff;padding:44px 0 66px}
+    .kick{font-size:12px;font-weight:700;letter-spacing:.28em;text-transform:uppercase;color:var(--teal-2);margin-bottom:16px}
+    .hero h1{font-family:var(--serif);font-size:clamp(30px,6vw,52px);font-weight:600;line-height:1.04;letter-spacing:-.01em;max-width:15ch}
+    .hero p{margin-top:16px;font-size:clamp(15px,2.4vw,18px);color:rgba(234,229,216,.82);max-width:56ch}
+
+    .card{background:#fff;border:1px solid var(--line);border-radius:18px;box-shadow:0 20px 40px -30px rgba(12,27,38,.4)}
+    .demo-panel{margin-top:-40px;position:relative;z-index:2;padding:22px 22px 26px}
+    .demo-tag{display:inline-flex;align-items:center;gap:7px;font-size:12px;font-weight:700;color:var(--teal);background:var(--teal-l);border-radius:999px;padding:5px 12px;margin-bottom:14px}
+    .demo-tag i{width:7px;height:7px;border-radius:50%;background:var(--teal);animation:blink 1.6s ease-in-out infinite}
+    @keyframes blink{0%,100%{opacity:1}50%{opacity:.35}}
+
+    /* Selector de escenarios */
+    .scn-lead{font-size:13.5px;color:var(--body);margin-bottom:12px}
+    .scn-lead b{color:var(--ink)}
+    .scns{display:flex;gap:9px;overflow-x:auto;padding:2px 2px 8px;-webkit-overflow-scrolling:touch;scrollbar-width:thin}
+    .scns::-webkit-scrollbar{height:6px}
+    .scns::-webkit-scrollbar-thumb{background:var(--cream-2);border-radius:999px}
+    .scn{flex:none;display:flex;align-items:center;gap:9px;font-family:var(--sans);font-size:12.5px;font-weight:600;color:var(--body);background:#fff;border:1px solid var(--line);border-radius:12px;padding:9px 13px 9px 10px;cursor:pointer;transition:border-color .14s,background .14s,box-shadow .14s;white-space:nowrap}
+    .scn:hover{border-color:var(--teal-2)}
+    .scn.on{background:var(--teal);border-color:var(--teal);color:#fff;box-shadow:0 8px 18px -10px var(--teal)}
+    .scn .sn{width:22px;height:22px;flex:none;border-radius:7px;display:flex;align-items:center;justify-content:center;font-family:var(--serif);font-weight:700;font-size:12px;background:var(--teal-l);color:var(--teal)}
+    .scn.on .sn{background:rgba(255,255,255,.22);color:#fff}
+
+    .ctrls{display:flex;flex-wrap:wrap;align-items:center;gap:11px;margin:16px 0 4px}
+    .btn{font-family:var(--sans);font-size:14px;font-weight:700;border:none;border-radius:11px;padding:11px 18px;cursor:pointer;display:inline-flex;align-items:center;gap:8px;text-decoration:none;transition:transform .12s,box-shadow .12s,background .12s}
+    .btn-primary{background:var(--teal);color:#fff;box-shadow:0 10px 24px -12px var(--teal)}
+    .btn-primary:hover{transform:translateY(-1px);box-shadow:0 14px 28px -12px var(--teal)}
+    .btn-ghost{background:transparent;color:var(--teal);border:1px solid var(--line)}
+    .btn-ghost:hover{background:var(--teal-l)}
+    .now{margin-left:auto;font-size:12px;color:var(--faint);display:flex;align-items:center;gap:7px}
+    .now b{font-family:var(--serif);color:var(--muted);font-weight:600}
+
+    /* Escenario: teléfono + panel */
+    .stage{display:grid;grid-template-columns:minmax(0,340px) 1fr;gap:26px;align-items:start;margin-top:16px}
+    .col-cap{font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--faint);margin:0 2px 11px;display:flex;align-items:center;gap:8px}
+    .col-cap svg{color:var(--teal-2)}
+
+    /* Teléfono */
+    .phone-wrap{display:flex;justify-content:center}
+    .phone{width:100%;max-width:330px;background:#0A141C;border-radius:42px;padding:11px;box-shadow:0 40px 70px -34px rgba(10,20,28,.7),0 0 0 1px rgba(255,255,255,.04) inset}
+    .screen{position:relative;border-radius:32px;overflow:hidden;background:var(--wa-bg);height:576px;display:flex;flex-direction:column}
+    .notch{position:absolute;top:8px;left:50%;transform:translateX(-50%);width:96px;height:20px;background:#0A141C;border-radius:0 0 14px 14px;z-index:6}
+    .statusbar{background:var(--wa);color:#fff;display:flex;align-items:center;justify-content:space-between;padding:9px 18px 4px;font-size:11px;font-weight:600;letter-spacing:.02em}
+    .statusbar .si{display:flex;align-items:center;gap:5px}
+    .wa-top{background:var(--wa);color:#fff;display:flex;align-items:center;gap:10px;padding:7px 12px 11px}
+    .wa-back{opacity:.9}
+    .wa-av{width:38px;height:38px;flex:none;border-radius:50%;background:linear-gradient(150deg,#2F8C93,#16466B);display:flex;align-items:center;justify-content:center}
+    .wa-id{flex:1;min-width:0}
+    .wa-id .wn{font-size:14.5px;font-weight:700;line-height:1.15;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .wa-id .ws{font-size:11px;color:rgba(255,255,255,.82);display:flex;align-items:center;gap:5px;margin-top:1px}
+    .wa-id .ws .grn{width:6px;height:6px;border-radius:50%;background:#7FE7A6;box-shadow:0 0 0 3px rgba(127,231,166,.25)}
+    .wa-ic{display:flex;align-items:center;gap:15px;opacity:.95}
+    .wa-tag{position:absolute;top:0;right:0}
+    .automa{margin:0 12px;font-size:9.5px;letter-spacing:.06em;background:rgba(0,0,0,.14);color:rgba(255,255,255,.9);padding:3px 9px;border-radius:0 0 9px 9px;align-self:flex-start;font-weight:600}
+
+    .wa-chat{flex:1;overflow-y:auto;padding:12px 12px 6px;display:flex;flex-direction:column;gap:7px;background-image:radial-gradient(rgba(20,34,46,.035) 1px,transparent 1px);background-size:22px 22px;scroll-behavior:smooth}
+    .wa-chat::-webkit-scrollbar{width:5px}
+    .wa-chat::-webkit-scrollbar-thumb{background:rgba(20,34,46,.14);border-radius:999px}
+    .day{align-self:center;background:#F3EDE0;color:var(--muted);font-size:10.5px;font-weight:600;padding:4px 12px;border-radius:8px;box-shadow:0 1px 2px rgba(20,34,46,.08);margin:3px 0}
+    .bub{max-width:82%;padding:7px 10px 5px;border-radius:12px;font-size:13px;line-height:1.42;position:relative;box-shadow:0 1px 1px rgba(20,34,46,.08);animation:pop .26s cubic-bezier(.2,.8,.3,1)}
+    @keyframes pop{from{opacity:0;transform:translateY(7px) scale(.97)}to{opacity:1;transform:none}}
+    .bub.in{align-self:flex-start;background:var(--wa-in);border-top-left-radius:4px;color:#1B2A33}
+    .bub.out{align-self:flex-end;background:var(--wa-out);border-top-right-radius:4px;color:#12331F}
+    .bub .tx{white-space:pre-line}
+    .bub .mt{font-size:9.5px;color:rgba(20,34,46,.4);float:right;margin:4px 0 -1px 9px;display:inline-flex;align-items:center;gap:3px;line-height:1}
+    .bub.out .mt .ck{color:#34B7F1}
+    .bub b{font-weight:700}
+    .typing{align-self:flex-start;background:#fff;border-top-left-radius:4px;border-radius:12px;padding:10px 13px;box-shadow:0 1px 1px rgba(20,34,46,.08);display:inline-flex;gap:4px}
+    .typing span{width:6px;height:6px;border-radius:50%;background:#9BB0AE;animation:td 1.1s infinite ease-in-out}
+    .typing span:nth-child(2){animation-delay:.16s}.typing span:nth-child(3){animation-delay:.32s}
+    @keyframes td{0%,60%,100%{transform:translateY(0);opacity:.5}30%{transform:translateY(-4px);opacity:1}}
+
+    .wa-foot{background:#F3EDE0;padding:8px 10px;display:flex;align-items:center;gap:8px}
+    .wa-foot .fld{flex:1;background:#fff;border-radius:999px;padding:9px 14px;font-size:12.5px;color:var(--faint);display:flex;align-items:center;justify-content:space-between}
+    .wa-foot .snd{width:38px;height:38px;flex:none;border-radius:50%;background:var(--wa);display:flex;align-items:center;justify-content:center;color:#fff}
+
+    /* Pantalla de llamada */
+    .call{position:absolute;inset:0;z-index:5;background:linear-gradient(180deg,#123642,#0C1B26 70%);color:#fff;display:none;flex-direction:column;align-items:center;padding:44px 20px 20px}
+    .call.on{display:flex}
+    .call .lbl{font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:rgba(255,255,255,.6)}
+    .call .cav{width:96px;height:96px;border-radius:50%;background:linear-gradient(150deg,#2F8C93,#16466B);display:flex;align-items:center;justify-content:center;margin:18px 0 14px;box-shadow:0 0 0 0 rgba(127,231,166,.5);animation:ring 2s infinite}
+    @keyframes ring{0%{box-shadow:0 0 0 0 rgba(127,231,166,.45)}70%{box-shadow:0 0 0 20px rgba(127,231,166,0)}100%{box-shadow:0 0 0 0 rgba(127,231,166,0)}}
+    .call .cn{font-family:var(--serif);font-size:21px;font-weight:600}
+    .call .ct{font-size:13px;color:rgba(255,255,255,.7);margin-top:5px;display:flex;align-items:center;gap:8px}
+    .call .rec{width:8px;height:8px;border-radius:50%;background:#F0685E;animation:blink 1.2s infinite}
+    .wave{display:flex;align-items:center;gap:3px;height:22px;margin-top:14px}
+    .wave i{width:3px;background:rgba(127,231,166,.7);border-radius:2px;animation:wv 1s infinite ease-in-out}
+    @keyframes wv{0%,100%{height:5px}50%{height:20px}}
+    .capbox{margin-top:auto;width:100%;background:rgba(0,0,0,.22);border-radius:14px;padding:12px 13px;min-height:120px;max-height:210px;overflow-y:auto;display:flex;flex-direction:column;gap:8px}
+    .capbox::-webkit-scrollbar{width:4px}.capbox::-webkit-scrollbar-thumb{background:rgba(255,255,255,.18);border-radius:9px}
+    .cap{font-size:12px;line-height:1.4;animation:pop .3s ease}
+    .cap .who{font-size:9.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;display:block;margin-bottom:1px}
+    .cap.cli .who{color:#9FE0FF}.cap.tri .who{color:#7FE7A6}
+    .cap .tt{color:rgba(255,255,255,.92)}
+    .call-actions{display:flex;gap:26px;margin-top:14px;padding-top:2px}
+    .cbtn{width:50px;height:50px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff}
+    .cbtn.end{background:#E5484D}.cbtn.mut{background:rgba(255,255,255,.15)}
+
+    /* Panel CRM */
+    .crm{background:linear-gradient(160deg,#fff,#FCFAF4);border:1px solid var(--line);border-radius:18px;padding:16px 16px 18px;min-height:576px;display:flex;flex-direction:column}
+    .crm-h{display:flex;align-items:center;gap:10px;padding-bottom:13px;border-bottom:1px solid var(--line);margin-bottom:14px}
+    .crm-h .ci{width:34px;height:34px;flex:none;border-radius:10px;background:var(--petrol);color:#fff;display:flex;align-items:center;justify-content:center}
+    .crm-h .ct{font-family:var(--serif);font-size:15px;font-weight:600;color:var(--ink);line-height:1.15}
+    .crm-h .cs{font-size:11.5px;color:var(--muted)}
+    .crm-h .rec2{margin-left:auto;font-size:10.5px;font-weight:700;letter-spacing:.04em;color:var(--green);background:#EAF3EC;border:1px solid #CFE6D6;border-radius:999px;padding:4px 10px;display:flex;align-items:center;gap:6px}
+    .crm-h .rec2 i{width:6px;height:6px;border-radius:50%;background:var(--green);animation:blink 1.5s infinite}
+    .crm-body{flex:1;display:flex;flex-direction:column;gap:12px}
+    .crm-empty{margin:auto;text-align:center;color:var(--faint);max-width:30ch;padding:30px 10px}
+    .crm-empty svg{color:var(--cream-2);margin-bottom:12px}
+    .crm-empty b{display:block;color:var(--muted);font-family:var(--serif);font-size:15px;font-weight:600;margin-bottom:6px}
+    .crm-empty p{font-size:12.5px;line-height:1.5}
+
+    .rc{border:1px solid var(--line);border-radius:14px;padding:14px 15px;background:#fff;box-shadow:0 8px 20px -16px rgba(12,27,38,.4);animation:drop .5s cubic-bezier(.2,.8,.3,1)}
+    @keyframes drop{from{opacity:0;transform:translateY(14px) scale(.98)}to{opacity:1;transform:none}}
+    .rc.flash{box-shadow:0 0 0 3px var(--teal-l),0 8px 20px -16px rgba(12,27,38,.4)}
+    .rc-h{display:flex;align-items:center;gap:9px;margin-bottom:10px}
+    .rc-ic{width:30px;height:30px;flex:none;border-radius:9px;display:flex;align-items:center;justify-content:center;color:var(--teal);background:var(--teal-l)}
+    .rc-t{font-weight:700;font-size:14px;color:var(--ink)}
+    .rc-badge{margin-left:auto;font-size:10px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;border-radius:999px;padding:3px 9px;white-space:nowrap}
+    .rc-badge.ok{color:var(--green);background:#EAF3EC}
+    .rc-badge.hot{color:#B4524A;background:#F6E9E7}
+    .rc-badge.info{color:var(--teal);background:var(--teal-l)}
+    .rc-badge.gold{color:var(--amber);background:#F6EFDC}
+    .rc-name{font-family:var(--serif);font-size:17px;font-weight:600;color:var(--ink)}
+    .rc-sub{font-size:12.5px;color:var(--body);margin-top:2px}
+    .rc-meta{display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--muted);margin-top:10px;padding-top:10px;border-top:1px dashed var(--line)}
+    .rc-meta svg{color:var(--teal);flex:none}
+    .rc-meta .tm{font-family:var(--serif);font-weight:600;color:var(--ink);font-variant-numeric:tabular-nums}
+    .rc-meta s{color:var(--faint);font-weight:400}
+    .rc-tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:11px}
+    .rc-tags span{font-size:11px;font-weight:600;color:var(--body);background:var(--cream);border:1px solid var(--line);border-radius:999px;padding:4px 10px}
+    .rc-lines{margin-top:4px;display:flex;flex-direction:column;gap:9px}
+    .rc-line{font-size:12.5px;color:var(--body);line-height:1.45;display:flex;gap:9px}
+    .rc-line b{color:var(--ink);font-weight:700}
+    .rc-line .k{flex:none;width:64px;font-size:10.5px;font-weight:700;letter-spacing:.03em;text-transform:uppercase;color:var(--teal);padding-top:1px}
+    .rc.metric{text-align:center}
+    .metric-big{font-family:var(--serif);font-size:52px;font-weight:600;color:var(--teal);line-height:1;margin:4px 0 6px}
+    .metric-big span{font-size:22px;color:var(--muted);margin-left:2px}
+    .rc.task{background:linear-gradient(120deg,var(--teal-l),#F3F7F2);border-color:#CFE6D6;display:flex;align-items:flex-start;gap:11px;padding:13px 15px}
+    .rc.task .tk{width:26px;height:26px;flex:none;border-radius:8px;background:var(--green);color:#fff;display:flex;align-items:center;justify-content:center}
+    .rc.task .tt2{font-size:12.5px;color:var(--ink);line-height:1.45}
+    .rc.task .tt2 b{display:block;font-size:11px;color:var(--muted);font-weight:700;letter-spacing:.03em;text-transform:uppercase;margin-bottom:2px}
+
+    /* Beneficios */
+    .sec{padding:52px 0 8px}
+    .sec-k{font-size:12px;font-weight:700;letter-spacing:.22em;text-transform:uppercase;color:var(--teal);text-align:center}
+    .sec-h{font-family:var(--serif);font-size:clamp(24px,4vw,34px);font-weight:600;text-align:center;margin-top:10px;max-width:20ch;margin-inline:auto;line-height:1.1}
+    .bens{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:32px}
+    .ben{border:1px solid var(--line);border-radius:16px;padding:22px;background:#fff;transition:transform .16s,box-shadow .16s}
+    .ben:hover{transform:translateY(-2px);box-shadow:0 20px 34px -26px rgba(12,27,38,.5)}
+    .ben .bi{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;color:var(--teal);background:var(--teal-l);margin-bottom:14px}
+    .ben h3{font-family:var(--serif);font-size:18px;font-weight:600;color:var(--ink)}
+    .ben p{font-size:13.5px;color:var(--body);line-height:1.55;margin-top:8px}
+
+    /* Contratación */
+    .hire{margin:56px 0 10px;background:linear-gradient(140deg,var(--petrol),#143a4a);color:#fff;border-radius:22px;padding:clamp(28px,5vw,44px);position:relative;overflow:hidden}
+    .hire::after{content:"";position:absolute;right:-80px;top:-80px;width:280px;height:280px;border-radius:50%;background:radial-gradient(circle,rgba(47,140,147,.35),transparent 70%)}
+    .hire .hk{font-size:12px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:var(--teal-2)}
+    .hire h2{font-family:var(--serif);font-size:clamp(23px,4vw,32px);font-weight:600;margin:12px 0 12px;max-width:24ch;line-height:1.12;position:relative}
+    .hire p{font-size:15px;color:rgba(234,229,216,.82);max-width:60ch;line-height:1.6;position:relative}
+    .hire .act{display:grid;grid-template-columns:1.1fr 1fr;gap:26px;margin-top:26px;position:relative}
+    .acts h4{font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--teal-2);margin-bottom:14px}
+    .acts ul{list-style:none;display:flex;flex-direction:column;gap:12px}
+    .acts li{display:flex;gap:11px;font-size:14px;color:rgba(234,229,216,.92);line-height:1.45}
+    .acts li svg{color:#7FE7A6;flex:none;margin-top:2px}
+    .hire-cta{align-self:center;background:rgba(255,255,255,.05);border:1px solid rgba(127,208,204,.28);border-radius:16px;padding:22px;text-align:center}
+    .hire-cta p{font-size:13.5px;color:rgba(234,229,216,.85);margin-bottom:16px;max-width:none}
+    .hire-cta .btn-primary{width:100%;justify-content:center;font-size:15.5px;padding:15px 22px}
+    .hire-note{margin-top:16px;font-size:12px;color:rgba(234,229,216,.6);display:flex;gap:8px;align-items:flex-start;position:relative}
+    .hire-note svg{flex:none;margin-top:1px;color:var(--teal-2)}
+
+    footer{border-top:1px solid var(--line);margin-top:48px;padding:26px 0;color:var(--faint);font-size:12.5px}
+    .foot{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px}
+    .foot .fb{display:flex;align-items:center;gap:9px;font-family:var(--serif);font-weight:600;color:var(--muted)}
+
+    @media (max-width:820px){
+      .stage{grid-template-columns:1fr;gap:22px;max-width:400px;margin-inline:auto}
+      .bens{grid-template-columns:1fr 1fr}
+      .crm{min-height:0}
+      .hire .act{grid-template-columns:1fr;gap:20px}
+    }
+    @media (max-width:560px){
+      .bens{grid-template-columns:1fr}
+      .demo-panel{padding:18px 15px 22px}
+      .now{width:100%;margin-left:0;order:3}
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="wrap hd">
+      <span class="brand">
+        <svg viewBox="0 0 120 120" width="30" height="30" fill="none" aria-hidden="true">
+          <path d="M26 90 L60 62 L94 90" stroke="#fff" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M26 73 L60 45 L94 73" stroke="#2F8C93" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M26 56 L60 28 L94 56" stroke="#6BA083" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        Tríada
+      </span>
+      <span class="badge">trIA · Conserje IA</span>
+    </div>
+  </header>
+
+  <section class="hero">
+    <div class="wrap">
+      <div class="kick">Conserje IA · Tríada</div>
+      <h1 class="serif">El vendedor que nunca duerme.</h1>
+      <p>trIA contesta tu WhatsApp y tu teléfono a cualquier hora — responde, agenda, cotiza y deja cada lead y cada cita anotados en tu CRM. Elige una situación y míralo en acción.</p>
+    </div>
+  </section>
+
+  <div class="wrap">
+    <div class="card demo-panel">
+      <div class="demo-tag"><i></i>Demostración · conversaciones de ejemplo</div>
+      <div class="scn-lead">Este es el <b>Conserje IA</b> atendiendo a una clínica dental de ejemplo. <b>Elige una situación</b> y trIA la resuelve sola — mira cómo cae el resultado en tu CRM, en vivo.</div>
+
+      <div class="scns" id="scns"></div>
+
+      <div class="ctrls">
+        <button class="btn btn-primary" id="play">▶ Reproducir</button>
+        <button class="btn btn-ghost" id="reset">↺ Reiniciar</button>
+        <span class="now"><b id="scTitle">Atención 24/7</b> · escenario <span id="scNum">1</span> de 6</span>
+      </div>
+
+      <div class="stage">
+        <div>
+          <div class="col-cap">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.4 8.4 0 0 1-12.3 7.5L3 21l2.1-5.6A8.4 8.4 0 1 1 21 11.5Z"/></svg>
+            En el teléfono de tu cliente
+          </div>
+          <div class="phone-wrap">
+            <div class="phone">
+              <div class="screen">
+                <div class="notch"></div>
+                <div class="statusbar">
+                  <span id="sbTime">23:40</span>
+                  <span class="si">
+                    <svg width="15" height="11" viewBox="0 0 18 12" fill="currentColor" aria-hidden="true"><rect x="0" y="7" width="3" height="5" rx="1"/><rect x="5" y="4" width="3" height="8" rx="1"/><rect x="10" y="1.5" width="3" height="10.5" rx="1"/><rect x="15" y="0" width="3" height="12" rx="1" opacity=".45"/></svg>
+                    <svg width="15" height="12" viewBox="0 0 20 15" fill="currentColor" aria-hidden="true"><path d="M10 14.5 0 4.5a14 14 0 0 1 20 0L10 14.5Z" opacity=".9"/></svg>
+                    <svg width="22" height="12" viewBox="0 0 26 13" fill="none" aria-hidden="true"><rect x="1" y="1.5" width="21" height="10" rx="2.5" stroke="currentColor" opacity=".6"/><rect x="3" y="3.5" width="15" height="6" rx="1" fill="currentColor"/><rect x="23.5" y="4.5" width="2" height="4" rx="1" fill="currentColor" opacity=".6"/></svg>
+                  </span>
+                </div>
+                <div class="wa-top">
+                  <span class="wa-back"><svg width="12" height="18" viewBox="0 0 12 20" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M10 2 3 10l7 8"/></svg></span>
+                  <span class="wa-av"><svg width="21" height="21" viewBox="0 0 120 120" fill="none" aria-hidden="true"><path d="M30 84 L60 60 L90 84" stroke="#fff" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/><path d="M30 68 L60 44 L90 68" stroke="#BFE9EA" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+                  <span class="wa-id">
+                    <span class="wn">Clínica Dental Aurora</span>
+                    <span class="ws"><span class="grn"></span>en línea · Conserje trIA</span>
+                  </span>
+                  <span class="wa-ic">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="13" height="12" rx="2.4"/><path d="M22 8l-5 4 5 4V8Z"/></svg>
+                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.9v2.6a2 2 0 0 1-2.2 2 19.5 19.5 0 0 1-8.5-3 19.2 19.2 0 0 1-6-6 19.5 19.5 0 0 1-3-8.6A2 2 0 0 1 4.1 4H7a2 2 0 0 1 2 1.7c.1.9.4 1.8.7 2.7a2 2 0 0 1-.5 2.1L8 11.6a16 16 0 0 0 6 6l1.1-1.2a2 2 0 0 1 2.1-.4c.9.3 1.8.5 2.7.6a2 2 0 0 1 1.8 2Z"/></svg>
+                  </span>
+                </div>
+                <div class="automa">🤖 Respuestas automáticas por trIA</div>
+                <div class="wa-chat" id="chat"></div>
+                <div class="wa-foot">
+                  <span class="fld">Mensaje
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#9BB0AE" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M8.5 14a4 4 0 0 0 7 0M9 9.5h.01M15 9.5h.01"/></svg>
+                  </span>
+                  <span class="snd"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M6 11l6-6 6 6"/></svg></span>
+                </div>
+
+                <!-- Pantalla de llamada -->
+                <div class="call" id="call">
+                  <div class="lbl" id="callLbl">Llamada entrante</div>
+                  <div class="cav"><svg width="42" height="42" viewBox="0 0 120 120" fill="none" aria-hidden="true"><path d="M30 84 L60 60 L90 84" stroke="#fff" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/><path d="M30 68 L60 44 L90 68" stroke="#BFE9EA" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+                  <div class="cn">Clínica Dental Aurora</div>
+                  <div class="ct"><span class="rec"></span><span id="callTime">00:00</span> · trIA atendiendo</div>
+                  <div class="wave"><i style="animation-delay:0s"></i><i style="animation-delay:.2s"></i><i style="animation-delay:.4s"></i><i style="animation-delay:.15s"></i><i style="animation-delay:.35s"></i><i style="animation-delay:.1s"></i></div>
+                  <div class="capbox" id="capbox"></div>
+                  <div class="call-actions">
+                    <span class="cbtn mut"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a3 3 0 0 1 3 3v6a3 3 0 0 1-6 0V5a3 3 0 0 1 3-3Z"/><path d="M19 10a7 7 0 0 1-14 0M12 17v4"/></svg></span>
+                    <span class="cbtn end"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" style="transform:rotate(135deg)"><path d="M22 16.9v2.6a2 2 0 0 1-2.2 2 19.5 19.5 0 0 1-8.5-3 19.2 19.2 0 0 1-6-6 19.5 19.5 0 0 1-3-8.6A2 2 0 0 1 4.1 4H7a2 2 0 0 1 2 1.7c.1.9.4 1.8.7 2.7a2 2 0 0 1-.5 2.1L8 11.6a16 16 0 0 0 6 6l1.1-1.2a2 2 0 0 1 2.1-.4c.9.3 1.8.5 2.7.6a2 2 0 0 1 1.8 2Z"/></svg></span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <div class="col-cap">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17l6-6 4 4 7-7"/><path d="M15 8h6v6"/></svg>
+            En tu negocio, en vivo
+          </div>
+          <div class="crm">
+            <div class="crm-h">
+              <span class="ci"><svg width="18" height="18" viewBox="0 0 120 120" fill="none" aria-hidden="true"><path d="M30 84 L60 60 L90 84" stroke="#fff" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/><path d="M30 68 L60 44 L90 68" stroke="#6BA083" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+              <div>
+                <div class="ct">Tu CRM · Tríada</div>
+                <div class="cs">Lo que trIA hace por dentro</div>
+              </div>
+              <span class="rec2"><i></i>trIA registrando</span>
+            </div>
+            <div class="crm-body" id="crm"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Beneficios -->
+    <section class="sec">
+      <div class="sec-k">Lo que hace por ti</div>
+      <h2 class="sec-h serif">Un equipo de atención completo, en una sola trIA</h2>
+      <div class="bens" id="bens"></div>
+    </section>
+
+    <!-- Contratación -->
+    <section class="hire">
+      <div class="hk">De la demo a tu negocio</div>
+      <h2 class="serif">Esto es una demostración. Al contratar, trIA atiende de verdad.</h2>
+      <p>Conectamos <b style="color:#fff">tu número de WhatsApp</b> y <b style="color:#fff">tu teléfono</b> reales, y trIA contesta 24/7 — sin descanso, sin feriados, sin licencias — dejando cada lead y cada cita ordenados en tu CRM. Afinamos su tono y sus respuestas a tus servicios.</p>
+      <div class="act">
+        <div class="acts">
+          <h4>Qué se activa al contratar</h4>
+          <ul>
+            <li><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>Tu número de <b>WhatsApp Business</b> real, atendiendo solo.</li>
+            <li><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>Atención <b>telefónica</b> con transcripción y resumen automático.</li>
+            <li><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>Integración con tu <b>agenda y tu CRM</b> — todo queda anotado.</li>
+            <li><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>Respuestas <b>afinadas</b> al tono y los servicios de tu negocio.</li>
+          </ul>
+        </div>
+        <div class="hire-cta">
+          <p>Cuéntanos de tu negocio y armamos tu Conserje IA a medida.</p>
+          <a class="btn btn-primary" href="https://grupotriada.cl" target="_blank" rel="noopener">Quiero mi Conserje IA →</a>
+        </div>
+      </div>
+      <div class="hire-note">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 8h.01M11 12h1v4h1"/></svg>
+        Las conversaciones de arriba son ejemplos guionizados para mostrarte el producto. No se envía nada a ningún servidor.
+      </div>
+    </section>
+  </div>
+
+  <footer>
+    <div class="wrap foot">
+      <span class="fb">
+        <svg viewBox="0 0 120 120" width="20" height="20" fill="none" aria-hidden="true">
+          <path d="M26 90 L60 62 L94 90" stroke="#3D6E92" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M26 71 L60 43 L94 71" stroke="#2F8C93" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        Tríada · Consultoría 360
+      </span>
+      <span>Demo · conversaciones de ejemplo · trIA atiende de verdad al contratar</span>
+    </div>
+  </footer>
+
+  <script>
+    var $ = function(id){ return document.getElementById(id); };
+    var RM = false; try { RM = matchMedia('(prefers-reduced-motion: reduce)').matches; } catch(e){}
+    var S = RM ? 0.4 : 1;                 // factor de velocidad (respeta reduce-motion)
+
+    // ── Íconos beneficios (viewBox 24, stroke currentColor) ─────────────────
+    var IC = {
+      clock:   '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/>',
+      radar:   '<path d="M16 21v-1.5a4 4 0 0 0-4-4H7.5a4 4 0 0 0-4 4V21"/><circle cx="9.7" cy="7.5" r="3.7"/><path d="M15.5 6l2.2 2.2L22 4"/>',
+      cal:     '<rect x="3.5" y="5" width="17" height="16" rx="2.5"/><path d="M3.5 9.5h17M8 3v4M16 3v4"/><path d="M8 14l2.5 2.5L16 12"/>',
+      call:    '<path d="M22 16.9v2.6a2 2 0 0 1-2.2 2 19.5 19.5 0 0 1-8.5-3 19.2 19.2 0 0 1-6-6 19.5 19.5 0 0 1-3-8.6A2 2 0 0 1 4.1 4H7a2 2 0 0 1 2 1.7c.1.9.4 1.8.7 2.7a2 2 0 0 1-.5 2.1L8 11.6a16 16 0 0 0 6 6l1.1-1.2a2 2 0 0 1 2.1-.4c.9.3 1.8.5 2.7.6a2 2 0 0 1 1.8 2Z"/>',
+      tag:     '<path d="M20.5 13.3 12.7 21a1.5 1.5 0 0 1-2.1 0L3 13.4V4h9.4l8 8a1.5 1.5 0 0 1 .1 1.3Z"/><circle cx="8" cy="8" r="1.5"/>',
+      heart:   '<path d="M12 21S3.5 15.5 3.5 9.2A4.7 4.7 0 0 1 12 6a4.7 4.7 0 0 1 8.5 3.2C20.5 15.5 12 21 12 21Z"/>'
+    };
+    function svg(p, s){ s = s || 22; return '<svg width="'+s+'" height="'+s+'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+p+'</svg>'; }
+
+    // ── Beneficios ──────────────────────────────────────────────────────────
+    var BENS = [
+      { ic:'clock', h:'Responde en segundos, 24/7', p:'Nunca más un “perdón, recién veo tu mensaje”. trIA contesta al instante de día, de noche, fines de semana y feriados.' },
+      { ic:'radar', h:'No se te escapa ni un lead', p:'Cada consulta queda registrada con nombre, interés y contacto. Cero mensajes perdidos, cero “se me pasó responder”.' },
+      { ic:'cal',   h:'Agenda y reagenda sola', p:'Ofrece horarios, confirma, manda recordatorios y mueve la hora si el cliente lo pide. Tu calendario siempre al día.' },
+      { ic:'call',  h:'Contesta y resume llamadas', p:'Atiende el teléfono, transcribe la conversación y te deja el resumen y la tarea de seguimiento en el CRM.' },
+      { ic:'tag',   h:'Cotiza y deriva con criterio', p:'Da precios de referencia al toque y, cuando el caso lo amerita, lo pasa a una persona con todo el contexto listo.' },
+      { ic:'heart', h:'Nunca se enferma ni renuncia', p:'Trabaja todos los días con el mismo ánimo y escala contigo sin sumar sueldos ni turnos de noche.' }
+    ];
+    $('bens').innerHTML = BENS.map(function(b){
+      return '<div class="ben"><div class="bi">'+svg(IC[b.ic],23)+'</div><h3 class="serif">'+b.h+'</h3><p>'+b.p+'</p></div>';
+    }).join('');
+
+    // ── Helpers de tarjetas del CRM ─────────────────────────────────────────
+    var CK = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>';
+    var CALI = svg('<rect x="3.5" y="5" width="17" height="16" rx="2.5"/><path d="M3.5 9.5h17M8 3v4M16 3v4"/>', 16);
+    function card(kind, inner){ return '<div class="rc '+(kind||'')+'">'+inner+'</div>'; }
+    function head(icP, title, badge){
+      return '<div class="rc-h"><span class="rc-ic">'+svg(icP,17)+'</span><span class="rc-t">'+title+'</span>'
+           + (badge ? '<span class="rc-badge '+badge.c+'">'+badge.t+'</span>' : '') + '</div>';
+    }
+
+    // Renderiza el resultado de cada escenario dentro del panel #crm.
+    var RESULT = {
+      respuesta: function(d){
+        return card('metric',
+          head(IC.clock,'Respondido solo', {c:'ok',t:'0 espera'})
+          + '<div class="metric-big">3<span>seg</span></div>'
+          + '<div class="rc-sub">Respuesta a las '+d.hora+' · fuera de horario</div>'
+          + '<div class="rc-meta" style="justify-content:center">'+svg(IC.clock,15)+'Sin nadie del equipo conectado</div>');
+      },
+      cita: function(d){
+        return '<div class="rc cita" id="rcCita">'
+          + head(IC.cal,'Cita creada', {c:'ok',t:'Confirmada'})
+          + '<div class="rc-name">'+d.nombre+'</div><div class="rc-sub">'+d.servicio+'</div>'
+          + '<div class="rc-meta">'+CALI+d.fecha+' · <span class="tm" id="rcHora">'+d.hora+'</span></div></div>';
+      },
+      lead: function(d){
+        return card('',
+          head(IC.radar,'Nuevo lead', {c:'hot',t:'Caliente'})
+          + '<div class="rc-name">'+d.nombre+'</div><div class="rc-sub">Interés: '+d.interes+'</div>'
+          + '<div class="rc-tags">'+d.tags.map(function(t){return '<span>'+t+'</span>';}).join('')+'</div>'
+          + '<div class="rc-meta">'+svg(IC.radar,15)+'Estado: <b style="color:var(--ink);font-weight:700">Por contactar</b></div>');
+      },
+      resumen: function(d){
+        return card('',
+          head(IC.call,'Resumen de la llamada', {c:'info',t:'Auto'})
+          + '<div class="rc-lines">'
+          +   '<div class="rc-line"><span class="k">Motivo</span><span>'+d.motivo+'</span></div>'
+          +   '<div class="rc-line"><span class="k">Acción</span><span>'+d.accion+'</span></div>'
+          +   '<div class="rc-line"><span class="k">Contacto</span><span><b>'+d.nombre+'</b> · '+d.fono+'</span></div>'
+          + '</div>');
+      },
+      tarea: function(d){
+        return '<div class="rc task">'+'<span class="tk">'+CK+'</span>'
+          + '<div class="tt2"><b>Tarea de seguimiento creada</b>'+d.texto+'</div></div>';
+      },
+      deriva: function(d){
+        return card('',
+          head(IC.tag,'Derivado a un asesor', {c:'gold',t:'Traspaso'})
+          + '<div class="rc-name">'+d.nombre+'</div><div class="rc-sub">'+d.servicio+'</div>'
+          + '<div class="rc-tags"><span>Contexto traspasado a '+d.asesor+'</span></div>'
+          + '<div class="rc-meta">'+svg(IC.call,15)+'<b style="color:var(--ink);font-weight:700">Te contactará un asesor hoy</b></div>');
+      }
+    };
+
+    // ── Escenarios (guiones sembrados) ──────────────────────────────────────
+    // Pasos:  {t:'day',x:'Hoy 23:40'} · {t:'in',x,typ,mt} (trIA) · {t:'out',x,mt} (cliente)
+    //         {t:'res',fn,arg,flash} (tarjeta CRM) · {t:'cap',who,x,clock} · {t:'callend',clock}
+    var ESC = [
+      { id:'faq', nom:'Atención 24/7', chip:'Atención 24/7 + FAQ', mode:'chat', sbTime:'23:40',
+        pasos:[
+          {t:'day',x:'Hoy 23:40'},
+          {t:'out',x:'Hola, buenas noches 🌙 ¿atienden mañana sábado?',mt:'23:40'},
+          {t:'in',x:'¡Hola! 😊 Sí, mañana sábado atendemos de 9:00 a 14:00 en Av. Providencia 1234.',typ:1200,mt:'23:40'},
+          {t:'in',x:'¿Te gustaría que te agende una hora? Tengo cupos libres en la mañana.',typ:900,mt:'23:40'},
+          {t:'out',x:'Buenísimo, no pensé que me iban a responder a esta hora jaja',mt:'23:40'},
+          {t:'in',x:'Estoy 24/7 para ti 🙌 dime qué necesitas y lo dejamos listo altiro.',typ:1000,mt:'23:41'},
+          {t:'res',fn:'respuesta',arg:{hora:'23:40'},flash:true}
+        ] },
+
+      { id:'agenda', nom:'Agendar cita', chip:'Agendar cita', mode:'chat', sbTime:'09:12',
+        pasos:[
+          {t:'day',x:'Hoy 09:12'},
+          {t:'out',x:'Hola! Quiero reservar una limpieza dental 🦷',mt:'09:12'},
+          {t:'in',x:'¡Hola! Perfecto 😄 Para limpieza tengo estos cupos este sábado 5 de julio:',typ:1100,mt:'09:12'},
+          {t:'in',x:'• 09:30\n• 11:00\n• 12:30\n¿Cuál te acomoda?',typ:800,mt:'09:12'},
+          {t:'out',x:'El de las 11:00 porfa',mt:'09:13'},
+          {t:'in',x:'Anotado ✅ ¿A nombre de quién dejo la hora?',typ:900,mt:'09:13'},
+          {t:'out',x:'Camila Fuentes',mt:'09:13'},
+          {t:'in',x:'¡Listo, Camila! Quedó confirmada tu limpieza para el sábado 5 de julio a las 11:00. Te enviaré un recordatorio el día antes 📩',typ:1300,mt:'09:13'},
+          {t:'res',fn:'cita',arg:{nombre:'Camila Fuentes',servicio:'Limpieza dental',fecha:'Sáb 5 jul',hora:'11:00'},flash:true}
+        ] },
+
+      { id:'lead', nom:'Capturar lead', chip:'Capturar lead', mode:'chat', sbTime:'20:05',
+        pasos:[
+          {t:'day',x:'Hoy 20:05'},
+          {t:'out',x:'Hola! vi que hacen blanqueamiento, ¿cuánto sale?',mt:'20:05'},
+          {t:'in',x:'¡Hola! 😃 Sí, hacemos blanqueamiento profesional. Parte en $180.000 e incluye una evaluación previa sin costo.',typ:1200,mt:'20:05'},
+          {t:'in',x:'¿Me dices tu nombre para dejarte registrada/o y coordinar la evaluación?',typ:900,mt:'20:05'},
+          {t:'out',x:'Soy Rodrigo, Rodrigo Salas',mt:'20:06'},
+          {t:'in',x:'Gracias, Rodrigo 🙌 ¿el blanqueamiento es para alguna fecha especial o algo puntual?',typ:1000,mt:'20:06'},
+          {t:'out',x:'Sí, me caso en septiembre 😅',mt:'20:06'},
+          {t:'in',x:'¡Qué gran noticia! 🎉 Con tiempo queda impecable. Te dejo registrado y un asesor coordina contigo la evaluación. ¡Felicidades!',typ:1200,mt:'20:07'},
+          {t:'res',fn:'lead',arg:{nombre:'Rodrigo Salas',interes:'Blanqueamiento profesional',tags:['Se casa en septiembre','Origen: WhatsApp','Presupuesto: $180.000']},flash:true}
+        ] },
+
+      { id:'reagenda', nom:'Recordatorio + reagenda', chip:'Recordatorio + reagenda', mode:'chat', sbTime:'18:00',
+        pasos:[
+          {t:'day',x:'Recordatorio automático · 1 día antes'},
+          {t:'res',fn:'cita',arg:{nombre:'Camila Fuentes',servicio:'Limpieza dental',fecha:'Sáb 5 jul',hora:'11:00'}},
+          {t:'in',x:'Hola Camila 👋 Te recuerdo tu hora de limpieza dental mañana sábado a las 11:00 en Clínica Aurora. ¿La confirmas?',typ:1200,mt:'18:00'},
+          {t:'out',x:'Uy, justo me salió algo a esa hora 😕 ¿habrá algo más tarde?',mt:'18:02'},
+          {t:'in',x:'No hay problema 🙂 Tengo disponible a las 12:30 el mismo sábado. ¿Te sirve?',typ:1100,mt:'18:02'},
+          {t:'out',x:'Sí, perfecto! gracias 🙏',mt:'18:03'},
+          {t:'in',x:'Listo, Camila ✅ Reagendé tu hora para el sábado 5 de julio a las 12:30. ¡Te espero!',typ:1100,mt:'18:03'},
+          {t:'reagenda',hora:'12:30',flash:true}
+        ] },
+
+      { id:'llamada', nom:'Llamada → resumen', chip:'Llamada → resumen', mode:'call', sbTime:'16:18',
+        pasos:[
+          {t:'callstart'},
+          {t:'cap',who:'cli',x:'Aló, hola… llamaba porque se me rompió una muela y me está doliendo.',clock:'00:05'},
+          {t:'cap',who:'tri',x:'Hola, lamento escuchar eso. ¿Le duele en este momento?',clock:'00:11'},
+          {t:'cap',who:'cli',x:'Sí, bastante, sobre todo al masticar.',clock:'00:17'},
+          {t:'cap',who:'tri',x:'Entiendo. Tenemos una hora de urgencia hoy a las 16:30 con el Dr. Pérez. ¿Le acomoda?',clock:'00:26'},
+          {t:'cap',who:'cli',x:'Sí, por favor, mientras antes mejor.',clock:'00:32'},
+          {t:'cap',who:'tri',x:'Perfecto. ¿Me confirma su nombre y un teléfono de contacto?',clock:'00:39'},
+          {t:'cap',who:'cli',x:'Jorge Medina, mi celular es 9 8765 4321.',clock:'00:47'},
+          {t:'cap',who:'tri',x:'Listo, señor Medina, lo dejo agendado a las 16:30. Cuídese y nos vemos al rato.',clock:'00:58'},
+          {t:'callend',clock:'01:06'},
+          {t:'res',fn:'resumen',arg:{motivo:'Urgencia — muela fracturada, dolor al masticar.',accion:'Hora de urgencia agendada hoy 16:30 con Dr. Pérez.',nombre:'Jorge Medina',fono:'+56 9 8765 4321'},flash:true},
+          {t:'res',fn:'tarea',arg:{texto:'Confirmar asistencia de Jorge Medina — hoy 15:30.'},flash:true}
+        ] },
+
+      { id:'cotiza', nom:'Cotiza / deriva', chip:'Cotiza / deriva', mode:'chat', sbTime:'12:40',
+        pasos:[
+          {t:'day',x:'Hoy 12:40'},
+          {t:'out',x:'Hola, necesito un presupuesto para implantes, son como 3 piezas',mt:'12:40'},
+          {t:'in',x:'¡Hola! 😊 Los implantes parten en $650.000 por pieza. Un caso de 3 necesita una evaluación con imágenes para darte un valor exacto.',typ:1300,mt:'12:40'},
+          {t:'in',x:'Por la complejidad, te derivo con la Dra. Soto, nuestra especialista, que te arma un plan a tu medida.',typ:1000,mt:'12:41'},
+          {t:'out',x:'Dale, me parece bien',mt:'12:41'},
+          {t:'in',x:'Le paso tu caso con todo el contexto 📋 ¿Tu nombre para que te contacte hoy mismo?',typ:1000,mt:'12:41'},
+          {t:'out',x:'Andrés Lagos',mt:'12:42'},
+          {t:'in',x:'Gracias, Andrés 🙌 La Dra. Soto te escribe hoy con la propuesta. ¡Quedas en buenas manos!',typ:1100,mt:'12:42'},
+          {t:'res',fn:'deriva',arg:{nombre:'Andrés Lagos',servicio:'Implantes — 3 piezas',asesor:'Dra. Soto'},flash:true}
+        ] }
+    ];
+
+    // ── Motor de reproducción ───────────────────────────────────────────────
+    var runId = 0, timers = [], cur = 0;
+    function sleep(ms){ return new Promise(function(res){ var id = setTimeout(res, ms*S); timers.push(id); }); }
+    function stopAll(){ runId++; timers.forEach(clearTimeout); timers = []; }
+
+    var chat = $('chat'), crm = $('crm'), callEl = $('call'), capbox = $('capbox');
+
+    function emptyCRM(){
+      crm.innerHTML = '<div class="crm-empty">'
+        + svg('<rect x="3" y="4.5" width="18" height="15" rx="2.5"/><path d="M3 9h18M7 14h6"/>',40)
+        + '<b>Aquí cae la magia</b><p>Reproduce un escenario y verás las citas, los leads y los resúmenes apareciendo solos, como en tu CRM real.</p></div>';
+    }
+    function scrollChat(){ chat.scrollTop = chat.scrollHeight; }
+    function scrollCap(){ capbox.scrollTop = capbox.scrollHeight; }
+
+    function prep(i){
+      cur = i;
+      var scn = ESC[i];
+      $('sbTime').textContent = scn.sbTime;
+      $('scTitle').textContent = scn.nom;
+      $('scNum').textContent = (i+1);
+      // chips
+      var chips = $('scns').children;
+      for (var k=0;k<chips.length;k++) chips[k].classList.toggle('on', k===i);
+      // reset teléfono / panel
+      chat.innerHTML = ''; capbox.innerHTML = '';
+      callEl.classList.toggle('on', scn.mode==='call');
+      $('callTime').textContent = '00:00';
+      $('callLbl').textContent = 'Llamada entrante';
+      emptyCRM();
+    }
+
+    function addDay(x){ var d=document.createElement('div'); d.className='day'; d.textContent=x; chat.appendChild(d); scrollChat(); }
+    function addBub(side, x, mt){
+      var b = document.createElement('div'); b.className = 'bub '+side;
+      var ck = side==='out' ? '<span class="ck">✓✓</span>' : '';
+      b.innerHTML = '<span class="tx">'+x+'</span><span class="mt">'+(mt||'')+ck+'</span>';
+      chat.appendChild(b); scrollChat();
+    }
+    function showTyping(){ var t=document.createElement('div'); t.className='typing'; t.id='typing'; t.innerHTML='<span></span><span></span><span></span>'; chat.appendChild(t); scrollChat(); }
+    function hideTyping(){ var t=$('typing'); if(t) t.remove(); }
+    function addCap(who, x){
+      var c=document.createElement('div'); c.className='cap '+(who==='cli'?'cli':'tri');
+      c.innerHTML='<span class="who">'+(who==='cli'?'Cliente':'trIA')+'</span><span class="tt">'+x+'</span>';
+      capbox.appendChild(c); scrollCap();
+    }
+    function dropCard(html, flash){
+      if (crm.querySelector('.crm-empty')) crm.innerHTML='';
+      var w=document.createElement('div'); w.innerHTML=html;
+      var node=w.firstChild; if(flash) node.classList.add('flash');
+      crm.appendChild(node);
+      if(flash) setTimeout(function(){ node.classList.remove('flash'); }, 1400);
+    }
+
+    async function step(p, my){
+      if (p.t==='day'){ addDay(p.x); await sleep(650); }
+      else if (p.t==='out'){ await sleep(520); if(my!==runId)return; addBub('out',p.x,p.mt); await sleep(560); }
+      else if (p.t==='in'){
+        showTyping(); await sleep(p.typ||1000); if(my!==runId){hideTyping();return;}
+        hideTyping(); addBub('in',p.x,p.mt); await sleep(640);
+      }
+      else if (p.t==='res'){ dropCard(RESULT[p.fn](p.arg), p.flash); await sleep(760); }
+      else if (p.t==='reagenda'){
+        var hEl=$('rcHora');
+        if(hEl){ var old=hEl.textContent; hEl.innerHTML='<s>'+old+'</s> '+p.hora;
+          var badge=document.querySelector('#rcCita .rc-badge'); if(badge){ badge.textContent='Reagendada'; badge.className='rc-badge info'; }
+          var cardEl=$('rcCita'); if(p.flash&&cardEl){ cardEl.classList.add('flash'); setTimeout(function(){cardEl.classList.remove('flash');},1400); } }
+        await sleep(760);
+      }
+      else if (p.t==='callstart'){ $('callLbl').textContent='En llamada · transcribiendo'; await sleep(700); }
+      else if (p.t==='cap'){ $('callTime').textContent=p.clock; addCap(p.who,p.x); await sleep(p.who==='cli'?1150:1350); }
+      else if (p.t==='callend'){ $('callLbl').textContent='Llamada finalizada'; $('callTime').textContent=p.clock; await sleep(700); }
+    }
+
+    async function play(i){
+      stopAll(); var my = runId;
+      if (typeof i==='number') prep(i);
+      var scn = ESC[cur];
+      chat.innerHTML=''; capbox.innerHTML=''; emptyCRM();
+      $('callTime').textContent='00:00'; $('callLbl').textContent = scn.mode==='call'?'Llamada entrante':'';
+      await sleep(420); if(my!==runId) return;
+      for (var k=0;k<scn.pasos.length;k++){
+        if(my!==runId) return;
+        await step(scn.pasos[k], my);
+      }
+    }
+
+    // ── UI ──────────────────────────────────────────────────────────────────
+    $('scns').innerHTML = ESC.map(function(s,i){
+      return '<button class="scn'+(i===0?' on':'')+'" data-i="'+i+'"><span class="sn">'+(i+1)+'</span>'+s.chip+'</button>';
+    }).join('');
+    $('scns').addEventListener('click', function(ev){
+      var b=ev.target.closest('.scn'); if(!b) return; play(+b.getAttribute('data-i'));
+    });
+    $('play').addEventListener('click', function(){ play(cur); });
+    $('reset').addEventListener('click', function(){ stopAll(); prep(cur); });
+
+    // Arranque: deja el escenario 1 listo y lo reproduce solo.
+    prep(0); emptyCRM();
+    setTimeout(function(){ play(0); }, 600);
+  </script>
+</body>
+</html>

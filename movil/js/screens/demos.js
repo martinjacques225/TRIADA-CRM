@@ -13,6 +13,16 @@ const e = escHtml;
 // que servimos nosotros, o absoluta si algún día una vive en otro dominio.
 const DEMOS = [
   {
+    id: 'conserje',
+    nombre: 'Conserje IA',
+    tagline: 'trIA atiende, agenda y cierra por ti, 24/7',
+    desc: 'trIA contesta tu WhatsApp y tu teléfono a cualquier hora: responde, agenda citas, captura leads, resume llamadas y cotiza —dejando cada cosa anotada en tu CRM. Elige una situación y míralo resolverla solo, en un teléfono real. Demo con conversaciones de ejemplo.',
+    chips: ['WhatsApp 24/7', 'Agenda sola', 'Capta leads', 'Resume llamadas'],
+    url: '../demos/conserje/',
+    icon: 'whatsapp',
+    grad: ['#25A560', 'var(--navy)'],
+  },
+  {
     id: 'auditor',
     nombre: 'Auditor de Imagen',
     tagline: 'Cómo te ve un cliente antes de que hables',
