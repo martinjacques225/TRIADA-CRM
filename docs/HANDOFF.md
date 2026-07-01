@@ -604,6 +604,11 @@ Columnas del calendario agregadas a `citas` y verificadas en vivo. Persistencia 
 
 ## 7. Bitácora de sesiones (más reciente arriba)
 
+### 2026-07-01 (cont. 12) — 🔧 Corrección: Dormitorio fuera del simulador (antes/después no calzaba)
+- El usuario avisó que **no se veía perfecto**. Verificación honesta del **slider al 50% en cada espacio** (había cantado "perfecto" habiendo mirado solo Cocina — lección: verificar el comparador de CADA espacio, no uno). Resultado: **Living y Cocina calzan perfecto**, **Local es aceptable** (la puerta a la calle alinea, perspectiva se mantiene), pero el **Dormitorio NO alinea**: la cama quedó en distinta posición/orientación entre "antes" y "después" (la IA **movió el mueble**), así que "salta" al cruzar el divisor.
+- **Fix (commit `df3623b`):** se **comentó el espacio `dormitorio`** en el `SPACES` (queda la nota para reactivarlo). El demo quedó con **3 espacios sólidos** (Living · Local · Cocina). Las imágenes del dormitorio siguen en `img/` para cuando se regeneren.
+- **Aprendizaje → `GUIA-IMAGENES.md` §0:** regla crítica **"NO mover muebles"** al editar el después (mantener cada mueble en su posición/orientación exacta; cambiar solo terminaciones) + usar structure/composición alta. Con eso, regenerar los 3 "después" del dormitorio y re-agregar el espacio.
+
 ### 2026-07-01 (cont. 11) — 🏠 Simulador de Remodelación AMPLIADO a 4 espacios (pendiente resuelto)
 - El usuario **generó las imágenes con otra IA** (siguiendo `demos/remodela/GUIA-IMAGENES.md`, ya que Masonry seguía sin créditos) y las dejó en `demos/remodela/img/`. Se **integraron al modelo `SPACES`** (commit `5e66a06`), pasando el simulador de **1 a 4 espacios**:
   - **Living** (existente: moderno/nórdico/cálido) · **Local comercial** (Cafetería + Boutique, editando el `local-antes`) · **Cocina** (antes + moderno/nórdico/cálido) · **Dormitorio** (antes + moderno/nórdico/cálido).

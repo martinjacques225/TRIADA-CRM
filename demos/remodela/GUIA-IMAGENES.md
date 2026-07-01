@@ -25,6 +25,16 @@ editarla** conservando la composición.
 **Estilo de cámara (pégalo en todos los prompts):**
 `photorealistic interior real-estate photo, wide-angle lens, eye-level, straight-on composition, no people, natural daylight, 3:2 aspect ratio landscape`
 
+> 🔴 **REGLA CRÍTICA aprendida (2026-07-01): NO mover los muebles.** Al editar el "después", la IA debe
+> **mantener CADA mueble en su posición, tamaño y orientación exactos** (la cama donde está la cama, el
+> sofá donde está el sofá) y cambiar **solo** terminaciones, colores, texturas y decoración pequeña. Si
+> mueve o reorienta un mueble grande (p. ej. la cama), en el slider **"salta" al cruzar el divisor** y se
+> ve mal. Frase para pegar: *"CRITICAL: keep the exact same composition and layout — every piece of
+> furniture stays in the identical position, size and orientation as in the original photo; do NOT move,
+> rotate, resize or rearrange anything; change ONLY finishes, colors, materials, textiles and small decor."*
+> Si tu IA tiene control de intensidad, usa **structure/composición ALTA** (cambio suave), no "reimaginar".
+> *(Así pasó con el dormitorio: quedó fuera del demo hasta regenerar sus "después" con esta regla.)*
+
 ---
 
 ## 1. Formato, medidas, nombres y dónde guardarlas
