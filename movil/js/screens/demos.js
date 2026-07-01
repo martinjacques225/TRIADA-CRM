@@ -133,6 +133,16 @@ const DEMOS = [
     grad: ['#2F7E6B', 'var(--navy)'],
   },
   {
+    id: 'pedidos',
+    nombre: 'Pedidos Online',
+    tagline: 'Tu carta digital con seguimiento en vivo',
+    desc: 'Tu carta para pedir por internet: el cliente arma su pedido, elige retiro o delivery y sigue en vivo cada paso —recibido, en cocina, en camino, entregado—. Arma un pedido en el local de ejemplo y mira el seguimiento avanzar solo. Demo sin backend ni cobros reales.',
+    chips: ['Carta digital', 'Carrito', 'Retiro/Delivery', 'Seguimiento en vivo'],
+    url: '../demos/pedidos/',
+    icon: 'bag',
+    grad: ['#B0632A', 'var(--navy)'],
+  },
+  {
     id: 'auditor',
     nombre: 'Auditor de Imagen',
     tagline: 'Cómo te ve un cliente antes de que hables',

@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="es-CL">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0C1B26">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta name="description" content="Pedidos Online con trIA — Tríada. Tu carta digital para pedir por internet: el cliente arma su pedido y sigue en vivo cada paso, de la cocina a su puerta. Pruébalo con un local de ejemplo.">
+  <title>Tríada · Pedidos Online con trIA</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Spectral:ital,wght@0,400;0,500;0,600;0,700;1,500&family=Hanken+Grotesk:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --paper:#FBF9F3; --cream:#F4F1E9; --cream-2:#EFEBDF;
+      --ink:#14222E; --body:#46555F; --muted:#6B7780; --faint:#8A90A3;
+      --line:#E5DFD0; --petrol:#0C1B26; --petrol-2:#16466B;
+      --teal:#1C7A82; --teal-2:#2F8C93; --teal-l:#E6F1F0;
+      --green:#5E9E7E; --green-l:#EAF3EC; --amber:#C2871A; --amber-l:#F6EFDC;
+      --red:#B4524A; --red-l:#F6E9E7;
+      --serif:'Spectral',Georgia,serif; --sans:'Hanken Grotesk',system-ui,-apple-system,sans-serif;
+    }
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:var(--sans);background:var(--paper);color:var(--ink);line-height:1.5;-webkit-font-smoothing:antialiased}
+    .wrap{max-width:1040px;margin:0 auto;padding:0 20px}
+    .serif{font-family:var(--serif)}
+
+    header{background:var(--petrol);color:#fff}
+    .hd{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:16px 0}
+    .brand{display:flex;align-items:center;gap:11px;font-family:var(--serif);font-size:21px;font-weight:600;letter-spacing:.04em}
+    .badge{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--teal-2);border:1px solid rgba(127,208,204,.4);border-radius:999px;padding:5px 12px;white-space:nowrap}
+
+    .hero{background:radial-gradient(120% 100% at 85% 0%,#15384a 0%,#0C1B26 55%,#0A1620 100%);color:#fff;padding:44px 0 66px}
+    .kick{font-size:12px;font-weight:700;letter-spacing:.28em;text-transform:uppercase;color:var(--teal-2);margin-bottom:16px}
+    .hero h1{font-family:var(--serif);font-size:clamp(30px,6vw,52px);font-weight:600;line-height:1.04;letter-spacing:-.01em;max-width:16ch}
+    .hero p{margin-top:16px;font-size:clamp(15px,2.4vw,18px);color:rgba(234,229,216,.82);max-width:56ch}
+
+    .card{background:#fff;border:1px solid var(--line);border-radius:18px;box-shadow:0 20px 40px -30px rgba(12,27,38,.4)}
+    .panel{margin-top:-40px;position:relative;z-index:2;padding:20px 20px 24px}
+    .tag{display:inline-flex;align-items:center;gap:7px;font-size:12px;font-weight:700;color:var(--teal);background:var(--teal-l);border-radius:999px;padding:5px 12px;margin-bottom:16px}
+    .tag i{width:7px;height:7px;border-radius:50%;background:var(--teal);animation:blink 1.6s ease-in-out infinite}
+    @keyframes blink{0%,100%{opacity:1}50%{opacity:.35}}
+
+    .shop{display:flex;align-items:center;gap:14px;flex-wrap:wrap;justify-content:space-between;margin-bottom:4px}
+    .shop .si{width:50px;height:50px;flex:none;border-radius:14px;background:linear-gradient(150deg,var(--amber),#9C5B22);color:#fff;display:flex;align-items:center;justify-content:center}
+    .shop .sn{font-family:var(--serif);font-size:22px;font-weight:600;line-height:1.1}
+    .shop .sd{font-size:12.5px;color:var(--muted);margin-top:1px}
+    .shop .sh{display:flex;align-items:center;gap:12px}
+    .mode{display:inline-flex;background:var(--cream);border:1px solid var(--line);border-radius:12px;padding:3px}
+    .mode button{font-family:var(--sans);font-size:13px;font-weight:700;color:var(--body);background:none;border:none;border-radius:9px;padding:9px 15px;cursor:pointer;display:flex;align-items:center;gap:7px}
+    .mode button.on{background:#fff;color:var(--teal);box-shadow:0 2px 8px -3px rgba(0,0,0,.25)}
+
+    /* Layout menú + carrito */
+    .order{display:grid;grid-template-columns:1fr 340px;gap:20px;margin-top:18px;align-items:start}
+
+    .toolbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+    .sb{display:flex;align-items:center;gap:9px;background:var(--cream);border:1px solid var(--line);border-radius:11px;padding:9px 13px;flex:1;min-width:160px}
+    .sb svg{color:var(--muted);flex:none}
+    .sb input{flex:1;border:none;background:none;font-family:var(--sans);font-size:14px;color:var(--ink)}
+    .sb input:focus{outline:none}
+    .cats{display:flex;gap:7px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;margin-top:12px}
+    .cats::-webkit-scrollbar{display:none}
+    .cat{flex:none;font-family:var(--sans);font-size:12.5px;font-weight:600;color:var(--body);background:#fff;border:1px solid var(--line);border-radius:9px;padding:8px 13px;cursor:pointer;white-space:nowrap;transition:border-color .13s,background .13s,color .13s}
+    .cat:hover{border-color:var(--teal-2)}
+    .cat.on{background:var(--teal);color:#fff;border-color:var(--teal)}
+
+    .menu{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:14px}
+    .dish{display:flex;flex-direction:column;border:1px solid var(--line);border-radius:14px;padding:14px 15px;background:#fff;transition:box-shadow .16s}
+    .dish:hover{box-shadow:0 14px 28px -22px rgba(12,27,38,.5)}
+    .dish .dn{font-weight:700;font-size:14.5px;color:var(--ink)}
+    .dish .dd{font-size:12px;color:var(--muted);line-height:1.45;margin-top:4px;flex:1}
+    .dish .df{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:12px}
+    .dish .dp{font-family:var(--serif);font-size:16px;font-weight:600;color:var(--ink);font-variant-numeric:tabular-nums}
+    .addb{font-family:var(--sans);font-size:12.5px;font-weight:700;color:#fff;background:var(--teal);border:none;border-radius:9px;padding:8px 13px;cursor:pointer;display:inline-flex;align-items:center;gap:5px;transition:transform .12s}
+    .addb:hover{transform:translateY(-1px)}
+    .addb.in{background:var(--cream);color:var(--teal);border:1px solid var(--teal-2)}
+    .empty{grid-column:1/-1;padding:26px;text-align:center;color:var(--faint);font-size:13.5px;border:1px dashed var(--line);border-radius:14px}
+
+    /* Carrito */
+    .cart{border:1px solid var(--line);border-radius:16px;background:linear-gradient(170deg,#fff,#FCFAF4);padding:18px;position:sticky;top:16px}
+    .cart h3{font-family:var(--serif);font-size:18px;font-weight:600;display:flex;align-items:center;gap:9px;margin-bottom:4px}
+    .cart .cc{font-size:12px;color:var(--muted);margin-bottom:14px}
+    .citems{display:flex;flex-direction:column;gap:12px;max-height:270px;overflow-y:auto}
+    .citem{display:flex;align-items:flex-start;gap:10px}
+    .citem .ci-n{flex:1;min-width:0;font-size:13px;font-weight:600;color:var(--ink);line-height:1.3}
+    .citem .ci-p{font-family:var(--serif);font-size:13.5px;font-weight:600;font-variant-numeric:tabular-nums;white-space:nowrap}
+    .qs{display:inline-flex;align-items:center;gap:2px;margin-top:5px}
+    .qs button{width:24px;height:24px;border:1px solid var(--line);background:#fff;border-radius:7px;color:var(--teal);font-size:15px;font-weight:700;cursor:pointer;line-height:1;display:flex;align-items:center;justify-content:center}
+    .qs button:hover{background:var(--teal-l)}
+    .qs .qn{min-width:26px;text-align:center;font-weight:700;font-size:13px;font-variant-numeric:tabular-nums}
+    .cart-empty{text-align:center;color:var(--faint);font-size:13px;padding:24px 0}
+    .cart-empty svg{color:var(--cream-2);margin-bottom:8px}
+    .sumline{display:flex;justify-content:space-between;font-size:13px;color:var(--body);margin-top:7px}
+    .sumline.tot{font-family:var(--serif);font-size:18px;font-weight:600;color:var(--ink);margin-top:12px;padding-top:12px;border-top:1px solid var(--line)}
+    .sumline .free{color:var(--green);font-weight:700}
+    .btn{font-family:var(--sans);font-size:15px;font-weight:700;border:none;border-radius:12px;padding:14px 20px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:8px;width:100%;transition:transform .12s,box-shadow .12s;text-decoration:none}
+    .btn-primary{background:var(--teal);color:#fff;box-shadow:0 10px 24px -12px var(--teal);margin-top:16px}
+    .btn-primary:hover{transform:translateY(-1px)}
+    .btn-primary:disabled{opacity:.45;cursor:default;box-shadow:none;transform:none}
+    .tria-tip{margin-top:12px;font-size:12px;color:var(--body);background:var(--teal-l);border:1px solid #CBE3E1;border-radius:10px;padding:9px 11px;line-height:1.4;display:flex;gap:8px}
+    .tria-tip b{color:var(--teal)}
+    .tria-tip svg{flex:none;color:var(--teal);margin-top:1px}
+
+    /* Seguimiento */
+    .track{display:none;margin-top:18px}
+    .track.on{display:block;animation:fade .4s ease}
+    @keyframes fade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+    .trk-head{background:linear-gradient(120deg,var(--petrol),#143a4a);color:#fff;border-radius:16px;padding:22px 24px;display:flex;align-items:center;gap:18px;flex-wrap:wrap}
+    .trk-head .oid{font-family:var(--serif);font-size:clamp(24px,5vw,32px);font-weight:600;line-height:1}
+    .trk-head .ol{font-size:11.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--teal-2)}
+    .trk-head .eta{margin-left:auto;text-align:right}
+    .trk-head .eta .el{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:rgba(234,229,216,.7)}
+    .trk-head .eta .ev{font-family:var(--serif);font-size:22px;font-weight:600}
+    .progress{height:8px;background:var(--cream-2);border-radius:999px;overflow:hidden;margin:22px 0 6px}
+    .progress span{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--teal),var(--green));border-radius:999px;transition:width .8s cubic-bezier(.4,0,.2,1)}
+
+    .steps{margin-top:20px;position:relative}
+    .step{display:flex;gap:15px;padding-bottom:22px;position:relative}
+    .step:last-child{padding-bottom:0}
+    .step::before{content:"";position:absolute;left:17px;top:34px;bottom:0;width:2px;background:var(--cream-2)}
+    .step.done::before{background:var(--green)}
+    .step:last-child::before{display:none}
+    .st-dot{width:36px;height:36px;flex:none;border-radius:50%;background:var(--cream);border:2px solid var(--line);display:flex;align-items:center;justify-content:center;color:var(--faint);z-index:1;transition:background .3s,border-color .3s,color .3s}
+    .step.done .st-dot{background:var(--green);border-color:var(--green);color:#fff}
+    .step.now .st-dot{background:var(--teal);border-color:var(--teal);color:#fff;box-shadow:0 0 0 0 rgba(28,122,130,.5);animation:pulse 1.6s infinite}
+    @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(28,122,130,.45)}70%{box-shadow:0 0 0 12px rgba(28,122,130,0)}100%{box-shadow:0 0 0 0 rgba(28,122,130,0)}}
+    .st-body{flex:1;padding-top:6px}
+    .st-name{font-weight:700;font-size:14.5px;color:var(--faint);transition:color .3s}
+    .step.done .st-name,.step.now .st-name{color:var(--ink)}
+    .st-msg{font-size:12.5px;color:var(--muted);margin-top:3px;min-height:16px}
+
+    .trk-items{border:1px solid var(--line);border-radius:14px;padding:16px 18px;margin-top:20px;background:#fff}
+    .trk-items h4{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:11px}
+    .trk-line{display:flex;justify-content:space-between;gap:10px;font-size:13px;color:var(--body);margin-bottom:7px}
+    .trk-line b{color:var(--ink);font-weight:600}
+    .trk-tot{display:flex;justify-content:space-between;font-family:var(--serif);font-size:16px;font-weight:600;margin-top:11px;padding-top:11px;border-top:1px solid var(--line)}
+    .trk-again{margin-top:18px}
+
+    /* Beneficios */
+    .sec{padding:52px 0 8px}
+    .sec-k{font-size:12px;font-weight:700;letter-spacing:.22em;text-transform:uppercase;color:var(--teal);text-align:center}
+    .sec-hh{font-family:var(--serif);font-size:clamp(24px,4vw,34px);font-weight:600;text-align:center;margin-top:10px;max-width:22ch;margin-inline:auto;line-height:1.1}
+    .bens{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:32px}
+    .ben{border:1px solid var(--line);border-radius:16px;padding:22px;background:#fff;transition:transform .16s,box-shadow .16s}
+    .ben:hover{transform:translateY(-2px);box-shadow:0 20px 34px -26px rgba(12,27,38,.5)}
+    .ben .bi{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;color:var(--teal);background:var(--teal-l);margin-bottom:14px}
+    .ben h3{font-family:var(--serif);font-size:18px;font-weight:600;color:var(--ink)}
+    .ben p{font-size:13.5px;color:var(--body);line-height:1.55;margin-top:8px}
+
+    /* Contratación */
+    .hire{margin:56px 0 10px;background:linear-gradient(140deg,var(--petrol),#143a4a);color:#fff;border-radius:22px;padding:clamp(28px,5vw,44px);position:relative;overflow:hidden}
+    .hire::after{content:"";position:absolute;right:-80px;top:-80px;width:280px;height:280px;border-radius:50%;background:radial-gradient(circle,rgba(47,140,147,.35),transparent 70%)}
+    .hire .hk{font-size:12px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:var(--teal-2)}
+    .hire h2{font-family:var(--serif);font-size:clamp(23px,4vw,32px);font-weight:600;margin:12px 0 12px;max-width:24ch;line-height:1.12;position:relative}
+    .hire p{font-size:15px;color:rgba(234,229,216,.82);max-width:60ch;line-height:1.6;position:relative}
+    .hire .act{display:grid;grid-template-columns:1.1fr 1fr;gap:26px;margin-top:26px;position:relative}
+    .acts h4{font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--teal-2);margin-bottom:14px}
+    .acts ul{list-style:none;display:flex;flex-direction:column;gap:12px}
+    .acts li{display:flex;gap:11px;font-size:14px;color:rgba(234,229,216,.92);line-height:1.45}
+    .acts li svg{color:#7FE7A6;flex:none;margin-top:2px}
+    .hire-cta{align-self:center;background:rgba(255,255,255,.05);border:1px solid rgba(127,208,204,.28);border-radius:16px;padding:22px;text-align:center}
+    .hire-cta p{font-size:13.5px;color:rgba(234,229,216,.85);margin-bottom:16px;max-width:none}
+    .hire-cta .btn{width:100%;background:var(--teal);color:#fff}
+    .hire-note{margin-top:16px;font-size:12px;color:rgba(234,229,216,.6);display:flex;gap:8px;align-items:flex-start;position:relative}
+    .hire-note svg{flex:none;margin-top:1px;color:var(--teal-2)}
+
+    footer{border-top:1px solid var(--line);margin-top:48px;padding:26px 0;color:var(--faint);font-size:12.5px}
+    .foot{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px}
+    .foot .fb{display:flex;align-items:center;gap:9px;font-family:var(--serif);font-weight:600;color:var(--muted)}
+
+    @media (max-width:860px){ .bens{grid-template-columns:1fr 1fr} .hire .act{grid-template-columns:1fr;gap:20px} }
+    @media (max-width:760px){
+      .order{grid-template-columns:1fr}
+      .cart{position:static;order:-1}
+    }
+    @media (max-width:520px){ .menu{grid-template-columns:1fr} .bens{grid-template-columns:1fr} .panel{margin-top:-26px;padding:16px 14px 20px} .shop .sh{width:100%} }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="wrap hd">
+      <span class="brand">
+        <svg viewBox="0 0 120 120" width="30" height="30" fill="none" aria-hidden="true">
+          <path d="M26 90 L60 62 L94 90" stroke="#fff" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M26 73 L60 45 L94 73" stroke="#2F8C93" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M26 56 L60 28 L94 56" stroke="#6BA083" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        Tríada
+      </span>
+      <span class="badge"><span style="text-transform:none">trIA</span> · Pedidos online</span>
+    </div>
+  </header>
+
+  <section class="hero">
+    <div class="wrap">
+      <div class="kick">Pedidos IA · Tríada</div>
+      <h1 class="serif">Recibe pedidos online y que tu cliente siga el suyo en vivo.</h1>
+      <p>Tu carta digital para pedir por internet: el cliente arma su pedido, elige retiro o delivery, y sigue cada paso —de la cocina a su puerta— en tiempo real. Pruébalo con un local de ejemplo.</p>
+    </div>
+  </section>
+
+  <div class="wrap">
+    <div class="card panel">
+      <div class="tag"><i></i>Demostración · local de ejemplo</div>
+
+      <div class="shop">
+        <div style="display:flex;align-items:center;gap:13px">
+          <span class="si"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 3v7a3 3 0 0 0 6 0V3M7 3v18M17 3c-1.7 0-3 2-3 5s1.3 4 3 4v9"/></svg></span>
+          <div><div class="sn serif">Sabores del Sur</div><div class="sd">Comida casera chilena · abierto ahora</div></div>
+        </div>
+        <div class="sh">
+          <div class="mode" id="mode">
+            <button data-m="retiro"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18M16 10a4 4 0 0 1-8 0"/></svg>Retiro</button>
+            <button class="on" data-m="delivery"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="18" r="2.5"/><circle cx="18" cy="18" r="2.5"/><path d="M8.5 18h7l2-6h-4l-1-4H9"/><path d="M4 8h4"/></svg>Delivery</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Vista pedido -->
+      <div id="orderView">
+        <div class="order">
+          <div>
+            <div class="toolbar">
+              <div class="sb">
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+                <input id="search" placeholder="Buscar en la carta…" aria-label="Buscar plato">
+              </div>
+            </div>
+            <div class="cats" id="cats"></div>
+            <div class="menu" id="menu"></div>
+          </div>
+
+          <aside class="cart">
+            <h3 class="serif"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8h12l-1 12a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2L6 8Z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/></svg>Tu pedido</h3>
+            <div class="cc" id="cartCount">Aún no agregas nada</div>
+            <div id="cartBody"></div>
+          </aside>
+        </div>
+      </div>
+
+      <!-- Vista seguimiento -->
+      <div class="track" id="track">
+        <div class="trk-head">
+          <div>
+            <div class="ol">Pedido</div>
+            <div class="oid serif" id="oid">#0000</div>
+          </div>
+          <div class="eta"><div class="el" id="etaLabel">Llega en</div><div class="ev" id="eta">~35 min</div></div>
+        </div>
+        <div class="progress"><span id="prog"></span></div>
+        <div class="steps" id="steps"></div>
+
+        <div class="trk-items">
+          <h4>Resumen del pedido</h4>
+          <div id="trkItems"></div>
+          <div class="trk-tot"><span>Total</span><span id="trkTot">$0</span></div>
+        </div>
+        <button class="btn btn-primary trk-again" id="again">Hacer otro pedido</button>
+      </div>
+    </div>
+
+    <!-- Beneficios -->
+    <section class="sec">
+      <div class="sec-k">Lo que hace por ti</div>
+      <h2 class="sec-hh serif">Vende directo, sin comisiones de terceros</h2>
+      <div class="bens" id="bens"></div>
+    </section>
+
+    <!-- Contratación -->
+    <section class="hire">
+      <div class="hk">De la demo a tu negocio</div>
+      <h2 class="serif">Esto es una demostración. Al contratar, cargamos TU carta.</h2>
+      <p>Montamos tu carta digital con tus productos, precios y fotos; recibes los pedidos por WhatsApp o panel, cobras en línea y tu cliente sigue su pedido en vivo. Todo <b style="color:#fff">a tu nombre y sin pagar comisión</b> a las apps de delivery.</p>
+      <div class="act">
+        <div class="acts">
+          <h4>Qué se activa al contratar</h4>
+          <ul>
+            <li><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>Tu <b>carta real</b> con productos, precios y fotos.</li>
+            <li><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg><b>Pago en línea</b> y aviso del pedido a tu cocina.</li>
+            <li><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg><b>Seguimiento en vivo</b> para el cliente, retiro o delivery.</li>
+            <li><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>Historial de pedidos y <b>clientes que vuelven</b>.</li>
+          </ul>
+        </div>
+        <div class="hire-cta">
+          <p>Cuéntanos qué vendes y te dejamos tu carta online lista para recibir pedidos.</p>
+          <a class="btn" href="https://grupotriada.cl" target="_blank" rel="noopener">Quiero recibir pedidos online →</a>
+        </div>
+      </div>
+      <div class="hire-note">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 8h.01M11 12h1v4h1"/></svg>
+        El local, la carta y el seguimiento son un ejemplo. Al contratar se cargan tus productos y se conecta el pago y tu cocina reales.
+      </div>
+    </section>
+  </div>
+
+  <footer>
+    <div class="wrap foot">
+      <span class="fb">
+        <svg viewBox="0 0 120 120" width="20" height="20" fill="none" aria-hidden="true">
+          <path d="M26 90 L60 62 L94 90" stroke="#3D6E92" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M26 71 L60 43 L94 71" stroke="#2F8C93" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        Tríada · Consultoría 360
+      </span>
+      <span>Demo · carta y pedido de ejemplo · sin cobros reales</span>
+    </div>
+  </footer>
+
+  <script>
+    var $ = function(id){ return document.getElementById(id); };
+    function esc(s){ return String(s==null?'':s).replace(/[&<>"]/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
+    function svg(p, s){ s = s || 22; return '<svg width="'+s+'" height="'+s+'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+p+'</svg>'; }
+    function clp(n){ return '$' + Math.round(n).toLocaleString('es-CL'); }
+
+    var MENU = [
+      { id:'m1', nom:'Empanada de pino', cat:'Entradas', precio:2500, desc:'Horneada, con carne, cebolla, huevo y aceituna.' },
+      { id:'m2', nom:'Sopaipillas (4u)', cat:'Entradas', precio:2000, desc:'Con pebre casero o chancaca.' },
+      { id:'m3', nom:'Tabla de quesos', cat:'Entradas', precio:8900, desc:'Selección de quesos y fiambres para compartir.' },
+      { id:'m4', nom:'Lomo a lo pobre', cat:'Platos de fondo', precio:9900, desc:'Lomo, papas fritas, huevo frito y cebolla.' },
+      { id:'m5', nom:'Cazuela de vacuno', cat:'Platos de fondo', precio:7500, desc:'Caldo con zapallo, choclo, papa y carne.' },
+      { id:'m6', nom:'Salmón grillado', cat:'Platos de fondo', precio:11500, desc:'Con arroz primavera y salsa de la casa.' },
+      { id:'m7', nom:'Pastel de choclo', cat:'Platos de fondo', precio:8200, desc:'Choclo molido, pino y pollo, al horno.' },
+      { id:'m8', nom:'Chorrillana', cat:'Platos de fondo', precio:12900, desc:'Para compartir: papas, carne, cebolla y huevo.' },
+      { id:'m9', nom:'Bebida lata', cat:'Bebidas', precio:1500, desc:'Línea Coca-Cola, 350 ml.' },
+      { id:'m10', nom:'Jugo natural', cat:'Bebidas', precio:2800, desc:'Frambuesa, mango o maracuyá.' },
+      { id:'m11', nom:'Cerveza artesanal', cat:'Bebidas', precio:3900, desc:'Del sur, 470 ml.' },
+      { id:'m12', nom:'Leche asada', cat:'Postres', precio:3500, desc:'Clásica, con caramelo.' },
+      { id:'m13', nom:'Mote con huesillo', cat:'Postres', precio:2900, desc:'Bien helado, receta de la casa.' },
+      { id:'m14', nom:'Tiramisú', cat:'Postres', precio:4200, desc:'Café, mascarpone y cacao.' }
+    ];
+    var CATS = ['Todo','Entradas','Platos de fondo','Bebidas','Postres'];
+    var DELIVERY = 2500;
+    var cart = {}, filterCat = 'Todo', query = '', modo = 'delivery';
+    var byId = function(id){ return MENU.find(function(m){ return m.id===id; }); };
+    function count(){ var n=0; for (var k in cart) n += cart[k]; return n; }
+    function subtotal(){ var s=0; for (var k in cart) s += byId(k).precio * cart[k]; return s; }
+
+    // ── Beneficios ──────────────────────────────────────────────────────────
+    var BENS = [
+      { ic:'<circle cx="12" cy="12" r="9"/><path d="M15 9.5a3 3 0 0 0-6 0c0 3 6 2 6 5a3 3 0 0 1-6 0"/>', h:'Sin comisiones de terceros', p:'Vendes directo desde tu propia carta. Te quedas con lo que hoy se llevan las apps de delivery en comisión.' },
+      { ic:'<rect x="4" y="2.5" width="16" height="19" rx="2.5"/><path d="M9 6h6M12 18h.01"/>', h:'Pedir es facilísimo', p:'Tu cliente entra, arma su pedido y paga desde el celular en un minuto. Menos llamadas y menos errores de anotación.' },
+      { ic:'<path d="M12 8v4l3 2"/><circle cx="12" cy="12" r="9"/>', h:'Seguimiento en vivo', p:'El cliente ve su pedido avanzar —recibido, en cocina, en camino— y deja de llamar para preguntar “¿ya va?”.' },
+      { ic:'<circle cx="6" cy="18" r="2.5"/><circle cx="18" cy="18" r="2.5"/><path d="M8.5 18h7l2-6h-4l-1-4H9"/>', h:'Retiro o delivery', p:'Ofreces ambos: que retiren en el local o que se lo lleven a la puerta. Tú defines zonas y costo de envío.' },
+      { ic:'<path d="M3 3h2l2.5 13h11l2-8H6"/>', h:'Tu cocina, ordenada', p:'Los pedidos llegan claros a la cocina, en orden y con el detalle. Adiós a los papelitos y al teléfono ocupado.' },
+      { ic:'<path d="M20 6 9 17l-5-5"/><circle cx="12" cy="12" r="10"/>', h:'Clientes que vuelven', p:'Guardas el historial y sabes qué pide cada quien. Promociones y recompra a los que ya te compraron.' }
+    ];
+    $('bens').innerHTML = BENS.map(function(b){
+      return '<div class="ben"><div class="bi">'+svg(b.ic,23)+'</div><h3 class="serif">'+b.h+'</h3><p>'+b.p+'</p></div>';
+    }).join('');
+
+    // ── Modalidad ───────────────────────────────────────────────────────────
+    $('mode').addEventListener('click', function(ev){
+      var b = ev.target.closest('button'); if (!b) return;
+      modo = b.getAttribute('data-m');
+      [].forEach.call(this.children, function(c){ c.classList.toggle('on', c===b); });
+      renderCart();
+    });
+
+    // ── Categorías + búsqueda ───────────────────────────────────────────────
+    $('cats').innerHTML = CATS.map(function(c,i){ return '<button class="cat'+(i===0?' on':'')+'" data-c="'+esc(c)+'">'+esc(c)+'</button>'; }).join('');
+    $('cats').addEventListener('click', function(ev){
+      var b = ev.target.closest('.cat'); if(!b) return; filterCat = b.getAttribute('data-c');
+      [].forEach.call(this.children, function(c){ c.classList.toggle('on', c===b); }); renderMenu();
+    });
+    $('search').addEventListener('input', function(){ query = this.value.toLowerCase().trim(); renderMenu(); });
+
+    // ── Menú ────────────────────────────────────────────────────────────────
+    function renderMenu(){
+      var list = MENU.filter(function(m){
+        if (filterCat!=='Todo' && m.cat!==filterCat) return false;
+        if (query) return (m.nom+' '+m.desc+' '+m.cat).toLowerCase().indexOf(query)!==-1;
+        return true;
+      });
+      if (!list.length){ $('menu').innerHTML = '<div class="empty">No encontramos ese plato en la carta.</div>'; return; }
+      $('menu').innerHTML = list.map(function(m){
+        var inCart = cart[m.id];
+        return '<article class="dish">'
+          + '<div class="dn">'+esc(m.nom)+'</div><div class="dd">'+esc(m.desc)+'</div>'
+          + '<div class="df"><span class="dp">'+clp(m.precio)+'</span>'
+          + '<button class="addb'+(inCart?' in':'')+'" data-add="'+m.id+'">'+(inCart? svg('<path d="M20 6 9 17l-5-5"/>',14)+'Agregado' : svg('<path d="M12 5v14M5 12h14"/>',14)+'Agregar')+'</button>'
+          + '</div></article>';
+      }).join('');
+    }
+    $('menu').addEventListener('click', function(ev){
+      var b = ev.target.closest('[data-add]'); if (!b) return;
+      var id = b.getAttribute('data-add'); cart[id] = (cart[id]||0) + 1;
+      renderMenu(); renderCart();
+    });
+
+    // ── Carrito ─────────────────────────────────────────────────────────────
+    function renderCart(){
+      var n = count();
+      $('cartCount').textContent = n ? (n + (n===1?' producto':' productos')) : 'Aún no agregas nada';
+      if (!n){
+        $('cartBody').innerHTML = '<div class="cart-empty">'+svg('<path d="M6 8h12l-1 12a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2L6 8Z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/>',40)+'<div>Agrega platos de la carta para armar tu pedido.</div></div>';
+        return;
+      }
+      var items = Object.keys(cart).map(function(id){ var m = byId(id); return '<div class="citem"><div><div class="ci-n">'+esc(m.nom)+'</div>'
+        + '<div class="qs"><button data-d="-1" data-id="'+id+'" aria-label="Quitar uno">−</button><span class="qn">'+cart[id]+'</span><button data-d="1" data-id="'+id+'" aria-label="Agregar uno">+</button></div></div>'
+        + '<div class="ci-p">'+clp(m.precio*cart[id])+'</div></div>'; }).join('');
+      var sub = subtotal();
+      var env = modo==='delivery' ? DELIVERY : 0;
+      var envLine = modo==='delivery'
+        ? '<div class="sumline"><span>Envío</span><span>'+clp(env)+'</span></div>'
+        : '<div class="sumline"><span>Retiro en local</span><span class="free">Gratis</span></div>';
+      var tip = '';
+      var hasBebida = Object.keys(cart).some(function(id){ return byId(id).cat==='Bebidas'; });
+      var hasPostre = Object.keys(cart).some(function(id){ return byId(id).cat==='Postres'; });
+      if (!hasBebida) tip = '¿Le sumas una <b>bebida</b>? Combina perfecto con tu pedido.';
+      else if (!hasPostre) tip = 'Un <b>postre</b> para cerrar — la leche asada es la favorita. 😋';
+      $('cartBody').innerHTML = '<div class="citems">'+items+'</div>'
+        + '<div class="sumline"><span>Subtotal</span><span>'+clp(sub)+'</span></div>'
+        + envLine
+        + '<div class="sumline tot"><span>Total</span><span>'+clp(sub+env)+'</span></div>'
+        + (tip ? '<div class="tria-tip">'+svg('<path d="M12 2 4 7v10l8 5 8-5V7l-8-5Z"/>',15)+'<div><b>trIA:</b> '+tip+'</div></div>' : '')
+        + '<button class="btn btn-primary" id="checkout">'+svg('<path d="M6 8h12l-1 12a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2L6 8Z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/>',17)+'Hacer pedido · '+clp(sub+env)+'</button>';
+      $('checkout').addEventListener('click', hacerPedido);
+    }
+    $('cartBody').addEventListener('click', function(ev){
+      var b = ev.target.closest('[data-d]'); if (!b) return;
+      var id = b.getAttribute('data-id');
+      cart[id] = (cart[id]||0) + (+b.getAttribute('data-d'));
+      if (cart[id] <= 0) delete cart[id];
+      renderMenu(); renderCart();
+    });
+
+    // ── Seguimiento en vivo ─────────────────────────────────────────────────
+    var STEPS_D = [
+      { n:'Pedido recibido',  ic:'<path d="M20 6 9 17l-5-5"/>',            msg:'La cocina ya tomó tu pedido. ¡Gracias!' },
+      { n:'En preparación',   ic:'<path d="M4 3v7a3 3 0 0 0 6 0V3M7 3v18M17 3c-1.7 0-3 2-3 5s1.3 4 3 4v9"/>', msg:'Cocinando con cariño… tiempo estimado ~15 min.' },
+      { n:'En camino',        ic:'<circle cx="6" cy="18" r="2"/><circle cx="18" cy="18" r="2"/><path d="M8 18h7l2-6h-4l-1-4H9"/>', msg:'Tu repartidor va en camino 🛵 llega en ~8 min.' },
+      { n:'Entregado',        ic:'<path d="M20 6 9 17l-5-5"/>',            msg:'¡Que lo disfrutes! Gracias por tu pedido. 🎉' }
+    ];
+    var STEPS_R = [
+      { n:'Pedido recibido',   ic:'<path d="M20 6 9 17l-5-5"/>',           msg:'La cocina ya tomó tu pedido. ¡Gracias!' },
+      { n:'En preparación',    ic:'<path d="M4 3v7a3 3 0 0 0 6 0V3M7 3v18M17 3c-1.7 0-3 2-3 5s1.3 4 3 4v9"/>', msg:'Cocinando con cariño… tiempo estimado ~15 min.' },
+      { n:'Listo para retirar',ic:'<path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/>', msg:'¡Listo! Te esperamos en el local para retirar.' },
+      { n:'Retirado',          ic:'<path d="M20 6 9 17l-5-5"/>',           msg:'¡Que lo disfrutes! Gracias por tu pedido. 🎉' }
+    ];
+    var ETAS = ['~35 min','~20 min','~8 min','¡Entregado!'];
+    var ETAS_R = ['~25 min','~15 min','Listo','¡Retirado!'];
+    var trkTimer = null, orderSeq = 2040;
+
+    function hacerPedido(){
+      if (!count()) return;
+      var steps = modo==='delivery' ? STEPS_D : STEPS_R;
+      orderSeq++;
+      $('oid').textContent = '#'+orderSeq;
+      $('etaLabel').textContent = modo==='delivery' ? 'Llega en' : 'Listo en';
+
+      var sub = subtotal(), env = modo==='delivery' ? DELIVERY : 0;
+      $('trkItems').innerHTML = Object.keys(cart).map(function(id){ var m = byId(id);
+        return '<div class="trk-line"><span>'+cart[id]+'× '+esc(m.nom)+'</span><b>'+clp(m.precio*cart[id])+'</b></div>'; }).join('')
+        + (env ? '<div class="trk-line"><span>Envío</span><b>'+clp(env)+'</b></div>' : '<div class="trk-line"><span>Retiro en local</span><b>Gratis</b></div>');
+      $('trkTot').textContent = clp(sub+env);
+
+      $('steps').innerHTML = steps.map(function(s,i){
+        return '<div class="step" data-i="'+i+'"><div class="st-dot">'+svg(s.ic,18)+'</div>'
+          + '<div class="st-body"><div class="st-name">'+s.n+'</div><div class="st-msg" data-msg="'+i+'"></div></div></div>';
+      }).join('');
+
+      $('orderView').style.display = 'none';
+      $('track').classList.add('on');
+      $('track').scrollIntoView({ behavior:'smooth', block:'start' });
+
+      var idx = -1;
+      var etas = modo==='delivery' ? ETAS : ETAS_R;
+      function advance(){
+        idx++;
+        var stepsEl = $('steps').querySelectorAll('.step');
+        stepsEl.forEach(function(el, i){
+          el.classList.toggle('done', i < idx);
+          el.classList.toggle('now', i === idx);
+          if (i === idx) el.querySelector('[data-msg="'+i+'"]').textContent = steps[i].msg;
+        });
+        $('prog').style.width = (idx/(steps.length-1)*100) + '%';
+        $('eta').textContent = etas[Math.min(idx, etas.length-1)];
+        if (idx >= steps.length-1){
+          $('etaLabel').textContent = 'Estado';
+          var last = stepsEl[stepsEl.length-1]; last.classList.remove('now'); last.classList.add('done');
+          return;
+        }
+        trkTimer = setTimeout(advance, 3200);
+      }
+      $('prog').style.width = '0%';
+      setTimeout(advance, 400);
+    }
+
+    $('again').addEventListener('click', function(){
+      if (trkTimer) clearTimeout(trkTimer);
+      cart = {};
+      $('track').classList.remove('on');
+      $('orderView').style.display = '';
+      renderMenu(); renderCart();
+      $('orderView').scrollIntoView({ behavior:'smooth', block:'start' });
+    });
+
+    // ── Arranque ────────────────────────────────────────────────────────────
+    renderMenu(); renderCart();
+  </script>
+</body>
+</html>
