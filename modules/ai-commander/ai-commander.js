@@ -33,6 +33,7 @@ import { PromptBuilderView } from './presentation/prompt-builder.view.js';
 import { HistoryView } from './presentation/history.view.js';
 import { OrquestaView } from './presentation/orquesta.view.js';
 import { ICONS, escHtml, setupNotice } from './presentation/ui.js';
+import { exportProjectZip } from './presentation/project-export.js';
 
 // ── COMPOSITION ROOT — inyección de dependencias (DIP) ───────────────────────
 const audit        = new SupabaseAudit();
@@ -49,7 +50,7 @@ const aiService        = new AIService(promptRepo, responseRepo, registry, audit
 const dashboardService = new DashboardService(projectRepo, taskRepo, promptRepo, responseRepo, audit);
 
 const views = {
-  orquesta:  new OrquestaView(S),
+  orquesta:  new OrquestaView(S, promptService, aiService, projectService),
   dashboard: new DashboardView(dashboardService),
   proyectos: new ProjectsView(projectService, taskService),
   tablero:   new BoardView(projectService, taskService, S),
@@ -217,6 +218,22 @@ function _setupApi() {
     async deleteProject(id) {
       if (!confirm('¿Eliminar el proyecto y todas sus tareas? Esta acción no se puede deshacer.')) return;
       await projectService.remove(id); toast('Proyecto eliminado', 'info'); render();
+    },
+    // Exporta el proyecto (ficha + tareas + sesiones de orquesta guardadas) como carpeta .zip.
+    async exportProject(id) {
+      try {
+        toast('Generando carpeta…', 'info');
+        const detail = await projectService.detail(id);
+        if (!detail) { toast('Proyecto no encontrado', 'error'); return; }
+        const prompts = await promptService.list({ proyectoId: id });
+        const promptsWithResponses = [];
+        for (const p of prompts) {
+          const responses = await aiService.history(p.id);
+          promptsWithResponses.push({ prompt: p, responses });
+        }
+        await exportProjectZip({ project: detail.project, tasks: detail.tasks, progress: detail.progress, promptsWithResponses });
+        toast('Carpeta descargada ✓', 'success');
+      } catch (e) { console.error('exportProject', e); toast(e?.message || 'No se pudo generar la carpeta', 'error'); }
     },
 
     // ── Tareas ──

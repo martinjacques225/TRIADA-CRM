@@ -79,6 +79,17 @@ export class AIService {
     return { id, ...response, message: result.message };
   }
 
+  /**
+   * Guarda una respuesta pegada MANUALMENTE (Mesa de Orquesta): sin llamar a
+   * ninguna API, queda con estado 'completado' en el historial del proyecto.
+   */
+  async saveManualResponse({ promptId, proyectoId = null, provider = null, contenido = '' }) {
+    const response = makeAIResponse({ promptId, proyectoId, provider, estado: 'completado', contenido });
+    const id = await this._responses.create(response);
+    await this._audit.record({ entidad: 'ia', accion: 'ia.respuesta_manual', entidadId: id, payload: { promptId, provider } });
+    return id;
+  }
+
   history(promptId) { return this._responses.listByPrompt(promptId); }
   recent(limit = 50) { return this._responses.listRecent(limit); }
 }

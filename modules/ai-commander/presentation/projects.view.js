@@ -65,6 +65,7 @@ export class ProjectsView {
       <div class="aic-card-actions">
         <button class="btn-action" onclick="window._aic.openBoard('${p.id}')" title="Tablero">${ICONS.board} Tablero</button>
         <button class="btn-action" onclick="window._aic.openProjectModal('${p.id}')" title="Editar">${ICONS.edit}</button>
+        <button class="btn-action" onclick="window._aic.exportProject('${p.id}')" title="Descargar carpeta (.zip)">${ICONS.download}</button>
         <button class="btn-action" onclick="window._aic.archiveProject('${p.id}')" title="Archivar">${ICONS.archive}</button>
         <button class="btn-action" onclick="window._aic.deleteProject('${p.id}')" title="Eliminar">${ICONS.trash}</button>
       </div>
