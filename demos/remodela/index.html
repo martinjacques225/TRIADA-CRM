@@ -398,24 +398,13 @@
             pal:['#EFE2D2','#C08B5C','#9A5B3B','#2B2320'],
             mat:['Muebles de madera tono miel','Cerámica terracota artesanal','Grifería y tiradores negros','Piso de madera tono medio','Iluminación cálida colgante'] }
         ] },
-      { id:'dormitorio', nom:'Dormitorio', ic:'<path d="M2 18v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5"/><path d="M2 18h20M2 14h20"/><path d="M6 11V8.5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1V11"/>', antes:'img/dormitorio-antes.jpg',
-        estilos:[
-          { id:'moderno', nom:'Moderno', tag:'Sereno y minimalista', img:'img/dormitorio-moderno.jpg',
-            plazo:'2–3 semanas', money:'$1.900.000 – $2.800.000',
-            con:'Paleta neutra, respaldo tapizado y textiles impecables. Un dormitorio sereno y ordenado, pensado para descansar de verdad.',
-            pal:['#F4F3F1','#D6D3CE','#B0A99F','#2B2B2B'],
-            mat:['Cama con respaldo tapizado','Piso vinílico símil roble','Veladores flotantes','Cortina traslúcida + blackout','Iluminación indirecta cálida'] },
-          { id:'nordico', nom:'Nórdico', tag:'Lino, madera y calma', img:'img/dormitorio-nordico.jpg',
-            plazo:'2–3 semanas', money:'$2.100.000 – $3.100.000',
-            con:'Maderas claras, ropa de cama de lino y texturas naturales. Un refugio cálido tipo hygge, luminoso y acogedor.',
-            pal:['#FBF7F0','#E7DDCB','#C7B299','#8A9A82'],
-            mat:['Cama y velador de madera clara','Ropa de cama de lino','Alfombra de yute','Lámpara de mimbre','Plantas y textiles tejidos'] },
-          { id:'calido', nom:'Cálido', tag:'Acogedor tipo hotel', img:'img/dormitorio-calido.jpg',
-            plazo:'3–4 semanas', money:'$2.400.000 – $3.500.000',
-            con:'Muro de acento, textiles cálidos y luz de ambiente en tonos dorados. Un dormitorio con aire de hotel boutique, envolvente y premium.',
-            pal:['#EFE6DA','#C57B57','#6B5B45','#3A3026'],
-            mat:['Muro de acento (terracota/verde)','Cama tapizada + textiles cálidos','Velador de madera/ratán','Lámparas de latón','Piso de madera tono medio'] }
-        ] }
+      /* ⏸ Dormitorio fuera del demo por ahora: en el slider el antes/después NO calza (la cama
+         quedó en distinta posición/orientación entre la foto "antes" y las "después", así que
+         "salta" al cruzar el divisor). Para reactivarlo: regenerar los 3 "después" editando
+         dormitorio-antes.jpg con alineación ESTRICTA (mantener la cama EXACTA en su lugar, mismo
+         tamaño y orientación; cambiar solo terminaciones/textiles) y volver a agregar el espacio:
+         { id:'dormitorio', nom:'Dormitorio', antes:'img/dormitorio-antes.jpg', estilos:[
+           {id:'moderno',img:'img/dormitorio-moderno.jpg',...}, {id:'nordico',...}, {id:'calido',...} ] } */
     ];
     var spc = 0, sty = 0;
     function space(){ return SPACES[spc]; }
