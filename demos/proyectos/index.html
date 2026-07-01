@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="es-CL">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0C1B26">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta name="description" content="Gestión de Proyectos con trIA — Tríada. Un tablero para que tus proyectos avancen a la vista de todos: tareas, responsables y estados, con un resumen de avance de trIA. Pruébalo moviendo las tarjetas.">
+  <title>Tríada · Gestión de Proyectos con trIA</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Spectral:ital,wght@0,400;0,500;0,600;0,700;1,500&family=Hanken+Grotesk:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --paper:#FBF9F3; --cream:#F4F1E9; --cream-2:#EFEBDF;
+      --ink:#14222E; --body:#46555F; --muted:#6B7780; --faint:#8A90A3;
+      --line:#E5DFD0; --petrol:#0C1B26; --petrol-2:#16466B;
+      --teal:#1C7A82; --teal-2:#2F8C93; --teal-l:#E6F1F0;
+      --green:#5E9E7E; --green-l:#EAF3EC; --amber:#C2871A; --amber-l:#F6EFDC; --red:#B4524A; --red-l:#F6E9E7;
+      --serif:'Spectral',Georgia,serif; --sans:'Hanken Grotesk',system-ui,-apple-system,sans-serif;
+    }
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:var(--sans);background:var(--paper);color:var(--ink);line-height:1.5;-webkit-font-smoothing:antialiased}
+    .wrap{max-width:1060px;margin:0 auto;padding:0 20px}
+    .serif{font-family:var(--serif)}
+
+    header{background:var(--petrol);color:#fff}
+    .hd{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:16px 0}
+    .brand{display:flex;align-items:center;gap:11px;font-family:var(--serif);font-size:21px;font-weight:600;letter-spacing:.04em}
+    .badge{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--teal-2);border:1px solid rgba(127,208,204,.4);border-radius:999px;padding:5px 12px;white-space:nowrap}
+
+    .hero{background:radial-gradient(120% 100% at 85% 0%,#15384a 0%,#0C1B26 55%,#0A1620 100%);color:#fff;padding:44px 0 66px}
+    .kick{font-size:12px;font-weight:700;letter-spacing:.28em;text-transform:uppercase;color:var(--teal-2);margin-bottom:16px}
+    .hero h1{font-family:var(--serif);font-size:clamp(30px,6vw,52px);font-weight:600;line-height:1.04;letter-spacing:-.01em;max-width:16ch}
+    .hero p{margin-top:16px;font-size:clamp(15px,2.4vw,18px);color:rgba(234,229,216,.82);max-width:56ch}
+
+    .card{background:#fff;border:1px solid var(--line);border-radius:18px;box-shadow:0 20px 40px -30px rgba(12,27,38,.4)}
+    .demo-panel{margin-top:-40px;position:relative;z-index:2;padding:20px 20px 24px}
+    .demo-tag{display:inline-flex;align-items:center;gap:7px;font-size:12px;font-weight:700;color:var(--teal);background:var(--teal-l);border-radius:999px;padding:5px 12px;margin-bottom:16px}
+    .demo-tag i{width:7px;height:7px;border-radius:50%;background:var(--teal);animation:blink 1.6s ease-in-out infinite}
+    @keyframes blink{0%,100%{opacity:1}50%{opacity:.35}}
+
+    /* Cabecera del proyecto */
+    .proj{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:14px}
+    .proj .pn{font-family:var(--serif);font-size:19px;font-weight:600;color:var(--ink)}
+    .proj .team{display:flex;margin-left:auto}
+    .proj .team .av{width:30px;height:30px;border-radius:50%;border:2px solid #fff;margin-left:-8px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:#fff}
+    .prog{display:flex;align-items:center;gap:12px;margin-bottom:14px}
+    .prog .ptrack{flex:1;height:9px;background:var(--cream-2);border-radius:999px;overflow:hidden}
+    .prog .pfill{height:100%;background:linear-gradient(90deg,var(--teal),var(--green));border-radius:999px;width:0;transition:width .7s cubic-bezier(.4,0,.2,1)}
+    .prog .pv{font-family:var(--serif);font-weight:600;font-size:15px;color:var(--ink);white-space:nowrap;font-variant-numeric:tabular-nums}
+
+    /* trIA resumen */
+    .tria{display:flex;align-items:center;gap:13px;border:1px solid var(--line);border-radius:14px;padding:13px 16px;background:linear-gradient(120deg,var(--teal-l),#F3F7F2);margin-bottom:16px}
+    .tria .ti{width:36px;height:36px;flex:none;border-radius:10px;background:var(--petrol);color:#fff;display:flex;align-items:center;justify-content:center}
+    .tria .tk{font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--teal)}
+    .tria .tm{font-size:13.5px;color:var(--body);line-height:1.45;margin-top:2px}
+    .tria .tm b{color:var(--ink)}
+
+    /* Tablero */
+    .board{display:flex;gap:14px;overflow-x:auto;padding-bottom:6px;-webkit-overflow-scrolling:touch;scrollbar-width:thin}
+    .board::-webkit-scrollbar{height:8px}.board::-webkit-scrollbar-thumb{background:var(--cream-2);border-radius:9px}
+    .col{flex:none;width:255px;background:var(--cream);border:1px solid var(--line);border-radius:14px;padding:11px;display:flex;flex-direction:column;transition:background .15s,box-shadow .15s}
+    .col.drag{background:var(--teal-l);box-shadow:inset 0 0 0 2px var(--teal-2)}
+    .col-h{display:flex;align-items:center;gap:8px;padding:3px 5px 11px}
+    .col-h .cn{font-size:12.5px;font-weight:700;letter-spacing:.03em;text-transform:uppercase;color:var(--body)}
+    .col-h .dotc{width:8px;height:8px;border-radius:50%}
+    .col-h .cc{font-size:11.5px;font-weight:700;color:var(--muted);background:#fff;border:1px solid var(--line);border-radius:999px;padding:1px 8px}
+    .col-list{display:flex;flex-direction:column;gap:9px;min-height:20px}
+    .kc{background:#fff;border:1px solid var(--line);border-radius:11px;padding:11px 12px;box-shadow:0 4px 10px -8px rgba(12,27,38,.4);cursor:grab;animation:fade .25s ease}
+    @keyframes fade{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}
+    .kc:active{cursor:grabbing}
+    .kc.dragging{opacity:.4}
+    .kc-top{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+    .prio{font-size:10px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;border-radius:999px;padding:2px 8px}
+    .prio.alta{color:var(--red);background:var(--red-l)} .prio.media{color:var(--amber);background:var(--amber-l)} .prio.baja{color:var(--teal);background:var(--teal-l)}
+    .kc-top .moves{margin-left:auto;display:flex;gap:2px}
+    .kc-top .moves button{width:22px;height:22px;border:1px solid var(--line);background:#fff;border-radius:6px;color:var(--muted);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .12s,color .12s}
+    .kc-top .moves button:hover:not(:disabled){background:var(--teal-l);color:var(--teal)}
+    .kc-top .moves button:disabled{opacity:.3;cursor:default}
+    .kc-title{font-size:13.5px;font-weight:600;color:var(--ink);line-height:1.3}
+    .kc-foot{display:flex;align-items:center;gap:8px;margin-top:10px}
+    .av{width:24px;height:24px;flex:none;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;color:#fff}
+    .kc-foot .who{font-size:11.5px;color:var(--muted)}
+    .due{margin-left:auto;font-size:11px;font-weight:600;color:var(--muted);display:inline-flex;align-items:center;gap:4px}
+    .due.late{color:var(--red)} .due.today{color:var(--amber)}
+    .addbox{display:flex;gap:7px;margin-top:9px}
+    .addbox input{flex:1;font-family:var(--sans);font-size:13px;color:var(--ink);background:#fff;border:1px solid var(--line);border-radius:8px;padding:8px 10px}
+    .addbox input:focus{outline:none;border-color:var(--teal)}
+    .addbox button{border:none;background:var(--teal);color:#fff;border-radius:8px;width:34px;font-size:18px;font-weight:700;cursor:pointer}
+    .hint{font-size:11.5px;color:var(--faint);margin-top:12px;display:flex;align-items:center;gap:6px}
+    .hint svg{color:var(--teal-2);flex:none}
+
+    /* Beneficios */
+    .sec{padding:52px 0 8px}
+    .sec-k{font-size:12px;font-weight:700;letter-spacing:.22em;text-transform:uppercase;color:var(--teal);text-align:center}
+    .sec-h{font-family:var(--serif);font-size:clamp(24px,4vw,34px);font-weight:600;text-align:center;margin-top:10px;max-width:22ch;margin-inline:auto;line-height:1.1}
+    .bens{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:32px}
+    .ben{border:1px solid var(--line);border-radius:16px;padding:22px;background:#fff;transition:transform .16s,box-shadow .16s}
+    .ben:hover{transform:translateY(-2px);box-shadow:0 20px 34px -26px rgba(12,27,38,.5)}
+    .ben .bi{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;color:var(--teal);background:var(--teal-l);margin-bottom:14px}
+    .ben h3{font-family:var(--serif);font-size:18px;font-weight:600;color:var(--ink)}
+    .ben p{font-size:13.5px;color:var(--body);line-height:1.55;margin-top:8px}
+
+    /* Contratación */
+    .hire{margin:56px 0 10px;background:linear-gradient(140deg,var(--petrol),#143a4a);color:#fff;border-radius:22px;padding:clamp(28px,5vw,44px);position:relative;overflow:hidden}
+    .hire::after{content:"";position:absolute;right:-80px;top:-80px;width:280px;height:280px;border-radius:50%;background:radial-gradient(circle,rgba(47,140,147,.35),transparent 70%)}
+    .hire .hk{font-size:12px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:var(--teal-2)}
+    .hire h2{font-family:var(--serif);font-size:clamp(23px,4vw,32px);font-weight:600;margin:12px 0 12px;max-width:24ch;line-height:1.12;position:relative}
+    .hire p{font-size:15px;color:rgba(234,229,216,.82);max-width:60ch;line-height:1.6;position:relative}
+    .hire .act{display:grid;grid-template-columns:1.1fr 1fr;gap:26px;margin-top:26px;position:relative}
+    .acts h4{font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--teal-2);margin-bottom:14px}
+    .acts ul{list-style:none;display:flex;flex-direction:column;gap:12px}
+    .acts li{display:flex;gap:11px;font-size:14px;color:rgba(234,229,216,.92);line-height:1.45}
+    .acts li svg{color:#7FE7A6;flex:none;margin-top:2px}
+    .hire-cta{align-self:center;background:rgba(255,255,255,.05);border:1px solid rgba(127,208,204,.28);border-radius:16px;padding:22px;text-align:center}
+    .hire-cta p{font-size:13.5px;color:rgba(234,229,216,.85);margin-bottom:16px;max-width:none}
+    .hire-cta .btn{width:100%;background:var(--teal);color:#fff;border:none;border-radius:12px;padding:14px 22px;font-family:var(--sans);font-size:15px;font-weight:700;cursor:pointer;box-shadow:0 10px 24px -12px var(--teal);text-decoration:none;display:inline-flex;align-items:center;justify-content:center;gap:8px;transition:transform .12s}
+    .hire-cta .btn:hover{transform:translateY(-1px)}
+    .hire-note{margin-top:16px;font-size:12px;color:rgba(234,229,216,.6);display:flex;gap:8px;align-items:flex-start;position:relative}
+    .hire-note svg{flex:none;margin-top:1px;color:var(--teal-2)}
+
+    footer{border-top:1px solid var(--line);margin-top:48px;padding:26px 0;color:var(--faint);font-size:12.5px}
+    .foot{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px}
+    .foot .fb{display:flex;align-items:center;gap:9px;font-family:var(--serif);font-weight:600;color:var(--muted)}
+
+    @media (max-width:760px){ .bens{grid-template-columns:1fr 1fr} .hire .act{grid-template-columns:1fr;gap:20px} }
+    @media (max-width:520px){ .bens{grid-template-columns:1fr} .demo-panel{padding:16px 14px 20px} .col{width:80vw} }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="wrap hd">
+      <span class="brand">
+        <svg viewBox="0 0 120 120" width="30" height="30" fill="none" aria-hidden="true">
+          <path d="M26 90 L60 62 L94 90" stroke="#fff" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M26 73 L60 45 L94 73" stroke="#2F8C93" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M26 56 L60 28 L94 56" stroke="#6BA083" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        Tríada
+      </span>
+      <span class="badge"><span style="text-transform:none">trIA</span> · Proyectos</span>
+    </div>
+  </header>
+
+  <section class="hero">
+    <div class="wrap">
+      <div class="kick">Proyectos IA · Tríada</div>
+      <h1 class="serif">Tus proyectos avanzando, a la vista de todos.</h1>
+      <p>Un tablero donde cada tarea tiene su responsable y su estado, y nada se pierde en el chat. trIA vigila el avance y te avisa qué está trabado. Pruébalo: arrastra las tarjetas entre columnas.</p>
+    </div>
+  </section>
+
+  <div class="wrap">
+    <div class="card demo-panel">
+      <div class="demo-tag"><i></i>Demostración · proyecto de ejemplo</div>
+
+      <div class="proj">
+        <span class="pn" id="projName">Lanzamiento Tienda Online</span>
+        <span class="team" id="team"></span>
+      </div>
+      <div class="prog">
+        <span class="ptrack"><span class="pfill" id="pfill"></span></span>
+        <span class="pv" id="pv">0%</span>
+      </div>
+
+      <div class="tria" id="tria"></div>
+
+      <div class="board" id="board"></div>
+
+      <div class="hint">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M5 9l-3 3 3 3M9 5l3-3 3 3M15 19l-3 3-3-3M19 9l3 3-3 3M2 12h20M12 2v20"/></svg>
+        Arrastra las tarjetas entre columnas (o usa las flechas ‹ ›). El avance y el resumen de trIA se actualizan solos.
+      </div>
+    </div>
+
+    <!-- Beneficios -->
+    <section class="sec">
+      <div class="sec-k">Lo que hace por ti</div>
+      <h2 class="sec-h serif">Que nada se pierda “en el grupo de WhatsApp”</h2>
+      <div class="bens" id="bens"></div>
+    </section>
+
+    <!-- Contratación -->
+    <section class="hire">
+      <div class="hk">De la demo a tu negocio</div>
+      <h2 class="serif">Esto es una demostración. Al contratar, ordenamos TUS proyectos.</h2>
+      <p>Armamos tus tableros con tus proyectos, tu equipo y tus etapas. Cada quien sabe qué le toca, tú ves el avance real sin preguntar, y trIA te avisa lo que se está atrasando <b style="color:#fff">antes</b> de que sea un problema.</p>
+      <div class="act">
+        <div class="acts">
+          <h4>Qué se activa al contratar</h4>
+          <ul>
+            <li><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>Tus <b>proyectos y tu equipo</b> reales, con permisos.</li>
+            <li><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>Tareas con <b>responsable, plazo y prioridad</b>, y notificaciones.</li>
+            <li><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg><b>Avance en vivo</b> y alertas de trIA de lo atrasado.</li>
+            <li><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>Se integra con tu <b>CRM y tus documentos</b> de Tríada.</li>
+          </ul>
+        </div>
+        <div class="hire-cta">
+          <p>Cuéntanos qué proyectos quieres ordenar y armamos tu tablero.</p>
+          <a class="btn" href="https://grupotriada.cl" target="_blank" rel="noopener">Quiero ordenar mis proyectos →</a>
+        </div>
+      </div>
+      <div class="hire-note">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 8h.01M11 12h1v4h1"/></svg>
+        El proyecto, las tareas y el equipo son un ejemplo editable. Al contratar se cargan con tus proyectos y tu gente.
+      </div>
+    </section>
+  </div>
+
+  <footer>
+    <div class="wrap foot">
+      <span class="fb">
+        <svg viewBox="0 0 120 120" width="20" height="20" fill="none" aria-hidden="true">
+          <path d="M26 90 L60 62 L94 90" stroke="#3D6E92" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M26 71 L60 43 L94 71" stroke="#2F8C93" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        Tríada · Consultoría 360
+      </span>
+      <span>Demo · proyecto de ejemplo · al contratar se carga con tus proyectos reales</span>
+    </div>
+  </footer>
+
+  <script>
+    var $ = function(id){ return document.getElementById(id); };
+    function esc(s){ return String(s==null?'':s).replace(/[&<>"]/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
+    function svg(p, s){ s = s || 22; return '<svg width="'+s+'" height="'+s+'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+p+'</svg>'; }
+    function triaMark(s){ return '<svg width="'+s+'" height="'+s+'" viewBox="0 0 120 120" fill="none" aria-hidden="true"><path d="M30 82 L60 58 L90 82" stroke="currentColor" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/><path d="M30 66 L60 42 L90 66" stroke="currentColor" stroke-width="11" stroke-linecap="round" stroke-linejoin="round" opacity=".55"/></svg>'; }
+
+    // ── Equipo ──────────────────────────────────────────────────────────────
+    var TEAM = {
+      C:{ n:'Camila', c:'#1C7A82' }, R:{ n:'Rodrigo', c:'#8A3B4C' },
+      J:{ n:'Jeinny', c:'#2E6E4E' }, M:{ n:'Martín', c:'#B5852A' }, '·':{ n:'Sin asignar', c:'#8A90A3' }
+    };
+    // ── Columnas ────────────────────────────────────────────────────────────
+    var COLS = [
+      { id:'todo', nom:'Por hacer', c:'#8A90A3' },
+      { id:'doing', nom:'En progreso', c:'#C2871A' },
+      { id:'review', nom:'En revisión', c:'#16466B' },
+      { id:'done', nom:'Listo', c:'#5E9E7E' }
+    ];
+    // ── Tareas (sembradas) ──────────────────────────────────────────────────
+    var TASKS = [
+      { id:'t1', col:'todo', title:'Sacar fotos de los productos', who:'J', prio:'alta', due:'Atrasada', lateFlag:true },
+      { id:'t2', col:'todo', title:'Redactar términos y condiciones', who:'M', prio:'media', due:'8 jul' },
+      { id:'t3', col:'todo', title:'Configurar medios de pago (Webpay)', who:'R', prio:'alta', due:'10 jul' },
+      { id:'t4', col:'doing', title:'Cargar el catálogo al sitio', who:'C', prio:'alta', due:'Vence hoy', todayFlag:true },
+      { id:'t5', col:'doing', title:'Diseñar los banners de la home', who:'J', prio:'media', due:'9 jul' },
+      { id:'t6', col:'review', title:'Revisar textos de la portada', who:'M', prio:'baja', due:'7 jul' },
+      { id:'t7', col:'done', title:'Comprar el dominio', who:'R', prio:'media', due:'' },
+      { id:'t8', col:'done', title:'Elegir la plantilla de la tienda', who:'C', prio:'baja', due:'' }
+    ];
+    var seq = 100;
+
+    // ── Beneficios ──────────────────────────────────────────────────────────
+    var BENS = [
+      { ic:'<rect x="3" y="4.5" width="18" height="15" rx="2.5"/><path d="M7 9h4v7H7zM14 9h3v4h-3z"/>', h:'Todo en un tablero', p:'Cada tarea con su responsable, su plazo y su estado. Se ve de un vistazo quién hace qué y cómo va la cosa.' },
+      { ic:'<path d="M30 84 L60 60 L90 84"/>', raw:true, h:'trIA vigila el avance', p:'Te dice el % de avance, qué está atrasado y dónde está el cuello de botella — sin que armes ningún reporte.' },
+      { ic:'<circle cx="9" cy="8" r="3.2"/><path d="M3.5 19c0-3 2.5-5 5.5-5s5.5 2 5.5 5"/><path d="M16 6.5a3 3 0 0 1 0 5.5"/>', h:'Cada quien sabe qué le toca', p:'Se acabó el “pensé que lo hacías tú”. Cada persona ve sus tareas y nadie se pisa ni se olvida.' },
+      { ic:'<path d="M10.3 3.2 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.2a2 2 0 0 0-3.4 0Z"/><path d="M12 9v4M12 17h.01"/>', h:'Alertas de lo atrasado', p:'Los plazos vencidos saltan a la vista y trIA te avisa, para que reacciones antes de que se te caiga el proyecto.' },
+      { ic:'<path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>', h:'Menos reuniones de estado', p:'El tablero responde “¿cómo vamos?” solo. Dejas de perder horas en reuniones para saber en qué está cada cosa.' },
+      { ic:'<rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/>', h:'Se conecta con tu Tríada', p:'Tus proyectos junto a tu CRM, tus documentos y tu equipo. Todo tu negocio conversando en un solo lugar.' }
+    ];
+    $('bens').innerHTML = BENS.map(function(b){
+      var icon = b.raw ? '<svg width="23" height="23" viewBox="0 0 120 120" fill="none" stroke="currentColor" stroke-width="10" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M30 84 L60 60 L90 84"/><path d="M30 68 L60 44 L90 68"/></svg>' : svg(b.ic,23);
+      return '<div class="ben"><div class="bi">'+icon+'</div><h3 class="serif">'+b.h+'</h3><p>'+b.p+'</p></div>';
+    }).join('');
+
+    // Equipo (avatares)
+    $('team').innerHTML = ['C','R','J','M'].map(function(k){ return '<span class="av" style="background:'+TEAM[k].c+'" title="'+TEAM[k].n+'">'+k+'</span>'; }).join('');
+
+    // ── Helpers ─────────────────────────────────────────────────────────────
+    function colIndex(id){ for (var i=0;i<COLS.length;i++) if (COLS[i].id===id) return i; return 0; }
+    function tasksIn(col){ return TASKS.filter(function(t){ return t.col===col; }); }
+    function byId(id){ return TASKS.find(function(t){ return t.id===id; }); }
+
+    // ── Progreso + trIA ─────────────────────────────────────────────────────
+    function renderProgress(){
+      var done = tasksIn('done').length, pct = TASKS.length? Math.round(done/TASKS.length*100):0;
+      $('pfill').style.width = pct+'%'; $('pv').textContent = pct+'% · '+done+'/'+TASKS.length;
+    }
+    function renderTria(){
+      var done = tasksIn('done').length, pct = TASKS.length? Math.round(done/TASKS.length*100):0;
+      var late = TASKS.filter(function(t){ return t.lateFlag && t.col!=='done'; }).length;
+      var altaTodo = TASKS.filter(function(t){ return t.prio==='alta' && t.col==='todo'; }).length;
+      // cuello de botella = columna intermedia con más tareas
+      var mid = ['doing','review'].map(function(c){ return { c:c, n:tasksIn(c).length }; }).sort(function(a,b){ return b.n-a.n; })[0];
+      var midNom = COLS[colIndex(mid.c)].nom;
+      var msg;
+      if (pct===100){ msg = '<b>¡Proyecto terminado! 🎉</b> Las '+TASKS.length+' tareas están en Listo. Buen trabajo del equipo.'; }
+      else {
+        msg = 'El proyecto va al <b>'+pct+'%</b> ('+done+' de '+TASKS.length+' tareas). '
+          + (late? 'Hay <b>'+late+' tarea'+(late>1?'s':'')+' atrasada'+(late>1?'s':'')+'</b> que urge destrabar. ' : '')
+          + (altaTodo? '<b>'+altaTodo+'</b> de prioridad alta aún sin empezar. ' : '')
+          + 'El foco ahora está en <b>'+midNom+'</b>.';
+      }
+      $('tria').innerHTML = '<span class="ti">'+triaMark(19)+'</span>'
+        + '<div class="tt"><div class="tk">trIA · estado del proyecto</div><div class="tm">'+msg+'</div></div>';
+    }
+
+    // ── Render tablero ──────────────────────────────────────────────────────
+    function cardHtml(t){
+      var ci = colIndex(t.col), m = TEAM[t.who]||TEAM['·'];
+      var dueCls = t.lateFlag?' late':(t.todayFlag?' today':'');
+      var dueHtml = t.due? '<span class="due'+dueCls+'">'+svg('<circle cx="12" cy="12" r="9"/><path d="M12 8v4l3 2"/>',12)+esc(t.due)+'</span>' : '';
+      return '<div class="kc" draggable="true" data-id="'+t.id+'">'
+        + '<div class="kc-top"><span class="prio '+t.prio+'">'+t.prio+'</span>'
+        +   '<span class="moves"><button data-mv="-1" '+(ci===0?'disabled':'')+' aria-label="Mover a la izquierda">‹</button>'
+        +   '<button data-mv="1" '+(ci===COLS.length-1?'disabled':'')+' aria-label="Mover a la derecha">›</button></span></div>'
+        + '<div class="kc-title">'+esc(t.title)+'</div>'
+        + '<div class="kc-foot"><span class="av" style="background:'+m.c+'">'+t.who+'</span><span class="who">'+m.n+'</span>'+dueHtml+'</div>'
+        + '</div>';
+    }
+    function renderBoard(){
+      $('board').innerHTML = COLS.map(function(col){
+        var list = tasksIn(col.id);
+        var add = col.id==='todo' ? '<div class="addbox"><input id="addInput" placeholder="Nueva tarea…" maxlength="60"><button id="addBtn" aria-label="Agregar">+</button></div>' : '';
+        return '<div class="col" data-col="'+col.id+'"><div class="col-h"><span class="dotc" style="background:'+col.c+'"></span>'
+          + '<span class="cn">'+col.nom+'</span><span class="cc">'+list.length+'</span></div>'
+          + '<div class="col-list" data-drop="'+col.id+'">'+list.map(cardHtml).join('')+'</div>'+add+'</div>';
+      }).join('');
+      wireDnD();
+      var ai=$('addInput'), ab=$('addBtn');
+      if (ab){ ab.addEventListener('click', addTask); ai.addEventListener('keydown', function(e){ if(e.key==='Enter') addTask(); }); }
+    }
+    function moveTask(id, delta){ var t=byId(id); var ci=colIndex(t.col)+delta; if(ci<0||ci>=COLS.length) return; t.col=COLS[ci].id; renderAll(); }
+    function addTask(){ var i=$('addInput'); var v=(i.value||'').trim(); if(!v) return;
+      TASKS.push({ id:'n'+(seq++), col:'todo', title:v, who:'·', prio:'media', due:'' }); renderAll();
+      var ni=$('addInput'); if(ni){ ni.focus(); } }
+
+    $('board').addEventListener('click', function(ev){
+      var mv=ev.target.closest('[data-mv]'); if(!mv) return; var kc=ev.target.closest('.kc'); moveTask(kc.getAttribute('data-id'), +mv.getAttribute('data-mv'));
+    });
+
+    // Drag & drop (escritorio)
+    var dragId=null;
+    function wireDnD(){
+      document.querySelectorAll('.kc').forEach(function(kc){
+        kc.addEventListener('dragstart', function(e){ dragId=kc.getAttribute('data-id'); kc.classList.add('dragging'); try{e.dataTransfer.setData('text/plain',dragId);e.dataTransfer.effectAllowed='move';}catch(_){} });
+        kc.addEventListener('dragend', function(){ kc.classList.remove('dragging'); dragId=null; document.querySelectorAll('.col').forEach(function(c){c.classList.remove('drag');}); });
+      });
+      document.querySelectorAll('.col').forEach(function(col){
+        col.addEventListener('dragover', function(e){ e.preventDefault(); col.classList.add('drag'); if(e.dataTransfer)e.dataTransfer.dropEffect='move'; });
+        col.addEventListener('dragleave', function(e){ if(e.target===col) col.classList.remove('drag'); });
+        col.addEventListener('drop', function(e){ e.preventDefault(); col.classList.remove('drag');
+          var id=dragId||(e.dataTransfer&&e.dataTransfer.getData('text/plain')); if(!id) return;
+          var t=byId(id); if(t && t.col!==col.getAttribute('data-col')){ t.col=col.getAttribute('data-col'); renderAll(); } });
+      });
+    }
+
+    function renderAll(){ renderBoard(); renderProgress(); renderTria(); }
+    // Arranque
+    renderAll();
+  </script>
+</body>
+</html>

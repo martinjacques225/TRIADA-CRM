@@ -83,6 +83,16 @@ const DEMOS = [
     grad: ['#2F8C93', 'var(--navy)'],
   },
   {
+    id: 'proyectos',
+    nombre: 'Gestión de Proyectos',
+    tagline: 'Tablero kanban con avance de trIA',
+    desc: 'Un tablero para que tus proyectos avancen a la vista de todos: tareas con responsable, prioridad y plazo, en columnas Por hacer → En progreso → En revisión → Listo. Arrastra las tarjetas y mira el avance y el resumen de trIA actualizarse. Demo sin backend.',
+    chips: ['Kanban', 'Tareas', 'Avance', 'Resumen trIA'],
+    url: '../demos/proyectos/',
+    icon: 'kanban',
+    grad: ['#3E6E8E', 'var(--navy)'],
+  },
+  {
     id: 'auditor',
     nombre: 'Auditor de Imagen',
     tagline: 'Cómo te ve un cliente antes de que hables',
