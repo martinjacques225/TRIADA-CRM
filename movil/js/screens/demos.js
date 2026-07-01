@@ -123,6 +123,16 @@ const DEMOS = [
     grad: ['#6B5B95', 'var(--navy)'],
   },
   {
+    id: 'compras',
+    nombre: 'Gestión de Compras',
+    tagline: 'A quién comprar, no solo lo más barato',
+    desc: 'Sube tus cotizaciones y trIA las compara por precio, plazo, garantía y reputación, te muestra el precio de mercado y recomienda al proveedor que más conviene. Cambia la cantidad, agrega una cotización y mira el ahorro y la recomendación actualizarse en vivo. Demo con una compra de ejemplo.',
+    chips: ['Cotizaciones', 'Precio de mercado', 'Ahorro', 'Recomienda trIA'],
+    url: '../demos/compras/',
+    icon: 'tag',
+    grad: ['#2F7E6B', 'var(--navy)'],
+  },
+  {
     id: 'auditor',
     nombre: 'Auditor de Imagen',
     tagline: 'Cómo te ve un cliente antes de que hables',
