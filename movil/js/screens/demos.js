@@ -103,6 +103,16 @@ const DEMOS = [
     grad: ['#3D7E8C', 'var(--navy)'],
   },
   {
+    id: 'documental',
+    nombre: 'Centro Documental',
+    tagline: 'Tus documentos, con acceso por rol',
+    desc: 'Contratos, manuales, facturas y certificaciones en un solo lugar, con permisos por rol: cambia entre Administración, RRHH, Finanzas y Colaborador y mira cómo la bóveda reserva lo confidencial de cada área. Busca, filtra, abre y sube documentos. Demo con datos de ejemplo.',
+    chips: ['Permisos por rol', 'Buscar', 'Categorías', 'Subir'],
+    url: '../demos/documental/',
+    icon: 'lock',
+    grad: ['#4A5D7E', 'var(--navy)'],
+  },
+  {
     id: 'auditor',
     nombre: 'Auditor de Imagen',
     tagline: 'Cómo te ve un cliente antes de que hables',
