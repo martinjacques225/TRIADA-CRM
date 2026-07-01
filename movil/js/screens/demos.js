@@ -13,6 +13,16 @@ const e = escHtml;
 // que servimos nosotros, o absoluta si algún día una vive en otro dominio.
 const DEMOS = [
   {
+    id: 'fugas',
+    nombre: 'Detección de Fugas',
+    tagline: 'Descubre dónde se te va la plata',
+    desc: 'trIA lee los números de un negocio (compras, ventas, gastos, operación) y detecta sobrecostos, mermas, horas perdidas y gastos hormiga: cuánto se fuga al mes y cómo cerrarlo. Demo con una empresa de ejemplo.',
+    chips: ['Sobrecostos', 'Mermas', 'Horas perdidas', 'Gastos hormiga'],
+    url: '../demos/fugas/',
+    icon: 'trending',
+    grad: ['var(--teal)', 'var(--navy)'],
+  },
+  {
     id: 'restaurant',
     nombre: 'CRM de Restaurantes',
     tagline: 'Operación completa en 4 roles',

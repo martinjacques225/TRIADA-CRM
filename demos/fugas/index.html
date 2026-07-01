@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="es-CL">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0C1B26">
+  <meta name="description" content="Detección de Fugas con trIA — Tríada. Sube tus datos y descubre dónde se te va la plata: sobrecostos, mermas, horas perdidas y más.">
+  <title>Tríada · Detección de Fugas con trIA</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Spectral:ital,wght@0,400;0,500;0,600;0,700;1,500&family=Hanken+Grotesk:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --paper:#FBF9F3; --cream:#F4F1E9; --cream-2:#EFEBDF;
+      --ink:#14222E; --body:#46555F; --muted:#6B7780; --faint:#8A90A3;
+      --line:#E5DFD0; --petrol:#0C1B26; --petrol-2:#16466B;
+      --teal:#1C7A82; --teal-2:#2F8C93; --teal-l:#E6F1F0;
+      --green:#5E9E7E; --amber:#C2871A; --red:#B4524A;
+      --serif:'Spectral',Georgia,serif; --sans:'Hanken Grotesk',system-ui,-apple-system,sans-serif;
+    }
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:var(--sans);background:var(--paper);color:var(--ink);line-height:1.5;-webkit-font-smoothing:antialiased}
+    .wrap{max-width:920px;margin:0 auto;padding:0 20px}
+    .serif{font-family:var(--serif)}
+
+    /* Header */
+    header{background:var(--petrol);color:#fff}
+    .hd{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:16px 0}
+    .brand{display:flex;align-items:center;gap:11px;font-family:var(--serif);font-size:21px;font-weight:600;letter-spacing:.04em}
+    .badge{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--teal-2);border:1px solid rgba(127,208,204,.4);border-radius:999px;padding:5px 12px;white-space:nowrap}
+
+    /* Hero */
+    .hero{background:radial-gradient(120% 100% at 85% 0%,#15384a 0%,#0C1B26 55%,#0A1620 100%);color:#fff;padding:44px 0 54px}
+    .kick{font-size:12px;font-weight:700;letter-spacing:.28em;text-transform:uppercase;color:var(--teal-2);margin-bottom:16px}
+    .hero h1{font-family:var(--serif);font-size:clamp(30px,6vw,52px);font-weight:600;line-height:1.04;letter-spacing:-.01em;max-width:16ch}
+    .hero p{margin-top:16px;font-size:clamp(15px,2.4vw,18px);color:rgba(234,229,216,.82);max-width:52ch}
+
+    /* Card empresa de ejemplo */
+    .card{background:#fff;border:1px solid var(--line);border-radius:18px;box-shadow:0 20px 40px -30px rgba(12,27,38,.4)}
+    .demo-panel{margin-top:-34px;position:relative;z-index:2;padding:22px}
+    .demo-tag{display:inline-flex;align-items:center;gap:7px;font-size:12px;font-weight:700;color:var(--teal);background:var(--teal-l);border-radius:999px;padding:5px 12px;margin-bottom:14px}
+    .demo-tag i{width:7px;height:7px;border-radius:50%;background:var(--teal)}
+    .emp-name{font-family:var(--serif);font-size:22px;font-weight:600}
+    .emp-sub{font-size:13px;color:var(--muted);margin-top:2px}
+    .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:18px}
+    .kpi{background:var(--cream);border:1px solid var(--line);border-radius:12px;padding:13px}
+    .kpi .k{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+    .kpi .v{font-family:var(--serif);font-size:clamp(17px,3vw,22px);font-weight:600;margin-top:5px;font-variant-numeric:tabular-nums}
+    .cta-row{margin-top:20px;display:flex;flex-wrap:wrap;gap:12px;align-items:center}
+    .btn{font-family:var(--sans);font-size:15px;font-weight:700;border:none;border-radius:12px;padding:14px 22px;cursor:pointer;display:inline-flex;align-items:center;gap:9px;text-decoration:none;transition:transform .12s,box-shadow .12s}
+    .btn-primary{background:var(--teal);color:#fff;box-shadow:0 10px 24px -12px var(--teal)}
+    .btn-primary:hover{transform:translateY(-1px);box-shadow:0 14px 28px -12px var(--teal)}
+    .btn-ghost{background:transparent;color:var(--teal);border:1px solid var(--line)}
+    .hint{font-size:12.5px;color:var(--faint)}
+
+    /* Análisis */
+    .scan{display:none;padding:34px 22px;text-align:center}
+    .scan.on{display:block}
+    .scan .spin{width:56px;height:56px;margin:0 auto 18px;border-radius:50%;border:4px solid var(--cream-2);border-top-color:var(--teal);animation:spin .8s linear infinite}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    .scan h3{font-family:var(--serif);font-size:22px;font-weight:600}
+    .scan .step{margin-top:8px;font-size:14px;color:var(--muted);min-height:21px}
+    .bar{height:8px;background:var(--cream-2);border-radius:999px;overflow:hidden;margin:18px auto 0;max-width:420px}
+    .bar span{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--teal),var(--green));border-radius:999px;transition:width .3s ease}
+
+    /* Resultado */
+    .result{display:none;padding-top:34px;padding-bottom:20px}
+    .result.on{display:block;animation:fade .5s ease}
+    @keyframes fade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+    .total{background:linear-gradient(120deg,var(--petrol),#143a4a);color:#fff;border-radius:18px;padding:26px 24px;text-align:center;overflow:hidden;position:relative}
+    .total .l{font-size:12px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--teal-2)}
+    .total .big{font-family:var(--serif);font-size:clamp(34px,8vw,60px);font-weight:600;line-height:1;letter-spacing:-.02em;margin:8px 0;font-variant-numeric:tabular-nums}
+    .total .sub{font-size:15px;color:rgba(234,229,216,.8)}
+    .sec-h{display:flex;align-items:center;gap:14px;margin:34px 0 16px}
+    .sec-h .n{font-family:var(--serif);font-weight:600;color:var(--teal);background:var(--teal-l);border-radius:8px;padding:5px 12px;font-size:14px}
+    .sec-h h2{font-family:var(--serif);font-size:24px;font-weight:600}
+    .sec-h .rule{flex:1;height:1px;background:linear-gradient(90deg,var(--line),transparent)}
+    .leaks{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    .leak{border:1px solid var(--line);border-left:4px solid var(--sev);border-radius:14px;padding:15px 16px;background:#fff;opacity:0;transform:translateY(10px)}
+    .leak.in{opacity:1;transform:none;transition:opacity .4s ease,transform .4s ease}
+    .leak .top{display:flex;align-items:baseline;justify-content:space-between;gap:10px}
+    .leak .cat{font-weight:700;font-size:15px;color:var(--ink)}
+    .leak .amt{font-family:var(--serif);font-weight:600;font-size:19px;color:var(--sev);white-space:nowrap;font-variant-numeric:tabular-nums}
+    .leak .amt small{font-size:11px;color:var(--faint);font-family:var(--sans);font-weight:500}
+    .leak .sev{display:inline-block;font-size:10.5px;font-weight:700;letter-spacing:.03em;text-transform:uppercase;color:var(--sev);background:color-mix(in srgb,var(--sev) 12%,#fff);border-radius:999px;padding:2px 9px;margin-top:6px}
+    .leak .desc{font-size:13px;color:var(--body);line-height:1.55;margin-top:9px}
+    .leak .fix{font-size:12.5px;color:var(--muted);line-height:1.5;margin-top:8px;padding-top:8px;border-top:1px dashed var(--line)}
+    .leak .fix b{color:var(--teal)}
+
+    /* Barras comparativas */
+    .bars{margin-top:8px;display:flex;flex-direction:column;gap:11px}
+    .brow{display:grid;grid-template-columns:150px 1fr auto;align-items:center;gap:12px}
+    .brow .bn{font-size:12.5px;font-weight:600;color:var(--body)}
+    .btrack{height:12px;background:var(--cream-2);border-radius:999px;overflow:hidden}
+    .bfill{height:100%;border-radius:999px;width:0;transition:width .9s cubic-bezier(.4,0,.2,1)}
+    .brow .bv{font-size:12.5px;font-weight:700;color:var(--ink);font-variant-numeric:tabular-nums;white-space:nowrap}
+
+    /* CTA final */
+    .final{margin-top:34px;background:linear-gradient(120deg,var(--teal-l),var(--cream-2));border:1px solid var(--line);border-radius:18px;padding:26px 24px;text-align:center}
+    .final h3{font-family:var(--serif);font-size:23px;font-weight:600;max-width:24ch;margin:0 auto}
+    .final p{font-size:14.5px;color:var(--body);margin:10px auto 18px;max-width:46ch}
+
+    footer{border-top:1px solid var(--line);margin-top:40px;padding:24px 0;color:var(--faint);font-size:12.5px}
+    .foot{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px}
+    .foot .fb{display:flex;align-items:center;gap:9px;font-family:var(--serif);font-weight:600;color:var(--muted)}
+
+    @media (max-width:640px){
+      .kpis{grid-template-columns:1fr 1fr}
+      .leaks{grid-template-columns:1fr}
+      .brow{grid-template-columns:110px 1fr auto;gap:9px}
+      .demo-panel{margin-top:-26px;padding:18px}
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="wrap hd">
+      <span class="brand">
+        <svg viewBox="0 0 120 120" width="30" height="30" fill="none" aria-hidden="true">
+          <path d="M26 90 L60 62 L94 90" stroke="#fff" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M26 73 L60 45 L94 73" stroke="#2F8C93" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M26 56 L60 28 L94 56" stroke="#6BA083" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        Tríada
+      </span>
+      <span class="badge">trIA · Detección de fugas</span>
+    </div>
+  </header>
+
+  <section class="hero">
+    <div class="wrap">
+      <div class="kick">Lector IA · Tríada</div>
+      <h1 class="serif">¿Cuánta plata se te fuga cada mes sin que te des cuenta?</h1>
+      <p>Sobrecostos, mermas, horas perdidas, precios que quedaron atrás… trIA lee tus números y te muestra dónde se escapa el dinero — y cuánto puedes recuperar.</p>
+    </div>
+  </section>
+
+  <div class="wrap">
+    <!-- Empresa de ejemplo -->
+    <div class="card demo-panel" id="panel">
+      <div class="demo-tag"><i></i>Empresa de ejemplo</div>
+      <div class="emp-name serif">Comercial del Maule Ltda.</div>
+      <div class="emp-sub">Comercio y servicios · 14 personas · datos de un mes típico</div>
+      <div class="kpis">
+        <div class="kpi"><div class="k">Ventas</div><div class="v">$18,4M</div></div>
+        <div class="kpi"><div class="k">Compras</div><div class="v">$9,5M</div></div>
+        <div class="kpi"><div class="k">Gastos oper.</div><div class="v">$5,2M</div></div>
+        <div class="kpi"><div class="k">Remuner.</div><div class="v">$4,1M</div></div>
+      </div>
+      <div class="cta-row">
+        <button class="btn btn-primary" id="go">⚡ Detectar fugas con trIA</button>
+        <span class="hint">Demo con datos de ejemplo · no se envía nada</span>
+      </div>
+    </div>
+
+    <!-- Análisis -->
+    <div class="card scan" id="scan" style="margin-top:20px">
+      <div class="spin"></div>
+      <h3 class="serif">trIA está leyendo los números…</h3>
+      <div class="step" id="step">Revisando compras…</div>
+      <div class="bar"><span id="barfill"></span></div>
+    </div>
+
+    <!-- Resultado -->
+    <div class="result" id="result">
+      <div class="total">
+        <div class="l">Fugas detectadas</div>
+        <div class="big" id="totalYear">$0</div>
+        <div class="sub">se están fugando al año · <b id="totalMonth">$0</b> al mes</div>
+      </div>
+
+      <div class="sec-h"><span class="n">01</span><h2 class="serif">Dónde se te va la plata</h2><span class="rule"></span></div>
+      <div class="leaks" id="leaks"></div>
+
+      <div class="sec-h"><span class="n">02</span><h2 class="serif">Ordenadas por impacto</h2><span class="rule"></span></div>
+      <div class="bars" id="bars"></div>
+
+      <div class="final">
+        <h3 class="serif">Esto es una empresa de ejemplo. ¿Cuánto se fuga en la tuya?</h3>
+        <p>Con tus cifras reales, trIA arma este mismo informe para tu negocio — y Tríada te ayuda a cerrar cada fuga.</p>
+        <a class="btn btn-primary" href="https://grupotriada.cl" target="_blank" rel="noopener">Conversemos con Tríada →</a>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    <div class="wrap foot">
+      <span class="fb">
+        <svg viewBox="0 0 120 120" width="20" height="20" fill="none" aria-hidden="true">
+          <path d="M26 90 L60 62 L94 90" stroke="#3D6E92" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M26 71 L60 43 L94 71" stroke="#2F8C93" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        Tríada · Consultoría 360
+      </span>
+      <span>Demo · datos de ejemplo · trIA no reemplaza asesoría profesional</span>
+    </div>
+  </footer>
+
+  <script>
+    // Fugas plantadas para la empresa de ejemplo (montos MENSUALES, CLP).
+    var LEAKS = [
+      { cat:'Sobrecosto en compras',        amt:680000, sev:'#B4524A', sevL:'Alta',
+        desc:'Tres proveedores cobran ~12% sobre el precio de mercado en productos que se compran todos los meses.',
+        fix:'Recotizar y renegociar con esos proveedores; comparar contra 2 alternativas.' },
+      { cat:'Merma de inventario sin registro', amt:380000, sev:'#B4524A', sevL:'Alta',
+        desc:'Cerca del 4% de lo comprado se pierde (quiebres, vencimientos, robo hormiga) sin quedar registrado.',
+        fix:'Conteos periódicos y control de mermas; alertas de stock crítico.' },
+      { cat:'Horas perdidas en tareas manuales', amt:520000, sev:'#C2871A', sevL:'Media',
+        desc:'≈45 horas al mes en digitar planillas y pasar datos de un lado a otro. Tiempo caro que no vende.',
+        fix:'Automatizar la captura y los reportes libera al equipo para atender y vender.' },
+      { cat:'Precios que quedaron atrás',    amt:450000, sev:'#C2871A', sevL:'Media',
+        desc:'Los precios no se ajustaron a la subida de costos; el margen se erosiona un poco cada mes.',
+        fix:'Revisión trimestral de precios contra costo real y mercado.' },
+      { cat:'Ventas perdidas por falta de postventa', amt:390000, sev:'#C2871A', sevL:'Media',
+        desc:'Clientes que compraron una vez y no volvieron porque nadie les hizo seguimiento.',
+        fix:'Un flujo simple de postventa y recompra recupera parte de esas ventas.' },
+      { cat:'Gastos hormiga y suscripciones sin uso', amt:210000, sev:'#1C7A82', sevL:'Baja',
+        desc:'Servicios, licencias y suscripciones que se siguen pagando pero casi nadie usa.',
+        fix:'Auditar cargos recurrentes y dar de baja lo que no aporta.' },
+    ];
+
+    function clp(n){ return '$' + Math.round(n).toLocaleString('es-CL'); }
+
+    var panel = document.getElementById('panel');
+    var scan  = document.getElementById('scan');
+    var result= document.getElementById('result');
+    var STEPS = ['Revisando compras…','Cruzando ventas y márgenes…','Midiendo tiempos y procesos…','Buscando gastos recurrentes…','Estimando pérdidas evitables…'];
+
+    document.getElementById('go').addEventListener('click', function(){
+      panel.style.display = 'none';
+      scan.classList.add('on');
+      var i = 0, fill = document.getElementById('barfill'), step = document.getElementById('step');
+      step.textContent = STEPS[0]; fill.style.width = '12%';
+      var t = setInterval(function(){
+        i++;
+        if (i < STEPS.length){ step.textContent = STEPS[i]; fill.style.width = (12 + i*20) + '%'; }
+        else { clearInterval(t); fill.style.width = '100%'; setTimeout(reveal, 420); }
+      }, 620);
+    });
+
+    function reveal(){
+      scan.classList.remove('on');
+      result.classList.add('on');
+
+      var totalMonth = LEAKS.reduce(function(s,l){ return s + l.amt; }, 0);
+      var totalYear = totalMonth * 12;
+      // Conteo animado del total anual
+      var big = document.getElementById('totalYear');
+      document.getElementById('totalMonth').textContent = clp(totalMonth);
+      var start = null, dur = 1100;
+      function tick(ts){
+        if (!start) start = ts;
+        var p = Math.min(1, (ts - start) / dur);
+        var eased = 1 - Math.pow(1 - p, 3);
+        big.textContent = clp(totalYear * eased);
+        if (p < 1) requestAnimationFrame(tick);
+        else big.textContent = clp(totalYear);
+      }
+      requestAnimationFrame(tick);
+
+      // Tarjetas de fugas (cascada)
+      var leaks = document.getElementById('leaks');
+      leaks.innerHTML = LEAKS.map(function(l){
+        return '<article class="leak" style="--sev:'+l.sev+'">'
+          + '<div class="top"><span class="cat">'+l.cat+'</span><span class="amt">'+clp(l.amt)+' <small>/mes</small></span></div>'
+          + '<span class="sev">'+l.sevL+'</span>'
+          + '<div class="desc">'+l.desc+'</div>'
+          + '<div class="fix"><b>Qué hacer:</b> '+l.fix+'</div>'
+          + '</article>';
+      }).join('');
+      var cards = leaks.querySelectorAll('.leak');
+      cards.forEach(function(c, idx){ setTimeout(function(){ c.classList.add('in'); }, 120 + idx*90); });
+
+      // Barras por impacto (ordenadas desc)
+      var sorted = LEAKS.slice().sort(function(a,b){ return b.amt - a.amt; });
+      var max = sorted[0].amt;
+      var bars = document.getElementById('bars');
+      bars.innerHTML = sorted.map(function(l){
+        return '<div class="brow"><span class="bn">'+l.cat.split(' ').slice(0,2).join(' ')+'…</span>'
+          + '<span class="btrack"><span class="bfill" data-w="'+Math.round(l.amt/max*100)+'" style="background:'+l.sev+'"></span></span>'
+          + '<span class="bv">'+clp(l.amt)+'</span></div>';
+      }).join('');
+      setTimeout(function(){
+        bars.querySelectorAll('.bfill').forEach(function(b){ b.style.width = b.getAttribute('data-w') + '%'; });
+      }, 260);
+
+      result.scrollIntoView({ behavior:'smooth', block:'start' });
+    }
+  </script>
+</body>
+</html>

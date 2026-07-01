@@ -7,6 +7,7 @@ con todas sus funciones, sin depender de terceros (Vercel, etc.).
 
 | Carpeta | Demo | Repo canónico |
 |---|---|---|
+| `fugas/`      | Detección de Fugas con trIA (demo del Motor 2 · datos de ejemplo, sin backend) | — (standalone, `demos/fugas/index.html`) |
 | `restaurant/` | CRM de Restaurantes (4 roles: Admin · Mesero · Cocina KDS · Cajero) | `TRIADA-CRM-RESTAURANT-TEMPLATE` |
 | `barberia/`   | Barbería Triada (web · reservas · cursos · CRM, con trIA)          | `BARBER-TEMPLATE` |
 
