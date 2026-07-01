@@ -31,6 +31,13 @@ export {
   areaLabel,
 } from '../../js/utils.js';
 
+// Motor del Módulo Financiero (dominio puro + visor del informe A4) — reutiliza
+// LITERALMENTE el del escritorio, así el análisis y el informe son idénticos.
+export {
+  FIN_TIPOS, findTipo, LECTOR, buildFinancePrompt, parseFinanceReport,
+} from '../../modules/financiero/domain/analisis.js';
+export { openFinReport } from '../../modules/financiero/presentation/informe-fin.view.js';
+
 // ── Estado de la app (en memoria, una sola instancia) ──────────────────────
 export const store = {
   user: null,         // { id, email }
