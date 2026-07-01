@@ -560,6 +560,13 @@ Columnas del calendario agregadas a `citas` y verificadas en vivo. Persistencia 
 
 ## 7. Bitácora de sesiones (más reciente arriba)
 
+### 2026-06-30 (cont.) — Plan Maestro: Biblioteca + Director de Orquesta (Mesa de Orquesta)
+- **Contexto:** el usuario armó una visión grande (16 demos + ERP + Director de Orquesta + biblioteca + módulo financiero + WhatsApp + SaaS + contenido). Se ordenó en el **Plan Maestro** (`PLAN-MAESTRO-TRIADA.md`, raíz de PROYECTO CONSULTORIA): 5 motores / 5 pistas / 4 olas. Ola 0 elegida.
+- **Biblioteca de documentos** (`e11d826`, PC + móvil): tabla `documentos` + bucket privado `biblioteca` + RLS multitenant (borrar=admin, primer uso de Storage) + módulo PC (sección Recursos) + pantalla móvil (Más → Biblioteca); subida multi-archivo, descarga por URL firmada. **19 PDF cargados** (05-VENTAS + 06-MARCA) por Claude vía Edge Function temporal `biblioteca-seed` (service_role server-side, ya neutralizada a stub 410).
+- **Director de Orquesta:** su DB (`ai_commander.sql`) **ya estaba aplicada** (la memoria decía "falta correr" — era falso). Decisión del usuario: **conectar las IAs SIN API** (evitar el gasto) → **Mesa de Orquesta** (`c696518`): pestaña estrella/por defecto; describes objetivo+tipo → genera 1 prompt por IA (ChatGPT/Claude/Gemini) → pegas respuestas → meta-prompt de síntesis para Claude. Cero API. + **Guardar sesión** y **Descargar carpeta .zip** por proyecto (`dbb2aca`, docs `988e571`).
+- **Verificado:** `node --check` + **55/55 tests** (11 nuevos). 🟡 falta la mirada del usuario logueado en la app. Vía Edge Function `ai-complete`/API **descartada** por presupuesto (`AI_CONFIG.edgeFunctionUrl=null` sigue a propósito).
+- **Siguiente:** Ola 1 = **Motor 2 (Lector IA) → módulo financiero** (aplicable el mismo enfoque "dirigir en vez de llamar", sin API).
+
 ### 2026-06-30 (cont.) — Equipo (cargo/áreas/editor) + Notificaciones de reunión
 - **Pedido:** (1) áreas Desarrollo/Comercial/Finanzas (+ Diseño para Jeinny) y que el cargo de cada
   persona sea el de su perfil (CEO/CTO/Gerenta de Finanzas/Diseñadora); (2) al sumar a alguien a una
