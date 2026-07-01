@@ -63,6 +63,16 @@ const DEMOS = [
     grad: ['#7A5230', 'var(--navy)'],
   },
   {
+    id: 'inventario',
+    nombre: 'Control de Inventario',
+    tagline: 'Tu stock bajo control, sin planillas',
+    desc: 'Panel de inventario con el valor de tu bodega, alertas de quiebre y por agotarse, y reposición sugerida por trIA. Ajusta el stock con + / − y mira cómo se actualizan los indicadores y las alertas en vivo. Demo con un almacén de ejemplo.',
+    chips: ['Stock', 'Alertas', 'Valor', 'Reposición trIA'],
+    url: '../demos/inventario/',
+    icon: 'package',
+    grad: ['var(--teal)', 'var(--navy)'],
+  },
+  {
     id: 'auditor',
     nombre: 'Auditor de Imagen',
     tagline: 'Cómo te ve un cliente antes de que hables',

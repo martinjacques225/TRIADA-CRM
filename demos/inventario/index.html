@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="es-CL">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0C1B26">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta name="description" content="Control de Inventario con trIA — Tríada. Tu stock bajo control, sin planillas: valor del inventario, alertas de quiebre y por agotarse, y reposición sugerida por trIA. Pruébalo con un almacén de ejemplo.">
+  <title>Tríada · Control de Inventario con trIA</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Spectral:ital,wght@0,400;0,500;0,600;0,700;1,500&family=Hanken+Grotesk:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --paper:#FBF9F3; --cream:#F4F1E9; --cream-2:#EFEBDF;
+      --ink:#14222E; --body:#46555F; --muted:#6B7780; --faint:#8A90A3;
+      --line:#E5DFD0; --petrol:#0C1B26; --petrol-2:#16466B;
+      --teal:#1C7A82; --teal-2:#2F8C93; --teal-l:#E6F1F0;
+      --green:#5E9E7E; --green-l:#EAF3EC; --amber:#C2871A; --amber-l:#F6EFDC; --red:#B4524A; --red-l:#F6E9E7;
+      --serif:'Spectral',Georgia,serif; --sans:'Hanken Grotesk',system-ui,-apple-system,sans-serif;
+    }
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:var(--sans);background:var(--paper);color:var(--ink);line-height:1.5;-webkit-font-smoothing:antialiased}
+    .wrap{max-width:1040px;margin:0 auto;padding:0 20px}
+    .serif{font-family:var(--serif)}
+
+    header{background:var(--petrol);color:#fff}
+    .hd{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:16px 0}
+    .brand{display:flex;align-items:center;gap:11px;font-family:var(--serif);font-size:21px;font-weight:600;letter-spacing:.04em}
+    .badge{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--teal-2);border:1px solid rgba(127,208,204,.4);border-radius:999px;padding:5px 12px;white-space:nowrap}
+
+    .hero{background:radial-gradient(120% 100% at 85% 0%,#15384a 0%,#0C1B26 55%,#0A1620 100%);color:#fff;padding:44px 0 66px}
+    .kick{font-size:12px;font-weight:700;letter-spacing:.28em;text-transform:uppercase;color:var(--teal-2);margin-bottom:16px}
+    .hero h1{font-family:var(--serif);font-size:clamp(30px,6vw,52px);font-weight:600;line-height:1.04;letter-spacing:-.01em;max-width:16ch}
+    .hero p{margin-top:16px;font-size:clamp(15px,2.4vw,18px);color:rgba(234,229,216,.82);max-width:56ch}
+
+    .card{background:#fff;border:1px solid var(--line);border-radius:18px;box-shadow:0 20px 40px -30px rgba(12,27,38,.4)}
+    .demo-panel{margin-top:-40px;position:relative;z-index:2;padding:20px 20px 24px}
+    .demo-tag{display:inline-flex;align-items:center;gap:7px;font-size:12px;font-weight:700;color:var(--teal);background:var(--teal-l);border-radius:999px;padding:5px 12px;margin-bottom:16px}
+    .demo-tag i{width:7px;height:7px;border-radius:50%;background:var(--teal);animation:blink 1.6s ease-in-out infinite}
+    @keyframes blink{0%,100%{opacity:1}50%{opacity:.35}}
+
+    /* KPIs */
+    .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+    .kpi{border:1px solid var(--line);border-radius:14px;padding:15px 16px;background:linear-gradient(160deg,#fff,#FCFAF4)}
+    .kpi .kl{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--faint);display:flex;align-items:center;gap:7px}
+    .kpi .kl svg{color:var(--teal)}
+    .kpi .kv{font-family:var(--serif);font-size:clamp(22px,3.4vw,29px);font-weight:600;color:var(--ink);margin-top:8px;line-height:1;font-variant-numeric:tabular-nums}
+    .kpi .kv small{font-size:14px;color:var(--muted);font-family:var(--sans);font-weight:600}
+    .kpi.warn .kv{color:var(--amber)} .kpi.warn .kl svg{color:var(--amber)}
+    .kpi.bad .kv{color:var(--red)} .kpi.bad .kl svg{color:var(--red)}
+    .kpi .kd{font-size:11.5px;color:var(--muted);margin-top:4px}
+
+    /* trIA reposición */
+    .tria{margin-top:14px;display:flex;align-items:center;gap:13px;border:1px solid var(--line);border-radius:14px;padding:14px 16px;background:linear-gradient(120deg,var(--teal-l),#F3F7F2)}
+    .tria .ti{width:38px;height:38px;flex:none;border-radius:11px;background:var(--petrol);color:#fff;display:flex;align-items:center;justify-content:center}
+    .tria .tt{flex:1;min-width:0}
+    .tria .tk{font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--teal)}
+    .tria .tm{font-size:13.5px;color:var(--body);line-height:1.45;margin-top:2px}
+    .tria .tm b{color:var(--ink)}
+    .btn{font-family:var(--sans);font-size:14px;font-weight:700;border:none;border-radius:11px;padding:11px 17px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:8px;text-decoration:none;transition:transform .12s,box-shadow .12s,filter .12s;white-space:nowrap}
+    .btn-primary{background:var(--teal);color:#fff;box-shadow:0 10px 22px -12px var(--teal)}
+    .btn-primary:hover{transform:translateY(-1px);box-shadow:0 14px 26px -12px var(--teal)}
+    .btn[disabled]{opacity:.5;cursor:default;box-shadow:none;transform:none}
+
+    /* Toolbar */
+    .toolbar{display:flex;align-items:center;gap:10px;margin-top:18px;flex-wrap:wrap}
+    .sb{display:flex;align-items:center;gap:9px;background:var(--cream);border:1px solid var(--line);border-radius:11px;padding:9px 13px;flex:1;min-width:180px}
+    .sb svg{color:var(--muted);flex:none}
+    .sb input{flex:1;border:none;background:none;font-family:var(--sans);font-size:14px;color:var(--ink)}
+    .sb input:focus{outline:none}
+    .cats{display:flex;gap:7px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+    .cats::-webkit-scrollbar{display:none}
+    .cat{flex:none;font-family:var(--sans);font-size:12.5px;font-weight:600;color:var(--body);background:#fff;border:1px solid var(--line);border-radius:9px;padding:8px 13px;cursor:pointer;white-space:nowrap;transition:border-color .13s,background .13s,color .13s}
+    .cat:hover{border-color:var(--teal-2)}
+    .cat.on{background:var(--teal);color:#fff;border-color:var(--teal)}
+
+    /* Tabla de inventario */
+    .inv{margin-top:14px;border:1px solid var(--line);border-radius:14px;overflow:hidden}
+    .inv-h,.inv-r{display:grid;grid-template-columns:2.4fr 1fr 1.5fr .9fr 1.2fr;gap:12px;align-items:center;padding:12px 16px}
+    .inv-h{background:var(--cream);font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--faint)}
+    .inv-h .r,.inv-r .r{text-align:right;justify-self:end}
+    .inv-r{border-top:1px solid var(--line);background:#fff;transition:background .2s}
+    .inv-r.flash{background:var(--teal-l)}
+    .pname{font-weight:700;font-size:14px;color:var(--ink);line-height:1.2}
+    .psku{font-size:11.5px;color:var(--faint);margin-top:1px}
+    .pcat{font-size:12px;color:var(--body)}
+    .price{font-family:var(--serif);font-weight:600;font-variant-numeric:tabular-nums}
+    .stock{display:flex;align-items:center;gap:8px}
+    .stepper{display:inline-flex;align-items:center;gap:2px;background:var(--cream);border:1px solid var(--line);border-radius:9px;padding:2px}
+    .stepper button{width:26px;height:26px;border:none;background:#fff;border-radius:7px;color:var(--teal);font-size:16px;font-weight:700;cursor:pointer;line-height:1;display:flex;align-items:center;justify-content:center}
+    .stepper button:hover{background:var(--teal-l)}
+    .stepper button:disabled{color:var(--faint);cursor:default;background:#fff}
+    .snum{font-weight:700;font-size:14px;min-width:30px;text-align:center;font-variant-numeric:tabular-nums}
+    .smin{font-size:11px;color:var(--faint);white-space:nowrap}
+    .st{display:inline-flex;align-items:center;gap:6px;font-size:11.5px;font-weight:700;border-radius:999px;padding:4px 10px;white-space:nowrap}
+    .st .dot{width:7px;height:7px;border-radius:50%}
+    .st.ok{color:var(--green);background:var(--green-l)} .st.ok .dot{background:var(--green)}
+    .st.low{color:var(--amber);background:var(--amber-l)} .st.low .dot{background:var(--amber)}
+    .st.out{color:var(--red);background:var(--red-l)} .st.out .dot{background:var(--red)}
+    .repo{font-family:var(--sans);font-size:12px;font-weight:700;color:var(--teal);background:none;border:1px solid var(--line);border-radius:8px;padding:6px 11px;cursor:pointer;transition:background .13s,border-color .13s}
+    .repo:hover{background:var(--teal-l);border-color:var(--teal-2)}
+    .stcell{display:flex;align-items:center;gap:10px;justify-content:flex-end}
+    .empty{padding:30px;text-align:center;color:var(--faint);font-size:13.5px;background:#fff;border-top:1px solid var(--line)}
+
+    /* Beneficios */
+    .sec{padding:52px 0 8px}
+    .sec-k{font-size:12px;font-weight:700;letter-spacing:.22em;text-transform:uppercase;color:var(--teal);text-align:center}
+    .sec-h{font-family:var(--serif);font-size:clamp(24px,4vw,34px);font-weight:600;text-align:center;margin-top:10px;max-width:22ch;margin-inline:auto;line-height:1.1}
+    .bens{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:32px}
+    .ben{border:1px solid var(--line);border-radius:16px;padding:22px;background:#fff;transition:transform .16s,box-shadow .16s}
+    .ben:hover{transform:translateY(-2px);box-shadow:0 20px 34px -26px rgba(12,27,38,.5)}
+    .ben .bi{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;color:var(--teal);background:var(--teal-l);margin-bottom:14px}
+    .ben h3{font-family:var(--serif);font-size:18px;font-weight:600;color:var(--ink)}
+    .ben p{font-size:13.5px;color:var(--body);line-height:1.55;margin-top:8px}
+
+    /* Contratación */
+    .hire{margin:56px 0 10px;background:linear-gradient(140deg,var(--petrol),#143a4a);color:#fff;border-radius:22px;padding:clamp(28px,5vw,44px);position:relative;overflow:hidden}
+    .hire::after{content:"";position:absolute;right:-80px;top:-80px;width:280px;height:280px;border-radius:50%;background:radial-gradient(circle,rgba(47,140,147,.35),transparent 70%)}
+    .hire .hk{font-size:12px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:var(--teal-2)}
+    .hire h2{font-family:var(--serif);font-size:clamp(23px,4vw,32px);font-weight:600;margin:12px 0 12px;max-width:24ch;line-height:1.12;position:relative}
+    .hire p{font-size:15px;color:rgba(234,229,216,.82);max-width:60ch;line-height:1.6;position:relative}
+    .hire .act{display:grid;grid-template-columns:1.1fr 1fr;gap:26px;margin-top:26px;position:relative}
+    .acts h4{font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--teal-2);margin-bottom:14px}
+    .acts ul{list-style:none;display:flex;flex-direction:column;gap:12px}
+    .acts li{display:flex;gap:11px;font-size:14px;color:rgba(234,229,216,.92);line-height:1.45}
+    .acts li svg{color:#7FE7A6;flex:none;margin-top:2px}
+    .hire-cta{align-self:center;background:rgba(255,255,255,.05);border:1px solid rgba(127,208,204,.28);border-radius:16px;padding:22px;text-align:center}
+    .hire-cta p{font-size:13.5px;color:rgba(234,229,216,.85);margin-bottom:16px;max-width:none}
+    .hire-cta .btn{width:100%;background:var(--teal);color:#fff;box-shadow:0 10px 24px -12px var(--teal)}
+    .hire-note{margin-top:16px;font-size:12px;color:rgba(234,229,216,.6);display:flex;gap:8px;align-items:flex-start;position:relative}
+    .hire-note svg{flex:none;margin-top:1px;color:var(--teal-2)}
+
+    footer{border-top:1px solid var(--line);margin-top:48px;padding:26px 0;color:var(--faint);font-size:12.5px}
+    .foot{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px}
+    .foot .fb{display:flex;align-items:center;gap:9px;font-family:var(--serif);font-weight:600;color:var(--muted)}
+
+    @media (max-width:820px){ .bens{grid-template-columns:1fr 1fr} .hire .act{grid-template-columns:1fr;gap:20px} }
+    @media (max-width:680px){
+      .kpis{grid-template-columns:1fr 1fr}
+      .inv-h{display:none}
+      .inv-r{grid-template-columns:1fr auto;gap:9px 12px;padding:13px 15px}
+      .inv-r .pcat{grid-column:1;color:var(--faint);font-size:11.5px;order:2}
+      .inv-r .price{grid-column:2;justify-self:end;order:2}
+      .inv-r .pinfo{order:1}
+      .inv-r .stcell{grid-column:1/-1;order:3;justify-content:space-between;padding-top:9px;border-top:1px dashed var(--line)}
+      .inv-r .stock{order:3}
+    }
+    @media (max-width:520px){ .bens{grid-template-columns:1fr} .demo-panel{padding:16px 14px 20px} .tria{flex-wrap:wrap} .tria .btn{width:100%} }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="wrap hd">
+      <span class="brand">
+        <svg viewBox="0 0 120 120" width="30" height="30" fill="none" aria-hidden="true">
+          <path d="M26 90 L60 62 L94 90" stroke="#fff" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M26 73 L60 45 L94 73" stroke="#2F8C93" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M26 56 L60 28 L94 56" stroke="#6BA083" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        Tríada
+      </span>
+      <span class="badge"><span style="text-transform:none">trIA</span> · Inventario</span>
+    </div>
+  </header>
+
+  <section class="hero">
+    <div class="wrap">
+      <div class="kick">Inventario IA · Tríada</div>
+      <h1 class="serif">Tu stock bajo control, sin planillas.</h1>
+      <p>Cuánto tienes, cuánto vale y qué está por acabarse — de un vistazo. trIA vigila tu inventario y te avisa qué reponer antes de que te quedes sin vender. Pruébalo con el almacén de ejemplo.</p>
+    </div>
+  </section>
+
+  <div class="wrap">
+    <div class="card demo-panel">
+      <div class="demo-tag"><i></i>Demostración · inventario de ejemplo editable</div>
+
+      <div class="kpis" id="kpis"></div>
+
+      <div class="tria" id="tria"></div>
+
+      <div class="toolbar">
+        <div class="sb">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+          <input id="search" placeholder="Buscar producto o SKU…" aria-label="Buscar">
+        </div>
+        <div class="cats" id="cats"></div>
+      </div>
+
+      <div class="inv">
+        <div class="inv-h">
+          <span>Producto</span><span>Categoría</span><span class="r">Precio</span><span>Estado</span><span class="r">Stock</span>
+        </div>
+        <div id="rows"></div>
+      </div>
+      <div style="font-size:11.5px;color:var(--faint);margin-top:10px;display:flex;align-items:center;gap:6px">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 8h.01M11 12h1v4h1"/></svg>
+        Usa los botones + / − para simular ventas e ingresos: los indicadores y las alertas de trIA se actualizan solos.
+      </div>
+    </div>
+
+    <!-- Beneficios -->
+    <section class="sec">
+      <div class="sec-k">Lo que hace por ti</div>
+      <h2 class="sec-h serif">Nunca más “se me acabó y no me di cuenta”</h2>
+      <div class="bens" id="bens"></div>
+    </section>
+
+    <!-- Contratación -->
+    <section class="hire">
+      <div class="hk">De la demo a tu negocio</div>
+      <h2 class="serif">Esto es una demostración. Al contratar, cargamos TU inventario.</h2>
+      <p>Subimos tus productos —o los importamos de tu planilla— con su stock, costos y mínimos, y trIA vigila todo: te avisa quiebres, sugiere reposición y te muestra el valor real de tu bodega, incluso con <b style="color:#fff">varias sucursales</b>.</p>
+      <div class="act">
+        <div class="acts">
+          <h4>Qué se activa al contratar</h4>
+          <ul>
+            <li><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>Tu <b>inventario real</b> importado desde tu planilla o sistema.</li>
+            <li><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg><b>Alertas automáticas</b> de quiebre y por agotarse.</li>
+            <li><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>Movimientos, <b>varias sucursales</b> y control de costos.</li>
+            <li><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>trIA sugiere <b>cuánto y cuándo reponer</b> según tu venta.</li>
+          </ul>
+        </div>
+        <div class="hire-cta">
+          <p>Cuéntanos qué manejas en bodega y te lo dejamos ordenado y vigilado.</p>
+          <a class="btn" href="https://grupotriada.cl" target="_blank" rel="noopener">Quiero ordenar mi inventario →</a>
+        </div>
+      </div>
+      <div class="hire-note">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 8h.01M11 12h1v4h1"/></svg>
+        El almacén y los productos son un ejemplo editable. Al contratar se cargan con tu inventario, tus costos y tus mínimos reales.
+      </div>
+    </section>
+  </div>
+
+  <footer>
+    <div class="wrap foot">
+      <span class="fb">
+        <svg viewBox="0 0 120 120" width="20" height="20" fill="none" aria-hidden="true">
+          <path d="M26 90 L60 62 L94 90" stroke="#3D6E92" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M26 71 L60 43 L94 71" stroke="#2F8C93" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        Tríada · Consultoría 360
+      </span>
+      <span>Demo · inventario de ejemplo · al contratar se carga con tu stock real</span>
+    </div>
+  </footer>
+
+  <script>
+    var $ = function(id){ return document.getElementById(id); };
+    function esc(s){ return String(s==null?'':s).replace(/[&<>"]/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
+    function svg(p, s){ s = s || 22; return '<svg width="'+s+'" height="'+s+'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+p+'</svg>'; }
+    function money(v){ return '$'+Number(Math.round(v)).toLocaleString('es-CL'); }
+    function miles(v){ return Number(v).toLocaleString('es-CL'); }
+
+    // ── Inventario (datos sembrados) ────────────────────────────────────────
+    var PRODS = [
+      { id:'p1', nom:'Bebida Cola 1.5 L', cat:'Bebidas', sku:'BEB-015', stock:48, min:24, precio:1200 },
+      { id:'p2', nom:'Agua Mineral 500 ml', cat:'Bebidas', sku:'BEB-005', stock:12, min:20, precio:700 },
+      { id:'p3', nom:'Papas Fritas 200 g', cat:'Snacks', sku:'SNK-020', stock:0, min:15, precio:1500 },
+      { id:'p4', nom:'Galletas Surtidas', cat:'Snacks', sku:'SNK-011', stock:30, min:12, precio:900 },
+      { id:'p5', nom:'Arroz Grano Largo 1 kg', cat:'Abarrotes', sku:'ABA-101', stock:22, min:20, precio:1100 },
+      { id:'p6', nom:'Aceite Vegetal 1 L', cat:'Abarrotes', sku:'ABA-140', stock:6, min:10, precio:2400 },
+      { id:'p7', nom:'Fideos 400 g', cat:'Abarrotes', sku:'ABA-088', stock:40, min:15, precio:800 },
+      { id:'p8', nom:'Detergente 1 kg', cat:'Limpieza', sku:'LIM-030', stock:0, min:8, precio:3200 },
+      { id:'p9', nom:'Cloro 1 L', cat:'Limpieza', sku:'LIM-012', stock:18, min:10, precio:1300 },
+      { id:'p10', nom:'Papel Higiénico x4', cat:'Limpieza', sku:'LIM-044', stock:9, min:12, precio:2100 }
+    ];
+    var CATS = ['Todos','Bebidas','Snacks','Abarrotes','Limpieza'];
+    var filterCat = 'Todos', query = '';
+
+    function statusOf(p){ if (p.stock<=0) return 'out'; if (p.stock<=p.min) return 'low'; return 'ok'; }
+    function target(p){ return Math.max(p.min*2, p.min+5); }   // nivel sano sugerido
+
+    // ── Beneficios ──────────────────────────────────────────────────────────
+    var BENS = [
+      { ic:'<path d="M3 9l1.5-5h15L21 9M4 9v10a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1V9M9 13h6"/>', h:'Sabes qué tienes, siempre', p:'Stock al día por producto, categoría y sucursal. Se acaba el “creo que quedaban…” y el conteo a mano.' },
+      { ic:'<path d="M10.3 3.2 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.2a2 2 0 0 0-3.4 0Z"/><path d="M12 9v4M12 17h.01"/>', h:'Te avisa antes del quiebre', p:'trIA vigila los mínimos y te alerta cuando algo está por acabarse. Dejas de perder ventas por no tener stock.' },
+      { ic:'<path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>', h:'Cuánta plata hay en bodega', p:'El valor de tu inventario, en vivo. Sabes cuánto capital tienes “dormido” en las estanterías.' },
+      { ic:'<path d="M21 12a9 9 0 1 1-3-6.7M21 4v5h-5"/>', h:'Reposición sugerida', p:'trIA calcula cuánto pedir de cada cosa para no quedarte corto ni sobre-stockearte. Compras con cabeza.' },
+      { ic:'<path d="M3 17l6-6 4 4 7-7M15 8h6v6"/>', h:'Qué se vende y qué no', p:'Detecta lo que rota rápido y lo que se queda pegado, para que compres lo que sí sale.' },
+      { ic:'<rect x="3" y="4.5" width="18" height="15" rx="2.5"/><path d="M3 9h18M8 14h8"/>', h:'Adiós a la planilla frágil', p:'Un lugar ordenado y a prueba de errores, que usa todo tu equipo — no una planilla que se rompe sola.' }
+    ];
+    $('bens').innerHTML = BENS.map(function(b){
+      return '<div class="ben"><div class="bi">'+svg(b.ic,23)+'</div><h3 class="serif">'+b.h+'</h3><p>'+b.p+'</p></div>';
+    }).join('');
+
+    // ── Categorías ──────────────────────────────────────────────────────────
+    $('cats').innerHTML = CATS.map(function(c,i){ return '<button class="cat'+(i===0?' on':'')+'" data-c="'+esc(c)+'">'+c+'</button>'; }).join('');
+    $('cats').addEventListener('click', function(ev){
+      var b = ev.target.closest('.cat'); if(!b) return; filterCat = b.getAttribute('data-c');
+      [].forEach.call($('cats').children, function(c){ c.classList.toggle('on', c===b); }); renderRows();
+    });
+    $('search').addEventListener('input', function(){ query = this.value.toLowerCase().trim(); renderRows(); });
+
+    // ── KPIs ────────────────────────────────────────────────────────────────
+    function renderKpis(){
+      var valor=0, unidades=0, low=0, out=0;
+      PRODS.forEach(function(p){ valor += p.stock*p.precio; unidades += p.stock;
+        var s=statusOf(p); if(s==='out') out++; else if(s==='low') low++; });
+      $('kpis').innerHTML =
+        kpi('', 'Valor del inventario', money(valor), miles(unidades)+' unidades en '+PRODS.length+' productos', '<path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>')
+      + kpi('', 'Productos (SKU)', PRODS.length, CATS.length-1+' categorías', '<path d="M3 9l1.5-5h15L21 9M4 9v10a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1V9"/>')
+      + kpi(low?'warn':'', 'Por agotarse', low, 'bajo el mínimo', '<path d="M23 18l-9.5-9.5-5 5L1 6"/><path d="M17 18h6v-6"/>')
+      + kpi(out?'bad':'', 'En quiebre', out, 'sin stock', '<path d="M10.3 3.2 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.2a2 2 0 0 0-3.4 0Z"/><path d="M12 9v4M12 17h.01"/>');
+    }
+    function kpi(cls, label, val, desc, icon){
+      return '<div class="kpi '+cls+'"><div class="kl">'+svg(icon,15)+label+'</div>'
+        + '<div class="kv">'+val+'</div><div class="kd">'+desc+'</div></div>';
+    }
+
+    // ── trIA reposición ─────────────────────────────────────────────────────
+    function needy(){ return PRODS.filter(function(p){ return statusOf(p)!=='ok'; }); }
+    function renderTria(){
+      var n = needy(), out = n.filter(function(p){return statusOf(p)==='out';}).length, low = n.length-out;
+      var units=0, cost=0; n.forEach(function(p){ var q=target(p)-p.stock; units+=q; cost+=q*p.precio; });
+      var msg, btn;
+      if (!n.length){
+        msg = '<b>Todo en orden.</b> No hay productos en quiebre ni por agotarse. Tu inventario está sano. ✅';
+        btn = '<button class="btn btn-primary" id="repoAll" disabled>Reponer lo sugerido</button>';
+      } else {
+        msg = 'Detecté '+(out?'<b>'+out+' en quiebre</b>':'')+(out&&low?' y ':'')+(low?'<b>'+low+' por agotarse</b>':'')
+          + '. Sugiero reponer <b>'+miles(units)+' unidades</b> (~<b>'+money(cost)+'</b>) para volver a un nivel sano.';
+        btn = '<button class="btn btn-primary" id="repoAll">Reponer lo sugerido</button>';
+      }
+      $('tria').innerHTML = '<span class="ti"><svg width="20" height="20" viewBox="0 0 120 120" fill="none" aria-hidden="true"><path d="M30 82 L60 58 L90 82" stroke="#fff" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/><path d="M30 66 L60 42 L90 66" stroke="#6BA083" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/></svg></span>'
+        + '<div class="tt"><div class="tk">trIA · reposición sugerida</div><div class="tm">'+msg+'</div></div>' + btn;
+      var r = $('repoAll'); if (r && !r.disabled) r.addEventListener('click', repoAll);
+    }
+
+    // ── Filas ───────────────────────────────────────────────────────────────
+    var LBL = { ok:'En stock', low:'Por agotarse', out:'Quiebre' };
+    function matches(p){
+      if (filterCat!=='Todos' && p.cat!==filterCat) return false;
+      if (query) return (p.nom+' '+p.sku+' '+p.cat).toLowerCase().indexOf(query)!==-1;
+      return true;
+    }
+    function renderRows(){
+      var list = PRODS.filter(matches);
+      if (!list.length){ $('rows').innerHTML = '<div class="empty">Sin resultados para tu búsqueda.</div>'; return; }
+      $('rows').innerHTML = list.map(function(p){
+        var s = statusOf(p);
+        return '<div class="inv-r" data-id="'+p.id+'">'
+          + '<div class="pinfo"><div class="pname">'+esc(p.nom)+'</div><div class="psku">'+p.sku+'</div></div>'
+          + '<div class="pcat">'+p.cat+'</div>'
+          + '<div class="price r">'+money(p.precio)+'</div>'
+          + '<div><span class="st '+s+'"><span class="dot"></span>'+LBL[s]+'</span></div>'
+          + '<div class="stcell">'
+          +   '<span class="stock"><span class="stepper"><button data-d="-1" '+(p.stock<=0?'disabled':'')+' aria-label="Restar">−</button>'
+          +     '<span class="snum">'+p.stock+'</span><button data-d="1" aria-label="Sumar">+</button></span>'
+          +     '<span class="smin">mín '+p.min+'</span></span>'
+          +   (s!=='ok' ? '<button class="repo" data-repo="1">Reponer</button>' : '')
+          + '</div></div>';
+      }).join('');
+    }
+    $('rows').addEventListener('click', function(ev){
+      var row = ev.target.closest('.inv-r'); if(!row) return; var p = PRODS.find(function(x){return x.id===row.getAttribute('data-id');});
+      var step = ev.target.closest('[data-d]'), repo = ev.target.closest('[data-repo]');
+      if (step){ p.stock = Math.max(0, p.stock + (+step.getAttribute('data-d'))); update(row); }
+      else if (repo){ p.stock = target(p); update(row); }
+    });
+    function update(row){ if(row){ row.classList.add('flash'); setTimeout(function(){ row.classList.remove('flash'); }, 500); } renderKpis(); renderTria(); renderRows(); }
+
+    function repoAll(){ PRODS.forEach(function(p){ if(statusOf(p)!=='ok') p.stock = target(p); }); renderKpis(); renderTria(); renderRows(); }
+
+    // ── Arranque ────────────────────────────────────────────────────────────
+    renderKpis(); renderTria(); renderRows();
+  </script>
+</body>
+</html>
