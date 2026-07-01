@@ -50,10 +50,13 @@
 >   falla la fila, update, remove, signedUrl) + `_getOrgId()` + mapper `docFromSupa` (`js/mappers.js`).
 > - **Verificado:** ✅ `node --check` (6 archivos) · ✅ 44/44 tests · ✅ advisors de seguridad sin hueco
 >   nuevo (`documentos` con políticas; no aparece en `rls_enabled_no_policy`).
-> - 🟡 **Falta prueba funcional real del usuario:** subir un PDF logueado y descargarlo. No se pudo
->   verificar por navegador desde acá (requiere login a Supabase).
-> - ⬜ **Pendiente inmediato:** el usuario sube los **17 PDF de `05-VENTAS`** (Biblioteca → Subir →
->   arrastrar la carpeta). No los subí yo: el bucket es privado y requiere su sesión autenticada.
+> - ✅ **19 documentos cargados** (2026-06-30) por Claude vía Edge Function temporal `biblioteca-seed`
+>   (service_role del lado servidor; **ya neutralizada** a stub 410 — se puede borrar del panel): 9 Contratos,
+>   5 Comercial, 3 Propuestas, 1 Precios, 1 Marca. Todos org Tríada, autor Martín. Verificado: **19 fichas =
+>   19 objetos en Storage**. (Fuentes: `05-VENTAS` + `06-MARCA`.)
+> - 🟡 **Falta solo la comprobación visual del usuario:** abrir Biblioteca en la app y descargar uno (la
+>   descarga usa URL firmada; la RLS de Storage se validó contra las políticas reales, pero no se pudo
+>   hacer clic logueado desde acá).
 > - **Siguiente de la Ola 0:** activar **Director de Orquesta** (correr `supabase/ai_commander.sql` + seam IA).
 
 ### 🆕 Equipo (cargo+áreas+editor) + Notificaciones de reunión (in-app + Web Push) (2026-06-30 cont.)
