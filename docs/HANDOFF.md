@@ -604,6 +604,13 @@ Columnas del calendario agregadas a `citas` y verificadas en vivo. Persistencia 
 
 ## 7. Bitácora de sesiones (más reciente arriba)
 
+### 2026-07-01 (cont. 11) — 🏠 Simulador de Remodelación AMPLIADO a 4 espacios (pendiente resuelto)
+- El usuario **generó las imágenes con otra IA** (siguiendo `demos/remodela/GUIA-IMAGENES.md`, ya que Masonry seguía sin créditos) y las dejó en `demos/remodela/img/`. Se **integraron al modelo `SPACES`** (commit `5e66a06`), pasando el simulador de **1 a 4 espacios**:
+  - **Living** (existente: moderno/nórdico/cálido) · **Local comercial** (Cafetería + Boutique, editando el `local-antes`) · **Cocina** (antes + moderno/nórdico/cálido) · **Dormitorio** (antes + moderno/nórdico/cálido).
+- **Encuadre antes/después verificado por inspección visual** en los 3 espacios nuevos: calzan perfecto (misma ventana/puerta/perspectiva) → el slider alinea bien. 10 imágenes nuevas **optimizadas a JPG** (~1280 px, 110-200 KB c/u, con Pillow).
+- Cada estilo trae su **propuesta de trIA** (concepto, paleta, materiales, presupuesto CLP, plazo) — rangos ajustados por tipo (local comercial > cocina > dormitorio). El **selector de espacio** ahora aparece (`SPACES.length > 1`) y el selector de estilo pasó a **flex** (soporta 2 o 3 estilos por espacio). Ficha de la vitrina + `README` actualizados.
+- Verificado por render (Preview MCP: 4 espacios, cambio de espacio y de estilo, imágenes cargan, slider/lightbox, responsive 375px sin desborde, consola limpia) + 77/77 tests. **Con esto se cierra el pendiente arrastrado del pulido de D10.** Quedan opcionales por si algún día: Oficina y estilos extra del Living (prompts en la GUIA).
+
 ### 2026-07-01 (cont. 10) — 🗂️ Ola 4: D3 Proyectos (kanban) + cierre de la jornada de demos
 - 4ª demo de la Ola 4 y última demo de la sesión. `demos/proyectos/` (commit `e5d2757`, EN VIVO `/demos/proyectos/`): **tablero kanban**, standalone, **sin imágenes ni backend**.
 - 4 columnas (Por hacer/En progreso/En revisión/Listo) con tareas de ejemplo (responsable con **avatar de iniciales**, prioridad Alta/Media/Baja, plazo con **"Atrasada"/"Vence hoy"**). Mover tarjetas por **drag & drop** (HTML5 `draggable` + `dragover`/`drop`, con **fallback a variable `dragId`** porque los eventos sintéticos no llevan `dataTransfer`) o por **flechas ‹ ›** (universal, funciona en touch). **Agregar tarea** inline en "Por hacer". Barra de **avance** (% en Listo) + **resumen de trIA** en vivo (%, atrasadas, prioridad alta sin empezar, cuello de botella) que se recalcula al mover.

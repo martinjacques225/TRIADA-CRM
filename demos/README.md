@@ -8,7 +8,7 @@ con todas sus funciones, sin depender de terceros (Vercel, etc.).
 | Carpeta | Demo | Repo canónico |
 |---|---|---|
 | `conserje/`   | Conserje IA con trIA (demo del Motor 1 · WhatsApp 24/7 + llamadas + agenda, **simulada** — mockup de teléfono con chat guionizado → resultado en el CRM, sin backend ni API) | — (standalone, `demos/conserje/index.html`) |
-| `remodela/`   | Simulador de Remodelación con trIA (demo del Motor 3 visual · Ola 3 · slider antes/después + selector de estilo + propuesta con materiales y presupuesto; imágenes IA sobre un espacio de ejemplo, sin backend ni API) | — (standalone, `demos/remodela/index.html` + `img/`) |
+| `remodela/`   | Simulador de Remodelación con trIA (demo del Motor 3 visual · Ola 3 · slider antes/después + selector de **espacio** (living/cocina/dormitorio/local) y de estilo + propuesta con materiales y presupuesto; imágenes IA, sin backend ni API) | — (standalone, `demos/remodela/index.html` + `img/`) |
 | `documentos/` | Generador de Documentos con trIA (demo del Motor 3 / Imprenta IA · Ola 3 · cotización/contrato/carta/recibo con marca editable en vivo + "redactar con trIA" + descargar PDF vía print; sin backend ni API) | — (standalone, `demos/documentos/index.html`) |
 | `academia/`   | Academia Online con trIA (demo · Ola 3 · LMS de cursos: temario + video-lecciones + tutor trIA con Q&A + progreso + certificado al finalizar; sin backend ni API) | — (standalone, `demos/academia/index.html`) |
 | `tienda/`     | Tienda Online con trIA (demo · Ola 4 · ecommerce: marca editable + catálogo + buscador trIA + carrito + checkout + confirmación; productos ilustrados, sin backend ni cobros reales) | — (standalone, `demos/tienda/index.html`) |
