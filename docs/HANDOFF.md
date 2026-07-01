@@ -35,6 +35,15 @@
 
 ## 1. Estado actual (al 2026-06-30)
 
+### 🆕 Director de Orquesta — Mesa de Orquesta (orquestación multi-IA SIN API) (2026-06-30 cont.)
+> El usuario **no quiere pagar API** (gasto grande). Solución construida: el Director **dirige** en vez de llamar. Motor M5 del Plan Maestro. Commit `c696518`, **EN VIVO**.
+> - **Hallazgo:** la DB del módulo (`ai_commander.sql`) **ya estaba aplicada** y verificada (4 tablas + 5 enums + RLS `*_org` + `aic_audit_row`). La memoria decía "falta correr" — era falso; NO había SQL pendiente.
+> - **Mesa de Orquesta** (pestaña estrella + por defecto del Director de Orquesta): flujo **copy-paste en 3 fases** — (1) describes objetivo + tipo (7: landing/app/crm/informe/marca/contenido/genérico) → genera **1 prompt a medida por IA** (ChatGPT=creativo, Claude=arquitecto/director, Gemini=investigador) con método Tríada horneado + copiar/abrir chat; (2) pegas las 3 respuestas; (3) **meta-prompt de síntesis** para pegar en Claude. Usa los chats que ya se pagan → **cero costo de API**.
+> - **Arquitectura (Clean, reusada):** `domain/orchestration.js` (puro) + `presentation/orquesta.view.js` (autocableada) + wiring en `ai-commander.js` (tab first + default `orquesta`) + `ui.js` (ícono) + `ai-commander.css`.
+> - **Verificado:** ✅ `node --check` (5) · ✅ **50/50 tests** (6 nuevos de orquestación) · 🟡 falta la mirada visual del usuario en la app.
+> - **Descartado por presupuesto:** Edge Function `ai-complete`/API keys. `AI_CONFIG.edgeFunctionUrl=null` sigue a propósito (el Prompt Builder viejo queda en `no_conectado`).
+> - **Próximos incrementos (opcionales):** guardar sesiones de orquesta en `ai_prompts`/`ai_responses` (historial) + carpeta local por proyecto.
+
 ### 🆕 Biblioteca de documentos (Ola 0 del Plan Maestro) (2026-06-30 cont.)
 > Repositorio documental compartido de la organización — **primer uso de Supabase Storage**.
 > Parte del **Plan Maestro** (`PLAN-MAESTRO-TRIADA.md` en la raíz de PROYECTO CONSULTORIA): motor **M4 "Bóveda"**.
