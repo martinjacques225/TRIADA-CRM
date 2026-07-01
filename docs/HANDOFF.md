@@ -31,6 +31,16 @@
 > - ✅ **Canónica (esta):** `C:\Users\velve\Documents\GitHub\TRIADA-CRM` — el CRM de Diagnóstico, lo que se trabaja.
 > - ❌ `C:\Users\velve\Desktop\files\PROYECTO CONSULTORIA\TRIADA-CRM` — CRM comercial viejo, **NO** es el target.
 
+> 💡 **PRINCIPIO DE PRODUCTO — "Demo simulada, API diferida" (try-before-buy) · decisión del usuario 2026-07-01:**
+> El usuario **NO quiere contratar ninguna API por ahora.** Regla para **TODAS las demos** (Olas 2-4): cualquier
+> función que en producción necesitaría una **API de pago** (IA conversacional, generación de imágenes, análisis con
+> LLM, etc.) se construye **SIMULADA de forma convincente y completa** — con guiones + datos sembrados + animación
+> realista — mostrando **todas** las ventajas y situaciones del producto final (las de "qué haría una vez desplegado"),
+> **nunca a medias**. La API real (y su costo) se contrata **solo cuando el cliente compra**. La demo debe ser **honesta**
+> (etiquetada como demostración) y traer un **CTA que explique qué se activa al contratar**. *Lógica: el cliente ve la
+> magia → dice "quiero eso" → se cobra → recién ahí se invierte en la API.* Excepciones vigentes: el **módulo financiero**
+> del CRM sí usa Gemini real (decisión aparte, §1), y la **Mesa de Orquesta** es copy-paste sin API.
+
 ---
 
 ## 1. Estado actual (al 2026-06-30)
@@ -416,6 +426,16 @@ index.html
 - [x] ~~**Demos Ola 1 sobre M2**~~ ✅ **COMPLETAS (2026-07-01)** — ✅ **D13 Detección de Fugas** (`demos/fugas/`) + ✅ **D12 Gemelo Virtual** (`demos/gemelo/`, simulador interactivo) + ✅ **D11 Auditor de Imagen Corporativa** (`demos/auditor/`, autodiagnóstico interactivo de 5 pilares → anillo de puntaje en vivo → escaneo → informe con barras por dimensión + hallazgos por severidad + fortalezas). Las 3 standalone, marca Tríada, sin backend, en la vitrina "Más → Demos". **Ola 1 (M2 financiero + paridad móvil + 3 demos) cerrada.**
 - [ ] (Opcional) Para datos de **clientes**, pasar Google AI a **tier de pago** (no entrena con los datos); evaluar velocidad (~13 s hoy con 2.5-flash).
 
+### 4.2 · 🌊 Ola 2 — Demo "Conserje IA" (Motor 1) — ⬜ LISTA PARA EMPEZAR
+> **Enfoque = el PRINCIPIO de §0 "Demo simulada, API diferida".** El usuario no contrata API ahora; construimos el
+> Conserje **como demo** (todo simulado, sin costo) para vender, y la infra real (Twilio + WhatsApp Business/Meta +
+> backend always-on + API, §7-D2 del Plan Maestro) se **difiere hasta que un cliente compre**.
+- **Brief accionable completo (leer antes de construir):** [`demos/_BRIEF-CONSERJE.md`](../demos/_BRIEF-CONSERJE.md).
+- **Qué es:** una demo standalone `demos/conserje/index.html` (patrón de `auditor/gemelo/fugas`) que muestra el **Motor 1 completo** — WhatsApp 24/7 + transcripción de llamadas + asistente de reuniones — con un **mockup de teléfono** que reproduce conversaciones **guionizadas** (typing + burbujas) y un **panel de resultado** donde caen la cita creada / el lead en el CRM / el resumen de la llamada.
+- **Escenarios (guiones sembrados), mínimo 1-2-3-5:** atención 24/7 + FAQ · agendar cita · capturar lead · **llamada → resumen + tarea** · (extra) recordatorio/reagendar · cotiza/deriva. Cada uno cierra con un resultado visible.
+- **Cero API/backend/costo.** Bloque de contratación honesto ("demostración con conversaciones de ejemplo") + **"qué se activa al contratar"** + CTA a grupotriada.cl.
+- **Al terminar:** registrar en `movil/js/screens/demos.js` (entrada `conserje`, ícono `whatsapp`/`phone`) + `demos/README.md`; verificar por render (reproduce escenarios, responsive 375px, 0 errores) + `npm test`; commit/push; marcar ✅ aquí y en el Plan Maestro §8-#12.
+
 ### 4.0 · PLAN DE AUDITORÍA 360 (2026-06-17) — checklist vivo entre sesiones
 
 > **Fuente:** `docs/AUDITORIA_360_2026-06-17.md` (el *porqué* de cada ítem está ahí).
@@ -583,6 +603,11 @@ Columnas del calendario agregadas a `citas` y verificadas en vivo. Persistencia 
 ---
 
 ## 7. Bitácora de sesiones (más reciente arriba)
+
+### 2026-07-01 (cont. 3) — Principio "Demo simulada, API diferida" + Ola 2 lista para empezar
+- **Decisión estratégica del usuario:** NO contratar ninguna API por ahora. Toda demo que en producción necesitaría API se construye **simulada de forma convincente y completa** (guiones + datos sembrados + animación), mostrando **todas** las ventajas/situaciones del producto final, **nunca a medias**; la API real se contrata **solo cuando el cliente compra**. Con honestidad (etiqueta de demostración) + CTA "qué se activa al contratar". → **Internalizado como PRINCIPIO DE PRODUCTO en §0** (aplica a Olas 2-4; excepciones: módulo financiero usa Gemini real, Mesa de Orquesta copy-paste).
+- **Ola 2 lista para empezar:** brief accionable completo de la **demo "Conserje IA"** (Motor 1 = WhatsApp 24/7 + transcripción de llamadas + asistente de reuniones, todo simulado) en **`demos/_BRIEF-CONSERJE.md`** + resumen en **§4.2**. Próxima sesión = construir `demos/conserje/index.html` siguiendo el brief (mockup de teléfono + chat guionizado + panel de resultado; escenarios 1-2-3-5 mínimo; registrar en la vitrina; verificar por render). La infra real de la Ola 2 (Twilio + Meta + backend + API) queda **diferida** hasta la 1ª venta.
+- Solo cambios de documentación (brief + HANDOFF + Plan Maestro + memoria); sin tocar código del CRM.
 
 ### 2026-07-01 (cont. 2) — D11 Auditor de Imagen Corporativa → Ola 1 (demos) COMPLETA
 - **D11 "Auditor de Imagen Corporativa"** (commit `aabad5e`), 3ª y última cosecha del Motor 2. `demos/auditor/index.html` standalone (HTML+CSS+JS inline, marca Tríada, sin backend/auth), el análogo "marketing" de Fugas. **Flujo híbrido (lo mejor de D12 y D13):** autodiagnóstico de **5 pilares** (identidad visual, sitio web, redes sociales, coherencia de marca, presencia/materiales) con **10 preguntas de opción segmentada** y ejemplo precargado → **anillo de puntaje en vivo 0–100** (nivel + color cambian al responder, estilo Gemelo) → botón **"Auditar con trIA"** → escaneo animado (estilo Fugas) → **informe**: puntaje + veredicto por nivel (En riesgo <40 / Funcional 40-64 / Sólida 65-84 / Premium ≥85), barras por dimensión (color por score), hallazgos ordenados por severidad con "qué hacer", y bloque de fortalezas (pilares ≥85). Registrada en `movil/js/screens/demos.js` (array `DEMOS`, primera, ícono `eye`) + `demos/README.md`.
