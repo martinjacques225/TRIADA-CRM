@@ -53,6 +53,16 @@ const DEMOS = [
     grad: ['#5B4B8A', 'var(--navy)'],
   },
   {
+    id: 'tienda',
+    nombre: 'Tienda Online',
+    tagline: 'Tu ecommerce con marca, carrito y pago',
+    desc: 'Una tienda para vender por internet con tu marca: catálogo, buscador con trIA, carrito, checkout y confirmación de pedido. Arma una compra en la tienda de ejemplo y llega hasta el pago. Demo sin backend ni cobros reales.',
+    chips: ['Catálogo', 'Carrito', 'Checkout', 'trIA'],
+    url: '../demos/tienda/',
+    icon: 'cart',
+    grad: ['#7A5230', 'var(--navy)'],
+  },
+  {
     id: 'auditor',
     nombre: 'Auditor de Imagen',
     tagline: 'Cómo te ve un cliente antes de que hables',

@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="es-CL">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0C1B26">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta name="description" content="Tienda Online con trIA — Tríada. Tu tienda para vender en internet: catálogo, carrito, pago y confirmación, con tu marca. Pruébala comprando en la tienda de ejemplo.">
+  <title>Tríada · Tienda Online con trIA</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Spectral:ital,wght@0,400;0,500;0,600;0,700;1,500&family=Hanken+Grotesk:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --paper:#FBF9F3; --cream:#F4F1E9; --cream-2:#EFEBDF;
+      --ink:#14222E; --body:#46555F; --muted:#6B7780; --faint:#8A90A3;
+      --line:#E5DFD0; --petrol:#0C1B26; --petrol-2:#16466B;
+      --teal:#1C7A82; --teal-2:#2F8C93; --teal-l:#E6F1F0;
+      --green:#5E9E7E; --amber:#C2871A; --red:#B4524A;
+      --accent:#6F4E37; --accent-l:#F1EAE3;
+      --serif:'Spectral',Georgia,serif; --sans:'Hanken Grotesk',system-ui,-apple-system,sans-serif;
+    }
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:var(--sans);background:var(--paper);color:var(--ink);line-height:1.5;-webkit-font-smoothing:antialiased}
+    .wrap{max-width:1040px;margin:0 auto;padding:0 20px}
+    .serif{font-family:var(--serif)}
+
+    header{background:var(--petrol);color:#fff}
+    .hd{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:16px 0}
+    .brand{display:flex;align-items:center;gap:11px;font-family:var(--serif);font-size:21px;font-weight:600;letter-spacing:.04em}
+    .badge{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--teal-2);border:1px solid rgba(127,208,204,.4);border-radius:999px;padding:5px 12px;white-space:nowrap}
+
+    .hero{background:radial-gradient(120% 100% at 85% 0%,#15384a 0%,#0C1B26 55%,#0A1620 100%);color:#fff;padding:44px 0 66px}
+    .kick{font-size:12px;font-weight:700;letter-spacing:.28em;text-transform:uppercase;color:var(--teal-2);margin-bottom:16px}
+    .hero h1{font-family:var(--serif);font-size:clamp(30px,6vw,52px);font-weight:600;line-height:1.04;letter-spacing:-.01em;max-width:16ch}
+    .hero p{margin-top:16px;font-size:clamp(15px,2.4vw,18px);color:rgba(234,229,216,.82);max-width:56ch}
+
+    .card{background:#fff;border:1px solid var(--line);border-radius:18px;box-shadow:0 20px 40px -30px rgba(12,27,38,.4)}
+    .demo-panel{margin-top:-40px;position:relative;z-index:2;padding:20px 20px 24px}
+    .demo-tag{display:inline-flex;align-items:center;gap:7px;font-size:12px;font-weight:700;color:var(--teal);background:var(--teal-l);border-radius:999px;padding:5px 12px;margin-bottom:14px}
+    .demo-tag i{width:7px;height:7px;border-radius:50%;background:var(--teal);animation:blink 1.6s ease-in-out infinite}
+    @keyframes blink{0%,100%{opacity:1}50%{opacity:.35}}
+
+    /* Personaliza */
+    .custo{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:16px;font-size:12.5px;color:var(--muted)}
+    .custo label{font-weight:700;color:var(--faint);letter-spacing:.06em;text-transform:uppercase;font-size:11px}
+    .custo input{font-family:var(--sans);font-size:14px;font-weight:600;color:var(--ink);background:var(--cream);border:1px solid var(--line);border-radius:9px;padding:8px 12px;width:170px}
+    .custo input:focus{outline:none;border-color:var(--accent);background:#fff}
+    .accs{display:flex;gap:7px}
+    .acc{width:26px;height:26px;border-radius:7px;cursor:pointer;border:2px solid transparent;transition:transform .12s}
+    .acc:hover{transform:scale(1.1)}
+    .acc.on{border-color:#fff;box-shadow:0 0 0 2px var(--ink)}
+
+    /* Storefront */
+    .shop{border:1px solid var(--line);border-radius:16px;overflow:hidden;background:#fff}
+    .shop-h{display:flex;align-items:center;gap:12px;padding:15px 17px;border-bottom:1px solid var(--line);background:linear-gradient(120deg,color-mix(in srgb,var(--accent) 8%,#fff),#fff)}
+    .mono{width:42px;height:42px;flex:none;border-radius:11px;background:var(--accent);color:#fff;display:flex;align-items:center;justify-content:center;font-family:var(--serif);font-weight:700;font-size:21px}
+    .shop-id .sn{font-family:var(--serif);font-size:18px;font-weight:600;color:var(--ink);line-height:1.1}
+    .shop-id .ss{font-size:11.5px;color:var(--muted)}
+    .cartbtn{margin-left:auto;position:relative;width:44px;height:44px;border-radius:12px;background:var(--accent);color:#fff;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:transform .12s}
+    .cartbtn:hover{transform:translateY(-1px)}
+    .cartbtn .cnt{position:absolute;top:-6px;right:-6px;min-width:20px;height:20px;padding:0 5px;border-radius:999px;background:var(--red);color:#fff;font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center;border:2px solid #fff;transform:scale(0);transition:transform .2s cubic-bezier(.3,1.4,.5,1)}
+    .cartbtn .cnt.on{transform:scale(1)}
+
+    .search{padding:14px 17px 0}
+    .search .sb{display:flex;align-items:center;gap:9px;background:var(--cream);border:1px solid var(--line);border-radius:11px;padding:10px 13px}
+    .search .sb svg{color:var(--accent);flex:none}
+    .search .sb input{flex:1;border:none;background:none;font-family:var(--sans);font-size:14px;color:var(--ink)}
+    .search .sb input:focus{outline:none}
+    .search .sb .tria{font-size:10.5px;font-weight:700;color:var(--accent);background:var(--accent-l);border-radius:999px;padding:3px 9px;white-space:nowrap}
+    .qchips{display:flex;gap:7px;overflow-x:auto;padding:10px 17px 0;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+    .qchips::-webkit-scrollbar{display:none}
+    .qchip{flex:none;font-family:var(--sans);font-size:12px;font-weight:600;color:var(--body);background:#fff;border:1px solid var(--line);border-radius:999px;padding:6px 12px;cursor:pointer;white-space:nowrap;transition:border-color .13s,background .13s}
+    .qchip:hover{border-color:var(--accent)}
+    .qchip.on{background:var(--accent);color:#fff;border-color:var(--accent)}
+
+    .triarec{margin:14px 17px 0;display:flex;align-items:center;gap:10px;background:var(--accent-l);border-radius:11px;padding:10px 13px;font-size:12.5px;color:var(--body)}
+    .triarec .ri{width:26px;height:26px;flex:none;border-radius:8px;background:var(--accent);color:#fff;display:flex;align-items:center;justify-content:center}
+    .triarec b{color:var(--ink)}
+
+    .cats{display:flex;gap:8px;overflow-x:auto;padding:14px 17px 2px;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+    .cats::-webkit-scrollbar{display:none}
+    .cat{flex:none;font-family:var(--sans);font-size:12.5px;font-weight:600;color:var(--body);background:#fff;border:1px solid var(--line);border-radius:9px;padding:7px 13px;cursor:pointer;white-space:nowrap;transition:border-color .13s,background .13s,color .13s}
+    .cat:hover{border-color:var(--accent)}
+    .cat.on{background:var(--accent);color:#fff;border-color:var(--accent)}
+
+    .grid{display:grid;grid-template-columns:repeat(4,1fr);gap:13px;padding:16px 17px 18px}
+    .prod{border:1px solid var(--line);border-radius:13px;overflow:hidden;background:#fff;display:flex;flex-direction:column;transition:transform .14s,box-shadow .14s;animation:fade .3s ease}
+    @keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+    .prod:hover{transform:translateY(-3px);box-shadow:0 16px 30px -20px rgba(12,27,38,.5)}
+    .prod .pic{aspect-ratio:1/1;background:linear-gradient(150deg,var(--g1),var(--g2));display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,.92);position:relative}
+    .prod .pic .bdg{position:absolute;top:8px;left:8px;font-size:9.5px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;background:rgba(255,255,255,.92);color:var(--ink);border-radius:999px;padding:3px 8px}
+    .prod .pb{padding:11px 12px 13px;display:flex;flex-direction:column;flex:1}
+    .prod .pn{font-size:13.5px;font-weight:700;color:var(--ink);line-height:1.2}
+    .prod .pc{font-size:11px;color:var(--muted);margin-top:2px}
+    .prod .rate{display:flex;align-items:center;gap:3px;font-size:11px;color:var(--amber);margin-top:6px}
+    .prod .prow{display:flex;align-items:center;gap:8px;margin-top:auto;padding-top:10px}
+    .prod .price{font-family:var(--serif);font-size:16px;font-weight:600;color:var(--ink);font-variant-numeric:tabular-nums}
+    .prod .add{margin-left:auto;width:34px;height:34px;flex:none;border-radius:9px;background:var(--accent-l);color:var(--accent);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .13s,transform .1s}
+    .prod .add:hover{background:var(--accent);color:#fff}
+    .prod .add:active{transform:scale(.9)}
+    .empty{grid-column:1/-1;text-align:center;color:var(--faint);padding:34px 10px;font-size:13.5px}
+
+    /* Carrito off-canvas */
+    .overlay{position:fixed;inset:0;background:rgba(12,27,38,.5);backdrop-filter:blur(2px);z-index:40;opacity:0;pointer-events:none;transition:opacity .25s}
+    .overlay.on{opacity:1;pointer-events:auto}
+    .cart{position:fixed;top:0;right:0;bottom:0;width:min(400px,100%);background:var(--paper);z-index:41;transform:translateX(100%);transition:transform .3s cubic-bezier(.3,.9,.3,1);display:flex;flex-direction:column;box-shadow:-20px 0 50px -20px rgba(12,27,38,.5)}
+    .cart.on{transform:none}
+    .cart-h{display:flex;align-items:center;gap:10px;padding:18px 20px;border-bottom:1px solid var(--line)}
+    .cart-h h3{font-family:var(--serif);font-size:19px;font-weight:600;color:var(--ink)}
+    .cart-h .x{margin-left:auto;width:36px;height:36px;border-radius:10px;background:#fff;border:1px solid var(--line);color:var(--body);cursor:pointer;display:flex;align-items:center;justify-content:center}
+    .cart-b{flex:1;overflow-y:auto;padding:16px 20px;display:flex;flex-direction:column;gap:12px}
+    .ci{display:flex;gap:12px;align-items:center;background:#fff;border:1px solid var(--line);border-radius:12px;padding:10px}
+    .ci .cpic{width:52px;height:52px;flex:none;border-radius:9px;background:linear-gradient(150deg,var(--g1),var(--g2));display:flex;align-items:center;justify-content:center;color:#fff}
+    .ci .cinfo{flex:1;min-width:0}
+    .ci .cn{font-size:13px;font-weight:700;color:var(--ink);line-height:1.2}
+    .ci .cp{font-size:12px;color:var(--muted);margin-top:1px}
+    .qty{display:flex;align-items:center;gap:9px;margin-top:6px}
+    .qty button{width:24px;height:24px;border-radius:7px;border:1px solid var(--line);background:#fff;color:var(--accent);font-size:15px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1}
+    .qty span{font-size:13px;font-weight:700;min-width:16px;text-align:center}
+    .ci .ct{font-family:var(--serif);font-weight:600;color:var(--ink);font-variant-numeric:tabular-nums;white-space:nowrap}
+    .cart-empty{margin:auto;text-align:center;color:var(--faint);padding:30px}
+    .cart-empty svg{color:var(--cream-2);margin-bottom:10px}
+
+    .cart-f{border-top:1px solid var(--line);padding:16px 20px;background:#fff}
+    .sumline{display:flex;justify-content:space-between;font-size:13px;color:var(--body);padding:4px 0}
+    .sumline.tot{font-family:var(--serif);font-size:19px;font-weight:700;color:var(--ink);border-top:1px solid var(--line);margin-top:6px;padding-top:10px}
+    .free{font-size:11.5px;color:var(--green);font-weight:600;margin:2px 0 8px}
+    .btn{font-family:var(--sans);font-size:15px;font-weight:700;border:none;border-radius:12px;padding:14px 20px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:9px;text-decoration:none;transition:transform .12s,box-shadow .12s,filter .12s;width:100%}
+    .btn-acc{background:var(--accent);color:#fff;box-shadow:0 10px 22px -12px var(--accent);margin-top:8px}
+    .btn-acc:hover{filter:brightness(1.06);transform:translateY(-1px)}
+    .btn-acc[disabled]{opacity:.5;cursor:default;box-shadow:none;transform:none;filter:none}
+
+    /* Checkout / confirmación */
+    .co-field{margin-bottom:11px}
+    .co-field label{display:block;font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--faint);margin-bottom:5px}
+    .co-field input{width:100%;font-family:var(--sans);font-size:14px;color:var(--ink);background:#fff;border:1px solid var(--line);border-radius:10px;padding:11px 13px}
+    .co-field input:focus{outline:none;border-color:var(--accent)}
+    .co-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    .pay{display:flex;align-items:center;gap:9px;background:var(--accent-l);border-radius:10px;padding:11px 13px;font-size:12.5px;color:var(--body);margin:4px 0 8px}
+    .pay svg{color:var(--accent);flex:none}
+    .back{background:none;border:none;color:var(--muted);font-family:var(--sans);font-size:13px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:6px;margin-bottom:12px}
+    .done{text-align:center;padding:26px 20px;animation:fade .4s ease}
+    .done .chk{width:66px;height:66px;border-radius:50%;background:var(--green);color:#fff;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;animation:pop .4s cubic-bezier(.3,1.4,.5,1)}
+    @keyframes pop{from{transform:scale(0)}to{transform:scale(1)}}
+    .done h3{font-family:var(--serif);font-size:22px;font-weight:600;color:var(--ink)}
+    .done .ord{font-size:13px;color:var(--muted);margin-top:5px}
+    .done .note{display:flex;align-items:flex-start;gap:9px;text-align:left;background:var(--accent-l);border-radius:11px;padding:12px 14px;margin:18px 0 0;font-size:12.5px;color:var(--body);line-height:1.5}
+    .done .note svg{color:var(--accent);flex:none;margin-top:1px}
+
+    /* Beneficios */
+    .sec{padding:52px 0 8px}
+    .sec-k{font-size:12px;font-weight:700;letter-spacing:.22em;text-transform:uppercase;color:var(--teal);text-align:center}
+    .sec-h{font-family:var(--serif);font-size:clamp(24px,4vw,34px);font-weight:600;text-align:center;margin-top:10px;max-width:22ch;margin-inline:auto;line-height:1.1}
+    .bens{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:32px}
+    .ben{border:1px solid var(--line);border-radius:16px;padding:22px;background:#fff;transition:transform .16s,box-shadow .16s}
+    .ben:hover{transform:translateY(-2px);box-shadow:0 20px 34px -26px rgba(12,27,38,.5)}
+    .ben .bi{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;color:var(--teal);background:var(--teal-l);margin-bottom:14px}
+    .ben h3{font-family:var(--serif);font-size:18px;font-weight:600;color:var(--ink)}
+    .ben p{font-size:13.5px;color:var(--body);line-height:1.55;margin-top:8px}
+
+    /* Contratación */
+    .hire{margin:56px 0 10px;background:linear-gradient(140deg,var(--petrol),#143a4a);color:#fff;border-radius:22px;padding:clamp(28px,5vw,44px);position:relative;overflow:hidden}
+    .hire::after{content:"";position:absolute;right:-80px;top:-80px;width:280px;height:280px;border-radius:50%;background:radial-gradient(circle,rgba(47,140,147,.35),transparent 70%)}
+    .hire .hk{font-size:12px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:var(--teal-2)}
+    .hire h2{font-family:var(--serif);font-size:clamp(23px,4vw,32px);font-weight:600;margin:12px 0 12px;max-width:24ch;line-height:1.12;position:relative}
+    .hire p{font-size:15px;color:rgba(234,229,216,.82);max-width:60ch;line-height:1.6;position:relative}
+    .hire .act{display:grid;grid-template-columns:1.1fr 1fr;gap:26px;margin-top:26px;position:relative}
+    .acts h4{font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--teal-2);margin-bottom:14px}
+    .acts ul{list-style:none;display:flex;flex-direction:column;gap:12px}
+    .acts li{display:flex;gap:11px;font-size:14px;color:rgba(234,229,216,.92);line-height:1.45}
+    .acts li svg{color:#7FE7A6;flex:none;margin-top:2px}
+    .hire-cta{align-self:center;background:rgba(255,255,255,.05);border:1px solid rgba(127,208,204,.28);border-radius:16px;padding:22px;text-align:center}
+    .hire-cta p{font-size:13.5px;color:rgba(234,229,216,.85);margin-bottom:16px;max-width:none}
+    .hire-cta .btn{background:var(--teal);color:#fff;box-shadow:0 10px 24px -12px var(--teal)}
+    .hire-note{margin-top:16px;font-size:12px;color:rgba(234,229,216,.6);display:flex;gap:8px;align-items:flex-start;position:relative}
+    .hire-note svg{flex:none;margin-top:1px;color:var(--teal-2)}
+
+    footer{border-top:1px solid var(--line);margin-top:48px;padding:26px 0;color:var(--faint);font-size:12.5px}
+    .foot{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px}
+    .foot .fb{display:flex;align-items:center;gap:9px;font-family:var(--serif);font-weight:600;color:var(--muted)}
+
+    @media (max-width:820px){
+      .grid{grid-template-columns:repeat(3,1fr)}
+      .bens{grid-template-columns:1fr 1fr}
+      .hire .act{grid-template-columns:1fr;gap:20px}
+    }
+    @media (max-width:560px){
+      .grid{grid-template-columns:1fr 1fr;gap:11px}
+      .bens{grid-template-columns:1fr}
+      .demo-panel{padding:16px 14px 20px}
+      .custo input{width:140px}
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="wrap hd">
+      <span class="brand">
+        <svg viewBox="0 0 120 120" width="30" height="30" fill="none" aria-hidden="true">
+          <path d="M26 90 L60 62 L94 90" stroke="#fff" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M26 73 L60 45 L94 73" stroke="#2F8C93" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M26 56 L60 28 L94 56" stroke="#6BA083" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        Tríada
+      </span>
+      <span class="badge"><span style="text-transform:none">trIA</span> · Tienda online</span>
+    </div>
+  </header>
+
+  <section class="hero">
+    <div class="wrap">
+      <div class="kick">Ecommerce IA · Tríada</div>
+      <h1 class="serif">Tu tienda, vendiendo mientras duermes.</h1>
+      <p>Una tienda online con tu marca: catálogo, carrito, pago y confirmación —simple para tu cliente, ordenada para ti—. Pruébala: arma un pedido en la tienda de ejemplo y llega hasta el pago.</p>
+    </div>
+  </section>
+
+  <div class="wrap">
+    <div class="card demo-panel">
+      <div class="demo-tag"><i></i>Demostración · tienda y productos de ejemplo</div>
+
+      <div class="custo">
+        <label>Tu tienda</label>
+        <input id="storeName" value="Nogal Café" maxlength="26" aria-label="Nombre de la tienda">
+        <span class="accs" id="accs"></span>
+      </div>
+
+      <div class="shop">
+        <div class="shop-h">
+          <span class="mono" id="mono">N</span>
+          <div class="shop-id">
+            <div class="sn" id="shopName">Nogal Café</div>
+            <div class="ss">Café de especialidad · despacho a todo Chile</div>
+          </div>
+          <button class="cartbtn" id="cartBtn" aria-label="Ver carrito">
+            <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="20" r="1.4"/><circle cx="18" cy="20" r="1.4"/><path d="M2 3h3l2.4 12.3a1.5 1.5 0 0 0 1.5 1.2h8.2a1.5 1.5 0 0 0 1.5-1.2L21 7H6"/></svg>
+            <span class="cnt" id="cnt">0</span>
+          </button>
+        </div>
+
+        <div class="search">
+          <div class="sb">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+            <input id="search" placeholder="Busca un producto o pregúntale a trIA…" aria-label="Buscar">
+            <span class="tria">trIA</span>
+          </div>
+        </div>
+        <div class="qchips" id="qchips"></div>
+
+        <div class="triarec" id="triarec"></div>
+
+        <div class="cats" id="cats"></div>
+        <div class="grid" id="grid"></div>
+      </div>
+    </div>
+
+    <!-- Beneficios -->
+    <section class="sec">
+      <div class="sec-k">Lo que hace por ti</div>
+      <h2 class="sec-h serif">Vende en internet sin volverte loco</h2>
+      <div class="bens" id="bens"></div>
+    </section>
+
+    <!-- Contratación -->
+    <section class="hire">
+      <div class="hk">De la demo a tu negocio</div>
+      <h2 class="serif">Esto es una demostración. Al contratar, montamos TU tienda real.</h2>
+      <p>Cargamos <b style="color:#fff">tu catálogo con tus fotos</b>, tu marca y tus formas de pago reales (Webpay, Mercado Pago, transferencia), y trIA ayuda a tu cliente a comprar y te avisa cada pedido. Vender online, por fin, sin dolores de cabeza.</p>
+      <div class="act">
+        <div class="acts">
+          <h4>Qué se activa al contratar</h4>
+          <ul>
+            <li><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>Tu <b>catálogo real con fotos</b>, stock y variantes.</li>
+            <li><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg><b>Pagos reales</b>: Webpay, Mercado Pago, transferencia.</li>
+            <li><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg><b>Despacho</b> y retiro, con seguimiento del pedido.</li>
+            <li><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>trIA <b>asiste al cliente</b> y te avisa cada venta.</li>
+          </ul>
+        </div>
+        <div class="hire-cta">
+          <p>Cuéntanos qué vendes y armamos tu tienda con tu marca y tus pagos.</p>
+          <a class="btn" href="https://grupotriada.cl" target="_blank" rel="noopener">Quiero mi tienda online →</a>
+        </div>
+      </div>
+      <div class="hire-note">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 8h.01M11 12h1v4h1"/></svg>
+        “Nogal Café”, los productos y el pago son un ejemplo (no se cobra nada). Al contratar se montan con tu catálogo, tus fotos y tus medios de pago reales.
+      </div>
+    </section>
+  </div>
+
+  <footer>
+    <div class="wrap foot">
+      <span class="fb">
+        <svg viewBox="0 0 120 120" width="20" height="20" fill="none" aria-hidden="true">
+          <path d="M26 90 L60 62 L94 90" stroke="#3D6E92" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M26 71 L60 43 L94 71" stroke="#2F8C93" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        Tríada · Consultoría 360
+      </span>
+      <span>Demo · tienda y pago de ejemplo · al contratar se monta con tu catálogo y pagos reales</span>
+    </div>
+  </footer>
+
+  <!-- Carrito -->
+  <div class="overlay" id="overlay"></div>
+  <aside class="cart" id="cart" aria-label="Carrito de compras">
+    <div class="cart-h">
+      <h3 id="cartTitle">Tu carrito</h3>
+      <button class="x" id="cartClose" aria-label="Cerrar"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+    </div>
+    <div class="cart-b" id="cartBody"></div>
+    <div class="cart-f" id="cartFoot"></div>
+  </aside>
+
+  <script>
+    var $ = function(id){ return document.getElementById(id); };
+    function esc(s){ return String(s==null?'':s).replace(/[&<>"]/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
+    function svg(p, s){ s = s || 22; return '<svg width="'+s+'" height="'+s+'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+p+'</svg>'; }
+    function money(v){ return '$'+Number(v).toLocaleString('es-CL'); }
+    function triaMark(s){ return '<svg width="'+s+'" height="'+s+'" viewBox="0 0 120 120" fill="none" aria-hidden="true"><path d="M30 82 L60 58 L90 82" stroke="currentColor" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/><path d="M30 66 L60 42 L90 66" stroke="currentColor" stroke-width="11" stroke-linecap="round" stroke-linejoin="round" opacity=".55"/></svg>'; }
+
+    // ── Íconos de producto ──────────────────────────────────────────────────
+    var PI = {
+      bag:   '<path d="M6 8h12l-1 12a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2L6 8Z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/><path d="M10 12h4"/>',
+      cup:   '<path d="M4 8h13v5a5 5 0 0 1-5 5H9a5 5 0 0 1-5-5V8Z"/><path d="M17 9h2.5a2.5 2.5 0 0 1 0 5H17"/><path d="M7 3c0 1-1 1-1 2M11 3c0 1-1 1-1 2"/>',
+      press: '<path d="M7 21h10M8 21l-1-9h10l-1 9M6 12h12M9 12V6h6v6M12 3v3"/>',
+      grind: '<path d="M8 3h8v5H8zM9 8l-1 5h8l-1-5M10 13v6h4v-6M12 3v0"/><circle cx="12" cy="5.5" r="1"/>',
+      mug:   '<path d="M5 8h10v8a3 3 0 0 1-3 3H8a3 3 0 0 1-3-3V8Z"/><path d="M15 10h3a2 2 0 0 1 0 4h-3"/>',
+      sub:   '<path d="M21 12a9 9 0 1 1-3-6.7M21 4v5h-5"/><path d="M12 8v4l3 2"/>',
+      choc:  '<rect x="5" y="4" width="14" height="16" rx="1.5"/><path d="M5 9h14M5 14h14M12 4v16"/>',
+      beans: '<ellipse cx="9" cy="10" rx="4" ry="6" transform="rotate(-25 9 10)"/><path d="M8 5c1 3 1 7-1 10"/>'
+    };
+
+    // ── Catálogo (datos sembrados) ──────────────────────────────────────────
+    var PRODS = [
+      { id:'blend', nom:'Blend de la Casa', cat:'Café', desc:'bolsa 250 g · molido o grano', precio:6900, rate:4.9, ic:'bag',   g:['#8D6E4F','#4E342E'], bdg:'Más vendido', tags:['mañana','regalo','clasico'] },
+      { id:'etio',  nom:'Etiopía Yirgacheffe', cat:'Café', desc:'origen único · notas florales', precio:9500, rate:5.0, ic:'beans', g:['#A97155','#5D4037'], bdg:'', tags:['regalo','premium','origen'] },
+      { id:'descaf',nom:'Descafeinado Suave', cat:'Café', desc:'bolsa 250 g · sin cafeína', precio:7200, rate:4.7, ic:'bag',   g:['#B08968','#6F4E37'], bdg:'', tags:['tarde','suave'] },
+      { id:'prensa',nom:'Prensa Francesa', cat:'Accesorios', desc:'600 ml · vidrio y acero', precio:18900, rate:4.8, ic:'press', g:['#3E6E7A','#123642'], bdg:'', tags:['casa','regalo','preparar'] },
+      { id:'molino',nom:'Molinillo Manual', cat:'Accesorios', desc:'muela cerámica ajustable', precio:24500, rate:4.9, ic:'grind', g:['#4C7A6E','#1F4A3F'], bdg:'Nuevo', tags:['casa','preparar','premium'] },
+      { id:'tazas', nom:'Set 2 Tazas de Greda', cat:'Accesorios', desc:'hechas a mano en Pomaire', precio:12900, rate:4.8, ic:'mug',   g:['#A66A4B','#5B3A2A'], bdg:'', tags:['regalo','casa'] },
+      { id:'sub',   nom:'Suscripción Mensual', cat:'Suscripción', desc:'2 bolsas cada mes · -15%', precio:12000, rate:5.0, ic:'sub',   g:['#B5852A','#7A5410'], bdg:'Ahorra', tags:['mañana','regalo','recurrente'] },
+      { id:'choc',  nom:'Chocolate 70% Origen', cat:'Almacén', desc:'barra 80 g · amargo', precio:3500, rate:4.6, ic:'choc',  g:['#6D4C41','#3E2723'], bdg:'', tags:['tarde','regalo','dulce'] }
+    ];
+    var CATS = ['Todos','Café','Accesorios','Suscripción','Almacén'];
+    var ACCENTS = [['#6F4E37','#F1EAE3'],['#1C7A82','#E6F1F0'],['#8A3B4C','#F6E9EC'],['#2E6E4E','#E7F1EC'],['#16234A','#E7EAF2']];
+
+    // Consultas rápidas de trIA (filtro por tag + mensaje).
+    var QUERIES = [
+      { q:'para regalar', tag:'regalo', msg:'Para regalar, estos son un acierto seguro 🎁' },
+      { q:'lo más vendido', tag:'clasico', msg:'Lo que más piden nuestros clientes ⭐' },
+      { q:'para la mañana', tag:'mañana', msg:'Ideales para arrancar el día ☀️' },
+      { q:'para preparar en casa', tag:'preparar', msg:'Todo para tu ritual en casa 🏠' }
+    ];
+
+    var store = { nombre:'Nogal Café', accent:ACCENTS[0] };
+    var cart = {};              // id -> qty
+    var filterCat = 'Todos', query = '', activeQuery = null;
+    var view = 'cart';          // cart | checkout | done
+
+    // ── Beneficios ──────────────────────────────────────────────────────────
+    var BENS = [
+      { ic:'<circle cx="9" cy="20" r="1.4"/><circle cx="18" cy="20" r="1.4"/><path d="M2 3h3l2.4 12.3a1.5 1.5 0 0 0 1.5 1.2h8.2a1.5 1.5 0 0 0 1.5-1.2L21 7H6"/>', h:'Vende 24/7, sin estar ahí', p:'Tu tienda atiende y cobra sola de día y de noche. Dejas de perder ventas por “estábamos cerrados” o “no vi el mensaje”.' },
+      { ic:'<path d="M12 3l2 5 5 2-5 2-2 5-2-5-5-2 5-2 2-5Z"/>', h:'Con tu marca, de nivel', p:'Tu logo, tus colores, tu dominio. Una tienda que se ve profesional y da confianza para comprar sin dudar.' },
+      { ic:'<rect x="2" y="5" width="20" height="14" rx="2.5"/><path d="M2 10h20"/>', h:'Pagos que sí funcionan', p:'Webpay, Mercado Pago y transferencia integrados. El cliente paga fácil y a ti te llega la plata, ordenado.' },
+      { ic:'<path d="M3 9l1.5-5h15L21 9M4 9v10a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1V9M9 13h6"/>', h:'Pedidos ordenados', p:'Cada compra queda registrada con sus datos y estado. Se acabó anotar pedidos en cuadernos o en el chat.' },
+      { ic:'<path d="M30 84 L60 60 L90 84"/>', raw:true, h:'trIA asiste al cliente', p:'trIA recomienda, responde dudas y ayuda a elegir —como un vendedor experto— para que más visitas terminen en compra.' },
+      { ic:'<path d="M3 17l6-6 4 4 7-7M15 8h6v6"/>', h:'Crece con datos', p:'Ves qué se vende, qué se estanca y quién te compra. Decisiones con números, no con corazonadas.' }
+    ];
+    $('bens').innerHTML = BENS.map(function(b){
+      var icon = b.raw ? '<svg width="23" height="23" viewBox="0 0 120 120" fill="none" stroke="currentColor" stroke-width="10" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M30 84 L60 60 L90 84"/><path d="M30 68 L60 44 L90 68"/></svg>' : svg(b.ic,23);
+      return '<div class="ben"><div class="bi">'+icon+'</div><h3 class="serif">'+b.h+'</h3><p>'+b.p+'</p></div>';
+    }).join('');
+
+    // ── Marca ───────────────────────────────────────────────────────────────
+    $('accs').innerHTML = ACCENTS.map(function(a,i){
+      return '<span class="acc'+(i===0?' on':'')+'" data-i="'+i+'" style="background:'+a[0]+'"></span>';
+    }).join('');
+    function applyAccent(){
+      document.documentElement.style.setProperty('--accent', store.accent[0]);
+      document.documentElement.style.setProperty('--accent-l', store.accent[1]);
+    }
+    $('accs').addEventListener('click', function(ev){
+      var b = ev.target.closest('.acc'); if(!b) return; store.accent = ACCENTS[+b.getAttribute('data-i')];
+      [].forEach.call($('accs').children, function(c){ c.classList.toggle('on', c===b); });
+      applyAccent();
+    });
+    $('storeName').addEventListener('input', function(){
+      store.nombre = this.value || 'Tu Tienda';
+      $('shopName').textContent = store.nombre;
+      $('mono').textContent = (store.nombre.trim()[0]||'T').toUpperCase();
+    });
+
+    // ── trIA: recomendación + consultas ─────────────────────────────────────
+    function renderTriaRec(){
+      $('triarec').innerHTML = '<span class="ri">'+triaMark(16)+'</span>'
+        + '<span><b>trIA te recomienda:</b> el <b>Blend de la Casa</b> con una <b>Suscripción Mensual</b> — es lo que más disfrutan quienes recién parten. ☕</span>';
+    }
+    $('qchips').innerHTML = QUERIES.map(function(q,i){ return '<button class="qchip" data-i="'+i+'">'+q.q+'</button>'; }).join('');
+    $('qchips').addEventListener('click', function(ev){
+      var b = ev.target.closest('.qchip'); if(!b) return;
+      var i = +b.getAttribute('data-i');
+      if (activeQuery === i){ activeQuery = null; $('search').value=''; }
+      else { activeQuery = i; $('search').value = QUERIES[i].q; }
+      query = '';
+      [].forEach.call($('qchips').children, function(c){ c.classList.toggle('on', activeQuery!==null && c===b); });
+      renderGrid();
+    });
+    $('search').addEventListener('input', function(){ query = this.value.toLowerCase().trim(); activeQuery=null;
+      [].forEach.call($('qchips').children, function(c){ c.classList.remove('on'); }); renderGrid(); });
+
+    // ── Categorías ──────────────────────────────────────────────────────────
+    $('cats').innerHTML = CATS.map(function(c,i){ return '<button class="cat'+(i===0?' on':'')+'" data-c="'+esc(c)+'">'+c+'</button>'; }).join('');
+    $('cats').addEventListener('click', function(ev){
+      var b = ev.target.closest('.cat'); if(!b) return; filterCat = b.getAttribute('data-c');
+      [].forEach.call($('cats').children, function(c){ c.classList.toggle('on', c===b); });
+      renderGrid();
+    });
+
+    // ── Grilla de productos ─────────────────────────────────────────────────
+    var STARS = '★★★★★';
+    function matches(p){
+      if (filterCat !== 'Todos' && p.cat !== filterCat) return false;
+      if (activeQuery !== null && p.tags.indexOf(QUERIES[activeQuery].tag) === -1) return false;
+      if (query){ return (p.nom+' '+p.cat+' '+p.desc+' '+p.tags.join(' ')).toLowerCase().indexOf(query) !== -1; }
+      return true;
+    }
+    function renderGrid(){
+      var list = PRODS.filter(matches);
+      var note = '';
+      if (activeQuery !== null){ note = '<div class="empty" style="grid-column:1/-1;padding:0 0 4px;text-align:left;color:var(--accent);font-weight:600;font-size:12.5px">'+QUERIES[activeQuery].msg+'</div>'; }
+      $('grid').innerHTML = note + (list.length ? list.map(function(p){
+        return '<article class="prod" style="--g1:'+p.g[0]+';--g2:'+p.g[1]+'">'
+          + '<div class="pic">'+(p.bdg?'<span class="bdg">'+p.bdg+'</span>':'')+svg(PI[p.ic],44)+'</div>'
+          + '<div class="pb"><div class="pn">'+esc(p.nom)+'</div><div class="pc">'+esc(p.desc)+'</div>'
+          + '<div class="rate">'+STARS+' <span style="color:var(--muted);margin-left:3px">'+p.rate.toFixed(1)+'</span></div>'
+          + '<div class="prow"><span class="price">'+money(p.precio)+'</span>'
+          + '<button class="add" data-add="'+p.id+'" aria-label="Agregar">'+svg('<path d="M12 5v14M5 12h14"/>',18)+'</button></div></div></article>';
+      }).join('') : '<div class="empty">trIA no encontró productos para eso. Prueba otra búsqueda 🔎</div>');
+    }
+    $('grid').addEventListener('click', function(ev){
+      var b = ev.target.closest('[data-add]'); if(!b) return; addToCart(b.getAttribute('data-add'));
+    });
+
+    // ── Carrito ─────────────────────────────────────────────────────────────
+    var ENVIO = 2990, FREE = 25000;
+    function count(){ var n=0; for (var k in cart) n+=cart[k]; return n; }
+    function subtotal(){ var s=0; for (var k in cart){ var p=PRODS.find(function(x){return x.id===k;}); s += p.precio*cart[k]; } return s; }
+    function prodById(id){ return PRODS.find(function(x){ return x.id===id; }); }
+
+    function bumpCount(){ var c=$('cnt'); c.textContent=count(); c.classList.toggle('on', count()>0);
+      c.style.animation='none'; void c.offsetWidth; c.style.animation=''; }
+    function addToCart(id){ cart[id]=(cart[id]||0)+1; bumpCount(); if(view!=='cart'){ view='cart'; } renderCart(); openCart(); }
+    function setQty(id, d){ cart[id]=(cart[id]||0)+d; if(cart[id]<=0) delete cart[id]; bumpCount(); renderCart(); }
+
+    function openCart(){ $('cart').classList.add('on'); $('overlay').classList.add('on'); }
+    function closeCart(){ $('cart').classList.remove('on'); $('overlay').classList.remove('on'); }
+    $('cartBtn').addEventListener('click', function(){ view='cart'; renderCart(); openCart(); });
+    $('cartClose').addEventListener('click', closeCart);
+    $('overlay').addEventListener('click', closeCart);
+
+    function renderCart(){
+      var title = { cart:'Tu carrito', checkout:'Finalizar compra', done:'¡Listo!' }[view];
+      $('cartTitle').textContent = title;
+      if (view === 'checkout') return renderCheckout();
+      if (view === 'done') return renderDone();
+
+      var ids = Object.keys(cart);
+      if (!ids.length){
+        $('cartBody').innerHTML = '<div class="cart-empty">'+svg('<circle cx="9" cy="20" r="1.4"/><circle cx="18" cy="20" r="1.4"/><path d="M2 3h3l2.4 12.3a1.5 1.5 0 0 0 1.5 1.2h8.2a1.5 1.5 0 0 0 1.5-1.2L21 7H6"/>',40)+'<div style="font-weight:600;color:var(--muted)">Tu carrito está vacío</div><div style="font-size:12.5px;margin-top:4px">Agrega productos y aparecerán aquí.</div></div>';
+        $('cartFoot').innerHTML = '';
+        return;
+      }
+      $('cartBody').innerHTML = ids.map(function(id){ var p=prodById(id), q=cart[id];
+        return '<div class="ci" style="--g1:'+p.g[0]+';--g2:'+p.g[1]+'"><span class="cpic">'+svg(PI[p.ic],26)+'</span>'
+          + '<div class="cinfo"><div class="cn">'+esc(p.nom)+'</div><div class="cp">'+money(p.precio)+'</div>'
+          + '<div class="qty"><button data-q="'+id+'|-1" aria-label="Quitar uno">−</button><span>'+q+'</span><button data-q="'+id+'|1" aria-label="Agregar uno">+</button></div></div>'
+          + '<div class="ct">'+money(p.precio*q)+'</div></div>';
+      }).join('');
+      var sub = subtotal(), envio = sub>=FREE?0:ENVIO, tot = sub+envio;
+      $('cartFoot').innerHTML = '<div class="sumline"><span>Subtotal</span><span>'+money(sub)+'</span></div>'
+        + '<div class="sumline"><span>Envío</span><span>'+(envio?money(envio):'Gratis')+'</span></div>'
+        + (envio? '<div class="free">Te faltan '+money(FREE-sub)+' para el envío gratis</div>' : '<div class="free">🎉 ¡Tienes envío gratis!</div>')
+        + '<div class="sumline tot"><span>Total</span><span>'+money(tot)+'</span></div>'
+        + '<button class="btn btn-acc" id="toCheckout">Ir a pagar · '+money(tot)+'</button>';
+      $('toCheckout').addEventListener('click', function(){ view='checkout'; renderCart(); });
+    }
+    $('cartBody').addEventListener('click', function(ev){
+      var b = ev.target.closest('[data-q]'); if(!b) return; var p=b.getAttribute('data-q').split('|'); setQty(p[0], +p[1]);
+    });
+
+    function renderCheckout(){
+      var sub = subtotal(), envio = sub>=FREE?0:ENVIO, tot = sub+envio;
+      $('cartBody').innerHTML = '<button class="back" id="backCart">'+svg('<path d="m15 18-6-6 6-6"/>',16)+'Volver al carrito</button>'
+        + '<div class="co-field"><label>Nombre y apellido</label><input id="fNom" value="Camila Fuentes"></div>'
+        + '<div class="co-field"><label>Correo</label><input id="fMail" value="camila@correo.cl"></div>'
+        + '<div class="co-field"><label>Dirección de despacho</label><input id="fDir" value="Av. Providencia 1234, depto 52"></div>'
+        + '<div class="co-row"><div class="co-field"><label>Ciudad</label><input id="fCiu" value="Santiago"></div>'
+        + '<div class="co-field"><label>Teléfono</label><input id="fFono" value="9 8765 4321"></div></div>'
+        + '<div class="pay">'+svg('<rect x="2" y="5" width="20" height="14" rx="2.5"/><path d="M2 10h20"/>',18)+'<span>Pago seguro con <b>Webpay</b> · Visa, Mastercard, débito</span></div>';
+      var sumHtml = '<div class="sumline"><span>Subtotal</span><span>'+money(sub)+'</span></div>'
+        + '<div class="sumline"><span>Envío</span><span>'+(envio?money(envio):'Gratis')+'</span></div>'
+        + '<div class="sumline tot"><span>Total a pagar</span><span>'+money(tot)+'</span></div>'
+        + '<button class="btn btn-acc" id="payBtn">Pagar '+money(tot)+'</button>';
+      $('cartFoot').innerHTML = sumHtml;
+      $('backCart').addEventListener('click', function(){ view='cart'; renderCart(); });
+      $('payBtn').addEventListener('click', function(){ view='done'; renderCart(); });
+    }
+
+    function renderDone(){
+      var n = 'NC-' + (2040 + count());   // folio determinista (demo)
+      var tot = subtotal() + (subtotal()>=FREE?0:ENVIO);
+      $('cartBody').innerHTML = '<div class="done"><div class="chk">'+svg('<path d="M20 6 9 17l-5-5"/>',34)+'</div>'
+        + '<h3 class="serif">¡Pedido confirmado!</h3><div class="ord">N° '+n+' · '+money(tot)+'</div>'
+        + '<div class="note">'+triaMark(18)
+        + '<span><b>trIA</b> ya le envió la confirmación a <b>Camila</b> por correo y WhatsApp, y te avisó a ti del nuevo pedido para prepararlo. 📦</span></div></div>';
+      $('cartFoot').innerHTML = '<button class="btn btn-acc" id="again">Seguir comprando</button>';
+      $('again').addEventListener('click', function(){ cart={}; bumpCount(); view='cart'; renderCart(); closeCart(); renderGrid(); });
+    }
+
+    // ── Arranque ────────────────────────────────────────────────────────────
+    applyAccent(); renderTriaRec(); renderGrid(); renderCart();
+  </script>
+</body>
+</html>
