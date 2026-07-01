@@ -13,6 +13,16 @@ const e = escHtml;
 // que servimos nosotros, o absoluta si algún día una vive en otro dominio.
 const DEMOS = [
   {
+    id: 'gemelo',
+    nombre: 'Gemelo Virtual',
+    tagline: 'Simula tus decisiones antes de tomarlas',
+    desc: 'Pon tu negocio (ventas, margen, costos) y mueve las palancas —subir precios, contratar, invertir en vender— para ver EN VIVO qué pasa con tu utilidad, tu margen y tu proyección a 12 meses. Decidir con datos, no con corazonadas.',
+    chips: ['Precios', 'Contratar', 'Proyección', 'Utilidad'],
+    url: '../demos/gemelo/',
+    icon: 'coins',
+    grad: ['var(--teal)', 'var(--navy)'],
+  },
+  {
     id: 'fugas',
     nombre: 'Detección de Fugas',
     tagline: 'Descubre dónde se te va la plata',
