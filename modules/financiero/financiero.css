@@ -1,9 +1,8 @@
 /* modules/financiero/financiero.css
    Módulo Financiero trIA (M2). Dos capas:
    1) Lista + flujo → usan las variables del tema del CRM (styles.css).
-   2) Informe A4 (.finr-*) → tokens de marca propios, scope-eados a .finr-viewer
-      (no afectan al resto del CRM), con el @media print correcto (lección del
-      fix de PDF del Informe 360: responsive en @media screen, min-height, box-sizing). */
+   2) Informe A4 → REUSA la piel del Informe 360 (.informe-viewer + tokens --rep-*
+      de informe.css). Aquí solo se añaden las tarjetas de indicadores. */
 
 /* ── Lista ─────────────────────────────────────────────────────────────── */
 .fin-loading { padding: 40px; text-align: center; color: var(--text3); }
@@ -65,92 +64,18 @@
 }
 
 /* ══════════════════════════════════════════════════════════════════════════
-   INFORME FINANCIERO A4 — .finr-viewer (marca Tríada, scope aislado)
+   INFORME FINANCIERO — usa la piel del Informe 360 (.informe-viewer + --rep-*).
+   Solo se añaden las tarjetas de INDICADORES; el resto (portada, headers, footer,
+   hallazgos, recomendaciones, print) reusa informe.css. Como viven dentro de
+   .informe-viewer, heredan los tokens de marca del 360.
    ══════════════════════════════════════════════════════════════════════════ */
-.finr-viewer {
-  --fr-cream: #F7F3EA; --fr-ink: #16466B; --fr-teal: #2F8C93; --fr-green: #2E9B73;
-  --fr-amber: #C0892F; --fr-red: #B4524A; --fr-muted: #5B6B7A; --fr-line: #E5DFD0;
-  --fr-serif: 'Spectral', Georgia, 'Times New Roman', serif;
-  --fr-sans: 'Libre Franklin', system-ui, -apple-system, sans-serif;
-  position: fixed; inset: 0; z-index: 4000; background: #2a2f36;
-  display: flex; flex-direction: column;
-}
-.finr-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 16px; background: #1c2128; color: #fff; flex-shrink: 0; }
-.finr-tb-left { display: flex; align-items: center; gap: 10px; }
-.finr-tb-name { font-family: var(--fr-serif); font-weight: 600; font-size: 15px; }
-.finr-tb-meta { font-size: 12px; color: rgba(255,255,255,.6); }
-.finr-tb-actions { display: flex; gap: 8px; }
-.finr-scroll { flex: 1; overflow-y: auto; padding: 28px 16px; }
-.finr-doc { max-width: 210mm; margin: 0 auto; display: flex; flex-direction: column; gap: 20px; }
+.informe-viewer .fin-kpis { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+.informe-viewer .fin-kpi { border: 1px solid var(--rep-border); border-left: 4px solid var(--rep-teal); border-radius: 12px; padding: 13px 15px; background: var(--rep-cream); break-inside: avoid; }
+.informe-viewer .fin-kpi-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.informe-viewer .fin-kpi-name { font-size: 12.5px; color: var(--rep-muted); font-weight: 600; }
+.informe-viewer .fin-kpi-val { font-family: var(--rep-serif); font-size: 25px; font-weight: 600; color: var(--rep-ink); margin-top: 3px; font-variant-numeric: tabular-nums; letter-spacing: -.01em; }
+.informe-viewer .fin-kpi-cmt { font-size: 11.5px; color: var(--rep-muted); margin-top: 4px; line-height: 1.45; }
 
-.finr-page {
-  box-sizing: border-box; width: 210mm; min-height: 297mm;
-  background: var(--fr-cream); color: #263238; font-family: var(--fr-sans);
-  padding: 20mm 18mm; box-shadow: 0 6px 30px rgba(0,0,0,.3);
-  display: flex; flex-direction: column;
-}
-
-/* Portada */
-.finr-cover { background: var(--fr-ink); color: #fff; justify-content: space-between; }
-.finr-cover-top { display: flex; align-items: center; justify-content: space-between; }
-.finr-brand { display: flex; align-items: center; gap: 10px; font-family: var(--fr-serif); font-size: 22px; font-weight: 600; letter-spacing: .04em; }
-.finr-brand svg path { stroke: #fff; } .finr-brand svg circle { fill: var(--fr-teal); }
-.finr-cover-kind { font-size: 13px; letter-spacing: .12em; text-transform: uppercase; color: rgba(255,255,255,.65); }
-.finr-cover-mid { flex: 1; display: flex; flex-direction: column; justify-content: center; }
-.finr-cover-title { font-family: var(--fr-serif); font-size: 52px; font-weight: 600; line-height: 1.04; letter-spacing: -.01em; margin: 0; }
-.finr-cover-period { font-family: var(--fr-serif); font-size: 22px; color: var(--fr-teal); margin-top: 10px; }
-.finr-cover-emp { font-size: 15px; color: rgba(255,255,255,.75); margin-top: 6px; }
-.finr-health { display: flex; align-items: center; gap: 16px; margin-top: 40px; padding: 18px 20px; border-radius: 14px; background: rgba(255,255,255,.06); max-width: 420px; }
-.finr-health-badge { width: 58px; height: 58px; flex-shrink: 0; border-radius: 14px; color: #fff; display: flex; align-items: center; justify-content: center; font-family: var(--fr-serif); font-size: 26px; font-weight: 700; }
-.finr-health-nivel { font-family: var(--fr-serif); font-size: 20px; font-weight: 600; }
-.finr-health-titular { font-size: 13px; color: rgba(255,255,255,.8); margin-top: 2px; }
-.finr-cover-foot { display: flex; justify-content: space-between; font-size: 11.5px; color: rgba(255,255,255,.5); font-family: var(--fr-sans); letter-spacing: .03em; }
-
-/* Páginas de contenido */
-.finr-h2 { font-family: var(--fr-serif); font-size: 26px; font-weight: 600; color: var(--fr-ink); margin: 0 0 16px; letter-spacing: -.01em; }
-.finr-h3 { font-family: var(--fr-serif); font-size: 17px; font-weight: 600; color: var(--fr-ink); margin: 22px 0 12px; }
-.finr-resumen p { font-size: 14px; line-height: 1.7; color: #37474F; margin: 0 0 10px; }
-
-.finr-kpis { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
-.finr-kpi { border: 1px solid var(--fr-line); border-left: 4px solid var(--s); border-radius: 10px; padding: 12px 14px; background: rgba(255,255,255,.5); break-inside: avoid; }
-.finr-kpi-top { display: flex; align-items: center; justify-content: space-between; }
-.finr-kpi-name { font-size: 12.5px; color: var(--fr-muted); font-weight: 500; }
-.finr-kpi-sig { font-size: 12px; }
-.finr-kpi-val { font-family: var(--fr-serif); font-size: 26px; font-weight: 600; color: var(--fr-ink); margin-top: 4px; font-variant-numeric: tabular-nums; }
-.finr-kpi-cmt { font-size: 11.5px; color: var(--fr-muted); margin-top: 4px; line-height: 1.4; }
-
-.finr-list { display: flex; flex-direction: column; gap: 10px; }
-.finr-item { border: 1px solid var(--fr-line); border-radius: 10px; padding: 12px 14px; background: rgba(255,255,255,.45); break-inside: avoid; }
-.finr-item-hd { display: flex; align-items: center; gap: 10px; }
-.finr-item-tt { font-weight: 600; color: var(--fr-ink); font-size: 14.5px; }
-.finr-item-dt { font-size: 13px; line-height: 1.6; color: #455A64; margin: 8px 0 0; }
-.finr-item-mit { font-size: 12.5px; line-height: 1.55; color: var(--fr-muted); margin: 6px 0 0; }
-.finr-tag { font-size: 11px; font-weight: 600; padding: 2px 9px; border-radius: 999px; white-space: nowrap; }
-.finr-dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
-.finr-reco { border-left: 4px solid var(--fr-green); }
-
-.finr-foot { margin-top: auto; padding-top: 16px; display: flex; align-items: center; justify-content: space-between; font-size: 11px; color: var(--fr-muted); border-top: 1px solid var(--fr-line); }
-.finr-foot > span:first-child { display: flex; align-items: center; gap: 8px; }
-.finr-foot svg { width: 18px; height: 18px; }
-.finr-foot-name { font-family: var(--fr-serif); font-weight: 600; color: var(--fr-ink); }
-.finr-foot-pg { font-family: var(--fr-sans); letter-spacing: .05em; }
-
-/* Responsive del visor SOLO en pantalla (nunca en impresión → no rompe el PDF) */
 @media screen and (max-width: 880px) {
-  .finr-doc { max-width: 100%; }
-  .finr-page { width: 100%; min-height: auto; padding: 24px 20px; }
-  .finr-cover-title { font-size: 38px; }
-  .finr-kpis { grid-template-columns: 1fr; }
-}
-
-/* Impresión: solo el documento, páginas exactas A4, sin sombras */
-@media print {
-  @page { size: A4; margin: 0; }
-  body.has-fin-report > *:not(.finr-viewer) { display: none !important; }
-  .finr-viewer { position: static; background: #fff; height: auto; }
-  .finr-toolbar { display: none !important; }
-  .finr-scroll { overflow: visible; padding: 0; }
-  .finr-doc { max-width: none; gap: 0; }
-  .finr-page { width: 210mm; min-height: 297mm; box-shadow: none; margin: 0; break-after: page; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-  .finr-page:last-child { break-after: auto; }
+  .informe-viewer .fin-kpis { grid-template-columns: 1fr; }
 }

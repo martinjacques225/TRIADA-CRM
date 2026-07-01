@@ -131,6 +131,11 @@ test('buildFinReportDoc: contiene título, indicador y hallazgo; escapa HTML', (
   assert.match(html, /Costo alto/);
   assert.match(html, /Cierre &lt;Junio&gt;/);   // escapado, no inyectado
   assert.doesNotMatch(html, /<Junio>/);
+  // piel unificada con el Informe 360 (mismas clases canónicas de informe.css)
+  assert.match(html, /report-page cover-page/);
+  assert.match(html, /class="rh-title"/);
+  assert.match(html, /class="report-footer"/);
+  assert.match(html, /chart-ring/);   // gauge reutilizado del 360
 });
 test('buildFinReportDoc: el total de páginas del footer refleja las páginas presentes', () => {
   // Sin hallazgos/recos: solo portada + resumen → footer "2 / 2".

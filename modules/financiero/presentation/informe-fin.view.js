@@ -1,175 +1,228 @@
 // modules/financiero/presentation/informe-fin.view.js
 // ── PRESENTACIÓN · Visor del Informe Financiero Tríada (A4 imprimible) ────────
-// Toma un `report` ya normalizado (contrato de dominio) y arma un documento A4
-// con la marca Tríada. `buildFinReportDoc` es puro (retorna HTML string, sin DOM)
-// → testeable. `openFinReport` monta el overlay + imprime (patrón openInformeViewer
-// del Informe 360). El @media print vive en financiero.css con la lección del fix
-// de PDF ya aprendida (media screen para el responsive, min-height, box-sizing).
+// Usa la MISMA piel que el Informe Ejecutivo 360 (`.informe-viewer` + tokens
+// --rep-* + clases .report-*/.cover-*/.hallazgo-card/.oport-card de informe.css)
+// para que TODOS los informes Tríada se vean idénticos. `buildFinReportDoc` es
+// puro (HTML string). Reusa `ringGauge` del módulo de informe (SVG puro) y el
+// print del 360 (body.has-report-open → informe.css).
 import { escHtml } from '../../../js/utils.js';
+import { ringGauge } from '../../informe-ejecutivo/informe.charts.js';
 
 const esc = (v) => escHtml(v == null ? '' : String(v));
 
-const LOGO_TRI = `<svg viewBox="0 0 40 40" width="30" height="30" aria-hidden="true">
-  <path d="M20 4 L34 30 H6 Z" fill="none" stroke="#16466B" stroke-width="2.4" stroke-linejoin="round"/>
-  <circle cx="20" cy="22" r="4.2" fill="#2F8C93"/></svg>`;
+// Logo de 3 barras (idéntico al del Informe 360) — currentColor para portada.
+const LOGO = `<svg viewBox="0 0 120 120" fill="none" class="report-logo">
+  <path d="M26 90 L60 62 L94 90" stroke="currentColor" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M26 73 L60 45 L94 73" stroke="currentColor" stroke-width="11" stroke-linecap="round" stroke-linejoin="round" opacity=".72"/>
+  <path d="M26 56 L60 28 L94 56" stroke="currentColor" stroke-width="11" stroke-linecap="round" stroke-linejoin="round" opacity=".45"/>
+</svg>`;
+const LOGO_TRI = `<svg viewBox="0 0 120 120" fill="none" style="width:38px;height:38px">
+  <path d="M26 90 L60 62 L94 90" stroke="#3D6E92" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M26 73 L60 45 L94 73" stroke="#2F8C93" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M26 56 L60 28 L94 56" stroke="#6BA083" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>`;
 
-const NIVEL_META = {
-  critico: { label: 'Crítico',  color: '#B4524A', bg: '#F6EAE6' },
-  alerta:  { label: 'En alerta', color: '#C0892F', bg: '#F4ECDA' },
-  estable: { label: 'Estable',   color: '#2F8C93', bg: '#E4EFEF' },
-  optimo:  { label: 'Óptimo',    color: '#2E9B73', bg: '#E9F0EA' },
+// Paletas alineadas al sistema de marca del 360 (verde --rep-fin, teal, rojo, ámbar).
+const NIVEL = {
+  critico: { c: '#B4524A', bg: '#F6EAE6', l: 'Crítico' },
+  alerta:  { c: '#C2871A', bg: '#F4ECDA', l: 'En alerta' },
+  estable: { c: '#1C7A82', bg: '#E6F1F0', l: 'Estable' },
+  optimo:  { c: '#5E9E7E', bg: '#E9F0EA', l: 'Óptimo' },
 };
-const SEÑAL_META = {
-  positivo: { color: '#2E9B73', glyph: '▲' },
-  neutro:   { color: '#3D6E92', glyph: '■' },
-  negativo: { color: '#B4524A', glyph: '▼' },
+const SEÑAL = {
+  positivo: { c: '#5E9E7E', g: '▲' },
+  neutro:   { c: '#3D6E92', g: '■' },
+  negativo: { c: '#B4524A', g: '▼' },
 };
-const RANGO_META = {
-  alta:  { label: 'Alta',  color: '#B4524A' },
-  media: { label: 'Media', color: '#C0892F' },
-  baja:  { label: 'Baja',  color: '#2F8C93' },
+const RANGO = {
+  alta:  { c: '#B4524A', bg: '#F6EAE6', l: 'Alta' },
+  media: { c: '#C2871A', bg: '#F4ECDA', l: 'Media' },
+  baja:  { c: '#1C7A82', bg: '#E6F1F0', l: 'Baja' },
 };
-const nivelMeta = (n) => NIVEL_META[n] || NIVEL_META.estable;
-const señalMeta = (s) => SEÑAL_META[s] || SEÑAL_META.neutro;
-const rangoMeta = (r) => RANGO_META[r] || RANGO_META.media;
+const nivelOf = (n) => NIVEL[n] || NIVEL.estable;
+const señalOf = (s) => SEÑAL[s] || SEÑAL.neutro;
+const rangoOf = (r) => RANGO[r] || RANGO.media;
 
-function _footer(n, total) {
-  return `<div class="finr-foot"><span>${LOGO_TRI}<span class="finr-foot-name">Tríada · Consultoría 360</span></span>
-    <span class="finr-foot-pg">${n} / ${total}</span></div>`;
+function fmtFechaLarga() {
+  return new Date().toLocaleDateString('es-CL', { day: '2-digit', month: 'long', year: 'numeric' });
+}
+
+function footer(codigo, n, total) {
+  return `<div class="report-footer">
+    <span class="rf-brand">TRÍADA · Informe Financiero</span>
+    <span class="rf-code">${esc(codigo || '')}</span>
+    <span class="rf-page">${n} / ${total}</span>
+  </div>`;
+}
+function pageHead(num, title) {
+  return `<div class="report-head"><span class="rh-num">${esc(num)}</span><h2 class="rh-title">${esc(title)}</h2><span class="rh-rule"></span></div>`;
 }
 
 // ── Páginas ───────────────────────────────────────────────────────────────────
 function pageCover(r, meta) {
-  const nm = nivelMeta(r.salud?.nivel);
-  const puntaje = Number.isFinite(r.salud?.puntaje) ? r.salud.puntaje : null;
-  return `<section class="finr-page finr-cover">
-    <div class="finr-cover-top">
-      <div class="finr-brand">${LOGO_TRI}<span>Tríada</span></div>
-      <div class="finr-cover-kind">${esc(meta?.tipoLabel || 'Informe Financiero')}</div>
+  const nv = nivelOf(r.salud?.nivel);
+  const pnt = Number.isFinite(r.salud?.puntaje) ? r.salud.puntaje : null;
+  const titulo = r.titulo || meta.tipoLabel || 'Informe Financiero';
+  const periodo = r.periodo || meta.periodo || '';
+  return `<section class="report-page cover-page">
+    <div class="cover-aura"></div>
+    <div class="cover-top">
+      <div class="cover-brand">${LOGO}<span>TRÍADA</span></div>
+      <div class="cover-areas"><span><i style="background:${nv.c}"></i>${esc(nv.l)}</span></div>
     </div>
-    <div class="finr-cover-mid">
-      <h1 class="finr-cover-title">${esc(r.titulo || meta?.tipoLabel || 'Informe Financiero')}</h1>
-      <div class="finr-cover-period">${esc(r.periodo || meta?.periodo || '')}</div>
-      ${meta?.empresa ? `<div class="finr-cover-emp">${esc(meta.empresa)}</div>` : ''}
-      <div class="finr-health" style="--h:${nm.color};background:${nm.bg}">
-        <div class="finr-health-badge" style="background:${nm.color}">${puntaje == null ? '—' : puntaje}</div>
-        <div class="finr-health-txt">
-          <div class="finr-health-nivel" style="color:${nm.color}">${esc(nm.label)}</div>
-          <div class="finr-health-titular">${esc(r.salud?.titular || '')}</div>
-        </div>
+    <div class="cover-center">
+      <div class="cover-kicker">Informe Financiero</div>
+      <h1 class="cover-title">${esc(titulo)}</h1>
+      ${periodo ? `<div class="cover-sub">${esc(periodo)}</div>` : ''}
+      ${r.salud?.titular ? `<div class="cover-quote">“${esc(r.salud.titular)}”</div>` : ''}
+      <div class="cover-result">
+        <span class="cr-item"><span class="cr-k">Salud financiera</span><span class="cr-v"><b>${pnt == null ? '—' : pnt}</b>/100 · ${esc(nv.l)}</span></span>
       </div>
     </div>
-    <div class="finr-cover-foot">
-      ${meta?.codigo ? `<span>${esc(meta.codigo)}</span>` : '<span></span>'}
-      <span>Generado con trIA · sin exponer tus datos a terceros</span>
+    <div class="cover-meta">
+      <div class="cmeta"><span class="cmeta-l">Empresa</span><span class="cmeta-v">${esc(meta.empresa || 'Interno')}</span></div>
+      <div class="cmeta"><span class="cmeta-l">Período</span><span class="cmeta-v">${esc(periodo || '—')}</span></div>
+      <div class="cmeta"><span class="cmeta-l">Generado</span><span class="cmeta-v">${esc(fmtFechaLarga())}</span></div>
+      <div class="cmeta"><span class="cmeta-l">Código de informe</span><span class="cmeta-v mono">${esc(meta.codigo || '—')}</span></div>
     </div>
   </section>`;
 }
 
-function pageResumen(r, total) {
+function pageResumen(r, n, total) {
+  const nv = nivelOf(r.salud?.nivel);
+  const pnt = Number.isFinite(r.salud?.puntaje) ? r.salud.puntaje : 0;
   const inds = r.indicadores || [];
-  return `<section class="finr-page">
-    <h2 class="finr-h2">Resumen ejecutivo</h2>
-    <div class="finr-resumen">${esc(r.resumen_ejecutivo || 'Sin resumen.').split(/\n+/).map((p) => `<p>${esc(p)}</p>`).join('')}</div>
-    ${inds.length ? `<h3 class="finr-h3">Indicadores clave</h3>
-      <div class="finr-kpis">
+  return `<section class="report-page">
+    ${pageHead('01', 'Resumen ejecutivo')}
+    <div class="resumen-grid">
+      <div class="resumen-gauge">
+        <div class="rg-label">Salud financiera</div>
+        ${ringGauge(pnt, { size: 220, color: nv.c, label: nv.l })}
+        ${r.salud?.titular ? `<div class="rg-tag" style="color:${nv.c};background:${nv.bg}">${esc(r.salud.titular)}</div>` : ''}
+      </div>
+      <div class="resumen-text">
+        <h3 class="rt-title">Lectura del período</h3>
+        <p class="rt-body">${esc(r.resumen_ejecutivo || 'Sin resumen.')}</p>
+      </div>
+    </div>
+    ${inds.length ? `<h3 class="rt-title" style="margin-top:26px">Indicadores clave</h3>
+      <div class="fin-kpis">
         ${inds.map((k) => {
-          const m = señalMeta(k.señal);
-          return `<div class="finr-kpi" style="--s:${m.color}">
-            <div class="finr-kpi-top"><span class="finr-kpi-name">${esc(k.nombre)}</span><span class="finr-kpi-sig" style="color:${m.color}">${m.glyph}</span></div>
-            <div class="finr-kpi-val">${esc(k.valor || '—')}</div>
-            ${k.comentario ? `<div class="finr-kpi-cmt">${esc(k.comentario)}</div>` : ''}
+          const m = señalOf(k.señal);
+          return `<div class="fin-kpi" style="border-left-color:${m.c}">
+            <div class="fin-kpi-top"><span class="fin-kpi-name">${esc(k.nombre)}</span><span style="color:${m.c}">${m.g}</span></div>
+            <div class="fin-kpi-val">${esc(k.valor || '—')}</div>
+            ${k.comentario ? `<div class="fin-kpi-cmt">${esc(k.comentario)}</div>` : ''}
           </div>`;
         }).join('')}
       </div>` : ''}
-    ${_footer(2, total)}
+    ${footer(r.codigo, n, total)}
   </section>`;
 }
 
-function _listBlock(title, items, render) {
-  if (!items || !items.length) return '';
-  return `<h3 class="finr-h3">${esc(title)}</h3><div class="finr-list">${items.map(render).join('')}</div>`;
-}
-
-function pageHallazgos(r, total) {
-  const hall = _listBlock('Hallazgos', r.hallazgos, (h) => {
-    const m = rangoMeta(h.severidad);
-    return `<div class="finr-item"><div class="finr-item-hd">
-        <span class="finr-tag" style="color:${m.color};background:${m.color}18">${esc(m.label)}</span>
-        <span class="finr-item-tt">${esc(h.titulo)}</span></div>
-      ${h.detalle ? `<p class="finr-item-dt">${esc(h.detalle)}</p>` : ''}</div>`;
-  });
-  const riesgos = _listBlock('Riesgos', r.riesgos, (x) => `<div class="finr-item">
-      <div class="finr-item-hd"><span class="finr-dot" style="background:#B4524A"></span><span class="finr-item-tt">${esc(x.titulo)}</span></div>
-      ${x.detalle ? `<p class="finr-item-dt">${esc(x.detalle)}</p>` : ''}
-      ${x.mitigacion ? `<p class="finr-item-mit"><strong>Mitigación:</strong> ${esc(x.mitigacion)}</p>` : ''}</div>`);
-  if (!hall && !riesgos) return '';
-  return `<section class="finr-page"><h2 class="finr-h2">Hallazgos y riesgos</h2>${hall}${riesgos}${_footer(3, total)}</section>`;
-}
-
-function pageRecos(r, total) {
-  const recos = _listBlock('Recomendaciones', r.recomendaciones, (x) => {
-    const m = rangoMeta(x.prioridad);
-    return `<div class="finr-item finr-reco"><div class="finr-item-hd">
-        <span class="finr-tag" style="color:${m.color};background:${m.color}18">Prioridad ${esc(m.label)}</span>
-        <span class="finr-item-tt">${esc(x.accion)}</span></div>
-      ${x.impacto ? `<p class="finr-item-dt"><strong>Impacto:</strong> ${esc(x.impacto)}</p>` : ''}</div>`;
-  });
-  if (!recos && !r.proyeccion) return '';
-  return `<section class="finr-page"><h2 class="finr-h2">Recomendaciones${r.proyeccion ? ' y proyección' : ''}</h2>
-    ${recos}
-    ${r.proyeccion ? `<h3 class="finr-h3">Qué viene el próximo período</h3><div class="finr-resumen"><p>${esc(r.proyeccion)}</p></div>` : ''}
-    ${_footer(4, total)}
+function pageHallazgos(r, n, total) {
+  const hall = r.hallazgos || [];
+  const ries = r.riesgos || [];
+  return `<section class="report-page">
+    ${pageHead('02', 'Hallazgos y riesgos')}
+    ${hall.length ? `<div class="hallazgos-list">
+      ${hall.map((h, i) => {
+        const m = rangoOf(h.severidad);
+        return `<div class="hallazgo-card">
+          <div class="hz-rank" style="background:${m.bg};color:${m.c}">${i + 1}</div>
+          <div style="flex:1">
+            <div class="hz-top"><span class="hz-title">${esc(h.titulo)}</span><span class="hz-risk" style="color:${m.c};border-color:${m.c};background:${m.bg}">${esc(m.l)}</span></div>
+            ${h.detalle ? `<div class="hz-impacto">${esc(h.detalle)}</div>` : ''}
+          </div>
+        </div>`;
+      }).join('')}
+    </div>` : ''}
+    ${ries.length ? `<h3 class="rt-title" style="margin-top:22px">Riesgos a vigilar</h3>
+      <div class="oport-list">
+        ${ries.map((x) => `<div class="oport-card">
+          <div class="op-num" style="background:#B4524A">!</div>
+          <div style="flex:1">
+            <div class="op-title">${esc(x.titulo)}</div>
+            ${x.detalle ? `<div class="op-benef">${esc(x.detalle)}</div>` : ''}
+            ${x.mitigacion ? `<div class="op-benef"><strong>Mitigación:</strong> ${esc(x.mitigacion)}</div>` : ''}
+          </div>
+        </div>`).join('')}
+      </div>` : ''}
+    ${footer(r.codigo, n, total)}
   </section>`;
 }
+
+function pageRecos(r, n, total) {
+  const recos = r.recomendaciones || [];
+  return `<section class="report-page">
+    ${pageHead('03', 'Recomendaciones')}
+    ${recos.length ? `<div class="oport-list">
+      ${recos.map((x, i) => {
+        const m = rangoOf(x.prioridad);
+        return `<div class="oport-card">
+          <div class="op-num" style="background:${m.c}">${i + 1}</div>
+          <div style="flex:1">
+            <div class="op-title-row"><span class="op-title">${esc(x.accion)}</span><span class="op-prio" style="color:${m.c};background:${m.bg}">Prioridad ${esc(m.l)}</span></div>
+            ${x.impacto ? `<div class="op-benef"><strong>Impacto:</strong> ${esc(x.impacto)}</div>` : ''}
+          </div>
+        </div>`;
+      }).join('')}
+    </div>` : ''}
+    ${r.proyeccion ? `<h3 class="rt-title" style="margin-top:22px">Qué viene el próximo período</h3>
+      <div class="conclusion-cta">${esc(r.proyeccion)}</div>` : ''}
+    ${footer(r.codigo, n, total)}
+  </section>`;
+}
+
+const _hasHallazgos = (r) => (r.hallazgos && r.hallazgos.length) || (r.riesgos && r.riesgos.length);
+const _hasRecos = (r) => (r.recomendaciones && r.recomendaciones.length) || r.proyeccion;
 
 /**
- * Documento completo del informe financiero (HTML string). Puro (sin DOM).
+ * Documento completo del informe financiero (HTML string, piel del 360). Puro.
  * @param {object} report  informe normalizado (dominio)
  * @param {object} meta    { tipoLabel, periodo, empresa, codigo }
  */
 export function buildFinReportDoc(report, meta = {}) {
   const r = report || {};
-  // Total de páginas presentes (portada + resumen siempre; hallazgos/recos si hay contenido).
-  const pages = [pageCover(r, meta), pageResumen(r, 0)];
-  const hall = pageHallazgos(r, 0);
-  const recos = pageRecos(r, 0);
-  if (hall) pages.push(hall);
-  if (recos) pages.push(recos);
-  const total = pages.length;
-  // Reconstruir con el total correcto en los footers.
-  const built = [pageCover(r, meta), pageResumen(r, total)];
-  const h = pageHallazgos(r, total); if (h) built.push(h);
-  const c = pageRecos(r, total);     if (c) built.push(c);
-  return built.join('');
+  const kinds = ['cover', 'resumen'];
+  if (_hasHallazgos(r)) kinds.push('hallazgos');
+  if (_hasRecos(r)) kinds.push('recos');
+  const total = kinds.length;
+  return kinds.map((k, i) => {
+    const n = i + 1;
+    if (k === 'cover') return pageCover(r, meta);
+    if (k === 'resumen') return pageResumen(r, n, total);
+    if (k === 'hallazgos') return pageHallazgos(r, n, total);
+    return pageRecos(r, n, total);
+  }).join('');
 }
 
-// ── Visor (overlay + imprimir) ────────────────────────────────────────────────
+// ── Visor (overlay + imprimir) — mismo shell que el Informe 360 ───────────────
 export function openFinReport(report, meta = {}) {
   let viewer = document.getElementById('finReportViewer');
   if (viewer) viewer.remove();
 
   viewer = document.createElement('div');
   viewer.id = 'finReportViewer';
-  viewer.className = 'finr-viewer';
+  viewer.className = 'informe-viewer';
   viewer.innerHTML = `
-    <div class="finr-toolbar">
-      <div class="finr-tb-left">${LOGO_TRI}
-        <div><div class="finr-tb-name">${esc(meta.tipoLabel || 'Informe Financiero')} Tríada</div>
-          <div class="finr-tb-meta">${esc(meta.periodo || report?.periodo || '')}${meta.codigo ? ' · ' + esc(meta.codigo) : ''}</div></div>
+    <div class="report-toolbar">
+      <div class="rt-left">${LOGO_TRI}
+        <div><div class="rt-name">Informe Financiero Tríada</div>
+          <div class="rt-meta">${esc(meta.tipoLabel || '')}${meta.periodo ? ' · ' + esc(meta.periodo) : ''}${meta.codigo ? ' · ' + esc(meta.codigo) : ''}</div></div>
       </div>
-      <div class="finr-tb-actions">
+      <div class="rt-actions">
         <button type="button" class="btn btn-ghost btn-sm" id="finrClose">✕ Cerrar</button>
         <button type="button" class="btn btn-primary btn-sm" id="finrPrint">🖨 Descargar PDF</button>
       </div>
     </div>
-    <div class="finr-scroll"><div class="finr-doc">${buildFinReportDoc(report, meta)}</div></div>`;
+    <div class="report-scroll"><div class="report-doc">${buildFinReportDoc(report, meta)}</div></div>`;
   document.body.appendChild(viewer);
-  document.body.classList.add('has-fin-report');
+  document.body.classList.add('has-report-open');
 
   viewer.querySelector('#finrClose').addEventListener('click', () => {
     viewer.remove();
-    document.body.classList.remove('has-fin-report');
+    document.body.classList.remove('has-report-open');
   });
   viewer.querySelector('#finrPrint').addEventListener('click', () => window.print());
 }
