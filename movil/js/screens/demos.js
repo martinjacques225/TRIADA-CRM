@@ -73,6 +73,16 @@ const DEMOS = [
     grad: ['var(--teal)', 'var(--navy)'],
   },
   {
+    id: 'encuestas',
+    nombre: 'Encuestas',
+    tagline: 'Escucha a tus clientes, con resumen de trIA',
+    desc: 'Encuestas de satisfacción y NPS con resultados en vivo y un resumen inteligente de trIA. Responde la encuesta de ejemplo (estrellas, NPS, opciones y comentario) y mira cómo se mueven los resultados y el análisis. Demo sin backend.',
+    chips: ['Satisfacción', 'NPS', 'Resultados', 'Resumen trIA'],
+    url: '../demos/encuestas/',
+    icon: 'clipboard',
+    grad: ['#2F8C93', 'var(--navy)'],
+  },
+  {
     id: 'auditor',
     nombre: 'Auditor de Imagen',
     tagline: 'Cómo te ve un cliente antes de que hables',

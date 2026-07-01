@@ -13,6 +13,7 @@ con todas sus funciones, sin depender de terceros (Vercel, etc.).
 | `academia/`   | Academia Online con trIA (demo · Ola 3 · LMS de cursos: temario + video-lecciones + tutor trIA con Q&A + progreso + certificado al finalizar; sin backend ni API) | — (standalone, `demos/academia/index.html`) |
 | `tienda/`     | Tienda Online con trIA (demo · Ola 4 · ecommerce: marca editable + catálogo + buscador trIA + carrito + checkout + confirmación; productos ilustrados, sin backend ni cobros reales) | — (standalone, `demos/tienda/index.html`) |
 | `inventario/` | Control de Inventario con trIA (demo · Ola 4 · panel de stock: KPIs valor/quiebre/por-agotarse + tabla con ajuste +/− en vivo + alertas y reposición sugerida por trIA; sin backend) | — (standalone, `demos/inventario/index.html`) |
+| `encuestas/`  | Encuestas con trIA (demo · Ola 4 · satisfacción + NPS: responder (estrellas/NPS/opciones/comentario) → resultados en vivo (distribución, NPS, lo más valorado, comentarios) + resumen de trIA; sin backend) | — (standalone, `demos/encuestas/index.html`) |
 | `auditor/`    | Auditor de Imagen Corporativa con trIA (demo del Motor 2 · autodiagnóstico interactivo → informe con puntaje, sin backend) | — (standalone, `demos/auditor/index.html`) |
 | `gemelo/`     | Gemelo Virtual con trIA (demo del Motor 2 · simulador interactivo de decisiones, sin backend) | — (standalone, `demos/gemelo/index.html`) |
 | `fugas/`      | Detección de Fugas con trIA (demo del Motor 2 · datos de ejemplo, sin backend) | — (standalone, `demos/fugas/index.html`) |

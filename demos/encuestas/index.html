@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="es-CL">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0C1B26">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta name="description" content="Encuestas con trIA — Tríada. Escucha a tus clientes: encuestas de satisfacción y NPS con resultados en vivo y un resumen inteligente de trIA. Pruébala respondiendo la encuesta de ejemplo.">
+  <title>Tríada · Encuestas con trIA</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Spectral:ital,wght@0,400;0,500;0,600;0,700;1,500&family=Hanken+Grotesk:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --paper:#FBF9F3; --cream:#F4F1E9; --cream-2:#EFEBDF;
+      --ink:#14222E; --body:#46555F; --muted:#6B7780; --faint:#8A90A3;
+      --line:#E5DFD0; --petrol:#0C1B26; --petrol-2:#16466B;
+      --teal:#1C7A82; --teal-2:#2F8C93; --teal-l:#E6F1F0;
+      --green:#5E9E7E; --green-l:#EAF3EC; --amber:#C2871A; --amber-l:#F6EFDC; --red:#B4524A; --red-l:#F6E9E7;
+      --serif:'Spectral',Georgia,serif; --sans:'Hanken Grotesk',system-ui,-apple-system,sans-serif;
+    }
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:var(--sans);background:var(--paper);color:var(--ink);line-height:1.5;-webkit-font-smoothing:antialiased}
+    .wrap{max-width:1000px;margin:0 auto;padding:0 20px}
+    .serif{font-family:var(--serif)}
+
+    header{background:var(--petrol);color:#fff}
+    .hd{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:16px 0}
+    .brand{display:flex;align-items:center;gap:11px;font-family:var(--serif);font-size:21px;font-weight:600;letter-spacing:.04em}
+    .badge{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--teal-2);border:1px solid rgba(127,208,204,.4);border-radius:999px;padding:5px 12px;white-space:nowrap}
+
+    .hero{background:radial-gradient(120% 100% at 85% 0%,#15384a 0%,#0C1B26 55%,#0A1620 100%);color:#fff;padding:44px 0 66px}
+    .kick{font-size:12px;font-weight:700;letter-spacing:.28em;text-transform:uppercase;color:var(--teal-2);margin-bottom:16px}
+    .hero h1{font-family:var(--serif);font-size:clamp(30px,6vw,52px);font-weight:600;line-height:1.04;letter-spacing:-.01em;max-width:16ch}
+    .hero p{margin-top:16px;font-size:clamp(15px,2.4vw,18px);color:rgba(234,229,216,.82);max-width:56ch}
+
+    .card{background:#fff;border:1px solid var(--line);border-radius:18px;box-shadow:0 20px 40px -30px rgba(12,27,38,.4)}
+    .demo-panel{margin-top:-40px;position:relative;z-index:2;padding:22px}
+    .demo-tag{display:inline-flex;align-items:center;gap:7px;font-size:12px;font-weight:700;color:var(--teal);background:var(--teal-l);border-radius:999px;padding:5px 12px;margin-bottom:16px}
+    .demo-tag i{width:7px;height:7px;border-radius:50%;background:var(--teal);animation:blink 1.6s ease-in-out infinite}
+    @keyframes blink{0%,100%{opacity:1}50%{opacity:.35}}
+
+    /* Tabs */
+    .tabs{display:inline-flex;background:var(--cream);border:1px solid var(--line);border-radius:12px;padding:4px;gap:3px;margin-bottom:18px}
+    .tab{font-family:var(--sans);font-size:13.5px;font-weight:700;color:var(--body);background:transparent;border:none;border-radius:9px;padding:9px 16px;cursor:pointer;display:inline-flex;align-items:center;gap:8px;transition:background .13s,color .13s}
+    .tab.on{background:#fff;color:var(--teal);box-shadow:0 3px 8px -4px rgba(12,27,38,.3)}
+    .tab .n{font-size:11px;background:var(--teal-l);color:var(--teal);border-radius:999px;padding:1px 8px;font-weight:800}
+    .tab.on .n{background:var(--teal);color:#fff}
+
+    .view{display:none} .view.on{display:block;animation:fade .35s ease}
+    @keyframes fade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+
+    /* Encuesta */
+    .survey-head{display:flex;align-items:center;gap:12px;padding-bottom:16px;margin-bottom:6px;border-bottom:1px solid var(--line)}
+    .survey-head .mono{width:42px;height:42px;flex:none;border-radius:11px;background:var(--petrol);color:#fff;display:flex;align-items:center;justify-content:center;font-family:var(--serif);font-weight:700;font-size:20px}
+    .survey-head .sn{font-family:var(--serif);font-size:18px;font-weight:600;color:var(--ink);line-height:1.1}
+    .survey-head .ss{font-size:12px;color:var(--muted)}
+    .q{padding:18px 0;border-bottom:1px solid var(--line)}
+    .q:last-of-type{border-bottom:none}
+    .q .ql{font-size:15px;font-weight:700;color:var(--ink);margin-bottom:12px}
+    .q .ql span{color:var(--red)}
+    .stars{display:flex;gap:6px}
+    .star{width:44px;height:44px;border:1px solid var(--line);background:#fff;border-radius:11px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--cream-2);transition:color .12s,border-color .12s,background .12s}
+    .star:hover,.star.on{color:var(--amber);border-color:var(--amber)}
+    .star.on{background:var(--amber-l)}
+    .star svg{fill:currentColor;stroke:none}
+    .nps{display:flex;gap:6px;flex-wrap:wrap}
+    .npb{width:40px;height:40px;border:1px solid var(--line);background:#fff;border-radius:9px;cursor:pointer;font-family:var(--sans);font-weight:700;font-size:14px;color:var(--body);transition:transform .1s,border-color .12s,background .12s,color .12s}
+    .npb:hover{border-color:var(--teal-2)}
+    .npb.on{background:var(--teal);color:#fff;border-color:var(--teal);transform:translateY(-2px)}
+    .npscale{display:flex;justify-content:space-between;font-size:11px;color:var(--faint);margin-top:7px}
+    .chips{display:flex;gap:8px;flex-wrap:wrap}
+    .chip{font-family:var(--sans);font-size:13px;font-weight:600;color:var(--body);background:#fff;border:1px solid var(--line);border-radius:999px;padding:9px 15px;cursor:pointer;transition:background .13s,color .13s,border-color .13s}
+    .chip:hover{border-color:var(--teal-2)}
+    .chip.on{background:var(--teal);color:#fff;border-color:var(--teal)}
+    textarea{width:100%;font-family:var(--sans);font-size:14px;color:var(--ink);background:var(--cream);border:1px solid var(--line);border-radius:11px;padding:12px 14px;resize:vertical;min-height:78px}
+    textarea:focus{outline:none;border-color:var(--teal);background:#fff}
+    .btn{font-family:var(--sans);font-size:15px;font-weight:700;border:none;border-radius:12px;padding:14px 22px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:9px;text-decoration:none;transition:transform .12s,box-shadow .12s}
+    .btn-primary{background:var(--teal);color:#fff;box-shadow:0 10px 24px -12px var(--teal)}
+    .btn-primary:hover{transform:translateY(-1px);box-shadow:0 14px 28px -12px var(--teal)}
+    .btn-primary[disabled]{opacity:.5;cursor:default;box-shadow:none;transform:none}
+    .submit-row{margin-top:20px;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+    .req-hint{font-size:12px;color:var(--faint)}
+
+    .thanks{text-align:center;padding:20px 10px 6px;display:none}
+    .thanks.on{display:block;animation:fade .4s ease}
+    .thanks .chk{width:60px;height:60px;border-radius:50%;background:var(--green);color:#fff;display:flex;align-items:center;justify-content:center;margin:0 auto 14px;animation:pop .4s cubic-bezier(.3,1.4,.5,1)}
+    @keyframes pop{from{transform:scale(0)}to{transform:scale(1)}}
+    .thanks h3{font-family:var(--serif);font-size:21px;font-weight:600}
+    .thanks p{font-size:13.5px;color:var(--body);margin-top:6px}
+
+    /* Resultados */
+    .rkpis{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:18px}
+    .rk{border:1px solid var(--line);border-radius:14px;padding:16px;background:linear-gradient(160deg,#fff,#FCFAF4);text-align:center}
+    .rk .rl{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--faint)}
+    .rk .rv{font-family:var(--serif);font-size:32px;font-weight:600;color:var(--ink);line-height:1;margin-top:8px;font-variant-numeric:tabular-nums}
+    .rk .rv small{font-size:16px;color:var(--amber)}
+    .rk .rd{font-size:11.5px;color:var(--muted);margin-top:5px}
+    .rk.nps .rv{color:var(--green)}
+
+    .rsec{border:1px solid var(--line);border-radius:14px;padding:18px;margin-bottom:14px;background:#fff}
+    .rsec h4{font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--faint);margin-bottom:14px;display:flex;align-items:center;gap:8px}
+    .bar{display:flex;align-items:center;gap:12px;margin-bottom:11px}
+    .bar .bl{width:74px;flex:none;font-size:12.5px;font-weight:600;color:var(--body);display:flex;align-items:center;gap:4px}
+    .bar .bl .s{color:var(--amber)}
+    .btrack{flex:1;height:12px;background:var(--cream-2);border-radius:999px;overflow:hidden}
+    .bfill{height:100%;border-radius:999px;width:0;transition:width .9s cubic-bezier(.4,0,.2,1)}
+    .bar .bv{width:56px;flex:none;text-align:right;font-size:12.5px;font-weight:700;color:var(--ink);font-variant-numeric:tabular-nums}
+    .nps-split{display:flex;height:16px;border-radius:999px;overflow:hidden;margin-bottom:10px}
+    .nps-split span{display:block;transition:width .9s ease}
+    .nps-leg{display:flex;gap:16px;flex-wrap:wrap;font-size:12px;color:var(--body)}
+    .nps-leg b{display:inline-flex;align-items:center;gap:6px;font-weight:600}
+    .nps-leg .d{width:9px;height:9px;border-radius:50%}
+
+    .insight{display:flex;gap:13px;border:1px solid var(--line);border-radius:14px;padding:16px 18px;background:linear-gradient(120deg,var(--teal-l),#F3F7F2);margin-bottom:14px}
+    .insight .ii{width:38px;height:38px;flex:none;border-radius:11px;background:var(--petrol);color:#fff;display:flex;align-items:center;justify-content:center}
+    .insight .ik{font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--teal)}
+    .insight .it{font-size:14px;color:var(--body);line-height:1.55;margin-top:3px}
+    .insight .it b{color:var(--ink)}
+
+    .comments{display:flex;flex-direction:column;gap:10px}
+    .cmt{border:1px solid var(--line);border-radius:12px;padding:12px 14px;background:#fff}
+    .cmt.mine{border-color:var(--teal);background:var(--teal-l)}
+    .cmt .ch{display:flex;align-items:center;gap:8px;margin-bottom:5px}
+    .cmt .cs{color:var(--amber);font-size:12px;letter-spacing:1px}
+    .cmt .cw{font-size:11px;color:var(--faint);margin-left:auto}
+    .cmt .cx{font-size:13.5px;color:var(--body);line-height:1.5}
+    .cmt .tag{font-size:10px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:var(--teal);background:#fff;border:1px solid var(--teal);border-radius:999px;padding:1px 8px}
+
+    /* Beneficios */
+    .sec{padding:52px 0 8px}
+    .sec-k{font-size:12px;font-weight:700;letter-spacing:.22em;text-transform:uppercase;color:var(--teal);text-align:center}
+    .sec-h{font-family:var(--serif);font-size:clamp(24px,4vw,34px);font-weight:600;text-align:center;margin-top:10px;max-width:22ch;margin-inline:auto;line-height:1.1}
+    .bens{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:32px}
+    .ben{border:1px solid var(--line);border-radius:16px;padding:22px;background:#fff;transition:transform .16s,box-shadow .16s}
+    .ben:hover{transform:translateY(-2px);box-shadow:0 20px 34px -26px rgba(12,27,38,.5)}
+    .ben .bi{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;color:var(--teal);background:var(--teal-l);margin-bottom:14px}
+    .ben h3{font-family:var(--serif);font-size:18px;font-weight:600;color:var(--ink)}
+    .ben p{font-size:13.5px;color:var(--body);line-height:1.55;margin-top:8px}
+
+    /* Contratación */
+    .hire{margin:56px 0 10px;background:linear-gradient(140deg,var(--petrol),#143a4a);color:#fff;border-radius:22px;padding:clamp(28px,5vw,44px);position:relative;overflow:hidden}
+    .hire::after{content:"";position:absolute;right:-80px;top:-80px;width:280px;height:280px;border-radius:50%;background:radial-gradient(circle,rgba(47,140,147,.35),transparent 70%)}
+    .hire .hk{font-size:12px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:var(--teal-2)}
+    .hire h2{font-family:var(--serif);font-size:clamp(23px,4vw,32px);font-weight:600;margin:12px 0 12px;max-width:24ch;line-height:1.12;position:relative}
+    .hire p{font-size:15px;color:rgba(234,229,216,.82);max-width:60ch;line-height:1.6;position:relative}
+    .hire .act{display:grid;grid-template-columns:1.1fr 1fr;gap:26px;margin-top:26px;position:relative}
+    .acts h4{font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--teal-2);margin-bottom:14px}
+    .acts ul{list-style:none;display:flex;flex-direction:column;gap:12px}
+    .acts li{display:flex;gap:11px;font-size:14px;color:rgba(234,229,216,.92);line-height:1.45}
+    .acts li svg{color:#7FE7A6;flex:none;margin-top:2px}
+    .hire-cta{align-self:center;background:rgba(255,255,255,.05);border:1px solid rgba(127,208,204,.28);border-radius:16px;padding:22px;text-align:center}
+    .hire-cta p{font-size:13.5px;color:rgba(234,229,216,.85);margin-bottom:16px;max-width:none}
+    .hire-cta .btn{width:100%;background:var(--teal);color:#fff;box-shadow:0 10px 24px -12px var(--teal)}
+    .hire-note{margin-top:16px;font-size:12px;color:rgba(234,229,216,.6);display:flex;gap:8px;align-items:flex-start;position:relative}
+    .hire-note svg{flex:none;margin-top:1px;color:var(--teal-2)}
+
+    footer{border-top:1px solid var(--line);margin-top:48px;padding:26px 0;color:var(--faint);font-size:12.5px}
+    .foot{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px}
+    .foot .fb{display:flex;align-items:center;gap:9px;font-family:var(--serif);font-weight:600;color:var(--muted)}
+
+    @media (max-width:760px){ .bens{grid-template-columns:1fr 1fr} .hire .act{grid-template-columns:1fr;gap:20px} }
+    @media (max-width:520px){ .bens{grid-template-columns:1fr} .demo-panel{padding:16px 15px} .rkpis{grid-template-columns:1fr} .star,.npb{width:38px;height:38px} }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="wrap hd">
+      <span class="brand">
+        <svg viewBox="0 0 120 120" width="30" height="30" fill="none" aria-hidden="true">
+          <path d="M26 90 L60 62 L94 90" stroke="#fff" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M26 73 L60 45 L94 73" stroke="#2F8C93" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M26 56 L60 28 L94 56" stroke="#6BA083" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        Tríada
+      </span>
+      <span class="badge"><span style="text-transform:none">trIA</span> · Encuestas</span>
+    </div>
+  </header>
+
+  <section class="hero">
+    <div class="wrap">
+      <div class="kick">Encuestas IA · Tríada</div>
+      <h1 class="serif">Escucha a tus clientes de verdad.</h1>
+      <p>Encuestas de satisfacción y NPS que la gente sí responde, con resultados en vivo y un resumen inteligente de trIA que te dice qué mejorar. Pruébala: responde la encuesta y mira cómo se mueven los resultados.</p>
+    </div>
+  </section>
+
+  <div class="wrap">
+    <div class="card demo-panel">
+      <div class="demo-tag"><i></i>Demostración · encuesta de ejemplo</div>
+
+      <div class="tabs">
+        <button class="tab on" data-v="responder">📝 Responder</button>
+        <button class="tab" data-v="resultados">📊 Resultados <span class="n" id="respN">142</span></button>
+      </div>
+
+      <!-- Vista: Responder -->
+      <div class="view on" id="v-responder">
+        <div class="survey-head">
+          <span class="mono">N</span>
+          <div><div class="sn">Nogal Café · Tu opinión</div><div class="ss">30 segundos · anónima · nos ayuda a mejorar</div></div>
+        </div>
+
+        <div id="form">
+          <div class="q">
+            <div class="ql">¿Qué tan satisfecho quedaste con tu experiencia? <span>*</span></div>
+            <div class="stars" id="stars"></div>
+          </div>
+          <div class="q">
+            <div class="ql">¿Qué tan probable es que nos recomiendes a alguien? <span>*</span></div>
+            <div class="nps" id="nps"></div>
+            <div class="npscale"><span>Nada probable</span><span>Muy probable</span></div>
+          </div>
+          <div class="q">
+            <div class="ql">¿Qué destacarías? <small style="font-weight:500;color:var(--muted)">(elige las que quieras)</small></div>
+            <div class="chips" id="chips"></div>
+          </div>
+          <div class="q">
+            <div class="ql">¿Algo que podríamos mejorar?</div>
+            <textarea id="comment" placeholder="Cuéntanos con tus palabras… (opcional)"></textarea>
+          </div>
+          <div class="submit-row">
+            <button class="btn btn-primary" id="send" disabled>Enviar respuesta</button>
+            <span class="req-hint" id="reqHint">Responde las dos primeras preguntas para enviar.</span>
+          </div>
+        </div>
+
+        <div class="thanks" id="thanks">
+          <div class="chk"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></div>
+          <h3 class="serif">¡Gracias por tu opinión!</h3>
+          <p>Tu respuesta ya está sumada a los resultados. Míralos en la pestaña <b>Resultados</b>.</p>
+          <button class="btn btn-primary" id="goResults" style="margin-top:16px">Ver resultados →</button>
+        </div>
+      </div>
+
+      <!-- Vista: Resultados -->
+      <div class="view" id="v-resultados">
+        <div class="rkpis" id="rkpis"></div>
+        <div class="insight" id="insight"></div>
+
+        <div class="rsec">
+          <h4>Satisfacción (1 a 5 estrellas)</h4>
+          <div id="satBars"></div>
+        </div>
+
+        <div class="rsec">
+          <h4>NPS · ¿nos recomiendan?</h4>
+          <div class="nps-split" id="npsSplit"></div>
+          <div class="nps-leg">
+            <b><span class="d" style="background:var(--green)"></span>Promotores <span id="lp"></span></b>
+            <b><span class="d" style="background:var(--amber)"></span>Pasivos <span id="lpa"></span></b>
+            <b><span class="d" style="background:var(--red)"></span>Detractores <span id="ld"></span></b>
+          </div>
+        </div>
+
+        <div class="rsec">
+          <h4>Lo más valorado</h4>
+          <div id="choiceBars"></div>
+        </div>
+
+        <div class="rsec">
+          <h4>Comentarios recientes</h4>
+          <div class="comments" id="comments"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Beneficios -->
+    <section class="sec">
+      <div class="sec-k">Lo que hace por ti</div>
+      <h2 class="sec-h serif">Deja de adivinar qué piensan tus clientes</h2>
+      <div class="bens" id="bens"></div>
+    </section>
+
+    <!-- Contratación -->
+    <section class="hire">
+      <div class="hk">De la demo a tu negocio</div>
+      <h2 class="serif">Esto es una demostración. Al contratar, escuchas a tus clientes de verdad.</h2>
+      <p>Armamos tus encuestas con tu marca y las enviamos por <b style="color:#fff">WhatsApp, correo o QR</b> tras cada compra o visita. trIA lee todas las respuestas y te entrega un resumen con lo bueno, lo malo y qué priorizar.</p>
+      <div class="act">
+        <div class="acts">
+          <h4>Qué se activa al contratar</h4>
+          <ul>
+            <li><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>Encuestas con <b>tu marca</b>, por WhatsApp, correo o QR.</li>
+            <li><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg><b>Resultados en vivo</b> y seguimiento del NPS en el tiempo.</li>
+            <li><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>trIA <b>resume los comentarios</b> y detecta temas y quejas.</li>
+            <li><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>Alertas cuando alguien queda <b>insatisfecho</b>, para reaccionar.</li>
+          </ul>
+        </div>
+        <div class="hire-cta">
+          <p>Cuéntanos qué quieres saber de tus clientes y armamos la encuesta.</p>
+          <a class="btn" href="https://grupotriada.cl" target="_blank" rel="noopener">Quiero escuchar a mis clientes →</a>
+        </div>
+      </div>
+      <div class="hire-note">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 8h.01M11 12h1v4h1"/></svg>
+        Las 142 respuestas y los comentarios son un ejemplo. Al contratar, los resultados son los de tus clientes reales.
+      </div>
+    </section>
+  </div>
+
+  <footer>
+    <div class="wrap foot">
+      <span class="fb">
+        <svg viewBox="0 0 120 120" width="20" height="20" fill="none" aria-hidden="true">
+          <path d="M26 90 L60 62 L94 90" stroke="#3D6E92" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M26 71 L60 43 L94 71" stroke="#2F8C93" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        Tríada · Consultoría 360
+      </span>
+      <span>Demo · encuesta y respuestas de ejemplo · al contratar escuchas a tus clientes reales</span>
+    </div>
+  </footer>
+
+  <script>
+    var $ = function(id){ return document.getElementById(id); };
+    function esc(s){ return String(s==null?'':s).replace(/[&<>"]/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
+    function svg(p, s){ s = s || 22; return '<svg width="'+s+'" height="'+s+'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+p+'</svg>'; }
+    var STAR = '<svg width="24" height="24" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5l2.9 6.1 6.6.9-4.8 4.6 1.2 6.6L12 18.6 6.1 21.7l1.2-6.6L2.5 9.5l6.6-.9z"/></svg>';
+
+    // ── Datos sembrados (142 respuestas) ────────────────────────────────────
+    // Distribución de satisfacción por estrellas [1..5]
+    var sat = { 1:3, 2:5, 3:15, 4:41, 5:78 };
+    // NPS por grupo
+    var nps = { prom:82, pas:38, det:22 };   // promotores(9-10), pasivos(7-8), detractores(0-6)
+    // "Lo más valorado" (múltiple)
+    var CHOICES = ['Atención','Calidad','Rapidez','Ambiente','Precio'];
+    var choice = { 'Atención':96, 'Calidad':71, 'Rapidez':44, 'Ambiente':38, 'Precio':21 };
+    // Comentarios sembrados
+    var comments = [
+      { s:5, w:'hace 2 h', x:'Excelente atención, el café espectacular. Volveré sí o sí.', tag:'Atención' },
+      { s:4, w:'hace 5 h', x:'Todo muy rico, aunque esperé un poco en la hora peak.', tag:'Rapidez' },
+      { s:5, w:'ayer', x:'El ambiente es precioso para trabajar. Mi lugar favorito.', tag:'Ambiente' },
+      { s:3, w:'ayer', x:'Buen producto pero los precios subieron harto último tiempo.', tag:'Precio' },
+      { s:5, w:'hace 2 d', x:'La chica de la barra se sabía mi pedido de memoria 🙌', tag:'Atención' }
+    ];
+
+    // ── Beneficios ──────────────────────────────────────────────────────────
+    var BENS = [
+      { ic:'<path d="M8 12h8M8 8h8M8 16h5"/><rect x="3" y="3" width="18" height="18" rx="3"/>', h:'Encuestas que sí responden', p:'Cortas, bonitas y móviles. Llegan por WhatsApp o QR tras la compra, cuando la experiencia está fresca.' },
+      { ic:'<path d="M3 3v18h18"/><path d="M7 14l3-3 3 2 5-6"/>', h:'Resultados en vivo', p:'Cada respuesta actualiza los números al instante. Ves tu satisfacción y tu NPS sin exportar nada.' },
+      { ic:'<path d="M30 84 L60 60 L90 84"/>', raw:true, h:'trIA resume por ti', p:'Lee todos los comentarios y te dice en dos líneas qué valoran y qué reclaman. Sin leer 200 respuestas a mano.' },
+      { ic:'<path d="M10.3 3.2 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.2a2 2 0 0 0-3.4 0Z"/><path d="M12 9v4M12 17h.01"/>', h:'Reaccionas a tiempo', p:'Si alguien queda insatisfecho, te avisa al toque para que lo contactes antes de que hable mal de ti.' },
+      { ic:'<path d="M21 12a9 9 0 1 1-3-6.7M21 4v5h-5"/>', h:'Sigue tu NPS en el tiempo', p:'Mira si vas mejorando mes a mes y qué cambios movieron la aguja. Decisiones con evidencia.' },
+      { ic:'<circle cx="12" cy="8" r="4"/><path d="M5 20c0-3.6 3-6 7-6s7 2.4 7 6"/>', h:'Conoce a tus clientes', p:'Entiende qué los hace volver y qué los aleja, por segmento, para enfocar tus esfuerzos donde importa.' }
+    ];
+    $('bens').innerHTML = BENS.map(function(b){
+      var icon = b.raw ? '<svg width="23" height="23" viewBox="0 0 120 120" fill="none" stroke="currentColor" stroke-width="10" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M30 84 L60 60 L90 84"/><path d="M30 68 L60 44 L90 68"/></svg>' : svg(b.ic,23);
+      return '<div class="ben"><div class="bi">'+icon+'</div><h3 class="serif">'+b.h+'</h3><p>'+b.p+'</p></div>';
+    }).join('');
+    function triaMark(s){ return '<svg width="'+s+'" height="'+s+'" viewBox="0 0 120 120" fill="none" aria-hidden="true"><path d="M30 82 L60 58 L90 82" stroke="currentColor" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/><path d="M30 66 L60 42 L90 66" stroke="currentColor" stroke-width="11" stroke-linecap="round" stroke-linejoin="round" opacity=".55"/></svg>'; }
+
+    // ── Estado de la respuesta del usuario ──────────────────────────────────
+    var ans = { sat:0, nps:null, choices:{}, comment:'', sent:false };
+
+    // Estrellas
+    $('stars').innerHTML = [1,2,3,4,5].map(function(i){ return '<button class="star" data-s="'+i+'" aria-label="'+i+' estrellas">'+STAR+'</button>'; }).join('');
+    $('stars').addEventListener('click', function(ev){ var b=ev.target.closest('.star'); if(!b) return; ans.sat=+b.getAttribute('data-s');
+      [].forEach.call($('stars').children, function(c,i){ c.classList.toggle('on', i < ans.sat); }); checkReady(); });
+    // NPS
+    $('nps').innerHTML = [0,1,2,3,4,5,6,7,8,9,10].map(function(i){ return '<button class="npb" data-n="'+i+'">'+i+'</button>'; }).join('');
+    $('nps').addEventListener('click', function(ev){ var b=ev.target.closest('.npb'); if(!b) return; ans.nps=+b.getAttribute('data-n');
+      [].forEach.call($('nps').children, function(c){ c.classList.toggle('on', +c.getAttribute('data-n')===ans.nps); }); checkReady(); });
+    // Chips
+    $('chips').innerHTML = CHOICES.map(function(c){ return '<button class="chip" data-c="'+esc(c)+'">'+c+'</button>'; }).join('');
+    $('chips').addEventListener('click', function(ev){ var b=ev.target.closest('.chip'); if(!b) return; var c=b.getAttribute('data-c');
+      ans.choices[c]=!ans.choices[c]; b.classList.toggle('on', ans.choices[c]); });
+    // Comentario
+    $('comment').addEventListener('input', function(){ ans.comment=this.value; });
+
+    function checkReady(){ var ok = ans.sat>0 && ans.nps!==null; $('send').disabled=!ok;
+      $('reqHint').textContent = ok ? 'Todo listo — ¡gracias!' : 'Responde las dos primeras preguntas para enviar.'; }
+
+    // ── Enviar ──────────────────────────────────────────────────────────────
+    $('send').addEventListener('click', function(){
+      if (ans.sat<1 || ans.nps===null || ans.sent) return;
+      ans.sent = true;
+      sat[ans.sat] = (sat[ans.sat]||0)+1;
+      if (ans.nps>=9) nps.prom++; else if (ans.nps>=7) nps.pas++; else nps.det++;
+      CHOICES.forEach(function(c){ if (ans.choices[c]) choice[c]=(choice[c]||0)+1; });
+      if (ans.comment.trim()){
+        var tag = Object.keys(ans.choices).filter(function(k){return ans.choices[k];})[0] || '';
+        comments.unshift({ s:ans.sat, w:'recién', x:ans.comment.trim(), tag:tag, mine:true });
+      }
+      $('form').style.display='none'; $('thanks').classList.add('on');
+      renderResults();
+    });
+    $('goResults').addEventListener('click', function(){ switchView('resultados'); });
+
+    // ── Tabs ────────────────────────────────────────────────────────────────
+    function switchView(v){
+      [].forEach.call(document.querySelectorAll('.tab'), function(t){ t.classList.toggle('on', t.getAttribute('data-v')===v); });
+      $('v-responder').classList.toggle('on', v==='responder');
+      $('v-resultados').classList.toggle('on', v==='resultados');
+      if (v==='resultados') renderResults();
+    }
+    document.querySelector('.tabs').addEventListener('click', function(ev){ var t=ev.target.closest('.tab'); if(!t) return; switchView(t.getAttribute('data-v')); });
+
+    // ── Resultados ──────────────────────────────────────────────────────────
+    function total(){ var n=0; for (var k in sat) n+=sat[k]; return n; }
+    function avgSat(){ var s=0,n=0; for (var k in sat){ s+=k*sat[k]; n+=sat[k]; } return n? s/n : 0; }
+    function npsScore(){ var n=nps.prom+nps.pas+nps.det; return n? Math.round((nps.prom-nps.det)/n*100) : 0; }
+    function stars(n){ return '★★★★★'.slice(0,n)+'☆☆☆☆☆'.slice(0,5-n); }
+
+    function renderResults(){
+      var n = total(), avg = avgSat(), score = npsScore();
+      $('respN').textContent = n;
+      $('rkpis').innerHTML =
+        '<div class="rk"><div class="rl">Respuestas</div><div class="rv">'+n+'</div><div class="rd">encuesta activa</div></div>'
+      + '<div class="rk"><div class="rl">Satisfacción</div><div class="rv">'+avg.toFixed(1)+'<small> ★</small></div><div class="rd">promedio de 5</div></div>'
+      + '<div class="rk nps"><div class="rl">NPS</div><div class="rv">'+(score>0?'+':'')+score+'</div><div class="rd">recomendación</div></div>';
+
+      // Insight de trIA
+      var topChoice = CHOICES.slice().sort(function(a,b){return choice[b]-choice[a];})[0];
+      var pctTop = Math.round(choice[topChoice]/n*100);
+      $('insight').innerHTML = '<span class="ii">'+triaMark(20)+'</span>'
+        + '<div><div class="ik"><span style="text-transform:none">trIA</span> · resumen de '+n+' respuestas</div>'
+        + '<div class="it">Tus clientes valoran sobre todo la <b>'+topChoice.toLowerCase()+'</b> ('+pctTop+'%) y la calidad. La satisfacción es <b>'+avg.toFixed(1)+'/5</b> con un NPS de <b>'+(score>0?'+':'')+score+'</b> (muy sano). La oportunidad más repetida en los comentarios son los <b>tiempos de espera en horario peak</b> — vale la pena revisar la dotación en esas horas.</div></div>';
+
+      // Barras de satisfacción
+      $('satBars').innerHTML = [5,4,3,2,1].map(function(k){
+        var pct = n? Math.round(sat[k]/n*100) : 0;
+        var col = k>=4?'var(--green)':k===3?'var(--amber)':'var(--red)';
+        return '<div class="bar"><span class="bl">'+k+' <span class="s">★</span></span>'
+          + '<span class="btrack"><span class="bfill" data-w="'+pct+'" style="background:'+col+'"></span></span>'
+          + '<span class="bv">'+sat[k]+' · '+pct+'%</span></div>';
+      }).join('');
+
+      // NPS split
+      var nn = nps.prom+nps.pas+nps.det;
+      $('npsSplit').innerHTML = '<span style="background:var(--green);width:'+(nps.prom/nn*100)+'%"></span>'
+        + '<span style="background:var(--amber);width:'+(nps.pas/nn*100)+'%"></span>'
+        + '<span style="background:var(--red);width:'+(nps.det/nn*100)+'%"></span>';
+      $('lp').textContent = Math.round(nps.prom/nn*100)+'%';
+      $('lpa').textContent = Math.round(nps.pas/nn*100)+'%';
+      $('ld').textContent = Math.round(nps.det/nn*100)+'%';
+
+      // Barras de "lo más valorado"
+      var maxC = Math.max.apply(null, CHOICES.map(function(c){return choice[c];}));
+      $('choiceBars').innerHTML = CHOICES.slice().sort(function(a,b){return choice[b]-choice[a];}).map(function(c){
+        var pct = n? Math.round(choice[c]/n*100) : 0, w = maxC? Math.round(choice[c]/maxC*100) : 0;
+        return '<div class="bar"><span class="bl" style="width:82px">'+c+'</span>'
+          + '<span class="btrack"><span class="bfill" data-w="'+w+'" style="background:var(--teal)"></span></span>'
+          + '<span class="bv">'+pct+'%</span></div>';
+      }).join('');
+
+      // Comentarios
+      $('comments').innerHTML = comments.slice(0,6).map(function(c){
+        return '<div class="cmt'+(c.mine?' mine':'')+'"><div class="ch"><span class="cs">'+stars(c.s)+'</span>'
+          + (c.tag?'<span class="tag">'+esc(c.tag)+'</span>':'')+'<span class="cw">'+(c.mine?'tu respuesta · ':'')+c.w+'</span></div>'
+          + '<div class="cx">'+esc(c.x)+'</div></div>';
+      }).join('');
+
+      // Animar barras
+      requestAnimationFrame(function(){ document.querySelectorAll('#v-resultados .bfill').forEach(function(b){ b.style.width=b.getAttribute('data-w')+'%'; }); });
+    }
+
+    // Arranque
+    checkReady(); renderResults();
+  </script>
+</body>
+</html>
