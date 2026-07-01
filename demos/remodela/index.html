@@ -84,8 +84,8 @@
     .hint svg{color:var(--teal-2);flex:none}
 
     /* Selector de estilo con miniaturas */
-    .styles{display:grid;grid-template-columns:repeat(3,1fr);gap:11px;margin-top:16px}
-    .sty{position:relative;display:flex;flex-direction:column;text-align:left;background:#fff;border:1px solid var(--line);border-radius:13px;overflow:hidden;cursor:pointer;transition:border-color .14s,box-shadow .14s,transform .12s;font-family:var(--sans)}
+    .styles{display:flex;flex-wrap:wrap;gap:11px;margin-top:16px}
+    .sty{flex:1 1 150px;min-width:140px;position:relative;display:flex;flex-direction:column;text-align:left;background:#fff;border:1px solid var(--line);border-radius:13px;overflow:hidden;cursor:pointer;transition:border-color .14s,box-shadow .14s,transform .12s;font-family:var(--sans)}
     .sty:hover{border-color:var(--teal-2);transform:translateY(-2px)}
     .sty.on{border-color:var(--teal);box-shadow:0 10px 22px -14px var(--teal),inset 0 0 0 1px var(--teal)}
     .sty .thumb{aspect-ratio:16/10;background-size:cover;background-position:center;position:relative}
@@ -366,6 +366,55 @@
             con:'Sofisticación acogedora: cuero, terracota y nogal. Un muro de acento, luz indirecta y materiales nobles para un living con carácter y calidez.',
             pal:['#EFE6DA','#C57B57','#A9744F','#4A3626'],
             mat:['Piso de madera tono medio','Muro de acento en terracota','Sofá de cuero caramelo','Mueble de nogal a medida','Iluminación cálida indirecta'] }
+        ] },
+      { id:'local', nom:'Local comercial', ic:'<path d="M3 9l1.6-4.5A1 1 0 0 1 5.5 4h13a1 1 0 0 1 .9.5L21 9"/><path d="M4 9v10a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1V9"/><path d="M9 20v-6h6v6"/><path d="M3 9a3 3 0 0 0 6 0 3 3 0 0 0 6 0 3 3 0 0 0 6 0"/>', antes:'img/local-antes.jpg',
+        estilos:[
+          { id:'cafe', nom:'Cafetería', tag:'Café de especialidad', img:'img/local-cafe.jpg',
+            plazo:'5–7 semanas', money:'$8.900.000 – $13.500.000',
+            con:'Un café de especialidad de barrio: barra de madera, cafetera profesional, luz cálida y un guiño industrial. Un lugar donde la gente quiere quedarse — y volver.',
+            pal:['#EDE4D6','#A9744F','#5B3A2A','#221C17'],
+            mat:['Barra de madera maciza','Piso de microcemento pulido','Cafetera y molino profesionales','Repisas de madera + luz cálida','Mesas y sillas de café (bentwood)'] },
+          { id:'boutique', nom:'Boutique', tag:'Tienda de ropa premium', img:'img/local-boutique.jpg',
+            plazo:'4–6 semanas', money:'$6.900.000 – $10.500.000',
+            con:'Una tienda luminosa y premium: mobiliario de roble a medida, iluminación de riel que hace lucir el producto, espejo de cuerpo entero y una imagen de marca cuidada.',
+            pal:['#F3EFE9','#D8C7A9','#B79B72','#2B2B2B'],
+            mat:['Mobiliario de roble a medida','Piso de madera clara','Iluminación de riel dirigible','Mesón mostrador + caja','Espejo de cuerpo entero y vitrina'] }
+        ] },
+      { id:'cocina', nom:'Cocina', ic:'<rect x="4" y="3" width="16" height="18" rx="2"/><path d="M4 9h16"/><path d="M7.5 6h.01M11 6h.01"/><rect x="8" y="12.5" width="8" height="6" rx="1"/>', antes:'img/cocina-antes.jpg',
+        estilos:[
+          { id:'moderno', nom:'Moderno', tag:'Blanco, acero y orden', img:'img/cocina-moderno.jpg',
+            plazo:'4–6 semanas', money:'$4.200.000 – $6.500.000',
+            con:'Cocina blanca sin tiradores, cubierta de cuarzo y electrodomésticos de acero. Superficies fáciles de limpiar, mucha luz y una sensación de orden total.',
+            pal:['#F5F5F3','#DCDEE0','#B9BEC2','#2B2B2B'],
+            mat:['Muebles melamina blanca sin tirador','Cubierta de cuarzo','Piso porcelanato símil madera','Campana y horno de acero','Cerámica metro + LED bajo mueble'] },
+          { id:'nordico', nom:'Nórdico', tag:'Madera clara y loza', img:'img/cocina-nordico.jpg',
+            plazo:'4–6 semanas', money:'$4.500.000 – $6.900.000',
+            con:'Maderas claras, repisas abiertas con loza y plantas, y detalles en bronce. Una cocina cálida y luminosa que invita a cocinar y compartir.',
+            pal:['#FBF7F0','#E3D6C0','#C8A97E','#7C9070'],
+            mat:['Muebles de abedul/roble claro','Repisas abiertas de madera','Cerámica metro blanca','Manillas de bronce','Cubierta de madera/piedra clara'] },
+          { id:'calido', nom:'Cálido', tag:'Madera y terracota', img:'img/cocina-calido.jpg',
+            plazo:'5–7 semanas', money:'$4.900.000 – $7.500.000',
+            con:'Muebles de madera cálida, muro de cerámica terracota y grifería negra. Una cocina de carácter, acogedora y con alma de casa.',
+            pal:['#EFE2D2','#C08B5C','#9A5B3B','#2B2320'],
+            mat:['Muebles de madera tono miel','Cerámica terracota artesanal','Grifería y tiradores negros','Piso de madera tono medio','Iluminación cálida colgante'] }
+        ] },
+      { id:'dormitorio', nom:'Dormitorio', ic:'<path d="M2 18v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5"/><path d="M2 18h20M2 14h20"/><path d="M6 11V8.5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1V11"/>', antes:'img/dormitorio-antes.jpg',
+        estilos:[
+          { id:'moderno', nom:'Moderno', tag:'Sereno y minimalista', img:'img/dormitorio-moderno.jpg',
+            plazo:'2–3 semanas', money:'$1.900.000 – $2.800.000',
+            con:'Paleta neutra, respaldo tapizado y textiles impecables. Un dormitorio sereno y ordenado, pensado para descansar de verdad.',
+            pal:['#F4F3F1','#D6D3CE','#B0A99F','#2B2B2B'],
+            mat:['Cama con respaldo tapizado','Piso vinílico símil roble','Veladores flotantes','Cortina traslúcida + blackout','Iluminación indirecta cálida'] },
+          { id:'nordico', nom:'Nórdico', tag:'Lino, madera y calma', img:'img/dormitorio-nordico.jpg',
+            plazo:'2–3 semanas', money:'$2.100.000 – $3.100.000',
+            con:'Maderas claras, ropa de cama de lino y texturas naturales. Un refugio cálido tipo hygge, luminoso y acogedor.',
+            pal:['#FBF7F0','#E7DDCB','#C7B299','#8A9A82'],
+            mat:['Cama y velador de madera clara','Ropa de cama de lino','Alfombra de yute','Lámpara de mimbre','Plantas y textiles tejidos'] },
+          { id:'calido', nom:'Cálido', tag:'Acogedor tipo hotel', img:'img/dormitorio-calido.jpg',
+            plazo:'3–4 semanas', money:'$2.400.000 – $3.500.000',
+            con:'Muro de acento, textiles cálidos y luz de ambiente en tonos dorados. Un dormitorio con aire de hotel boutique, envolvente y premium.',
+            pal:['#EFE6DA','#C57B57','#6B5B45','#3A3026'],
+            mat:['Muro de acento (terracota/verde)','Cama tapizada + textiles cálidos','Velador de madera/ratán','Lámparas de latón','Piso de madera tono medio'] }
         ] }
     ];
     var spc = 0, sty = 0;
