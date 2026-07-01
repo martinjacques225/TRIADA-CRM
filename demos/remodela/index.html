@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="es-CL">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0C1B26">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta name="description" content="Simulador de Remodelación con trIA — Tríada. Sube una foto de tu espacio y míralo remodelado en varios estilos, con materiales y presupuesto, en segundos. Arrastra para comparar el antes y el después.">
+  <title>Tríada · Simulador de Remodelación con trIA</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Spectral:ital,wght@0,400;0,500;0,600;0,700;1,500&family=Hanken+Grotesk:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --paper:#FBF9F3; --cream:#F4F1E9; --cream-2:#EFEBDF;
+      --ink:#14222E; --body:#46555F; --muted:#6B7780; --faint:#8A90A3;
+      --line:#E5DFD0; --petrol:#0C1B26; --petrol-2:#16466B;
+      --teal:#1C7A82; --teal-2:#2F8C93; --teal-l:#E6F1F0;
+      --green:#5E9E7E; --amber:#C2871A; --red:#B4524A;
+      --serif:'Spectral',Georgia,serif; --sans:'Hanken Grotesk',system-ui,-apple-system,sans-serif;
+    }
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:var(--sans);background:var(--paper);color:var(--ink);line-height:1.5;-webkit-font-smoothing:antialiased}
+    .wrap{max-width:980px;margin:0 auto;padding:0 20px}
+    .serif{font-family:var(--serif)}
+
+    header{background:var(--petrol);color:#fff}
+    .hd{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:16px 0}
+    .brand{display:flex;align-items:center;gap:11px;font-family:var(--serif);font-size:21px;font-weight:600;letter-spacing:.04em}
+    .badge{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--teal-2);border:1px solid rgba(127,208,204,.4);border-radius:999px;padding:5px 12px;white-space:nowrap}
+
+    .hero{background:radial-gradient(120% 100% at 85% 0%,#15384a 0%,#0C1B26 55%,#0A1620 100%);color:#fff;padding:44px 0 66px}
+    .kick{font-size:12px;font-weight:700;letter-spacing:.28em;text-transform:uppercase;color:var(--teal-2);margin-bottom:16px}
+    .hero h1{font-family:var(--serif);font-size:clamp(30px,6vw,52px);font-weight:600;line-height:1.04;letter-spacing:-.01em;max-width:16ch}
+    .hero p{margin-top:16px;font-size:clamp(15px,2.4vw,18px);color:rgba(234,229,216,.82);max-width:56ch}
+
+    .card{background:#fff;border:1px solid var(--line);border-radius:18px;box-shadow:0 20px 40px -30px rgba(12,27,38,.4)}
+    .demo-panel{margin-top:-40px;position:relative;z-index:2;padding:22px 22px 26px}
+    .demo-tag{display:inline-flex;align-items:center;gap:7px;font-size:12px;font-weight:700;color:var(--teal);background:var(--teal-l);border-radius:999px;padding:5px 12px;margin-bottom:14px}
+    .demo-tag i{width:7px;height:7px;border-radius:50%;background:var(--teal);animation:blink 1.6s ease-in-out infinite}
+    @keyframes blink{0%,100%{opacity:1}50%{opacity:.35}}
+    .lead{font-size:13.5px;color:var(--body);margin-bottom:4px}
+    .lead b{color:var(--ink)}
+
+    /* Before / After */
+    .ba{position:relative;aspect-ratio:3/2;border-radius:15px;overflow:hidden;user-select:none;touch-action:pan-y;box-shadow:0 16px 34px -22px rgba(12,27,38,.6);background:#0A1620;margin-top:14px;cursor:ew-resize}
+    .ba img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;pointer-events:none}
+    .ba .after{z-index:1}
+    .ba .before{z-index:2;clip-path:inset(0 calc(100% - var(--split,55%)) 0 0)}
+    .ba .divider{position:absolute;top:0;bottom:0;left:var(--split,55%);width:2px;background:rgba(255,255,255,.9);z-index:3;transform:translateX(-1px);box-shadow:0 0 0 1px rgba(12,27,38,.15)}
+    .ba .knob{position:absolute;top:50%;left:var(--split,55%);z-index:4;width:44px;height:44px;transform:translate(-50%,-50%);background:#fff;border-radius:50%;box-shadow:0 6px 16px -4px rgba(12,27,38,.55);display:flex;align-items:center;justify-content:center;color:var(--petrol)}
+    .ba .knob svg{display:block}
+    .ba .tag{position:absolute;top:12px;z-index:3;font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#fff;background:rgba(12,27,38,.62);backdrop-filter:blur(3px);border-radius:999px;padding:5px 12px}
+    .ba .tag.b{left:12px}
+    .ba .tag.a{right:12px;background:rgba(28,122,130,.85)}
+    .ba .redraw{position:absolute;inset:0;z-index:5;background:rgba(10,22,32,.66);backdrop-filter:blur(4px);display:none;flex-direction:column;align-items:center;justify-content:center;gap:14px;color:#fff}
+    .ba .redraw.on{display:flex}
+    .ba .redraw .spin{width:46px;height:46px;border-radius:50%;border:4px solid rgba(255,255,255,.22);border-top-color:var(--teal-2);animation:spin .8s linear infinite}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    .ba .redraw .rt{font-family:var(--serif);font-size:17px;font-weight:600}
+    .ba .redraw .rs{font-size:12.5px;color:rgba(234,229,216,.8);margin-top:-8px}
+
+    .hint{display:flex;align-items:center;gap:7px;font-size:12px;color:var(--faint);margin-top:10px}
+    .hint svg{color:var(--teal-2);flex:none}
+
+    /* Selector de estilo */
+    .styles{display:flex;gap:10px;margin-top:16px;flex-wrap:wrap}
+    .sty{flex:1;min-width:120px;display:flex;align-items:center;gap:11px;font-family:var(--sans);text-align:left;background:#fff;border:1px solid var(--line);border-radius:13px;padding:11px 13px;cursor:pointer;transition:border-color .14s,box-shadow .14s,transform .12s}
+    .sty:hover{border-color:var(--teal-2);transform:translateY(-1px)}
+    .sty.on{border-color:var(--teal);box-shadow:0 8px 20px -12px var(--teal),inset 0 0 0 1px var(--teal)}
+    .sty .sw{width:34px;height:34px;flex:none;border-radius:9px;border:1px solid rgba(12,27,38,.1)}
+    .sty .st{font-weight:700;font-size:14px;color:var(--ink);line-height:1.1}
+    .sty .ss{font-size:11.5px;color:var(--muted);margin-top:2px}
+    .sty.on .st{color:var(--teal)}
+
+    /* Propuesta trIA */
+    .prop{margin-top:18px;border:1px solid var(--line);border-radius:16px;background:linear-gradient(160deg,#fff,#FCFAF4);padding:18px 18px 20px;animation:fade .4s ease}
+    @keyframes fade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+    .prop-h{display:flex;align-items:center;gap:11px;padding-bottom:14px;border-bottom:1px solid var(--line);margin-bottom:15px}
+    .prop-h .ci{width:34px;height:34px;flex:none;border-radius:10px;background:var(--petrol);color:#fff;display:flex;align-items:center;justify-content:center}
+    .prop-k{font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--teal)}
+    .prop-nom{font-family:var(--serif);font-size:19px;font-weight:600;color:var(--ink);line-height:1.1}
+    .prop-plazo{margin-left:auto;font-size:12px;font-weight:700;color:var(--amber);background:#F6EFDC;border-radius:999px;padding:6px 13px;white-space:nowrap}
+    .prop-con{font-size:14px;color:var(--body);line-height:1.55;margin-bottom:16px}
+    .prop-grid{display:grid;grid-template-columns:1fr 1.3fr 1fr;gap:18px}
+    .prop-col h4{font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--faint);margin-bottom:10px}
+    .swatches{display:flex;gap:8px}
+    .swatches span{width:30px;height:30px;border-radius:8px;border:1px solid rgba(12,27,38,.12);box-shadow:0 4px 10px -6px rgba(12,27,38,.4)}
+    .mat{list-style:none;display:flex;flex-direction:column;gap:8px}
+    .mat li{display:flex;gap:9px;font-size:13px;color:var(--body);line-height:1.35}
+    .mat li svg{color:var(--teal);flex:none;margin-top:2px}
+    .prop-money{font-family:var(--serif);font-size:22px;font-weight:600;color:var(--ink);line-height:1.15;font-variant-numeric:tabular-nums}
+    .prop-note{font-size:11.5px;color:var(--muted);margin-top:6px}
+
+    /* Beneficios */
+    .sec{padding:52px 0 8px}
+    .sec-k{font-size:12px;font-weight:700;letter-spacing:.22em;text-transform:uppercase;color:var(--teal);text-align:center}
+    .sec-h{font-family:var(--serif);font-size:clamp(24px,4vw,34px);font-weight:600;text-align:center;margin-top:10px;max-width:22ch;margin-inline:auto;line-height:1.1}
+    .bens{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:32px}
+    .ben{border:1px solid var(--line);border-radius:16px;padding:22px;background:#fff;transition:transform .16s,box-shadow .16s}
+    .ben:hover{transform:translateY(-2px);box-shadow:0 20px 34px -26px rgba(12,27,38,.5)}
+    .ben .bi{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;color:var(--teal);background:var(--teal-l);margin-bottom:14px}
+    .ben h3{font-family:var(--serif);font-size:18px;font-weight:600;color:var(--ink)}
+    .ben p{font-size:13.5px;color:var(--body);line-height:1.55;margin-top:8px}
+
+    /* Contratación */
+    .hire{margin:56px 0 10px;background:linear-gradient(140deg,var(--petrol),#143a4a);color:#fff;border-radius:22px;padding:clamp(28px,5vw,44px);position:relative;overflow:hidden}
+    .hire::after{content:"";position:absolute;right:-80px;top:-80px;width:280px;height:280px;border-radius:50%;background:radial-gradient(circle,rgba(47,140,147,.35),transparent 70%)}
+    .hire .hk{font-size:12px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:var(--teal-2)}
+    .hire h2{font-family:var(--serif);font-size:clamp(23px,4vw,32px);font-weight:600;margin:12px 0 12px;max-width:24ch;line-height:1.12;position:relative}
+    .hire p{font-size:15px;color:rgba(234,229,216,.82);max-width:60ch;line-height:1.6;position:relative}
+    .hire .act{display:grid;grid-template-columns:1.1fr 1fr;gap:26px;margin-top:26px;position:relative}
+    .acts h4{font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--teal-2);margin-bottom:14px}
+    .acts ul{list-style:none;display:flex;flex-direction:column;gap:12px}
+    .acts li{display:flex;gap:11px;font-size:14px;color:rgba(234,229,216,.92);line-height:1.45}
+    .acts li svg{color:#7FE7A6;flex:none;margin-top:2px}
+    .hire-cta{align-self:center;background:rgba(255,255,255,.05);border:1px solid rgba(127,208,204,.28);border-radius:16px;padding:22px;text-align:center}
+    .hire-cta p{font-size:13.5px;color:rgba(234,229,216,.85);margin-bottom:16px;max-width:none}
+    .btn{font-family:var(--sans);font-size:15.5px;font-weight:700;border:none;border-radius:12px;padding:15px 22px;cursor:pointer;display:inline-flex;align-items:center;gap:9px;text-decoration:none;transition:transform .12s,box-shadow .12s}
+    .btn-primary{background:var(--teal);color:#fff;box-shadow:0 10px 24px -12px var(--teal);width:100%;justify-content:center}
+    .btn-primary:hover{transform:translateY(-1px);box-shadow:0 14px 28px -12px var(--teal)}
+    .hire-note{margin-top:16px;font-size:12px;color:rgba(234,229,216,.6);display:flex;gap:8px;align-items:flex-start;position:relative}
+    .hire-note svg{flex:none;margin-top:1px;color:var(--teal-2)}
+
+    footer{border-top:1px solid var(--line);margin-top:48px;padding:26px 0;color:var(--faint);font-size:12.5px}
+    .foot{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px}
+    .foot .fb{display:flex;align-items:center;gap:9px;font-family:var(--serif);font-weight:600;color:var(--muted)}
+
+    @media (max-width:760px){
+      .bens{grid-template-columns:1fr 1fr}
+      .prop-grid{grid-template-columns:1fr;gap:16px}
+      .hire .act{grid-template-columns:1fr;gap:20px}
+      .sty{min-width:0}
+      .sty .ss{display:none}
+    }
+    @media (max-width:520px){
+      .bens{grid-template-columns:1fr}
+      .demo-panel{padding:18px 15px 22px}
+      .ba .knob{width:38px;height:38px}
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="wrap hd">
+      <span class="brand">
+        <svg viewBox="0 0 120 120" width="30" height="30" fill="none" aria-hidden="true">
+          <path d="M26 90 L60 62 L94 90" stroke="#fff" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M26 73 L60 45 L94 73" stroke="#2F8C93" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M26 56 L60 28 L94 56" stroke="#6BA083" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        Tríada
+      </span>
+      <span class="badge"><span style="text-transform:none">trIA</span> · Remodelación</span>
+    </div>
+  </header>
+
+  <section class="hero">
+    <div class="wrap">
+      <div class="kick">Remodelación IA · Tríada</div>
+      <h1 class="serif">Mira tu espacio transformado antes de invertir un peso.</h1>
+      <p>Sube una foto de tu espacio y trIA te muestra cómo quedaría remodelado —en varios estilos, con materiales y presupuesto— en segundos. Arrastra para comparar el antes y el después.</p>
+    </div>
+  </section>
+
+  <div class="wrap">
+    <div class="card demo-panel">
+      <div class="demo-tag"><i></i>Demostración · espacio de ejemplo</div>
+      <div class="lead"><b>Living de departamento</b> · arrastra el control para comparar, y cambia de estilo para ver a trIA rediseñar en vivo.</div>
+
+      <div class="ba" id="ba">
+        <img class="after" id="after" src="img/living-moderno.jpg" alt="Espacio remodelado">
+        <img class="before" src="img/living-antes.jpg" alt="Espacio original">
+        <span class="tag b">Antes</span>
+        <span class="tag a">Después</span>
+        <div class="divider" id="divider"></div>
+        <div class="knob" id="knob" aria-hidden="true">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6 4 12l5 6M15 6l5 6-5 6"/></svg>
+        </div>
+        <div class="redraw" id="redraw">
+          <div class="spin"></div>
+          <div style="text-align:center">
+            <div class="rt serif">trIA está rediseñando tu espacio…</div>
+            <div class="rs" id="redrawSub">Aplicando estilo</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="hint">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6 4 12l5 6M15 6l5 6-5 6"/></svg>
+        Arrastra sobre la imagen · en la demo usamos un espacio de ejemplo; al contratar, subes fotos del tuyo.
+      </div>
+
+      <div class="styles" id="styles"></div>
+
+      <div class="prop" id="prop">
+        <div class="prop-h">
+          <span class="ci"><svg width="18" height="18" viewBox="0 0 120 120" fill="none" aria-hidden="true"><path d="M30 84 L60 60 L90 84" stroke="#fff" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/><path d="M30 68 L60 44 L90 68" stroke="#6BA083" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+          <div>
+            <div class="prop-k">Propuesta de <span style="text-transform:none">trIA</span></div>
+            <div class="prop-nom" id="pNom">Estilo Moderno</div>
+          </div>
+          <span class="prop-plazo" id="pPlazo">3–4 semanas</span>
+        </div>
+        <p class="prop-con" id="pCon"></p>
+        <div class="prop-grid">
+          <div class="prop-col">
+            <h4>Paleta</h4>
+            <div class="swatches" id="pPal"></div>
+          </div>
+          <div class="prop-col">
+            <h4>Materiales sugeridos</h4>
+            <ul class="mat" id="pMat"></ul>
+          </div>
+          <div class="prop-col">
+            <h4>Inversión estimada</h4>
+            <div class="prop-money" id="pMoney"></div>
+            <div class="prop-note">Estimación referencial · llave en mano · IVA incluido</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Beneficios -->
+    <section class="sec">
+      <div class="sec-k">Lo que hace por ti</div>
+      <h2 class="sec-h serif">Decide tu remodelación viéndola, no imaginándola</h2>
+      <div class="bens" id="bens"></div>
+    </section>
+
+    <!-- Contratación -->
+    <section class="hire">
+      <div class="hk">De la demo a tu espacio</div>
+      <h2 class="serif">Esto es una demostración. Al contratar, trIA remodela TU espacio.</h2>
+      <p>Subes fotos de tu casa, tu oficina o tu local, y trIA te devuelve <b style="color:#fff">propuestas fotorrealistas</b> a tu medida —con la paleta, los materiales y un presupuesto estimado— para que decidas con la vista puesta en el resultado, no en la imaginación.</p>
+      <div class="act">
+        <div class="acts">
+          <h4>Qué se activa al contratar</h4>
+          <ul>
+            <li><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>Subes <b>fotos de tus propios espacios</b> y trIA los remodela.</li>
+            <li><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>Varios <b>estilos y variantes</b> por espacio, en minutos.</li>
+            <li><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg><b>Lista de materiales y presupuesto</b> estimado por propuesta.</li>
+            <li><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>Acompañamiento de Tríada para <b>ejecutar la remodelación</b>.</li>
+          </ul>
+        </div>
+        <div class="hire-cta">
+          <p>Cuéntanos qué espacio quieres transformar y trIA te muestra el después.</p>
+          <a class="btn btn-primary" href="https://grupotriada.cl" target="_blank" rel="noopener">Quiero remodelar mi espacio →</a>
+        </div>
+      </div>
+      <div class="hire-note">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 8h.01M11 12h1v4h1"/></svg>
+        Las imágenes de arriba fueron generadas con IA a partir de un espacio de ejemplo. Las propuestas reales se ajustan a las fotos y medidas de tu espacio.
+      </div>
+    </section>
+  </div>
+
+  <footer>
+    <div class="wrap foot">
+      <span class="fb">
+        <svg viewBox="0 0 120 120" width="20" height="20" fill="none" aria-hidden="true">
+          <path d="M26 90 L60 62 L94 90" stroke="#3D6E92" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M26 71 L60 43 L94 71" stroke="#2F8C93" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        Tríada · Consultoría 360
+      </span>
+      <span>Demo · imágenes generadas con IA sobre un espacio de ejemplo · las propuestas reales se ajustan a tu espacio</span>
+    </div>
+  </footer>
+
+  <script>
+    var $ = function(id){ return document.getElementById(id); };
+    var RM = false; try { RM = matchMedia('(prefers-reduced-motion: reduce)').matches; } catch(e){}
+
+    function svg(p, s){ s = s || 22; return '<svg width="'+s+'" height="'+s+'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+p+'</svg>'; }
+    var CK = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>';
+
+    // ── Estilos (datos sembrados) ───────────────────────────────────────────
+    var ESTILOS = [
+      { id:'moderno', nom:'Moderno', tag:'Líneas limpias y luz', img:'img/living-moderno.jpg', sw:'#EDEBE6',
+        plazo:'3–4 semanas', money:'$2.900.000 – $3.800.000',
+        con:'Líneas limpias, paleta clara y madera natural. Se libera el espacio y entra la luz: mobiliario bajo, orden visual y una sensación de amplitud inmediata.',
+        pal:['#F5F4F1','#C9CDD2','#C7A26B','#2B2B2B'],
+        mat:['Piso vinílico símil roble claro','Muros lisos en blanco mate','Sofá modular gris claro','Mueble de TV flotante lacado','Iluminación LED empotrada'] },
+      { id:'nordico', nom:'Nórdico', tag:'Calidez escandinava', img:'img/living-nordico.jpg', sw:'#E8DECB',
+        plazo:'3–5 semanas', money:'$3.200.000 – $4.200.000',
+        con:'Calidez escandinava: maderas claras, textiles suaves y mucho verde. Un ambiente acogedor y luminoso, pensado para habitar y descansar.',
+        pal:['#FBF7F0','#E7DDCB','#C7B299','#7C9070'],
+        mat:['Piso de madera clara','Textiles de lino y lana','Muebles de abedul','Plantas de interior','Cortinas traslúcidas'] },
+      { id:'calido', nom:'Cálido', tag:'Acogedor y premium', img:'img/living-calido.jpg', sw:'#C57B57',
+        plazo:'4–6 semanas', money:'$3.600.000 – $4.800.000',
+        con:'Sofisticación acogedora: cuero, terracota y nogal. Un muro de acento, luz indirecta y materiales nobles para un living con carácter y calidez.',
+        pal:['#EFE6DA','#C57B57','#A9744F','#4A3626'],
+        mat:['Piso de madera tono medio','Muro de acento en terracota','Sofá de cuero caramelo','Mueble de nogal a medida','Iluminación cálida indirecta'] }
+    ];
+
+    // ── Beneficios ──────────────────────────────────────────────────────────
+    var BENS = [
+      { ic:'<path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/>', h:'Lo ves antes de invertir', p:'Nada de imaginarte “cómo quedaría”. Ves el resultado fotorrealista antes de gastar en materiales o mano de obra.' },
+      { ic:'<path d="M12 3l2 5 5 2-5 2-2 5-2-5-5-2 5-2 2-5Z"/>', h:'Varios estilos en minutos', p:'Moderno, nórdico, cálido… trIA rediseña tu mismo espacio en distintas líneas para que elijas la que te enamore.' },
+      { ic:'<path d="M20.5 13.3 12.7 21a1.5 1.5 0 0 1-2.1 0L3 13.4V4h9.4l8 8a1.5 1.5 0 0 1 .1 1.3Z"/><circle cx="8" cy="8" r="1.5"/>', h:'Con materiales y presupuesto', p:'Cada propuesta viene con su paleta, los materiales sugeridos y una inversión estimada. Sabes en qué te metes.' },
+      { ic:'<path d="M17 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2"/><circle cx="10" cy="7" r="4"/><path d="M20 8v6M23 11h-6"/>', h:'Decide en equipo', p:'Comparte las propuestas con tu pareja, tu socio o tu equipo y decidan mirando lo mismo, no descripciones sueltas.' },
+      { ic:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/>', h:'Ahorra tiempo y reprocesos', p:'Evitas remodelar “a ciegas” y arrepentirte después. Alineas expectativas antes de que llegue el primer maestro.' },
+      { ic:'<path d="M3 21h18M6 21V8l6-4 6 4v13M10 21v-5h4v5"/>', h:'Casa, oficina o local', p:'Sirve para tu living, tu oficina, tu tienda o tu cafetería. Cualquier espacio que quieras verte antes de transformar.' }
+    ];
+    $('bens').innerHTML = BENS.map(function(b){
+      return '<div class="ben"><div class="bi">'+svg(b.ic,23)+'</div><h3 class="serif">'+b.h+'</h3><p>'+b.p+'</p></div>';
+    }).join('');
+
+    // ── Selector de estilo ──────────────────────────────────────────────────
+    $('styles').innerHTML = ESTILOS.map(function(s,i){
+      return '<button class="sty'+(i===0?' on':'')+'" data-i="'+i+'">'
+        + '<span class="sw" style="background:'+s.sw+'"></span>'
+        + '<span><span class="st">'+s.nom+'</span><span class="ss">'+s.tag+'</span></span></button>';
+    }).join('');
+
+    // Precarga las imágenes "después" para que el cambio sea instantáneo.
+    ESTILOS.forEach(function(s){ var im = new Image(); im.src = s.img; });
+
+    // ── Slider antes/después ────────────────────────────────────────────────
+    var ba = $('ba'), split = 55, dragging = false;
+    function setSplit(v){ split = Math.max(0, Math.min(100, v)); ba.style.setProperty('--split', split + '%'); }
+    function atClientX(x){ var r = ba.getBoundingClientRect(); setSplit((x - r.left) / r.width * 100); }
+    ba.addEventListener('pointerdown', function(e){ dragging = true; ba.setPointerCapture(e.pointerId); atClientX(e.clientX); });
+    ba.addEventListener('pointermove', function(e){ if (dragging) atClientX(e.clientX); });
+    ba.addEventListener('pointerup', function(){ dragging = false; });
+    ba.addEventListener('pointercancel', function(){ dragging = false; });
+    setSplit(55);
+
+    // Barrido suave (revelación) del antes→después al cambiar de estilo.
+    var sweeping = 0;
+    function sweepTo(to, dur){
+      var id = ++sweeping, from = split, start = null;
+      if (RM){ setSplit(to); return; }
+      function f(ts){ if (id !== sweeping) return; if (!start) start = ts;
+        var p = Math.min(1, (ts - start) / dur), e = 1 - Math.pow(1 - p, 3);
+        setSplit(from + (to - from) * e); if (p < 1) requestAnimationFrame(f); }
+      requestAnimationFrame(f);
+    }
+
+    // ── Aplicar estilo ──────────────────────────────────────────────────────
+    var busy = false;
+    function fmtMat(arr){ return arr.map(function(m){ return '<li>'+CK+'<span>'+m+'</span></li>'; }).join(''); }
+    function fmtPal(arr){ return arr.map(function(c){ return '<span style="background:'+c+'"></span>'; }).join(''); }
+
+    function renderProp(s){
+      $('pNom').textContent = 'Estilo ' + s.nom;
+      $('pPlazo').textContent = s.plazo;
+      $('pCon').textContent = s.con;
+      $('pPal').innerHTML = fmtPal(s.pal);
+      $('pMat').innerHTML = fmtMat(s.mat);
+      $('pMoney').textContent = s.money;
+      $('prop').style.animation = 'none'; void $('prop').offsetWidth; $('prop').style.animation = '';
+    }
+
+    function applyStyle(i, first){
+      var s = ESTILOS[i];
+      var chips = $('styles').children;
+      for (var k=0;k<chips.length;k++) chips[k].classList.toggle('on', k===i);
+      if (first){ $('after').src = s.img; renderProp(s); return; }
+      if (busy) return; busy = true;
+      $('redrawSub').textContent = 'Aplicando estilo ' + s.nom;
+      $('redraw').classList.add('on');
+      sweepTo(100, 260);                          // muestra el "antes" completo
+      var wait = RM ? 260 : 950;
+      setTimeout(function(){
+        $('after').src = s.img;                   // (ya precargada) intercambia el después
+        renderProp(s);
+        $('redraw').classList.remove('on');
+        sweepTo(52, 850);                         // revela el nuevo diseño
+        busy = false;
+      }, wait);
+    }
+
+    $('styles').addEventListener('click', function(ev){
+      var b = ev.target.closest('.sty'); if (!b) return; applyStyle(+b.getAttribute('data-i'), false);
+    });
+
+    // Arranque
+    applyStyle(0, true);
+  </script>
+</body>
+</html>

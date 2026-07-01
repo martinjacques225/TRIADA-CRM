@@ -8,6 +8,7 @@ con todas sus funciones, sin depender de terceros (Vercel, etc.).
 | Carpeta | Demo | Repo canónico |
 |---|---|---|
 | `conserje/`   | Conserje IA con trIA (demo del Motor 1 · WhatsApp 24/7 + llamadas + agenda, **simulada** — mockup de teléfono con chat guionizado → resultado en el CRM, sin backend ni API) | — (standalone, `demos/conserje/index.html`) |
+| `remodela/`   | Simulador de Remodelación con trIA (demo del Motor 3 visual · Ola 3 · slider antes/después + selector de estilo + propuesta con materiales y presupuesto; imágenes IA sobre un espacio de ejemplo, sin backend ni API) | — (standalone, `demos/remodela/index.html` + `img/`) |
 | `auditor/`    | Auditor de Imagen Corporativa con trIA (demo del Motor 2 · autodiagnóstico interactivo → informe con puntaje, sin backend) | — (standalone, `demos/auditor/index.html`) |
 | `gemelo/`     | Gemelo Virtual con trIA (demo del Motor 2 · simulador interactivo de decisiones, sin backend) | — (standalone, `demos/gemelo/index.html`) |
 | `fugas/`      | Detección de Fugas con trIA (demo del Motor 2 · datos de ejemplo, sin backend) | — (standalone, `demos/fugas/index.html`) |

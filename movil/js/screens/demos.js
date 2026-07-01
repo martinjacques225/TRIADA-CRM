@@ -23,6 +23,16 @@ const DEMOS = [
     grad: ['#25A560', 'var(--navy)'],
   },
   {
+    id: 'remodela',
+    nombre: 'Simulador de Remodelación',
+    tagline: 'Mira tu espacio remodelado antes de invertir',
+    desc: 'Sube una foto de tu espacio y trIA te lo muestra remodelado en varios estilos —moderno, nórdico, cálido— con su paleta, materiales y presupuesto estimado. Arrastra para comparar el antes y el después, en fotorrealista. Demo con un espacio de ejemplo.',
+    chips: ['Antes/después', 'Varios estilos', 'Materiales', 'Presupuesto'],
+    url: '../demos/remodela/',
+    icon: 'home',
+    grad: ['#C57B57', 'var(--navy)'],
+  },
+  {
     id: 'auditor',
     nombre: 'Auditor de Imagen',
     tagline: 'Cómo te ve un cliente antes de que hables',
