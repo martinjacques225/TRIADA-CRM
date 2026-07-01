@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="es-CL">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0C1B26">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta name="description" content="Generador de Documentos con marca — Tríada. Elige un tipo de documento, pon tu marca y trIA arma una cotización, contrato, carta o recibo profesional en segundos, listo para descargar en PDF.">
+  <title>Tríada · Generador de Documentos con trIA</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Spectral:ital,wght@0,400;0,500;0,600;0,700;1,500&family=Hanken+Grotesk:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --paper:#FBF9F3; --cream:#F4F1E9; --cream-2:#EFEBDF;
+      --ink:#14222E; --body:#46555F; --muted:#6B7780; --faint:#8A90A3;
+      --line:#E5DFD0; --petrol:#0C1B26; --petrol-2:#16466B;
+      --teal:#1C7A82; --teal-2:#2F8C93; --teal-l:#E6F1F0;
+      --green:#5E9E7E; --amber:#C2871A; --red:#B4524A;
+      --accent:#1C7A82;
+      --serif:'Spectral',Georgia,serif; --sans:'Hanken Grotesk',system-ui,-apple-system,sans-serif;
+    }
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:var(--sans);background:var(--paper);color:var(--ink);line-height:1.5;-webkit-font-smoothing:antialiased}
+    .wrap{max-width:1080px;margin:0 auto;padding:0 20px}
+    .serif{font-family:var(--serif)}
+
+    header{background:var(--petrol);color:#fff}
+    .hd{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:16px 0}
+    .brand{display:flex;align-items:center;gap:11px;font-family:var(--serif);font-size:21px;font-weight:600;letter-spacing:.04em}
+    .badge{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--teal-2);border:1px solid rgba(127,208,204,.4);border-radius:999px;padding:5px 12px;white-space:nowrap}
+
+    .hero{background:radial-gradient(120% 100% at 85% 0%,#15384a 0%,#0C1B26 55%,#0A1620 100%);color:#fff;padding:44px 0 66px}
+    .kick{font-size:12px;font-weight:700;letter-spacing:.28em;text-transform:uppercase;color:var(--teal-2);margin-bottom:16px}
+    .hero h1{font-family:var(--serif);font-size:clamp(30px,6vw,52px);font-weight:600;line-height:1.04;letter-spacing:-.01em;max-width:16ch}
+    .hero p{margin-top:16px;font-size:clamp(15px,2.4vw,18px);color:rgba(234,229,216,.82);max-width:56ch}
+
+    .card{background:#fff;border:1px solid var(--line);border-radius:18px;box-shadow:0 20px 40px -30px rgba(12,27,38,.4)}
+    .demo-panel{margin-top:-40px;position:relative;z-index:2;padding:22px 22px 24px}
+    .demo-tag{display:inline-flex;align-items:center;gap:7px;font-size:12px;font-weight:700;color:var(--teal);background:var(--teal-l);border-radius:999px;padding:5px 12px;margin-bottom:14px}
+    .demo-tag i{width:7px;height:7px;border-radius:50%;background:var(--teal);animation:blink 1.6s ease-in-out infinite}
+    @keyframes blink{0%,100%{opacity:1}50%{opacity:.35}}
+
+    .studio{display:grid;grid-template-columns:320px 1fr;gap:22px;align-items:start;margin-top:6px}
+    .controls{display:flex;flex-direction:column;gap:18px}
+    .grp label{display:block;font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--faint);margin-bottom:9px}
+    .types{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+    .ty{display:flex;align-items:center;gap:9px;font-family:var(--sans);font-size:13px;font-weight:600;color:var(--body);background:#fff;border:1px solid var(--line);border-radius:11px;padding:10px 11px;cursor:pointer;transition:border-color .14s,box-shadow .14s;text-align:left}
+    .ty:hover{border-color:var(--teal-2)}
+    .ty.on{border-color:var(--teal);color:var(--teal);box-shadow:inset 0 0 0 1px var(--teal)}
+    .ty svg{flex:none}
+    .fld{width:100%;font-family:var(--sans);font-size:14px;color:var(--ink);background:var(--cream);border:1px solid var(--line);border-radius:10px;padding:11px 13px;transition:border-color .14s,background .14s}
+    .fld:focus{outline:none;border-color:var(--teal);background:#fff}
+    .row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    .swatches{display:flex;gap:9px;flex-wrap:wrap}
+    .acc{width:34px;height:34px;border-radius:9px;cursor:pointer;border:2px solid transparent;transition:transform .12s;position:relative}
+    .acc:hover{transform:scale(1.08)}
+    .acc.on{border-color:#fff;box-shadow:0 0 0 2px var(--ink)}
+    .btn{font-family:var(--sans);font-size:14.5px;font-weight:700;border:none;border-radius:11px;padding:12px 18px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:9px;text-decoration:none;transition:transform .12s,box-shadow .12s,background .12s;width:100%}
+    .btn-primary{background:var(--teal);color:#fff;box-shadow:0 10px 24px -12px var(--teal)}
+    .btn-primary:hover{transform:translateY(-1px);box-shadow:0 14px 28px -12px var(--teal)}
+    .btn-ghost{background:transparent;color:var(--teal);border:1px solid var(--line)}
+    .btn-ghost:hover{background:var(--teal-l)}
+    .cta2{display:flex;flex-direction:column;gap:9px}
+
+    /* Preview */
+    .preview{background:linear-gradient(160deg,#EAE6DC,#F1EDE3);border:1px solid var(--line);border-radius:16px;padding:22px;display:flex;justify-content:center;position:relative;overflow:hidden}
+    .writing{position:absolute;inset:0;z-index:5;background:rgba(20,34,46,.5);backdrop-filter:blur(3px);display:none;flex-direction:column;align-items:center;justify-content:center;gap:13px;color:#fff}
+    .writing.on{display:flex}
+    .writing .spin{width:42px;height:42px;border-radius:50%;border:4px solid rgba(255,255,255,.22);border-top-color:#7FD0CC;animation:spin .8s linear infinite}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    .writing .wt{font-family:var(--serif);font-size:16px;font-weight:600}
+
+    .page{background:#fff;width:100%;max-width:560px;min-height:730px;box-shadow:0 20px 50px -26px rgba(12,27,38,.5);border-radius:3px;padding:42px 44px;color:#25313a;font-size:12.5px;line-height:1.6;animation:fade .35s ease}
+    @keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+    .ph{display:flex;align-items:center;gap:13px;padding-bottom:16px;border-bottom:2px solid var(--accent)}
+    .mono{width:46px;height:46px;flex:none;border-radius:10px;background:var(--accent);color:#fff;display:flex;align-items:center;justify-content:center;font-family:var(--serif);font-weight:700;font-size:24px}
+    .ph .co{font-family:var(--serif);font-size:19px;font-weight:600;color:#1a2630;line-height:1.1}
+    .ph .cs{font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);font-weight:700;margin-top:3px}
+    .ph .folio{margin-left:auto;text-align:right;font-size:10.5px;color:#7a848b;line-height:1.5}
+    .ph .folio b{color:#1a2630;font-size:12px}
+    .doc-title{font-family:var(--serif);font-size:22px;font-weight:600;color:#1a2630;margin:22px 0 4px}
+    .doc-sub{font-size:11.5px;color:#7a848b;margin-bottom:18px}
+    .pp{margin:0 0 12px}
+    .pp b{color:#1a2630}
+    .parties{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:6px 0 18px}
+    .party{background:#F7F5F0;border-radius:8px;padding:12px 14px}
+    .party h5{font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--accent);font-weight:700;margin-bottom:6px}
+    .party .nm{font-weight:700;color:#1a2630;font-size:13px}
+    .party .dt{font-size:11px;color:#6b747b;margin-top:2px}
+    table.items{width:100%;border-collapse:collapse;margin:6px 0 14px;font-size:11.5px}
+    table.items th{text-align:left;font-size:9.5px;letter-spacing:.06em;text-transform:uppercase;color:#8a929a;border-bottom:1px solid #E4E0D6;padding:0 8px 7px}
+    table.items th.r,table.items td.r{text-align:right}
+    table.items td{padding:8px;border-bottom:1px solid #F0EDE5;color:#3a464e}
+    table.items td b{color:#1a2630}
+    .totals{margin-left:auto;width:56%;font-size:12px}
+    .totals div{display:flex;justify-content:space-between;padding:5px 8px}
+    .totals .tot{border-top:2px solid var(--accent);margin-top:4px;font-family:var(--serif);font-weight:700;font-size:15px;color:#1a2630}
+    .clause{margin:0 0 11px}
+    .clause b{color:#1a2630}
+    .placeholder{color:#b8bcc4;font-style:italic}
+    .signs{display:grid;grid-template-columns:1fr 1fr;gap:30px;margin-top:44px}
+    .sign{border-top:1px solid #35414a;padding-top:7px;font-size:11px;color:#5a636a;text-align:center}
+    .pfoot{margin-top:26px;padding-top:12px;border-top:1px solid #EEEBE2;font-size:9.5px;color:#9aa1a8;display:flex;justify-content:space-between;gap:12px}
+    .stamp{display:inline-flex;align-items:center;gap:7px;margin-top:16px;font-size:11px;font-weight:700;color:var(--accent);background:color-mix(in srgb,var(--accent) 10%,#fff);border:1px dashed var(--accent);border-radius:8px;padding:8px 13px}
+
+    /* Beneficios */
+    .sec{padding:52px 0 8px}
+    .sec-k{font-size:12px;font-weight:700;letter-spacing:.22em;text-transform:uppercase;color:var(--teal);text-align:center}
+    .sec-h{font-family:var(--serif);font-size:clamp(24px,4vw,34px);font-weight:600;text-align:center;margin-top:10px;max-width:22ch;margin-inline:auto;line-height:1.1}
+    .bens{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:32px}
+    .ben{border:1px solid var(--line);border-radius:16px;padding:22px;background:#fff;transition:transform .16s,box-shadow .16s}
+    .ben:hover{transform:translateY(-2px);box-shadow:0 20px 34px -26px rgba(12,27,38,.5)}
+    .ben .bi{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;color:var(--teal);background:var(--teal-l);margin-bottom:14px}
+    .ben h3{font-family:var(--serif);font-size:18px;font-weight:600;color:var(--ink)}
+    .ben p{font-size:13.5px;color:var(--body);line-height:1.55;margin-top:8px}
+
+    /* Contratación */
+    .hire{margin:56px 0 10px;background:linear-gradient(140deg,var(--petrol),#143a4a);color:#fff;border-radius:22px;padding:clamp(28px,5vw,44px);position:relative;overflow:hidden}
+    .hire::after{content:"";position:absolute;right:-80px;top:-80px;width:280px;height:280px;border-radius:50%;background:radial-gradient(circle,rgba(47,140,147,.35),transparent 70%)}
+    .hire .hk{font-size:12px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:var(--teal-2)}
+    .hire h2{font-family:var(--serif);font-size:clamp(23px,4vw,32px);font-weight:600;margin:12px 0 12px;max-width:24ch;line-height:1.12;position:relative}
+    .hire p{font-size:15px;color:rgba(234,229,216,.82);max-width:60ch;line-height:1.6;position:relative}
+    .hire .act{display:grid;grid-template-columns:1.1fr 1fr;gap:26px;margin-top:26px;position:relative}
+    .acts h4{font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--teal-2);margin-bottom:14px}
+    .acts ul{list-style:none;display:flex;flex-direction:column;gap:12px}
+    .acts li{display:flex;gap:11px;font-size:14px;color:rgba(234,229,216,.92);line-height:1.45}
+    .acts li svg{color:#7FE7A6;flex:none;margin-top:2px}
+    .hire-cta{align-self:center;background:rgba(255,255,255,.05);border:1px solid rgba(127,208,204,.28);border-radius:16px;padding:22px;text-align:center}
+    .hire-cta p{font-size:13.5px;color:rgba(234,229,216,.85);margin-bottom:16px}
+    .hire-cta .btn-primary{width:100%}
+    .hire-note{margin-top:16px;font-size:12px;color:rgba(234,229,216,.6);display:flex;gap:8px;align-items:flex-start;position:relative}
+    .hire-note svg{flex:none;margin-top:1px;color:var(--teal-2)}
+
+    footer{border-top:1px solid var(--line);margin-top:48px;padding:26px 0;color:var(--faint);font-size:12.5px}
+    .foot{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px}
+    .foot .fb{display:flex;align-items:center;gap:9px;font-family:var(--serif);font-weight:600;color:var(--muted)}
+
+    @media (max-width:840px){
+      .studio{grid-template-columns:1fr;gap:18px}
+      .bens{grid-template-columns:1fr 1fr}
+      .hire .act{grid-template-columns:1fr;gap:20px}
+    }
+    @media (max-width:520px){
+      .bens{grid-template-columns:1fr}
+      .demo-panel{padding:18px 15px 20px}
+      .page{padding:30px 26px;min-height:0}
+      .preview{padding:14px}
+    }
+
+    @media print{
+      body{background:#fff}
+      header,.hero,.demo-tag,.controls,.sec,.hire,footer,.writing{display:none !important}
+      .wrap,.demo-panel{max-width:none;margin:0;padding:0;border:none;box-shadow:none}
+      .studio{display:block}
+      .preview{background:none;border:none;padding:0}
+      .page{box-shadow:none;max-width:none;min-height:auto;border-radius:0;padding:0}
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="wrap hd">
+      <span class="brand">
+        <svg viewBox="0 0 120 120" width="30" height="30" fill="none" aria-hidden="true">
+          <path d="M26 90 L60 62 L94 90" stroke="#fff" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M26 73 L60 45 L94 73" stroke="#2F8C93" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M26 56 L60 28 L94 56" stroke="#6BA083" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        Tríada
+      </span>
+      <span class="badge"><span style="text-transform:none">trIA</span> · Documentos</span>
+    </div>
+  </header>
+
+  <section class="hero">
+    <div class="wrap">
+      <div class="kick">Imprenta IA · Tríada</div>
+      <h1 class="serif">Tus documentos, con tu marca, en segundos.</h1>
+      <p>Elige el tipo de documento, pon tu marca, y trIA arma una cotización, un contrato, una carta o un recibo con aspecto profesional — listo para descargar en PDF. Nunca más pelear con Word.</p>
+    </div>
+  </section>
+
+  <div class="wrap">
+    <div class="card demo-panel">
+      <div class="demo-tag"><i></i>Demostración · datos de ejemplo editables</div>
+
+      <div class="studio">
+        <div class="controls">
+          <div class="grp">
+            <label>Tipo de documento</label>
+            <div class="types" id="types"></div>
+          </div>
+          <div class="grp">
+            <label>Tu marca</label>
+            <input class="fld" id="empresa" value="Áurea Estudio" placeholder="Nombre de tu empresa" maxlength="34" style="margin-bottom:10px">
+            <div class="swatches" id="accents"></div>
+          </div>
+          <div class="grp">
+            <label>Datos</label>
+            <input class="fld" id="cliente" value="Comercial Andes Ltda." placeholder="Cliente / destinatario" maxlength="40" style="margin-bottom:10px">
+            <div class="row2">
+              <input class="fld" id="monto" value="1.450.000" placeholder="Monto" inputmode="numeric">
+              <input class="fld" id="folio" value="0142" placeholder="N°">
+            </div>
+          </div>
+          <div class="cta2">
+            <button class="btn btn-primary" id="write">✨ Redactar con trIA</button>
+            <button class="btn btn-ghost" id="download">⭳ Descargar PDF</button>
+          </div>
+        </div>
+
+        <div class="preview">
+          <div class="page" id="page"></div>
+          <div class="writing" id="writing">
+            <div class="spin"></div>
+            <div class="wt serif">trIA está redactando…</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Beneficios -->
+    <section class="sec">
+      <div class="sec-k">Lo que hace por ti</div>
+      <h2 class="sec-h serif">Deja de improvisar documentos en Word</h2>
+      <div class="bens" id="bens"></div>
+    </section>
+
+    <!-- Contratación -->
+    <section class="hire">
+      <div class="hk">De la demo a tu negocio</div>
+      <h2 class="serif">Esto es una demostración. Al contratar, generas documentos ilimitados con tu marca.</h2>
+      <p>Cargamos <b style="color:#fff">tu logo, tus colores y tus datos</b>, y trIA genera cotizaciones, contratos, cartas y recibos consistentes y profesionales en segundos —con tu numeración y tus términos— listos para enviar o firmar.</p>
+      <div class="act">
+        <div class="acts">
+          <h4>Qué se activa al contratar</h4>
+          <ul>
+            <li><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>Tu <b>logo y tu identidad</b> aplicados a cada documento.</li>
+            <li><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>Plantillas a medida de tus <b>documentos habituales</b>.</li>
+            <li><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg><b>Numeración, términos y datos</b> de tu empresa por defecto.</li>
+            <li><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>Descarga en <b>PDF</b> y envío directo, o firma electrónica.</li>
+          </ul>
+        </div>
+        <div class="hire-cta">
+          <p>Cuéntanos qué documentos usas y trIA los deja listos con tu marca.</p>
+          <a class="btn btn-primary" href="https://grupotriada.cl" target="_blank" rel="noopener">Quiero mis documentos con marca →</a>
+        </div>
+      </div>
+      <div class="hire-note">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 8h.01M11 12h1v4h1"/></svg>
+        La marca “Áurea Estudio” y los datos son un ejemplo editable. Al contratar, se configuran con los de tu empresa.
+      </div>
+    </section>
+  </div>
+
+  <footer>
+    <div class="wrap foot">
+      <span class="fb">
+        <svg viewBox="0 0 120 120" width="20" height="20" fill="none" aria-hidden="true">
+          <path d="M26 90 L60 62 L94 90" stroke="#3D6E92" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M26 71 L60 43 L94 71" stroke="#2F8C93" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        Tríada · Consultoría 360
+      </span>
+      <span>Demo · documentos de ejemplo · al contratar se aplican tu marca y tus datos</span>
+    </div>
+  </footer>
+
+  <script>
+    var $ = function(id){ return document.getElementById(id); };
+    var RM = false; try { RM = matchMedia('(prefers-reduced-motion: reduce)').matches; } catch(e){}
+    function esc(s){ return String(s==null?'':s).replace(/[&<>"]/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
+    function svg(p, s){ s = s || 18; return '<svg width="'+s+'" height="'+s+'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+p+'</svg>'; }
+
+    // ── Estado ──────────────────────────────────────────────────────────────
+    var state = { tipo:'cotizacion', empresa:'Áurea Estudio', accent:'#1C7A82', cliente:'Comercial Andes Ltda.', monto:'1.450.000', folio:'0142', redactado:false };
+
+    var ACCENTS = ['#1C7A82','#16234A','#8A3B4C','#2E6E4E','#B5852A','#5B4B8A'];
+    var TIPOS = [
+      { id:'cotizacion', nom:'Cotización', ic:'<rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/>' },
+      { id:'contrato',   nom:'Contrato',   ic:'<path d="M6 3h9l4 4v14a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1Z"/><path d="M14 3v5h5M9 17l2 2 4-4"/>' },
+      { id:'carta',      nom:'Carta',      ic:'<rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3.5 7 8.5 6 8.5-6"/>' },
+      { id:'recibo',     nom:'Recibo',     ic:'<path d="M5 3h14v18l-2.5-1.5L14 21l-2-1.5L10 21l-2.5-1.5L5 21Z"/><path d="M9 8h6M9 12h6"/>' }
+    ];
+
+    // Prosa que "escribe" trIA por tipo de documento (sembrada).
+    var PROSA = {
+      cotizacion:'Agradecemos su interés en nuestros servicios. A continuación detallamos la propuesta de valor ajustada a los requerimientos conversados, con precios netos vigentes por 15 días. Incluye coordinación, ejecución y una reunión de cierre.',
+      contrato:['<b>PRIMERO — Objeto.</b> El Prestador ejecutará los servicios profesionales descritos en la propuesta técnica, aplicando su mejor estándar y buenas prácticas del rubro.','<b>SEGUNDO — Precio y forma de pago.</b> El Cliente pagará el valor acordado, con un abono del 50% al inicio y el 50% restante contra entrega, mediante transferencia electrónica.','<b>TERCERO — Plazo.</b> Los trabajos se desarrollarán en el plazo estimado en la propuesta, salvo fuerza mayor o cambios de alcance acordados por escrito.','<b>CUARTO — Confidencialidad.</b> Ambas partes mantendrán reserva de la información que intercambien con motivo de este contrato.'],
+      carta:['Estimados señores:','Junto con saludar, les presentamos formalmente a nuestra empresa y los servicios que ofrecemos. Contamos con un equipo especializado y un enfoque orientado a resultados, con foco en la calidad y el cumplimiento de plazos.','Quedamos atentos a coordinar una reunión para conocer sus necesidades y proponer soluciones a su medida. Agradecemos de antemano la oportunidad de colaborar.'],
+      recibo:'Por concepto de servicios profesionales prestados conforme a lo acordado, se extiende el presente comprobante como constancia de pago recibido a entera conformidad.'
+    };
+
+    // ── Beneficios ──────────────────────────────────────────────────────────
+    var BENS = [
+      { ic:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/>', h:'De horas a segundos', p:'Lo que te toma media hora armando y alineando en Word, trIA lo entrega listo y prolijo al instante.' },
+      { ic:'<path d="M12 3l2 5 5 2-5 2-2 5-2-5-5-2 5-2 2-5Z"/>', h:'Siempre con tu marca', p:'Tu logo, tus colores y tus datos en cada documento. Consistencia impecable, sin plantillas rotas ni copiar-pegar.' },
+      { ic:'<path d="M4 4h16v4H4zM4 10h16v10H4z"/><path d="M8 14h8"/>', h:'Cotización, contrato, carta o recibo', p:'Cuatro documentos esenciales del día a día —y los que sumes— desde un mismo lugar, con el mismo estándar.' },
+      { ic:'<path d="M12 3v12m0 0-4-4m4 4 4-4M5 21h14"/>', h:'Listo para PDF', p:'Descárgalo en PDF para enviar por correo o WhatsApp, o llévalo a firma. Se ve profesional en pantalla y en papel.' },
+      { ic:'<path d="M20 6 9 17l-5-5"/>', h:'Menos errores', p:'Números, fechas y términos consistentes. Menos typos, menos “se me olvidó el IVA”, menos vergüenzas.' },
+      { ic:'<path d="M17 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2"/><circle cx="10" cy="7" r="4"/><path d="M20 8v6M23 11h-6"/>', h:'Todo tu equipo, igual', p:'Cualquiera de tu equipo emite documentos con el mismo nivel, sin depender del que “sabe usar Word”.' }
+    ];
+    $('bens').innerHTML = BENS.map(function(b){
+      return '<div class="ben"><div class="bi">'+svg(b.ic,23)+'</div><h3 class="serif">'+b.h+'</h3><p>'+b.p+'</p></div>';
+    }).join('');
+
+    // ── Selector de tipo + acentos ──────────────────────────────────────────
+    $('types').innerHTML = TIPOS.map(function(t){
+      return '<button class="ty'+(t.id===state.tipo?' on':'')+'" data-t="'+t.id+'">'+svg(t.ic,17)+t.nom+'</button>';
+    }).join('');
+    $('accents').innerHTML = ACCENTS.map(function(c){
+      return '<span class="acc'+(c===state.accent?' on':'')+'" data-c="'+c+'" style="background:'+c+'"></span>';
+    }).join('');
+
+    // ── Utilidades de documento ─────────────────────────────────────────────
+    function money(v){ var n = String(v).replace(/[^\d]/g,''); if(!n) return '$0'; return '$'+Number(n).toLocaleString('es-CL'); }
+    function num(v){ return Number(String(v).replace(/[^\d]/g,'')) || 0; }
+    var HOY = '18 de junio de 2026';   // fecha fija (demo determinista)
+
+    function head(sub, folioLbl){
+      var ini = (state.empresa.trim()[0] || 'A').toUpperCase();
+      return '<div class="ph"><div class="mono">'+esc(ini)+'</div>'
+        + '<div><div class="co">'+esc(state.empresa||'Tu Empresa')+'</div><div class="cs">'+sub+'</div></div>'
+        + '<div class="folio">'+folioLbl+' <b>N° '+esc(state.folio||'—')+'</b><br>'+HOY+'</div></div>';
+    }
+    function prosaOr(html){ return state.redactado ? html : '<p class="placeholder">Presiona “Redactar con trIA” y este texto se completa solo, con redacción profesional.</p>'; }
+
+    // ── Plantillas ──────────────────────────────────────────────────────────
+    var DOC = {
+      cotizacion: function(){
+        var base = num(state.monto);
+        var items = [
+          ['Servicio principal · plan acordado', 1, Math.round(base*0.7)],
+          ['Puesta en marcha e implementación', 1, Math.round(base*0.2)],
+          ['Soporte y acompañamiento (mes 1)', 1, Math.round(base*0.1)]
+        ];
+        var sub = items.reduce(function(s,i){ return s+i[2]; },0), iva = Math.round(sub*0.19), tot = sub+iva;
+        var rows = items.map(function(i){ return '<tr><td><b>'+i[0]+'</b></td><td class="r">'+i[1]+'</td><td class="r">'+money(i[2])+'</td></tr>'; }).join('');
+        return head('Cotización de servicios','Cotización')
+          + '<div class="doc-title serif">Cotización</div>'
+          + '<div class="doc-sub">Preparada para <b>'+esc(state.cliente||'—')+'</b></div>'
+          + '<p class="pp">'+prosaOr(esc(PROSA.cotizacion))+'</p>'
+          + '<table class="items"><thead><tr><th>Detalle</th><th class="r">Cant.</th><th class="r">Valor</th></tr></thead><tbody>'+rows+'</tbody></table>'
+          + '<div class="totals"><div><span>Subtotal</span><span>'+money(sub)+'</span></div>'
+          + '<div><span>IVA 19%</span><span>'+money(iva)+'</span></div>'
+          + '<div class="tot"><span>Total</span><span>'+money(tot)+'</span></div></div>'
+          + '<div class="pfoot"><span>Valores en pesos chilenos · vigencia 15 días</span><span>'+esc(state.empresa)+'</span></div>';
+      },
+      contrato: function(){
+        var cl = state.redactado ? PROSA.contrato.map(function(c){ return '<p class="clause">'+c+'</p>'; }).join('') : prosaOr('');
+        return head('Contrato de prestación de servicios','Contrato')
+          + '<div class="doc-title serif">Contrato de servicios</div>'
+          + '<div class="doc-sub">Documento entre las partes individualizadas</div>'
+          + '<div class="parties"><div class="party"><h5>Prestador</h5><div class="nm">'+esc(state.empresa||'Tu Empresa')+'</div><div class="dt">RUT 77.123.456-7</div></div>'
+          + '<div class="party"><h5>Cliente</h5><div class="nm">'+esc(state.cliente||'—')+'</div><div class="dt">RUT 78.987.654-3</div></div></div>'
+          + cl
+          + '<div class="signs"><div class="sign">'+esc(state.empresa||'Prestador')+'</div><div class="sign">'+esc(state.cliente||'Cliente')+'</div></div>'
+          + '<div class="pfoot"><span>Firmado en Santiago, '+HOY+'</span><span>N° '+esc(state.folio)+'</span></div>';
+      },
+      carta: function(){
+        var body = state.redactado ? PROSA.carta.map(function(p){ return '<p class="pp">'+p+'</p>'; }).join('') : prosaOr('');
+        return head('Carta de presentación','Carta')
+          + '<div style="text-align:right;font-size:11px;color:#7a848b;margin:16px 0 22px">Santiago, '+HOY+'</div>'
+          + '<div class="doc-sub" style="font-size:12.5px;color:#1a2630;font-weight:600;margin-bottom:16px">Para: '+esc(state.cliente||'—')+'</div>'
+          + body
+          + '<div style="margin-top:34px"><p class="pp" style="margin-bottom:2px">Atentamente,</p><p class="pp serif" style="font-size:16px;color:#1a2630;font-weight:600">'+esc(state.empresa||'Tu Empresa')+'</p></div>'
+          + '<div class="pfoot"><span>'+esc(state.empresa)+' · contacto@tuempresa.cl</span><span>+56 9 1234 5678</span></div>';
+      },
+      recibo: function(){
+        var tot = num(state.monto);
+        return head('Comprobante de pago','Recibo')
+          + '<div class="doc-title serif">Recibo de pago</div>'
+          + '<div class="doc-sub">Comprobante N° '+esc(state.folio)+' · '+HOY+'</div>'
+          + '<div class="parties"><div class="party"><h5>Recibí de</h5><div class="nm">'+esc(state.cliente||'—')+'</div></div>'
+          + '<div class="party"><h5>Monto</h5><div class="nm serif" style="font-size:20px;color:var(--accent)">'+money(tot)+'</div></div></div>'
+          + '<p class="pp">'+prosaOr(esc(PROSA.recibo))+'</p>'
+          + '<div class="stamp">'+svg('<path d="M20 6 9 17l-5-5"/>',15)+'Pagado · '+money(tot)+'</div>'
+          + '<div class="signs" style="grid-template-columns:1fr;max-width:220px;margin-left:auto;margin-top:52px"><div class="sign">'+esc(state.empresa||'Emisor')+'</div></div>'
+          + '<div class="pfoot"><span>Gracias por su preferencia</span><span>'+esc(state.empresa)+'</span></div>';
+      }
+    };
+
+    function render(){
+      document.documentElement.style.setProperty('--accent', state.accent);
+      $('page').style.setProperty('--accent', state.accent);
+      $('page').innerHTML = DOC[state.tipo]();
+      $('page').style.animation='none'; void $('page').offsetWidth; $('page').style.animation='';
+    }
+
+    // ── Eventos ─────────────────────────────────────────────────────────────
+    $('types').addEventListener('click', function(ev){
+      var b = ev.target.closest('.ty'); if(!b) return;
+      state.tipo = b.getAttribute('data-t'); state.redactado = false;
+      [].forEach.call($('types').children, function(c){ c.classList.toggle('on', c===b); });
+      render();
+    });
+    $('accents').addEventListener('click', function(ev){
+      var b = ev.target.closest('.acc'); if(!b) return;
+      state.accent = b.getAttribute('data-c');
+      [].forEach.call($('accents').children, function(c){ c.classList.toggle('on', c===b); });
+      render();
+    });
+    function bindInput(id, key){ $(id).addEventListener('input', function(){ state[key] = this.value; render(); }); }
+    bindInput('empresa','empresa'); bindInput('cliente','cliente'); bindInput('monto','monto'); bindInput('folio','folio');
+
+    $('write').addEventListener('click', function(){
+      if (state.redactado){ render(); return; }
+      $('writing').classList.add('on');
+      setTimeout(function(){ state.redactado = true; $('writing').classList.remove('on'); render(); }, RM ? 250 : 1050);
+    });
+    $('download').addEventListener('click', function(){ window.print(); });
+
+    // Arranque
+    render();
+  </script>
+</body>
+</html>

@@ -33,6 +33,16 @@ const DEMOS = [
     grad: ['#C57B57', 'var(--navy)'],
   },
   {
+    id: 'documentos',
+    nombre: 'Generador de Documentos',
+    tagline: 'Cotizaciones, contratos y cartas con tu marca',
+    desc: 'Elige el tipo de documento —cotización, contrato, carta o recibo—, pon tu marca (nombre y color) y trIA lo arma con aspecto profesional en segundos, editable en vivo y listo para descargar en PDF. Demo con datos de ejemplo.',
+    chips: ['Cotización', 'Contrato', 'Carta', 'Recibo'],
+    url: '../demos/documentos/',
+    icon: 'fileText',
+    grad: ['#C2871A', 'var(--navy)'],
+  },
+  {
     id: 'auditor',
     nombre: 'Auditor de Imagen',
     tagline: 'Cómo te ve un cliente antes de que hables',
