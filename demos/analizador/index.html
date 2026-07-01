@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="es-CL">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0C1B26">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta name="description" content="Analizador Comercial con trIA — Tríada. trIA lee tu embudo de ventas y detecta dónde se cae la conversión: cuellos de botella, cotizaciones frías, vendedores lentos y clientes sin seguimiento — con un plan para recuperar esas ventas.">
+  <title>Tríada · Analizador Comercial con trIA</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Spectral:ital,wght@0,400;0,500;0,600;0,700;1,500&family=Hanken+Grotesk:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --paper:#FBF9F3; --cream:#F4F1E9; --cream-2:#EFEBDF;
+      --ink:#14222E; --body:#46555F; --muted:#6B7780; --faint:#8A90A3;
+      --line:#E5DFD0; --petrol:#0C1B26; --petrol-2:#16466B;
+      --teal:#1C7A82; --teal-2:#2F8C93; --teal-l:#E6F1F0;
+      --green:#5E9E7E; --amber:#C2871A; --red:#B4524A;
+      --serif:'Spectral',Georgia,serif; --sans:'Hanken Grotesk',system-ui,-apple-system,sans-serif;
+    }
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:var(--sans);background:var(--paper);color:var(--ink);line-height:1.5;-webkit-font-smoothing:antialiased}
+    .wrap{max-width:920px;margin:0 auto;padding:0 20px}
+    .serif{font-family:var(--serif)}
+
+    header{background:var(--petrol);color:#fff}
+    .hd{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:16px 0}
+    .brand{display:flex;align-items:center;gap:11px;font-family:var(--serif);font-size:21px;font-weight:600;letter-spacing:.04em}
+    .badge{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--teal-2);border:1px solid rgba(127,208,204,.4);border-radius:999px;padding:5px 12px;white-space:nowrap}
+
+    .hero{background:radial-gradient(120% 100% at 85% 0%,#15384a 0%,#0C1B26 55%,#0A1620 100%);color:#fff;padding:44px 0 54px}
+    .kick{font-size:12px;font-weight:700;letter-spacing:.28em;text-transform:uppercase;color:var(--teal-2);margin-bottom:16px}
+    .hero h1{font-family:var(--serif);font-size:clamp(30px,6vw,52px);font-weight:600;line-height:1.04;letter-spacing:-.01em;max-width:17ch}
+    .hero p{margin-top:16px;font-size:clamp(15px,2.4vw,18px);color:rgba(234,229,216,.82);max-width:54ch}
+
+    .card{background:#fff;border:1px solid var(--line);border-radius:18px;box-shadow:0 20px 40px -30px rgba(12,27,38,.4)}
+    .demo-panel{margin-top:-34px;position:relative;z-index:2;padding:22px}
+    .demo-tag{display:inline-flex;align-items:center;gap:7px;font-size:12px;font-weight:700;color:var(--teal);background:var(--teal-l);border-radius:999px;padding:5px 12px;margin-bottom:14px}
+    .demo-tag i{width:7px;height:7px;border-radius:50%;background:var(--teal)}
+    .emp-name{font-family:var(--serif);font-size:22px;font-weight:600}
+    .emp-sub{font-size:13.5px;color:var(--muted);margin-top:3px;max-width:56ch}
+
+    /* Marcador en vivo */
+    .live{display:flex;align-items:center;gap:20px;background:linear-gradient(120deg,var(--cream),var(--cream-2));border:1px solid var(--line);border-radius:16px;padding:18px 20px;margin-top:16px}
+    .ring{position:relative;width:96px;height:96px;flex:none}
+    .ring svg{width:100%;height:100%;transform:rotate(-90deg)}
+    .ring .track{stroke:var(--cream-2)}
+    .ring .prog{stroke:var(--teal);stroke-linecap:round;transition:stroke-dashoffset .6s cubic-bezier(.4,0,.2,1),stroke .3s}
+    .ring .num{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1}
+    .ring .num b{font-family:var(--serif);font-size:28px;font-weight:600;font-variant-numeric:tabular-nums}
+    .ring .num small{font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-top:3px}
+    .live .lvl{font-family:var(--serif);font-size:20px;font-weight:600;color:var(--ink)}
+    .live .lvd{font-size:12.5px;color:var(--body);margin-top:3px;line-height:1.45;max-width:42ch}
+    .live .risk{font-family:var(--serif);font-size:17px;font-weight:600;color:var(--red);margin-top:9px;font-variant-numeric:tabular-nums;line-height:1.2}
+    .live .risk span{font-family:var(--sans);font-size:12px;font-weight:600;color:var(--muted)}
+
+    /* Embudo */
+    .funnel{margin-top:18px}
+    .funnel-h{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:12px}
+    .frow{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin-bottom:5px}
+    .fname{font-size:13px;font-weight:600;color:var(--ink)}
+    .fname small{font-weight:500;color:var(--faint);font-size:11.5px}
+    .fnum{font-family:var(--serif);font-size:16px;font-weight:600;color:var(--ink);font-variant-numeric:tabular-nums;white-space:nowrap}
+    .ftrack{height:26px;background:var(--cream-2);border-radius:8px;overflow:hidden}
+    .fbar{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--teal),var(--teal-2));border-radius:8px;transition:width .7s cubic-bezier(.4,0,.2,1);min-width:3px}
+    .fbar.win{background:linear-gradient(90deg,var(--green),#7BB597)}
+    .fdrop{display:flex;align-items:center;gap:9px;padding:5px 0 8px 12px;margin-top:2px;color:var(--muted);font-size:11.5px;position:relative}
+    .fdrop::before{content:'';position:absolute;left:0;top:0;bottom:8px;width:2px;background:var(--line);border-radius:2px}
+    .fdrop .fd-pct{font-weight:700;color:var(--amber);font-variant-numeric:tabular-nums}
+    .fdrop.neck .fd-pct{color:var(--red)}
+    .fdrop.neck{color:var(--red);font-weight:600}
+    .fdrop .neck-tag{font-size:10px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:#fff;background:var(--red);border-radius:999px;padding:2px 8px}
+
+    /* Controles editables */
+    .kpis{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:20px}
+    .kpi{background:var(--cream);border:1px solid var(--line);border-radius:12px;padding:13px 13px 11px;transition:border-color .15s,box-shadow .15s}
+    .kpi:focus-within{border-color:var(--teal);box-shadow:0 0 0 3px var(--teal-l)}
+    .kpi label{display:block;font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+    .minp{display:flex;align-items:baseline;gap:2px;margin-top:6px}
+    .minp .cur{font-family:var(--serif);font-size:17px;font-weight:600;color:var(--faint)}
+    .money{border:none;background:transparent;outline:none;width:100%;min-width:0;font-family:var(--serif);font-size:clamp(17px,3vw,22px);font-weight:600;color:var(--ink);font-variant-numeric:tabular-nums;padding:0}
+
+    .ask{margin-top:16px}
+    .qtext{font-size:13.5px;font-weight:600;color:var(--body);margin-bottom:8px}
+    .opts{display:flex;flex-wrap:wrap;gap:8px}
+    .opt{font-family:var(--sans);font-size:12.5px;font-weight:600;color:var(--body);background:#fff;border:1px solid var(--line);border-radius:999px;padding:8px 14px;cursor:pointer;transition:background .14s,color .14s,border-color .14s}
+    .opt:hover{border-color:var(--teal-2)}
+    .opt.on{background:var(--teal);color:#fff;border-color:var(--teal);box-shadow:0 6px 14px -8px var(--teal)}
+
+    .cta-row{margin-top:20px;display:flex;flex-wrap:wrap;gap:12px;align-items:center}
+    .btn{font-family:var(--sans);font-size:15px;font-weight:700;border:none;border-radius:12px;padding:14px 22px;cursor:pointer;display:inline-flex;align-items:center;gap:9px;text-decoration:none;transition:transform .12s,box-shadow .12s}
+    .btn-primary{background:var(--teal);color:#fff;box-shadow:0 10px 24px -12px var(--teal)}
+    .btn-primary:hover{transform:translateY(-1px);box-shadow:0 14px 28px -12px var(--teal)}
+    .btn-ghost{background:transparent;color:var(--teal);border:1px solid var(--line)}
+    .btn-ghost:hover{background:var(--teal-l)}
+    .edit-hint{font-size:12px;color:var(--faint);margin-top:12px;display:flex;align-items:center;gap:6px}
+
+    /* Escaneo */
+    .scan{display:none;padding:32px 22px;text-align:center}
+    .scan.on{display:block}
+    .scan .spin{width:52px;height:52px;margin:0 auto 16px;border-radius:50%;border:4px solid var(--cream-2);border-top-color:var(--teal);animation:spin .8s linear infinite}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    .scan h3{font-family:var(--serif);font-size:21px;font-weight:600}
+    .scan .step{margin-top:8px;font-size:14px;color:var(--muted);min-height:21px}
+    .bar{height:8px;background:var(--cream-2);border-radius:999px;overflow:hidden;margin:18px auto 0;max-width:420px}
+    .bar span{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--teal),var(--green));border-radius:999px;transition:width .3s ease}
+
+    /* Resultado */
+    .result{display:none;padding-top:30px;padding-bottom:20px}
+    .result.on{display:block;animation:fade .5s ease}
+    @keyframes fade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+    .total{background:linear-gradient(120deg,var(--petrol),#143a4a);color:#fff;border-radius:18px;padding:26px 24px;display:flex;align-items:center;gap:26px}
+    .total .ring2{position:relative;width:132px;height:132px;flex:none}
+    .total .ring2 svg{width:100%;height:100%;transform:rotate(-90deg)}
+    .total .ring2 .track{stroke:rgba(255,255,255,.12)}
+    .total .ring2 .prog{stroke-linecap:round;transition:stroke-dashoffset 1s cubic-bezier(.4,0,.2,1)}
+    .total .ring2 .num{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1}
+    .total .ring2 .num b{font-family:var(--serif);font-size:40px;font-weight:600;font-variant-numeric:tabular-nums}
+    .total .ring2 .num small{font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;color:rgba(234,229,216,.7);margin-top:4px}
+    .total .l{font-size:12px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--teal-2)}
+    .total .lvl2{font-family:var(--serif);font-size:clamp(24px,5vw,32px);font-weight:600;line-height:1.05;margin:6px 0 8px}
+    .total .verdict{font-size:14.5px;color:rgba(234,229,216,.85);line-height:1.5}
+    .total .rrisk{margin-top:13px;display:inline-flex;align-items:center;gap:8px;font-size:14px;font-weight:600;background:rgba(180,82,74,.22);border:1px solid rgba(180,82,74,.5);color:#F3D3CE;border-radius:999px;padding:7px 14px}
+    .total .rrisk b{font-family:var(--serif);color:#fff;font-variant-numeric:tabular-nums}
+
+    .sec-h{display:flex;align-items:center;gap:14px;margin:32px 0 16px}
+    .sec-h .n{font-family:var(--serif);font-weight:600;color:var(--teal);background:var(--teal-l);border-radius:8px;padding:5px 12px;font-size:14px}
+    .sec-h h2{font-family:var(--serif);font-size:23px;font-weight:600}
+    .sec-h .rule{flex:1;height:1px;background:linear-gradient(90deg,var(--line),transparent)}
+
+    /* Barras (ranking del equipo) */
+    .bars{display:flex;flex-direction:column;gap:15px}
+    .bhead{display:flex;align-items:baseline;justify-content:space-between;gap:14px;margin-bottom:7px}
+    .bn{font-size:13.5px;font-weight:600;color:var(--ink)}
+    .bn small{font-weight:500;color:var(--faint);font-size:11.5px}
+    .bv{font-family:var(--serif);font-size:16px;font-weight:600;font-variant-numeric:tabular-nums;white-space:nowrap}
+    .btrack{display:block;height:13px;background:var(--cream-2);border-radius:999px;overflow:hidden}
+    .bfill{display:block;height:100%;width:0;border-radius:999px;transition:width 1s cubic-bezier(.4,0,.2,1)}
+    .bnote{font-size:12.5px;color:var(--muted);margin-top:14px;display:flex;align-items:center;gap:7px}
+    .bnote b{color:var(--ink)}
+
+    /* Hallazgos */
+    .finds{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    .find{border:1px solid var(--line);border-left:4px solid var(--sev);border-radius:14px;padding:15px 16px;background:#fff;opacity:0;transform:translateY(10px)}
+    .find.in{opacity:1;transform:none;transition:opacity .4s ease,transform .4s ease}
+    .find .top{display:flex;align-items:baseline;justify-content:space-between;gap:10px}
+    .find .cat{font-weight:700;font-size:15px;color:var(--ink)}
+    .find .sev{display:inline-block;font-size:10.5px;font-weight:700;letter-spacing:.03em;text-transform:uppercase;color:var(--sev);background:color-mix(in srgb,var(--sev) 12%,#fff);border-radius:999px;padding:2px 9px;white-space:nowrap}
+    .find .desc{font-size:13px;color:var(--body);line-height:1.55;margin-top:9px}
+    .find .fix{font-size:12.5px;color:var(--muted);line-height:1.5;margin-top:8px;padding-top:8px;border-top:1px dashed var(--line)}
+    .find .fix b{color:var(--teal)}
+
+    .final{margin-top:34px;background:linear-gradient(120deg,var(--teal-l),var(--cream-2));border:1px solid var(--line);border-radius:18px;padding:26px 24px;text-align:center}
+    .final h3{font-family:var(--serif);font-size:23px;font-weight:600;max-width:26ch;margin:0 auto}
+    .final p{font-size:14.5px;color:var(--body);margin:10px auto 18px;max-width:48ch}
+
+    footer{border-top:1px solid var(--line);margin-top:40px;padding:24px 0;color:var(--faint);font-size:12.5px}
+    .foot{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px}
+    .foot .fb{display:flex;align-items:center;gap:9px;font-family:var(--serif);font-weight:600;color:var(--muted)}
+
+    @media (max-width:640px){
+      .live{gap:15px;padding:16px}
+      .ring{width:82px;height:82px}
+      .ring .num b{font-size:23px}
+      .kpis{grid-template-columns:1fr}
+      .finds{grid-template-columns:1fr}
+      .total{flex-direction:column;text-align:center;gap:16px;padding:24px 20px}
+      .demo-panel{margin-top:-26px;padding:18px}
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="wrap hd">
+      <span class="brand">
+        <svg viewBox="0 0 120 120" width="30" height="30" fill="none" aria-hidden="true">
+          <path d="M26 90 L60 62 L94 90" stroke="#fff" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M26 73 L60 45 L94 73" stroke="#2F8C93" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M26 56 L60 28 L94 56" stroke="#6BA083" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        Tríada
+      </span>
+      <span class="badge">trIA · Analizador comercial</span>
+    </div>
+  </header>
+
+  <section class="hero">
+    <div class="wrap">
+      <div class="kick">Lector IA · Tríada</div>
+      <h1 class="serif">¿En qué parte de tu embudo se te caen las ventas?</h1>
+      <p>trIA lee tu proceso comercial de punta a punta y encuentra dónde se pierde la plata: cuellos de botella, cotizaciones que se enfrían, vendedores bajo la media y clientes sin seguimiento — con un plan para recuperar esas ventas.</p>
+    </div>
+  </section>
+
+  <div class="wrap">
+    <!-- Panel de datos -->
+    <div class="card demo-panel" id="panel">
+      <div class="demo-tag"><i></i>Datos del equipo comercial · ejemplo</div>
+      <div class="emp-name serif">Comercial Andes SpA</div>
+      <div class="emp-sub">Equipo de ventas (4 personas) · últimos 30 días. Ajusta los números a tu realidad y mira el diagnóstico moverse en vivo.</div>
+
+      <div class="live">
+        <div class="ring" id="ring">
+          <svg viewBox="0 0 120 120" aria-hidden="true">
+            <circle class="track" cx="60" cy="60" r="52" fill="none" stroke-width="12"/>
+            <circle class="prog" id="ringProg" cx="60" cy="60" r="52" fill="none" stroke-width="12" stroke-dasharray="326.7" stroke-dashoffset="326.7"/>
+          </svg>
+          <div class="num"><b id="ringNum">0</b><small>salud</small></div>
+        </div>
+        <div>
+          <div class="lvl" id="liveLvl">Salud comercial</div>
+          <div class="lvd" id="liveDesc">Así de sano está tu embudo de ventas hoy.</div>
+          <div class="risk"><span id="riskAmt">$0</span> <span>en ventas en riesgo este mes</span></div>
+        </div>
+      </div>
+
+      <div class="funnel">
+        <div class="funnel-h">Tu embudo de ventas</div>
+        <div id="funnel"></div>
+      </div>
+
+      <div class="kpis">
+        <div class="kpi"><label for="inLeads">Leads que entran al mes</label><div class="minp"><input id="inLeads" class="money" inputmode="numeric" value="120"></div></div>
+        <div class="kpi"><label for="inTicket">Ticket promedio</label><div class="minp"><span class="cur">$</span><input id="inTicket" class="money" inputmode="numeric" value="850.000"></div></div>
+      </div>
+
+      <div class="ask">
+        <div class="qtext">¿Con qué constancia le hacen seguimiento a las cotizaciones?</div>
+        <div class="opts" id="segFollow">
+          <button class="opt" data-k="rara">Rara vez</button>
+          <button class="opt on" data-k="aveces">A veces</button>
+          <button class="opt" data-k="siempre">Siempre</button>
+        </div>
+      </div>
+
+      <div class="cta-row">
+        <button class="btn btn-primary" id="go">⚡ Analizar mi embudo con trIA</button>
+        <button class="btn btn-ghost" id="reset">Usar ejemplo</button>
+      </div>
+      <div class="edit-hint">Demo con datos de ejemplo · no se envía nada a ningún servidor.</div>
+    </div>
+
+    <!-- Escaneo -->
+    <div class="card scan" id="scan" style="margin-top:18px">
+      <div class="spin"></div>
+      <h3 class="serif">trIA está analizando tu proceso comercial…</h3>
+      <div class="step" id="step">Leyendo tu embudo de ventas…</div>
+      <div class="bar"><span id="barfill"></span></div>
+    </div>
+
+    <!-- Resultado -->
+    <div class="result" id="result">
+      <div class="total">
+        <div class="ring2">
+          <svg viewBox="0 0 120 120" aria-hidden="true">
+            <circle class="track" cx="60" cy="60" r="52" fill="none" stroke-width="11"/>
+            <circle class="prog" id="ring2Prog" cx="60" cy="60" r="52" fill="none" stroke-width="11" stroke-dasharray="326.7" stroke-dashoffset="326.7"/>
+          </svg>
+          <div class="num"><b id="ring2Num">0</b><small>de 100</small></div>
+        </div>
+        <div>
+          <div class="l">Salud comercial</div>
+          <div class="lvl2 serif" id="rLvl">—</div>
+          <div class="verdict" id="rVerdict"></div>
+          <div class="rrisk">⚠ <b id="rRisk">$0</b> en ventas en riesgo este mes</div>
+        </div>
+      </div>
+
+      <div class="sec-h"><span class="n">01</span><h2 class="serif">Dónde se cae tu embudo</h2><span class="rule"></span></div>
+      <div class="funnel"><div id="rFunnel"></div></div>
+
+      <div class="sec-h"><span class="n">02</span><h2 class="serif">Hallazgos y plan de acción</h2><span class="rule"></span></div>
+      <div class="finds" id="finds"></div>
+
+      <div class="sec-h"><span class="n">03</span><h2 class="serif">Ranking del equipo · tasa de cierre</h2><span class="rule"></span></div>
+      <div class="bars" id="bars"></div>
+      <div class="bnote" id="bnote"></div>
+
+      <div class="final">
+        <h3 class="serif">Este es un vistazo con datos de ejemplo. ¿Destrabamos tu embudo real?</h3>
+        <p>Con tu pipeline de verdad, Tríada arma este diagnóstico a fondo, ordena tu proceso comercial y acompaña al equipo para recuperar cada venta que hoy se enfría.</p>
+        <a class="btn btn-primary" href="https://grupotriada.cl" target="_blank" rel="noopener">Conversemos con Tríada →</a>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    <div class="wrap foot">
+      <span class="fb">
+        <svg viewBox="0 0 120 120" width="20" height="20" fill="none" aria-hidden="true">
+          <path d="M26 90 L60 62 L94 90" stroke="#3D6E92" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M26 71 L60 43 L94 71" stroke="#2F8C93" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        Tríada · Consultoría 360
+      </span>
+      <span>Demo · datos de referencia · trIA no reemplaza asesoría profesional</span>
+    </div>
+  </footer>
+
+  <script>
+    var $ = function(id){ return document.getElementById(id); };
+    function clp(n){ return '$' + Math.round(n).toLocaleString('es-CL'); }
+    function clpShort(n){
+      if (n >= 1e6) return '$' + (n/1e6).toLocaleString('es-CL',{maximumFractionDigits:1}) + 'M';
+      if (n >= 1e3) return '$' + Math.round(n/1e3) + 'K';
+      return clp(n);
+    }
+    function parseNum(s){ return parseInt(String(s).replace(/[^0-9]/g,''), 10) || 0; }
+    function fmtMiles(n){ return n ? n.toLocaleString('es-CL') : ''; }
+
+    // Tasas de conversión del embudo (proporción que pasa a la etapa siguiente).
+    var R = { contacto:0.70, cotiza:0.62, cierra:0.24 };
+    var DEF = { leads:120, ticket:850000 };
+
+    // Seguimiento a cotizaciones: cuántas se enfrían y cuánto pesa en la salud.
+    var FOLLOWS = {
+      rara:    { frias:0.70, health:0.25 },
+      aveces:  { frias:0.45, health:0.55 },
+      siempre: { frias:0.20, health:0.90 }
+    };
+    var followKey = 'aveces';
+
+    // Equipo comercial (datos sembrados) — para el ranking del informe.
+    var VEND = [
+      { n:'Camila Rojas',  cot:20, cie:6 },
+      { n:'Diego Fuentes', cot:16, cie:4 },
+      { n:'Tomás Vera',    cot:6,  cie:1 },
+      { n:'Marta Silva',   cot:10, cie:1 }
+    ];
+
+    var C = 2 * Math.PI * 52;   // circunferencia de los anillos (r=52)
+
+    function inputs(){
+      return { leads:parseNum($('inLeads').value), ticket:parseNum($('inTicket').value), follow:FOLLOWS[followKey] };
+    }
+    function funnelData(){
+      var leads = inputs().leads;
+      var contactados = Math.round(leads * R.contacto);
+      var cotizados   = Math.round(contactados * R.cotiza);
+      var cerrados    = Math.round(cotizados * R.cierra);
+      var st = [
+        { name:'Leads que entran',   n:leads,       note:'oportunidades nuevas' },
+        { name:'Contactados',        n:contactados, note:'llegaste a hablar con ellos' },
+        { name:'Cotizados',          n:cotizados,   note:'recibieron una propuesta' },
+        { name:'Cerrados (venta)',   n:cerrados,    note:'terminaron comprando' }
+      ];
+      var maxDrop = -1, neck = -1;
+      for (var i=1;i<st.length;i++){
+        var prev = st[i-1].n;
+        st[i].dropN   = Math.max(0, prev - st[i].n);
+        st[i].dropPct = prev ? Math.round(st[i].dropN / prev * 100) : 0;
+        if (st[i].dropPct > maxDrop){ maxDrop = st[i].dropPct; neck = i; }
+      }
+      return { st:st, neck:neck, leads:leads, contactados:contactados, cotizados:cotizados, cerrados:cerrados };
+    }
+    function metrics(){
+      var d = funnelData(), inp = inputs();
+      var abiertas = Math.max(0, d.cotizados - d.cerrados);
+      var frias    = Math.round(abiertas * inp.follow.frias);
+      var riesgo   = frias * inp.ticket;
+      var conv     = d.leads ? d.cerrados / d.leads : 0;
+      var fConv    = Math.max(0, Math.min(1, conv / 0.18));   // meta de conversión 18%
+      var fFollow  = inp.follow.health;
+      var fTeam    = 0.5;                                      // 2 de 4 vendedores sobre la media
+      var score    = Math.round((fConv + fFollow + fTeam) / 3 * 100);
+      return { abiertas:abiertas, frias:frias, riesgo:riesgo, conv:conv, score:score };
+    }
+    function levelFor(score){
+      if (score < 40) return { lvl:'Comercial en riesgo', col:'#B4524A',
+        desc:'Se está perdiendo venta en varias etapas del embudo. Hay que ordenar el proceso desde la base.' };
+      if (score < 65) return { lvl:'Comercial funcional', col:'#C2871A',
+        desc:'Vendes, pero con fugas en el embudo que dejan plata sobre la mesa cada mes.' };
+      if (score < 85) return { lvl:'Comercial sólido', col:'#1C7A82',
+        desc:'Buen proceso. Con ajustes finos en cierre y seguimiento subes a nivel premium.' };
+      return { lvl:'Comercial de alto rendimiento', col:'#5E9E7E',
+        desc:'Tu máquina comercial funciona. El foco ahora es sostener el ritmo y escalar.' };
+    }
+
+    // ── Render del embudo (mismo markup para el panel y el informe) ──────────
+    function funnelHTML(){
+      var d = funnelData(), leads = d.leads || 1, out = '';
+      d.st.forEach(function(s, i){
+        var w = Math.max(2, Math.round(s.n / leads * 100));
+        var isWin = i === d.st.length - 1;
+        out += '<div class="fstage">'
+          + '<div class="frow"><span class="fname">'+s.name+' <small>· '+s.note+'</small></span><span class="fnum">'+s.n.toLocaleString('es-CL')+'</span></div>'
+          + '<div class="ftrack"><span class="fbar'+(isWin?' win':'')+'" data-w="'+w+'"></span></div>'
+          + '</div>';
+        if (i < d.st.length - 1){
+          var nx = d.st[i+1], isNeck = (i+1) === d.neck;
+          out += '<div class="fdrop'+(isNeck?' neck':'')+'">'
+            + '<span class="fd-pct">−'+nx.dropPct+'%</span>'
+            + '<span>'+nx.dropN.toLocaleString('es-CL')+' no pasan a «'+nx.name.replace(' (venta)','')+'»</span>'
+            + (isNeck ? '<span class="neck-tag">Cuello de botella</span>' : '')
+            + '</div>';
+        }
+      });
+      return out;
+    }
+    function paintFunnel(host){
+      host.innerHTML = funnelHTML();
+      var fills = host.querySelectorAll('.fbar');
+      void host.offsetWidth;
+      requestAnimationFrame(function(){ fills.forEach(function(b){ b.style.width = b.getAttribute('data-w') + '%'; }); });
+    }
+
+    // ── Marcador en vivo ─────────────────────────────────────────────────────
+    function updateLive(){
+      var m = metrics(), lv = levelFor(m.score);
+      $('ringNum').textContent = m.score;
+      $('ringProg').style.strokeDashoffset = C * (1 - m.score/100);
+      $('ringProg').style.stroke = lv.col;
+      $('liveLvl').textContent = lv.lvl;
+      $('liveLvl').style.color = lv.col;
+      $('liveDesc').textContent = lv.desc;
+      $('riskAmt').textContent = clp(m.riesgo);
+      paintFunnel($('funnel'));
+    }
+
+    // ── Formateo de los inputs mientras se escribe ───────────────────────────
+    ['inLeads','inTicket'].forEach(function(id){
+      $(id).addEventListener('input', function(){
+        var el = $(id); el.value = fmtMiles(parseNum(el.value)); updateLive();
+      });
+    });
+    $('segFollow').addEventListener('click', function(ev){
+      var b = ev.target.closest('.opt'); if (!b) return;
+      followKey = b.getAttribute('data-k');
+      this.querySelectorAll('.opt').forEach(function(o){ o.classList.remove('on'); });
+      b.classList.add('on');
+      updateLive();
+    });
+    $('reset').addEventListener('click', function(){
+      $('inLeads').value = fmtMiles(DEF.leads);
+      $('inTicket').value = fmtMiles(DEF.ticket);
+      followKey = 'aveces';
+      $('segFollow').querySelectorAll('.opt').forEach(function(o){ o.classList.toggle('on', o.getAttribute('data-k') === 'aveces'); });
+      updateLive();
+    });
+
+    // ── Escaneo → informe ────────────────────────────────────────────────────
+    var STEPS = ['Leyendo tu embudo de ventas…','Midiendo la conversión por etapa…','Revisando el seguimiento de cotizaciones…','Comparando el desempeño del equipo…','Ordenando hallazgos y plan…'];
+    $('go').addEventListener('click', function(){
+      if (inputs().leads <= 0){ alert('Ingresa cuántos leads entran al mes para analizar.'); return; }
+      $('scan').classList.add('on');
+      $('result').classList.remove('on');
+      var i = 0, fill = $('barfill'), step = $('step');
+      step.textContent = STEPS[0]; fill.style.width = '12%';
+      var t = setInterval(function(){
+        i++;
+        if (i < STEPS.length){ step.textContent = STEPS[i]; fill.style.width = (12 + i*18) + '%'; }
+        else { clearInterval(t); fill.style.width = '100%'; setTimeout(reveal, 380); }
+      }, 470);
+    });
+
+    function vColor(t){ if (t < 0.12) return '#B4524A'; if (t < 0.20) return '#C2871A'; if (t < 0.28) return '#1C7A82'; return '#5E9E7E'; }
+
+    function buildFinds(){
+      var m = metrics(), d = funnelData();
+      var neckPct = d.st[3].dropPct;                 // caída cotizado → cerrado
+      var cierrePct = Math.round(R.cierra * 100);
+      var metaCierre = Math.min(45, cierrePct + 10);
+      var sumCot = 0, sumCie = 0;
+      VEND.forEach(function(v){ sumCot += v.cot; sumCie += v.cie; });
+      var mediaPct = sumCot ? Math.round(sumCie / sumCot * 100) : 0;
+
+      var finds = [];
+      finds.push({ cat:'Cuello de botella en el cierre', sev:'#B4524A', sevL:'Prioridad alta', order:0,
+        desc:'De cada 100 cotizaciones, solo <b>'+cierrePct+'</b> terminan en venta. Entre «Cotizado» y «Cerrado» se cae el '+neckPct+'% del esfuerzo: es tu mayor fuga comercial.',
+        fix:'Guion de cierre, seguimiento a 48 h y manejo de objeciones. Pasar el cierre del '+cierrePct+'% al '+metaCierre+'% ya cambia el mes.' });
+      finds.push({ cat:'Cotizaciones frías sin seguimiento', sev:(m.riesgo >= 8e6 ? '#B4524A' : '#C2871A'), sevL:(m.riesgo >= 8e6 ? 'Prioridad alta' : 'Prioridad media'), order:1,
+        desc:'<b>'+m.frias+'</b> cotizaciones ('+clp(m.riesgo)+') llevan +14 días sin que nadie las retome. Se enfrían y se pierden por silencio, no por precio.',
+        fix:'Recordatorios automáticos de seguimiento a las 48 h y a los 7 días: ninguna cotización sin próximo paso agendado.' });
+      finds.push({ cat:'Vendedores bajo la media', sev:'#C2871A', sevL:'Prioridad media', order:2,
+        desc:'Marta (10%) y Tomás (17%) cierran bajo la media del equipo ('+mediaPct+'%). Tomás además genera pocas cotizaciones. Camila convierte al 30%: la fórmula ya existe adentro, falta replicarla.',
+        fix:'Acompañamiento y shadowing de Camila, metas semanales por vendedor y foco en cotizar más y mejor.' });
+      finds.push({ cat:'Leads que se enfrían por contacto tardío', sev:'#C2871A', sevL:'Prioridad media', order:3,
+        desc:'1 de cada 3 leads no se contacta el mismo día. Un lead atendido en la primera hora convierte varias veces más que uno contactado a los dos días.',
+        fix:'Alerta de lead nuevo y contacto en menos de 1 hora; repartir los leads apenas entran, no al día siguiente.' });
+      finds.push({ cat:'Clientes de una sola compra', sev:'#1C7A82', sevL:'A trabajar', order:4,
+        desc:'38 clientes compraron una vez y no volvieron: no hay postventa ni recompra. Venderle de nuevo a quien ya te compró es la venta más barata que existe.',
+        fix:'Campaña simple de recompra y un contacto de postventa a los 30 días de cada venta.' });
+      finds.push({ cat:'Pipeline sin priorizar', sev:'#1C7A82', sevL:'A trabajar', order:5,
+        desc:'Las oportunidades no están ordenadas por monto ni probabilidad: el equipo le dedica el mismo tiempo a un negocio de $100.000 que a uno de $5.000.000.',
+        fix:'Ponderar el pipeline por valor esperado y enfocar la semana en las 10 oportunidades que más mueven la aguja.' });
+      return finds;
+    }
+
+    function reveal(){
+      $('scan').classList.remove('on');
+      $('result').classList.add('on');
+
+      var m = metrics(), lv = levelFor(m.score);
+
+      // Cabecera: anillo + veredicto + riesgo
+      $('rLvl').textContent = lv.lvl; $('rLvl').style.color = '#fff';
+      $('rVerdict').textContent = lv.desc;
+      $('rRisk').textContent = clp(m.riesgo);
+      $('ring2Prog').style.stroke = lv.col;
+      $('ring2Prog').style.strokeDashoffset = C * (1 - m.score/100);
+      var big = $('ring2Num'), start = null, dur = 1000;
+      requestAnimationFrame(function run(ts){
+        if (!start) start = ts;
+        var p = Math.min(1, (ts - start)/dur), eased = 1 - Math.pow(1-p, 3);
+        big.textContent = Math.round(m.score * eased);
+        if (p < 1) requestAnimationFrame(run); else big.textContent = m.score;
+      });
+
+      // 01 · Embudo con el cuello marcado
+      paintFunnel($('rFunnel'));
+
+      // 02 · Hallazgos (cascada)
+      var finds = buildFinds();
+      var findsEl = $('finds');
+      findsEl.innerHTML = finds.map(function(f){
+        return '<article class="find" style="--sev:'+f.sev+'">'
+          + '<div class="top"><span class="cat">'+f.cat+'</span><span class="sev">'+f.sevL+'</span></div>'
+          + '<div class="desc">'+f.desc+'</div>'
+          + '<div class="fix"><b>Qué hacer:</b> '+f.fix+'</div>'
+          + '</article>';
+      }).join('');
+      findsEl.querySelectorAll('.find').forEach(function(c, idx){ setTimeout(function(){ c.classList.add('in'); }, 100 + idx*80); });
+
+      // 03 · Ranking del equipo por tasa de cierre
+      var rows = VEND.map(function(v){ return { n:v.n, cot:v.cot, cie:v.cie, t:v.cot ? v.cie/v.cot : 0 }; })
+                     .sort(function(a,b){ return b.t - a.t; });
+      var maxT = rows[0].t || 1;
+      var sumCot = 0, sumCie = 0;
+      VEND.forEach(function(v){ sumCot += v.cot; sumCie += v.cie; });
+      var mediaPct = sumCot ? Math.round(sumCie / sumCot * 100) : 0;
+      var barsEl = $('bars');
+      barsEl.innerHTML = rows.map(function(r){
+        var pct = Math.round(r.t*100), col = vColor(r.t), w = Math.max(5, Math.round(r.t/maxT*100));
+        return '<div class="brow">'
+          + '<div class="bhead"><span class="bn">'+r.n+' <small>· '+r.cie+' de '+r.cot+' cotizaciones</small></span><span class="bv" style="color:'+col+'">'+pct+'%</span></div>'
+          + '<span class="btrack"><span class="bfill" data-w="'+w+'" style="background:'+col+'"></span></span>'
+          + '</div>';
+      }).join('');
+      var fills = barsEl.querySelectorAll('.bfill');
+      void barsEl.offsetWidth;
+      requestAnimationFrame(function(){ fills.forEach(function(b){ b.style.width = b.getAttribute('data-w') + '%'; }); });
+      $('bnote').innerHTML = 'Media del equipo: <b>'+mediaPct+'% de cierre</b>. La diferencia entre tu mejor y tu peor vendedor es dinero que ya está sobre la mesa.';
+
+      $('result').scrollIntoView({ behavior:'smooth', block:'start' });
+    }
+
+    // Arranque
+    updateLive();
+  </script>
+</body>
+</html>

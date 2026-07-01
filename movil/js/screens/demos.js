@@ -93,6 +93,16 @@ const DEMOS = [
     grad: ['#3E6E8E', 'var(--navy)'],
   },
   {
+    id: 'analizador',
+    nombre: 'Analizador Comercial',
+    tagline: 'Descubre dónde se te caen las ventas',
+    desc: 'trIA lee tu embudo de ventas de punta a punta y detecta dónde se pierde la plata: cuellos de botella, cotizaciones que se enfrían, vendedores bajo la media y clientes sin seguimiento. Ajusta tus números y mira la salud comercial y las ventas en riesgo moverse en vivo, con un plan para recuperarlas. Demo con un equipo de ejemplo.',
+    chips: ['Embudo', 'Conversión', 'Ranking equipo', 'Plan trIA'],
+    url: '../demos/analizador/',
+    icon: 'funnel',
+    grad: ['#3D7E8C', 'var(--navy)'],
+  },
+  {
     id: 'auditor',
     nombre: 'Auditor de Imagen',
     tagline: 'Cómo te ve un cliente antes de que hables',
