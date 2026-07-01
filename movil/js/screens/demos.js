@@ -43,6 +43,16 @@ const DEMOS = [
     grad: ['#C2871A', 'var(--navy)'],
   },
   {
+    id: 'academia',
+    nombre: 'Academia Online',
+    tagline: 'Vende tus cursos con un tutor IA',
+    desc: 'Tu escuela online con tu marca: video-lecciones, un tutor trIA que responde las dudas de cada alumno al instante, seguimiento de progreso y certificado al finalizar. Toma la lección de ejemplo y ve cómo funciona. Demo sin backend.',
+    chips: ['Cursos', 'Tutor trIA', 'Progreso', 'Certificado'],
+    url: '../demos/academia/',
+    icon: 'video',
+    grad: ['#5B4B8A', 'var(--navy)'],
+  },
+  {
     id: 'auditor',
     nombre: 'Auditor de Imagen',
     tagline: 'Cómo te ve un cliente antes de que hables',
