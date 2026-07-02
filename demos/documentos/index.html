@@ -10,7 +10,7 @@
   <title>Tríada · Generador de Documentos con trIA</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Spectral:ital,wght@0,400;0,500;0,600;0,700;1,500&family=Hanken+Grotesk:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Spectral:ital,wght@0,400;0,500;0,600;0,700;1,500&family=Hanken+Grotesk:wght@400;500;600;700;800&family=Libre+Franklin:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
     :root{
       --paper:#FBF9F3; --cream:#F4F1E9; --cream-2:#EFEBDF;
@@ -20,6 +20,11 @@
       --green:#5E9E7E; --amber:#C2871A; --red:#B4524A;
       --accent:#1C7A82;
       --serif:'Spectral',Georgia,serif; --sans:'Hanken Grotesk',system-ui,-apple-system,sans-serif;
+      /* Tokens del DOCUMENTO (calidad _fuente, marca editable vía --accent) */
+      --doc-cream:#FBF9F3; --doc-cream2:#F4F1E9; --doc-line:#E9E3D4;
+      --doc-ink:#14222E; --doc-dark:#0C1B26; --doc-body:#46555F; --doc-muted:#6B7780;
+      --doc-serif:'Spectral',Georgia,'Times New Roman',serif;
+      --doc-sans:'Libre Franklin',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
     }
     *{box-sizing:border-box;margin:0;padding:0}
     body{font-family:var(--sans);background:var(--paper);color:var(--ink);line-height:1.5;-webkit-font-smoothing:antialiased}
@@ -72,38 +77,65 @@
     @keyframes spin{to{transform:rotate(360deg)}}
     .writing .wt{font-family:var(--serif);font-size:16px;font-weight:600}
 
-    .page{background:#fff;width:100%;max-width:560px;min-height:730px;box-shadow:0 20px 50px -26px rgba(12,27,38,.5);border-radius:3px;padding:42px 44px;color:#25313a;font-size:12.5px;line-height:1.6;animation:fade .35s ease}
+    /* ===== Documento (calidad de producción · marca editable vía --accent) ===== */
+    .page{background:var(--doc-cream);width:100%;max-width:600px;min-height:770px;box-shadow:0 20px 50px -26px rgba(12,27,38,.5);border-radius:3px;padding:46px 46px 38px;color:var(--doc-body);font-family:var(--doc-sans);font-size:12.5px;line-height:1.6;font-variant-numeric:tabular-nums;animation:fade .35s ease}
     @keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
-    .ph{display:flex;align-items:center;gap:13px;padding-bottom:16px;border-bottom:2px solid var(--accent)}
-    .mono{width:46px;height:46px;flex:none;border-radius:10px;background:var(--accent);color:#fff;display:flex;align-items:center;justify-content:center;font-family:var(--serif);font-weight:700;font-size:24px}
-    .ph .co{font-family:var(--serif);font-size:19px;font-weight:600;color:#1a2630;line-height:1.1}
-    .ph .cs{font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);font-weight:700;margin-top:3px}
-    .ph .folio{margin-left:auto;text-align:right;font-size:10.5px;color:#7a848b;line-height:1.5}
-    .ph .folio b{color:#1a2630;font-size:12px}
-    .doc-title{font-family:var(--serif);font-size:22px;font-weight:600;color:#1a2630;margin:22px 0 4px}
-    .doc-sub{font-size:11.5px;color:#7a848b;margin-bottom:18px}
-    .pp{margin:0 0 12px}
-    .pp b{color:#1a2630}
-    .parties{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:6px 0 18px}
-    .party{background:#F7F5F0;border-radius:8px;padding:12px 14px}
-    .party h5{font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--accent);font-weight:700;margin-bottom:6px}
-    .party .nm{font-weight:700;color:#1a2630;font-size:13px}
-    .party .dt{font-size:11px;color:#6b747b;margin-top:2px}
-    table.items{width:100%;border-collapse:collapse;margin:6px 0 14px;font-size:11.5px}
-    table.items th{text-align:left;font-size:9.5px;letter-spacing:.06em;text-transform:uppercase;color:#8a929a;border-bottom:1px solid #E4E0D6;padding:0 8px 7px}
-    table.items th.r,table.items td.r{text-align:right}
-    table.items td{padding:8px;border-bottom:1px solid #F0EDE5;color:#3a464e}
-    table.items td b{color:#1a2630}
-    .totals{margin-left:auto;width:56%;font-size:12px}
-    .totals div{display:flex;justify-content:space-between;padding:5px 8px}
-    .totals .tot{border-top:2px solid var(--accent);margin-top:4px;font-family:var(--serif);font-weight:700;font-size:15px;color:#1a2630}
-    .clause{margin:0 0 11px}
-    .clause b{color:#1a2630}
-    .placeholder{color:#b8bcc4;font-style:italic}
-    .signs{display:grid;grid-template-columns:1fr 1fr;gap:30px;margin-top:44px}
-    .sign{border-top:1px solid #35414a;padding-top:7px;font-size:11px;color:#5a636a;text-align:center}
-    .pfoot{margin-top:26px;padding-top:12px;border-top:1px solid #EEEBE2;font-size:9.5px;color:#9aa1a8;display:flex;justify-content:space-between;gap:12px}
-    .stamp{display:inline-flex;align-items:center;gap:7px;margin-top:16px;font-size:11px;font-weight:700;color:var(--accent);background:color-mix(in srgb,var(--accent) 10%,#fff);border:1px dashed var(--accent);border-radius:8px;padding:8px 13px}
+    .page .serif{font-family:var(--doc-serif)}
+    /* Membrete */
+    .lh{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;border-bottom:2px solid var(--doc-dark);padding-bottom:13px;margin-bottom:20px}
+    .lh .logo{display:flex;align-items:center;gap:11px}
+    .lh .mono{width:40px;height:40px;flex:none;border-radius:9px;background:var(--accent);color:#fff;display:flex;align-items:center;justify-content:center;font-family:var(--doc-serif);font-weight:700;font-size:21px}
+    .lh .word{font-family:var(--doc-serif);font-weight:600;font-size:19px;color:var(--doc-ink);line-height:1.12}
+    .lh .word .sub{display:block;font-family:var(--doc-sans);font-weight:700;font-size:8px;letter-spacing:.16em;text-transform:uppercase;color:var(--accent);margin-top:3px}
+    .lh .meta{text-align:right;font-size:9.5px;color:var(--doc-muted);line-height:1.6}
+    .lh .meta b{color:var(--doc-ink);font-size:11px}
+    /* Títulos y prosa */
+    .doc-title{font-family:var(--doc-serif);font-size:24px;font-weight:600;color:var(--doc-ink);margin:14px 0 3px;line-height:1.12}
+    .doc-sub{font-size:11.5px;color:var(--doc-muted);margin-bottom:18px}
+    .doc-sub b{color:var(--doc-ink)}
+    .pp{margin:0 0 11px}
+    .pp b,.clause b{color:var(--doc-ink);font-weight:600}
+    .placeholder{color:#b3b8bf;font-style:italic}
+    .dateline{text-align:right;font-size:11px;color:var(--doc-muted);margin:14px 0 18px}
+    .forline{font-size:12.5px;color:var(--doc-ink);font-weight:600;margin-bottom:16px}
+    /* Comparecientes */
+    .parties{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:6px 0 16px}
+    .party{background:var(--doc-cream2);border:1px solid var(--doc-line);border-radius:11px;padding:12px 14px}
+    .party .role{font-family:var(--doc-sans);font-weight:700;font-size:8px;letter-spacing:.14em;text-transform:uppercase;color:var(--accent);margin-bottom:6px}
+    .party .nm{font-family:var(--doc-serif);font-size:14px;color:var(--doc-ink);font-weight:600;line-height:1.2}
+    .party .ln{font-size:10px;color:var(--doc-body);margin-top:3px}
+    /* Tabla de datos */
+    table.data{width:100%;border-collapse:collapse;margin:8px 0 12px;font-size:11.5px}
+    table.data thead th{background:var(--doc-dark);color:#fff;font-family:var(--doc-sans);font-weight:600;font-size:9px;letter-spacing:.06em;text-transform:uppercase;text-align:left;padding:9px 11px}
+    table.data th.num,table.data td.num{text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}
+    table.data tbody td{padding:9px 11px;border-bottom:1px solid var(--doc-line);vertical-align:top;color:var(--doc-body)}
+    table.data tbody td b{color:var(--doc-ink)}
+    table.data tbody tr:nth-child(even) td{background:var(--doc-cream2)}
+    table.data tfoot td{padding:8px 11px;font-weight:700;color:var(--doc-ink)}
+    table.data tfoot tr:first-child td{border-top:2px solid var(--doc-dark)}
+    table.data tfoot tr.total td{background:var(--doc-dark);color:#fff}
+    table.data tfoot tr.total .lbl{font-family:var(--doc-serif);font-size:13px}
+    /* Cláusulas numeradas */
+    ol.clauses{list-style:none;padding-left:0;counter-reset:cl;margin:2px 0 4px}
+    ol.clauses>li{counter-increment:cl;position:relative;padding-left:30px;margin:0 0 12px}
+    ol.clauses>li::before{content:counter(cl);position:absolute;left:0;top:1px;font-family:var(--doc-serif);font-weight:600;font-size:13px;color:var(--accent);width:22px;text-align:right}
+    ol.clauses>li .h{display:block;font-family:var(--doc-sans);font-weight:700;font-size:12px;color:var(--doc-ink);margin-bottom:2px}
+    /* Firmas */
+    .signs{display:grid;grid-template-columns:1fr 1fr;gap:34px;margin-top:44px}
+    .sign{text-align:center}
+    .sign .line{border-top:1.4px solid var(--doc-ink);margin:0 0 6px;height:0}
+    .sign .nm{font-weight:700;color:var(--doc-ink);font-size:11px}
+    .sign .rl{font-size:9.5px;color:var(--doc-muted);margin-top:1px}
+    /* Callout · stamp · monto */
+    .callout{border-radius:11px;padding:11px 14px;margin:12px 0;font-size:11px;border:1px solid color-mix(in srgb,var(--accent) 28%,var(--doc-line));background:color-mix(in srgb,var(--accent) 7%,#fff);color:var(--doc-body)}
+    .callout .t{font-family:var(--doc-sans);font-weight:700;color:var(--accent);margin-bottom:2px;display:block}
+    .stamp{display:inline-flex;align-items:center;gap:7px;margin-top:14px;font-size:11px;font-weight:700;color:var(--accent);background:color-mix(in srgb,var(--accent) 10%,#fff);border:1px dashed var(--accent);border-radius:8px;padding:8px 13px}
+    .amount{font-family:var(--doc-serif);font-size:22px;font-weight:600;color:var(--accent)}
+    /* Pie */
+    .dfoot{margin-top:26px;padding-top:11px;border-top:1px solid var(--doc-line);display:flex;align-items:center;justify-content:space-between;gap:12px;font-size:9px;color:var(--doc-muted)}
+    .dfoot .fb{display:flex;align-items:center;gap:7px}
+    .dfoot .fb .iso{width:12px;height:12px;flex:none;border-radius:3px;background:var(--accent)}
+    .dfoot .fb .wm{font-family:var(--doc-serif);font-weight:600;font-size:11px;color:var(--doc-ink)}
 
     /* Beneficios */
     .sec{padding:52px 0 8px}
@@ -319,11 +351,17 @@
     function num(v){ return Number(String(v).replace(/[^\d]/g,'')) || 0; }
     var HOY = '18 de junio de 2026';   // fecha fija (demo determinista)
 
-    function head(sub, folioLbl){
+    // Membrete: inicial + nombre de la empresa + etiqueta del documento; N°/fecha a la derecha
+    function lh(tag){
       var ini = (state.empresa.trim()[0] || 'A').toUpperCase();
-      return '<div class="ph"><div class="mono">'+esc(ini)+'</div>'
-        + '<div><div class="co">'+esc(state.empresa||'Tu Empresa')+'</div><div class="cs">'+sub+'</div></div>'
-        + '<div class="folio">'+folioLbl+' <b>N° '+esc(state.folio||'—')+'</b><br>'+HOY+'</div></div>';
+      return '<div class="lh"><div class="logo"><div class="mono">'+esc(ini)+'</div>'
+        + '<div class="word">'+esc(state.empresa||'Tu Empresa')+'<span class="sub">'+tag+'</span></div></div>'
+        + '<div class="meta"><b>N° '+esc(state.folio||'—')+'</b><br>'+HOY+'</div></div>';
+    }
+    // Pie del documento: nota a la izquierda, marca (inicial + nombre) a la derecha
+    function foot(left){
+      return '<div class="dfoot"><span>'+left+'</span>'
+        + '<span class="fb"><span class="iso"></span><span class="wm">'+esc(state.empresa||'Tu Empresa')+'</span></span></div>';
     }
     function prosaOr(html){ return state.redactado ? html : '<p class="placeholder">Presiona “Redactar con trIA” y este texto se completa solo, con redacción profesional.</p>'; }
 
@@ -337,48 +375,56 @@
           ['Soporte y acompañamiento (mes 1)', 1, Math.round(base*0.1)]
         ];
         var sub = items.reduce(function(s,i){ return s+i[2]; },0), iva = Math.round(sub*0.19), tot = sub+iva;
-        var rows = items.map(function(i){ return '<tr><td><b>'+i[0]+'</b></td><td class="r">'+i[1]+'</td><td class="r">'+money(i[2])+'</td></tr>'; }).join('');
-        return head('Cotización de servicios','Cotización')
-          + '<div class="doc-title serif">Cotización</div>'
+        var rows = items.map(function(i){ return '<tr><td><b>'+i[0]+'</b></td><td class="num">'+i[1]+'</td><td class="num">'+money(i[2])+'</td></tr>'; }).join('');
+        return lh('Cotización')
+          + '<div class="doc-title">Cotización de servicios</div>'
           + '<div class="doc-sub">Preparada para <b>'+esc(state.cliente||'—')+'</b></div>'
           + '<p class="pp">'+prosaOr(esc(PROSA.cotizacion))+'</p>'
-          + '<table class="items"><thead><tr><th>Detalle</th><th class="r">Cant.</th><th class="r">Valor</th></tr></thead><tbody>'+rows+'</tbody></table>'
-          + '<div class="totals"><div><span>Subtotal</span><span>'+money(sub)+'</span></div>'
-          + '<div><span>IVA 19%</span><span>'+money(iva)+'</span></div>'
-          + '<div class="tot"><span>Total</span><span>'+money(tot)+'</span></div></div>'
-          + '<div class="pfoot"><span>Valores en pesos chilenos · vigencia 15 días</span><span>'+esc(state.empresa)+'</span></div>';
+          + '<table class="data"><thead><tr><th>Detalle</th><th class="num">Cant.</th><th class="num">Valor</th></tr></thead>'
+          + '<tbody>'+rows+'</tbody>'
+          + '<tfoot><tr><td>Subtotal</td><td class="num"></td><td class="num">'+money(sub)+'</td></tr>'
+          + '<tr><td>IVA 19%</td><td class="num"></td><td class="num">'+money(iva)+'</td></tr>'
+          + '<tr class="total"><td class="lbl">Total</td><td class="num"></td><td class="num">'+money(tot)+'</td></tr></tfoot></table>'
+          + '<div class="callout"><span class="t">Vigencia y condiciones</span>Valores en pesos chilenos, netos + IVA. Cotización válida por 15 días. Incluye coordinación, ejecución y una reunión de cierre.</div>'
+          + foot('Cotización N° '+esc(state.folio));
       },
       contrato: function(){
-        var cl = state.redactado ? PROSA.contrato.map(function(c){ return '<p class="clause">'+c+'</p>'; }).join('') : prosaOr('');
-        return head('Contrato de prestación de servicios','Contrato')
-          + '<div class="doc-title serif">Contrato de servicios</div>'
-          + '<div class="doc-sub">Documento entre las partes individualizadas</div>'
-          + '<div class="parties"><div class="party"><h5>Prestador</h5><div class="nm">'+esc(state.empresa||'Tu Empresa')+'</div><div class="dt">RUT 77.123.456-7</div></div>'
-          + '<div class="party"><h5>Cliente</h5><div class="nm">'+esc(state.cliente||'—')+'</div><div class="dt">RUT 78.987.654-3</div></div></div>'
+        var cl = state.redactado
+          ? '<ol class="clauses">'+PROSA.contrato.map(function(c){
+              var m = c.match(/^<b>([\s\S]+?)<\/b>\s*([\s\S]*)$/);
+              return m ? '<li><span class="h">'+m[1]+'</span>'+m[2]+'</li>' : '<li>'+c+'</li>';
+            }).join('')+'</ol>'
+          : prosaOr('');
+        return lh('Contrato')
+          + '<div class="doc-title">Contrato de prestación de servicios</div>'
+          + '<div class="doc-sub">Entre las partes que a continuación se individualizan</div>'
+          + '<div class="parties"><div class="party"><div class="role">Prestador</div><div class="nm">'+esc(state.empresa||'Tu Empresa')+'</div><div class="ln">RUT 77.123.456-7</div></div>'
+          + '<div class="party"><div class="role">Cliente</div><div class="nm">'+esc(state.cliente||'—')+'</div><div class="ln">RUT 78.987.654-3</div></div></div>'
           + cl
-          + '<div class="signs"><div class="sign">'+esc(state.empresa||'Prestador')+'</div><div class="sign">'+esc(state.cliente||'Cliente')+'</div></div>'
-          + '<div class="pfoot"><span>Firmado en Santiago, '+HOY+'</span><span>N° '+esc(state.folio)+'</span></div>';
+          + '<div class="signs"><div class="sign"><div class="line"></div><div class="nm">'+esc(state.empresa||'Prestador')+'</div><div class="rl">Prestador</div></div>'
+          + '<div class="sign"><div class="line"></div><div class="nm">'+esc(state.cliente||'Cliente')+'</div><div class="rl">Cliente</div></div></div>'
+          + foot('Suscrito en Santiago, '+HOY);
       },
       carta: function(){
         var body = state.redactado ? PROSA.carta.map(function(p){ return '<p class="pp">'+p+'</p>'; }).join('') : prosaOr('');
-        return head('Carta de presentación','Carta')
-          + '<div style="text-align:right;font-size:11px;color:#7a848b;margin:16px 0 22px">Santiago, '+HOY+'</div>'
-          + '<div class="doc-sub" style="font-size:12.5px;color:#1a2630;font-weight:600;margin-bottom:16px">Para: '+esc(state.cliente||'—')+'</div>'
+        return lh('Carta')
+          + '<div class="dateline">Santiago, '+HOY+'</div>'
+          + '<div class="forline">Para: '+esc(state.cliente||'—')+'</div>'
           + body
-          + '<div style="margin-top:34px"><p class="pp" style="margin-bottom:2px">Atentamente,</p><p class="pp serif" style="font-size:16px;color:#1a2630;font-weight:600">'+esc(state.empresa||'Tu Empresa')+'</p></div>'
-          + '<div class="pfoot"><span>'+esc(state.empresa)+' · contacto@tuempresa.cl</span><span>+56 9 1234 5678</span></div>';
+          + '<div style="margin-top:30px"><p class="pp" style="margin-bottom:2px">Atentamente,</p><p class="serif" style="font-size:16px;color:var(--doc-ink);font-weight:600;margin:0">'+esc(state.empresa||'Tu Empresa')+'</p></div>'
+          + foot('Carta de presentación');
       },
       recibo: function(){
         var tot = num(state.monto);
-        return head('Comprobante de pago','Recibo')
-          + '<div class="doc-title serif">Recibo de pago</div>'
+        return lh('Recibo')
+          + '<div class="doc-title">Recibo de pago</div>'
           + '<div class="doc-sub">Comprobante N° '+esc(state.folio)+' · '+HOY+'</div>'
-          + '<div class="parties"><div class="party"><h5>Recibí de</h5><div class="nm">'+esc(state.cliente||'—')+'</div></div>'
-          + '<div class="party"><h5>Monto</h5><div class="nm serif" style="font-size:20px;color:var(--accent)">'+money(tot)+'</div></div></div>'
+          + '<div class="parties"><div class="party"><div class="role">Recibí de</div><div class="nm">'+esc(state.cliente||'—')+'</div></div>'
+          + '<div class="party"><div class="role">Monto recibido</div><div class="amount">'+money(tot)+'</div></div></div>'
           + '<p class="pp">'+prosaOr(esc(PROSA.recibo))+'</p>'
           + '<div class="stamp">'+svg('<path d="M20 6 9 17l-5-5"/>',15)+'Pagado · '+money(tot)+'</div>'
-          + '<div class="signs" style="grid-template-columns:1fr;max-width:220px;margin-left:auto;margin-top:52px"><div class="sign">'+esc(state.empresa||'Emisor')+'</div></div>'
-          + '<div class="pfoot"><span>Gracias por su preferencia</span><span>'+esc(state.empresa)+'</span></div>';
+          + '<div class="signs" style="grid-template-columns:1fr;max-width:230px;margin-left:auto;margin-top:50px"><div class="sign"><div class="line"></div><div class="nm">'+esc(state.empresa||'Emisor')+'</div><div class="rl">Emisor</div></div></div>'
+          + foot('Gracias por su preferencia');
       }
     };
 
