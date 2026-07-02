@@ -184,6 +184,14 @@
       .demo-panel{padding:16px 14px 20px}
       .acbar{flex-wrap:wrap}.acbar .prog{margin-left:0;width:100%}
     }
+    /* Al imprimir el certificado, aislar solo la tarjeta (evita imprimir toda la página) */
+    @media print {
+      header, footer, .cert-actions, .btn { display:none !important; }
+      body { background:#fff !important; }
+      body * { visibility:hidden; }
+      .cert, .cert * { visibility:visible; }
+      .cert { position:absolute; left:0; top:0; width:100%; margin:0; border:none; box-shadow:none; }
+    }
   </style>
 </head>
 <body>

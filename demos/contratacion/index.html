@@ -216,19 +216,19 @@
       <div class="levers">
         <div class="lever">
           <div class="lv-top"><span class="lv-name">Experiencia</span><span class="lv-val" id="vExp">35%</span></div>
-          <input type="range" id="wExp" min="0" max="100" step="5" value="35">
+          <input type="range" id="wExp" min="0" max="100" step="5" value="35" aria-label="Peso de Experiencia">
         </div>
         <div class="lever">
           <div class="lv-top"><span class="lv-name">Habilidades</span><span class="lv-val" id="vSkl">25%</span></div>
-          <input type="range" id="wSkl" min="0" max="100" step="5" value="25">
+          <input type="range" id="wSkl" min="0" max="100" step="5" value="25" aria-label="Peso de Habilidades">
         </div>
         <div class="lever">
           <div class="lv-top"><span class="lv-name">Prueba técnica</span><span class="lv-val" id="vTest">25%</span></div>
-          <input type="range" id="wTest" min="0" max="100" step="5" value="25">
+          <input type="range" id="wTest" min="0" max="100" step="5" value="25" aria-label="Peso de Prueba técnica">
         </div>
         <div class="lever">
           <div class="lv-top"><span class="lv-name">Entrevista / encaje</span><span class="lv-val" id="vEntr">15%</span></div>
-          <input type="range" id="wEntr" min="0" max="100" step="5" value="15">
+          <input type="range" id="wEntr" min="0" max="100" step="5" value="15" aria-label="Peso de Entrevista o encaje">
         </div>
         <div class="levers-foot"><button class="btn-ghost" id="reset">↺ Pesos por defecto</button></div>
       </div>
@@ -370,7 +370,7 @@
           + list.filter(function(x){return x.score>=72;}).length + ' de ' + list.length + ' candidatos calzan bien con el perfil.';
       }
       $('tria').innerHTML = '<span class="ti"><svg width="20" height="20" viewBox="0 0 120 120" fill="none" aria-hidden="true"><path d="M30 82 L60 58 L90 82" stroke="#fff" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/><path d="M30 66 L60 42 L90 66" stroke="#6BA083" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/></svg></span>'
-        + '<div class="tt"><div class="tk">trIA · recomendación</div><div class="tm">'+msg+'</div></div>';
+        + '<div class="tt"><div class="tk"><span style="text-transform:none">trIA</span> · recomendación</div><div class="tm">'+msg+'</div></div>';
     }
 
     // ── Ranking ─────────────────────────────────────────────────────────────

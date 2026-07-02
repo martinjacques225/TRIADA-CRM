@@ -144,6 +144,7 @@
       .inv-r .pcat{grid-column:1;color:var(--faint);font-size:11.5px;order:2}
       .inv-r .price{grid-column:2;justify-self:end;order:2}
       .inv-r .pinfo{order:1}
+      .inv-r .pstate{grid-column:1/-1;order:2;margin-top:3px}
       .inv-r .stcell{grid-column:1/-1;order:3;justify-content:space-between;padding-top:9px;border-top:1px dashed var(--line)}
       .inv-r .stock{order:3}
     }
@@ -326,7 +327,7 @@
         btn = '<button class="btn btn-primary" id="repoAll">Reponer lo sugerido</button>';
       }
       $('tria').innerHTML = '<span class="ti"><svg width="20" height="20" viewBox="0 0 120 120" fill="none" aria-hidden="true"><path d="M30 82 L60 58 L90 82" stroke="#fff" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/><path d="M30 66 L60 42 L90 66" stroke="#6BA083" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/></svg></span>'
-        + '<div class="tt"><div class="tk">trIA · reposición sugerida</div><div class="tm">'+msg+'</div></div>' + btn;
+        + '<div class="tt"><div class="tk"><span style="text-transform:none">trIA</span> · reposición sugerida</div><div class="tm">'+msg+'</div></div>' + btn;
       var r = $('repoAll'); if (r && !r.disabled) r.addEventListener('click', repoAll);
     }
 
@@ -346,7 +347,7 @@
           + '<div class="pinfo"><div class="pname">'+esc(p.nom)+'</div><div class="psku">'+p.sku+'</div></div>'
           + '<div class="pcat">'+p.cat+'</div>'
           + '<div class="price r">'+money(p.precio)+'</div>'
-          + '<div><span class="st '+s+'"><span class="dot"></span>'+LBL[s]+'</span></div>'
+          + '<div class="pstate"><span class="st '+s+'"><span class="dot"></span>'+LBL[s]+'</span></div>'
           + '<div class="stcell">'
           +   '<span class="stock"><span class="stepper"><button data-d="-1" '+(p.stock<=0?'disabled':'')+' aria-label="Restar">−</button>'
           +     '<span class="snum">'+p.stock+'</span><button data-d="1" aria-label="Sumar">+</button></span>'

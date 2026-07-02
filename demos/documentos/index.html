@@ -194,15 +194,15 @@
           </div>
           <div class="grp">
             <label>Tu marca</label>
-            <input class="fld" id="empresa" value="Áurea Estudio" placeholder="Nombre de tu empresa" maxlength="34" style="margin-bottom:10px">
+            <input class="fld" id="empresa" value="Áurea Estudio" placeholder="Nombre de tu empresa" maxlength="34" style="margin-bottom:10px" aria-label="Nombre de tu empresa">
             <div class="swatches" id="accents"></div>
           </div>
           <div class="grp">
             <label>Datos</label>
-            <input class="fld" id="cliente" value="Comercial Andes Ltda." placeholder="Cliente / destinatario" maxlength="40" style="margin-bottom:10px">
+            <input class="fld" id="cliente" value="Comercial Andes Ltda." placeholder="Cliente / destinatario" maxlength="40" style="margin-bottom:10px" aria-label="Cliente o destinatario">
             <div class="row2">
-              <input class="fld" id="monto" value="1.450.000" placeholder="Monto" inputmode="numeric">
-              <input class="fld" id="folio" value="0142" placeholder="N°">
+              <input class="fld" id="monto" value="1.450.000" placeholder="Monto" inputmode="numeric" aria-label="Monto">
+              <input class="fld" id="folio" value="0142" placeholder="N°" aria-label="Número de documento">
             </div>
           </div>
           <div class="cta2">
@@ -299,7 +299,7 @@
       { ic:'<path d="M12 3l2 5 5 2-5 2-2 5-2-5-5-2 5-2 2-5Z"/>', h:'Siempre con tu marca', p:'Tu logo, tus colores y tus datos en cada documento. Consistencia impecable, sin plantillas rotas ni copiar-pegar.' },
       { ic:'<path d="M4 4h16v4H4zM4 10h16v10H4z"/><path d="M8 14h8"/>', h:'Cotización, contrato, carta o recibo', p:'Cuatro documentos esenciales del día a día —y los que sumes— desde un mismo lugar, con el mismo estándar.' },
       { ic:'<path d="M12 3v12m0 0-4-4m4 4 4-4M5 21h14"/>', h:'Listo para PDF', p:'Descárgalo en PDF para enviar por correo o WhatsApp, o llévalo a firma. Se ve profesional en pantalla y en papel.' },
-      { ic:'<path d="M20 6 9 17l-5-5"/>', h:'Menos errores', p:'Números, fechas y términos consistentes. Menos typos, menos “se me olvidó el IVA”, menos vergüenzas.' },
+      { ic:'<path d="M20 6 9 17l-5-5"/>', h:'Menos errores', p:'Números, fechas y términos consistentes. Menos typos, menos “se me olvidó el IVA”, menos malos ratos.' },
       { ic:'<path d="M17 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2"/><circle cx="10" cy="7" r="4"/><path d="M20 8v6M23 11h-6"/>', h:'Todo tu equipo, igual', p:'Cualquiera de tu equipo emite documentos con el mismo nivel, sin depender del que “sabe usar Word”.' }
     ];
     $('bens').innerHTML = BENS.map(function(b){

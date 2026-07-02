@@ -296,7 +296,7 @@
           + 'El foco ahora está en <b>'+midNom+'</b>.';
       }
       $('tria').innerHTML = '<span class="ti">'+triaMark(19)+'</span>'
-        + '<div class="tt"><div class="tk">trIA · estado del proyecto</div><div class="tm">'+msg+'</div></div>';
+        + '<div class="tt"><div class="tk"><span style="text-transform:none">trIA</span> · estado del proyecto</div><div class="tm">'+msg+'</div></div>';
     }
 
     // ── Render tablero ──────────────────────────────────────────────────────
@@ -315,7 +315,7 @@
     function renderBoard(){
       $('board').innerHTML = COLS.map(function(col){
         var list = tasksIn(col.id);
-        var add = col.id==='todo' ? '<div class="addbox"><input id="addInput" placeholder="Nueva tarea…" maxlength="60"><button id="addBtn" aria-label="Agregar">+</button></div>' : '';
+        var add = col.id==='todo' ? '<div class="addbox"><input id="addInput" placeholder="Nueva tarea…" maxlength="60" aria-label="Nueva tarea"><button id="addBtn" aria-label="Agregar">+</button></div>' : '';
         return '<div class="col" data-col="'+col.id+'"><div class="col-h"><span class="dotc" style="background:'+col.c+'"></span>'
           + '<span class="cn">'+col.nom+'</span><span class="cc">'+list.length+'</span></div>'
           + '<div class="col-list" data-drop="'+col.id+'">'+list.map(cardHtml).join('')+'</div>'+add+'</div>';

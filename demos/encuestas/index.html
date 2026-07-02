@@ -219,7 +219,7 @@
           </div>
           <div class="q">
             <div class="ql">¿Algo que podríamos mejorar?</div>
-            <textarea id="comment" placeholder="Cuéntanos con tus palabras… (opcional)"></textarea>
+            <textarea id="comment" placeholder="Cuéntanos con tus palabras… (opcional)" aria-label="Comentario"></textarea>
           </div>
           <div class="submit-row">
             <button class="btn btn-primary" id="send" disabled>Enviar respuesta</button>
@@ -356,7 +356,7 @@
     var ans = { sat:0, nps:null, choices:{}, comment:'', sent:false };
 
     // Estrellas
-    $('stars').innerHTML = [1,2,3,4,5].map(function(i){ return '<button class="star" data-s="'+i+'" aria-label="'+i+' estrellas">'+STAR+'</button>'; }).join('');
+    $('stars').innerHTML = [1,2,3,4,5].map(function(i){ return '<button class="star" data-s="'+i+'" aria-label="'+i+(i===1?' estrella':' estrellas')+'">'+STAR+'</button>'; }).join('');
     $('stars').addEventListener('click', function(ev){ var b=ev.target.closest('.star'); if(!b) return; ans.sat=+b.getAttribute('data-s');
       [].forEach.call($('stars').children, function(c,i){ c.classList.toggle('on', i < ans.sat); }); checkReady(); });
     // NPS

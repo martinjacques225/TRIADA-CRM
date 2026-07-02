@@ -494,11 +494,11 @@
     function renderCheckout(){
       var sub = subtotal(), envio = sub>=FREE?0:ENVIO, tot = sub+envio;
       $('cartBody').innerHTML = '<button class="back" id="backCart">'+svg('<path d="m15 18-6-6 6-6"/>',16)+'Volver al carrito</button>'
-        + '<div class="co-field"><label>Nombre y apellido</label><input id="fNom" value="Camila Fuentes"></div>'
-        + '<div class="co-field"><label>Correo</label><input id="fMail" value="camila@correo.cl"></div>'
-        + '<div class="co-field"><label>Dirección de despacho</label><input id="fDir" value="Av. Providencia 1234, depto 52"></div>'
-        + '<div class="co-row"><div class="co-field"><label>Ciudad</label><input id="fCiu" value="Santiago"></div>'
-        + '<div class="co-field"><label>Teléfono</label><input id="fFono" value="9 8765 4321"></div></div>'
+        + '<div class="co-field"><label>Nombre y apellido</label><input id="fNom" value="Camila Fuentes" aria-label="Nombre y apellido"></div>'
+        + '<div class="co-field"><label>Correo</label><input id="fMail" value="camila@correo.cl" aria-label="Correo"></div>'
+        + '<div class="co-field"><label>Dirección de despacho</label><input id="fDir" value="Av. Providencia 1234, depto 52" aria-label="Dirección de despacho"></div>'
+        + '<div class="co-row"><div class="co-field"><label>Ciudad</label><input id="fCiu" value="Santiago" aria-label="Ciudad"></div>'
+        + '<div class="co-field"><label>Teléfono</label><input id="fFono" value="9 8765 4321" aria-label="Teléfono"></div></div>'
         + '<div class="pay">'+svg('<rect x="2" y="5" width="20" height="14" rx="2.5"/><path d="M2 10h20"/>',18)+'<span>Pago seguro con <b>Webpay</b> · Visa, Mastercard, débito</span></div>';
       var sumHtml = '<div class="sumline"><span>Subtotal</span><span>'+money(sub)+'</span></div>'
         + '<div class="sumline"><span>Envío</span><span>'+(envio?money(envio):'Gratis')+'</span></div>'
@@ -510,7 +510,7 @@
     }
 
     function renderDone(){
-      var n = 'NC-' + (2040 + count());   // folio determinista (demo)
+      var n = 'NC-2043';   // folio de ejemplo (demo)
       var tot = subtotal() + (subtotal()>=FREE?0:ENVIO);
       $('cartBody').innerHTML = '<div class="done"><div class="chk">'+svg('<path d="M20 6 9 17l-5-5"/>',34)+'</div>'
         + '<h3 class="serif">¡Pedido confirmado!</h3><div class="ord">N° '+n+' · '+money(tot)+'</div>'

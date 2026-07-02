@@ -127,7 +127,7 @@
         </svg>
         Tríada
       </span>
-      <span class="badge">trIA · Gemelo Virtual</span>
+      <span class="badge"><span style="text-transform:none">trIA</span> · Gemelo Virtual</span>
     </div>
   </header>
 
@@ -237,7 +237,7 @@
       var v = Math.min(95, parseNum($('mMargen').value)); $('mMargen').value = v || ''; recompute();
     });
     ['sPrecio','sVol','sPers','sFijos'].forEach(function(id){ $(id).addEventListener('input', recompute); });
-    $('reset').addEventListener('click', function(){ ['sPrecio','sVol','sPers','sFijos'].forEach(function(id){ $(id).value = id==='sPers'?0:0; }); recompute(); });
+    $('reset').addEventListener('click', function(){ ['sPrecio','sVol','sPers','sFijos'].forEach(function(id){ $(id).value = 0; }); recompute(); });
 
     function model(){
       var V = parseNum($('mVentas').value), M = (parseNum($('mMargen').value)||0)/100, F = parseNum($('mFijos').value);
@@ -272,7 +272,7 @@
 
       var delta = m.utilSim - m.utilHoy;
       var pct = m.utilHoy !== 0 ? Math.round(delta / Math.abs(m.utilHoy) * 100) : 0;
-      $('sAnual').textContent = (delta>=0?'+':'') + clp(delta*12).replace('$','$');
+      $('sAnual').textContent = (delta>=0?'+':'') + clp(delta*12);
       $('sAnual').style.color = delta >= 0 ? 'var(--green)' : 'var(--red)';
 
       var v = $('verdict'), ico = $('vIco'), txt = $('vTxt');

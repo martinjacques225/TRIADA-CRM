@@ -310,7 +310,7 @@
       { id:'p1', nom:'Muebles Pro',  precio:86900, dias:6,  gar:24, rating:4.7 },
       { id:'p2', nom:'OfiExpress',   precio:79900, dias:18, gar:6,  rating:4.0 },
       { id:'p3', nom:'ErgoChile',    precio:96500, dias:5,  gar:36, rating:4.8 },
-      { id:'p4', nom:'ImportaColo',  precio:82000, dias:22, gar:12, rating:3.6 }
+      { id:'p4', nom:'ImportaSur',   precio:82000, dias:22, gar:12, rating:3.6 }
     ];
     PROVS.forEach(function(p,i){ p.color = COLORS[i%COLORS.length]; });
     var qty = 30;
@@ -372,7 +372,7 @@
       var mktTxt = pctMkt <= 0 ? ('está un '+Math.abs(pctMkt)+'% <b>bajo</b> el precio de mercado')
         : (Math.abs(pctMkt) <= 3 ? 'está prácticamente en el precio de mercado' : ('está un '+pctMkt+'% sobre el mercado'));
       $('tria').innerHTML = '<span class="ti"><svg width="20" height="20" viewBox="0 0 120 120" fill="none" aria-hidden="true"><path d="M30 82 L60 58 L90 82" stroke="#fff" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/><path d="M30 66 L60 42 L90 66" stroke="#6BA083" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/></svg></span>'
-        + '<div class="tt"><div class="tk">trIA · recomendación de compra</div><div class="tm">Para '+qty+' unidades, conviene <b>'+esc(rec.p.nom)+'</b> ('+clp(rec.p.precio*qty)+' total). '
+        + '<div class="tt"><div class="tk"><span style="text-transform:none">trIA</span> · recomendación de compra</div><div class="tm">Para '+qty+' unidades, conviene <b>'+esc(rec.p.nom)+'</b> ('+clp(rec.p.precio*qty)+' total). '
         + (rec.p.id!==cheapest.id ? 'No es la más barata, pero '+mktTxt+' y gana en plazo, garantía y reputación. ' : 'Además es la más barata del grupo. ')
         + 'Eligiéndola ahorras <b>'+clp((s.maxP-rec.p.precio)*qty)+'</b> frente a la opción más cara.</div></div>';
 

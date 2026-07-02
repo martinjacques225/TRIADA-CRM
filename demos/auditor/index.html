@@ -158,7 +158,7 @@
         </svg>
         Tríada
       </span>
-      <span class="badge">trIA · Auditor de imagen</span>
+      <span class="badge"><span style="text-transform:none">trIA</span> · Auditor de imagen</span>
     </div>
   </header>
 
@@ -474,7 +474,7 @@
       // Fortalezas (pilares con score >= 0.85)
       var wins = [];
       PILARES.forEach(function(p, i){ if (pilarScore(i) >= 0.85) wins.push(p.strong); });
-      var check = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>';
+      var check = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>';
       if (wins.length){
         $('winsWrap').style.display = 'block';
         $('wins').innerHTML = wins.map(function(w){ return '<span class="win">'+check+w+'</span>'; }).join('');
