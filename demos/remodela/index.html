@@ -398,16 +398,7 @@
             pal:['#EFE2D2','#C08B5C','#9A5B3B','#2B2320'],
             mat:['Muebles de madera tono miel','Cerámica terracota artesanal','Grifería y tiradores negros','Piso de madera tono medio','Iluminación cálida colgante'] }
         ] },
-      /* DORMITORIO — objeto ya armado abajo; SOLO faltan imágenes alineadas para reactivarlo.
-         Problema actual: la cama de los "después" (dormitorio-moderno/nordico/calido.jpg) quedó más
-         grande y más adelantada que en dormitorio-antes.jpg, así que "salta" al cruzar el divisor
-         del slider (la gracia del antes/después es que TODO queda igual salvo las terminaciones).
-         PARA REACTIVAR: (1) regenerar los 3 "después" editando dormitorio-antes.jpg con alineación
-         ESTRICTA — misma cama: idéntico tamaño, posición y orientación; cambiar SOLO paredes, piso,
-         textiles, muebles y luz (ver GUIA-IMAGENES.md sección 0, "no mover muebles"). (2) Reemplazar
-         los 3 .jpg (mismos nombres). (3) Descomentar el objeto de aquí abajo: borrar la línea que
-         abre el comentario (justo antes del objeto) y la que lo cierra (justo después). */
-      /*
+      /* Dormitorio — 4º espacio (imágenes "después" regeneradas 2026-07-01 con la cama alineada). */
       { id:'dormitorio', nom:'Dormitorio', ic:'<path d="M3 18v-5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v5M3 18v2M21 18v2M3 15h18M6 11V9a1 1 0 0 1 1-1h3a1 1 0 0 1 1 1v2M13 11V9a1 1 0 0 1 1-1h3a1 1 0 0 1 1 1v2"/>', antes:'img/dormitorio-antes.jpg',
         estilos:[
           { id:'moderno', nom:'Moderno', tag:'Sereno y luminoso', img:'img/dormitorio-moderno.jpg',
@@ -425,8 +416,7 @@
             con:'Muro de acento terracota, textiles en tonos miel y tostado, y luz cálida. Un dormitorio envolvente, de carácter y con alma de casa.',
             pal:['#EFE2D2','#C88A5A','#9A5B3B','#2B2320'],
             mat:['Muro de acento terracota','Textiles en miel y tostado','Velador de ratán','Piso de madera tono medio','Iluminación cálida ambiental'] }
-        ] },
-      */
+        ] }
     ];
     var spc = 0, sty = 0;
     function space(){ return SPACES[spc]; }
