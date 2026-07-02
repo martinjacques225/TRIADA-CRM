@@ -115,6 +115,12 @@ Primero genera **`cocina-antes.jpg`**, luego **edítala** para los 3 estilos.
 
 ## 5. 💼 Oficina *(opcional)* — genera antes + 3 estilos
 
+> 🔴 **Para los 3 "después": pega también el bloque crítico anti-salto de §4** (adaptado a oficina):
+> *"CRITICAL — keep every piece of furniture (desks, chairs, shelves) in the EXACT same position, size
+> and orientation as in the original; do NOT move, resize or replace them; change ONLY finishes, colors,
+> materials and small decor."* Con **estructura ALTA**. (Sin esto la IA reordena los escritorios y "salta"
+> en el slider, igual que pasó con la cama del dormitorio.)
+
 | Archivo | Prompt | Criterio de aprobación |
 |---|---|---|
 | `oficina-antes.jpg` *(genera)* | *Photorealistic "before renovation" photo of a dated, worn small **office** room. Scuffed grey-beige walls, stained old grey carpet tiles, a bulky old melamine desk, mismatched old office chairs, a bulky CRT-era monitor, tangled cables, a fluorescent ceiling light, a window with old vertical blinds, cluttered and dull.* + estilo de cámara | Oficina **datada pero creíble**. Se distingue la **ventana**. 3:2, sin personas. |
@@ -125,6 +131,12 @@ Primero genera **`cocina-antes.jpg`**, luego **edítala** para los 3 estilos.
 ---
 
 ## 6. 🛋️ Living — 2 estilos extra *(opcional)* — edita `living-antes.jpg` (ya existe)
+
+> 🔴 **Pega también el bloque crítico anti-salto de §4** (adaptado): *"CRITICAL — keep the sofa and every
+> piece of furniture in the EXACT same position, size and orientation as in the original; do NOT move,
+> resize or remove them; change ONLY finishes, colors, materials and small decor."* Con **estructura ALTA**.
+> Ojo el minimalista: si le pides "quitar" muebles, la escena "salta" — mejor **re-estilizar** el sofá
+> existente en su lugar, no vaciarlo.
 
 | Archivo | Prompt (editar sobre `living-antes.jpg`) | Criterio de aprobación |
 |---|---|---|
