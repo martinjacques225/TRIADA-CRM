@@ -89,10 +89,27 @@ Primero genera **`cocina-antes.jpg`**, luego **edítala** para los 3 estilos.
 
 | Archivo | Prompt | Criterio de aprobación |
 |---|---|---|
-| `dormitorio-antes.jpg` *(genera)* | *Photorealistic real-estate "before renovation" photo of a dated, worn Chilean **bedroom**. Scuffed beige walls, old worn laminate floor, a tired metal-frame bed with a mismatched old duvet, a bulky old wardrobe, faded curtains over a single window, a bare bulb, cluttered and dim.* + estilo de cámara | Dormitorio **datado pero creíble**. Se distingue la **ventana** (referencia). 3:2, sin personas. |
-| `dormitorio-moderno.jpg` *(editar)* | *Edit this exact bedroom into a **modern contemporary** style, keeping the same camera angle, same window and layout. Clean white and soft-grey walls, an upholstered low platform bed with crisp neutral linens, a floating nightstand, light oak floor, sheer curtains, recessed and pendant lighting, a few plants, minimalist and serene.* | Mismo encuadre/ventana. Estilo **moderno** sereno. |
-| `dormitorio-nordico.jpg` *(editar)* | *Edit this exact bedroom into a warm **Scandinavian / Nordic** style, keeping the same camera angle, same window and layout. Soft white walls, pale wood floor, a cozy wood-frame bed with layered beige linen and a knit throw, light wood furniture, woven textures and plants, warm soft daylight, hygge feel.* | Mismo encuadre. Estilo **nórdico** acogedor. |
-| `dormitorio-calido.jpg` *(editar)* | *Edit this exact bedroom into a warm, cozy **premium** style, keeping the same camera angle, same window and layout. Warm off-white walls with a soft terracotta or deep-green accent wall, medium wood floor, an upholstered bed with warm textiles, a rattan or wood nightstand, brass lamps, warm ambient lighting, boutique-hotel feel.* | Mismo encuadre. Estilo **cálido premium** (muro de acento, latón). |
+| `dormitorio-antes.jpg` *(ya existe)* | *Photorealistic real-estate "before renovation" photo of a dated, worn Chilean **bedroom**. Scuffed beige walls, old worn laminate floor, a tired metal-frame bed with a mismatched old duvet, a bulky old wardrobe, faded curtains over a single window, a bare bulb, cluttered and dim.* + estilo de cámara | Dormitorio **datado pero creíble**. Se distingue la **ventana** (referencia). 3:2, sin personas. |
+
+> 🔴 **CORREGIR EL DORMITORIO (2026-07-01) — la cama "salta" en el slider.** Los 3 "después" actuales
+> (`dormitorio-moderno/nordico/calido.jpg`) **agrandaron y adelantaron la cama** respecto al "antes"
+> (el prompt viejo pedía *"an upholstered low platform bed"* = cama nueva más grande), así que al cruzar
+> el divisor la cama cambia de tamaño/posición. **Regenerar los 3 editando `dormitorio-antes.jpg` con
+> estos prompts** (mismos nombres de archivo), con **estructura ALTA**. Bloque crítico a pegar al inicio
+> de los 3:
+>
+> `Edit this exact bedroom photo. CRITICAL — do NOT move or resize the bed: the double bed must stay in the EXACT same position, size, orientation and footprint as in the original (headboard against the right-hand wall, foot of the bed pointing toward the lower-left, same area and same edges of the frame). You may restyle the bed's frame, headboard and bedding, but it must occupy the identical footprint — do NOT enlarge it, push it forward, rotate it, or replace it with a bigger bed. Keep the same camera angle, the same window on the back-left, the same door on the lower-left and the same wardrobe on the left. Change ONLY wall finish, floor, curtains, bedding/textiles, wardrobe finish, lighting and small decor. Use high structure fidelity — a subtle restyle, not a reimagining.`
+
+| Archivo | Prompt (pegar DESPUÉS del bloque crítico de arriba) | Criterio de aprobación |
+|---|---|---|
+| `dormitorio-moderno.jpg` *(editar)* | *New look: modern contemporary style — soft white and light-grey walls, light oak floor, sheer white curtains, the same bed made with crisp white and beige linens plus a slim neutral upholstered headboard that fits the existing bed, a light-wood wardrobe, a small floating nightstand with a modern lamp, one framed art print, a couple of plants, recessed and pendant lighting, minimalist and serene.* + estilo de cámara | **La cama NO se movió** (esquinas, ventana y ropero calzan con el antes). Estilo **moderno** sereno. |
+| `dormitorio-nordico.jpg` *(editar)* | *New look: warm Scandinavian / Nordic style — soft white walls, pale wood floor, the same bed with a light wood-tone frame, layered beige linen bedding and a knit throw, a light-wood nightstand, a rattan pendant lamp, a jute rug, woven textures and plants, warm soft daylight, cozy hygge feel.* + estilo de cámara | **La cama NO se movió.** Estilo **nórdico** acogedor. |
+| `dormitorio-calido.jpg` *(editar)* | *New look: warm premium boutique-hotel style — warm off-white walls with a soft terracotta accent wall behind the bed, medium-tone wood floor, the same bed dressed with warm honey and rust textiles, a rattan or wood nightstand, brass table lamps, warm ambient lighting, a framed art print, plants.* + estilo de cámara | **La cama NO se movió.** Estilo **cálido premium** (muro terracota, latón). |
+
+> ✅ **Control:** superpón el antes y el nuevo "después" y desliza — la ventana, el ropero y **las 4
+> esquinas de la cama** deben quedar en el mismo lugar. Si la cama se corrió, baja creatividad / sube
+> estructura y regenera. Cuando los 3 estén en `img/`, avísame: el objeto Dormitorio ya está **pre-armado
+> y comentado** en `index.html` (solo hay que descomentarlo).
 
 ---
 
