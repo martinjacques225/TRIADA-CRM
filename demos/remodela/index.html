@@ -398,13 +398,35 @@
             pal:['#EFE2D2','#C08B5C','#9A5B3B','#2B2320'],
             mat:['Muebles de madera tono miel','Cerámica terracota artesanal','Grifería y tiradores negros','Piso de madera tono medio','Iluminación cálida colgante'] }
         ] },
-      /* ⏸ Dormitorio fuera del demo por ahora: en el slider el antes/después NO calza (la cama
-         quedó en distinta posición/orientación entre la foto "antes" y las "después", así que
-         "salta" al cruzar el divisor). Para reactivarlo: regenerar los 3 "después" editando
-         dormitorio-antes.jpg con alineación ESTRICTA (mantener la cama EXACTA en su lugar, mismo
-         tamaño y orientación; cambiar solo terminaciones/textiles) y volver a agregar el espacio:
-         { id:'dormitorio', nom:'Dormitorio', antes:'img/dormitorio-antes.jpg', estilos:[
-           {id:'moderno',img:'img/dormitorio-moderno.jpg',...}, {id:'nordico',...}, {id:'calido',...} ] } */
+      /* DORMITORIO — objeto ya armado abajo; SOLO faltan imágenes alineadas para reactivarlo.
+         Problema actual: la cama de los "después" (dormitorio-moderno/nordico/calido.jpg) quedó más
+         grande y más adelantada que en dormitorio-antes.jpg, así que "salta" al cruzar el divisor
+         del slider (la gracia del antes/después es que TODO queda igual salvo las terminaciones).
+         PARA REACTIVAR: (1) regenerar los 3 "después" editando dormitorio-antes.jpg con alineación
+         ESTRICTA — misma cama: idéntico tamaño, posición y orientación; cambiar SOLO paredes, piso,
+         textiles, muebles y luz (ver GUIA-IMAGENES.md sección 0, "no mover muebles"). (2) Reemplazar
+         los 3 .jpg (mismos nombres). (3) Descomentar el objeto de aquí abajo: borrar la línea que
+         abre el comentario (justo antes del objeto) y la que lo cierra (justo después). */
+      /*
+      { id:'dormitorio', nom:'Dormitorio', ic:'<path d="M3 18v-5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v5M3 18v2M21 18v2M3 15h18M6 11V9a1 1 0 0 1 1-1h3a1 1 0 0 1 1 1v2M13 11V9a1 1 0 0 1 1-1h3a1 1 0 0 1 1 1v2"/>', antes:'img/dormitorio-antes.jpg',
+        estilos:[
+          { id:'moderno', nom:'Moderno', tag:'Sereno y luminoso', img:'img/dormitorio-moderno.jpg',
+            plazo:'3–4 semanas', money:'$1.800.000 – $2.900.000',
+            con:'Paredes en gris suave, cama tapizada beige y ropero de madera clara. Un dormitorio ordenado, luminoso y de líneas simples, pensado para descansar sin distracciones.',
+            pal:['#EFEDEA','#D6D2CC','#B7A98F','#3A3733'],
+            mat:['Muro gris claro mate','Cama tapizada en lino beige','Ropero de madera clara','Piso de madera clara','Lámpara colgante + veladores'] },
+          { id:'nordico', nom:'Nórdico', tag:'Madera clara y lino', img:'img/dormitorio-nordico.jpg',
+            plazo:'3–4 semanas', money:'$2.000.000 – $3.200.000',
+            con:'Roble claro, ropa de cama de lino, alfombra de yute y plantas. Calidez escandinava: un refugio acogedor, natural y muy luminoso.',
+            pal:['#FBF7F0','#E7D9C2','#C9A97C','#7C9070'],
+            mat:['Cama y velador de roble claro','Ropa de cama de lino','Alfombra de yute','Lámpara de mimbre','Textiles y plantas naturales'] },
+          { id:'calido', nom:'Cálido', tag:'Terracota y textiles', img:'img/dormitorio-calido.jpg',
+            plazo:'3–5 semanas', money:'$2.200.000 – $3.500.000',
+            con:'Muro de acento terracota, textiles en tonos miel y tostado, y luz cálida. Un dormitorio envolvente, de carácter y con alma de casa.',
+            pal:['#EFE2D2','#C88A5A','#9A5B3B','#2B2320'],
+            mat:['Muro de acento terracota','Textiles en miel y tostado','Velador de ratán','Piso de madera tono medio','Iluminación cálida ambiental'] }
+        ] },
+      */
     ];
     var spc = 0, sty = 0;
     function space(){ return SPACES[spc]; }
