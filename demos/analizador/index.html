@@ -467,6 +467,7 @@
       var mediaPct = sumCot ? Math.round(sumCie / sumCot * 100) : 0;
 
       var finds = [];
+      var vr = function(fn){ var v = VEND.find(function(x){ return x.n.split(' ')[0]===fn; }); return v && v.cot ? Math.round(v.cie/v.cot*100) : 0; };
       finds.push({ cat:'Cuello de botella en el cierre', sev:'#B4524A', sevL:'Prioridad alta', order:0,
         desc:'De cada 100 cotizaciones, solo <b>'+cierrePct+'</b> terminan en venta. Entre «Cotizado» y «Cerrado» se cae el '+neckPct+'% del esfuerzo: es tu mayor fuga comercial.',
         fix:'Guion de cierre, seguimiento a 48 h y manejo de objeciones. Pasar el cierre del '+cierrePct+'% al '+metaCierre+'% ya cambia el mes.' });
@@ -474,7 +475,7 @@
         desc:'<b>'+m.frias+'</b> cotizaciones ('+clp(m.riesgo)+') llevan +14 días sin que nadie las retome. Se enfrían y se pierden por silencio, no por precio.',
         fix:'Recordatorios automáticos de seguimiento a las 48 h y a los 7 días: ninguna cotización sin próximo paso agendado.' });
       finds.push({ cat:'Vendedores bajo la media', sev:'#C2871A', sevL:'Prioridad media', order:2,
-        desc:'Marta (10%) y Tomás (17%) cierran bajo la media del equipo ('+mediaPct+'%). Tomás además genera pocas cotizaciones. Camila convierte al 30%: la fórmula ya existe adentro, falta replicarla.',
+        desc:'Marta ('+vr('Marta')+'%) y Tomás ('+vr('Tomás')+'%) cierran bajo la media del equipo ('+mediaPct+'%). Tomás además genera pocas cotizaciones. Camila convierte al '+vr('Camila')+'%: la fórmula ya existe adentro, falta replicarla.',
         fix:'Acompañamiento y shadowing de Camila, metas semanales por vendedor y foco en cotizar más y mejor.' });
       finds.push({ cat:'Leads que se enfrían por contacto tardío', sev:'#C2871A', sevL:'Prioridad media', order:3,
         desc:'1 de cada 3 leads no se contacta el mismo día. Un lead atendido en la primera hora convierte varias veces más que uno contactado a los dos días.',
