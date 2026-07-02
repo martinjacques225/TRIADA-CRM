@@ -1,0 +1,39 @@
+-- ============================================================
+-- TRIADA CRM · Cerrar la superficie anónima duplicada de `leads`
+-- (Experience Center — hardening F0.5, ítem D-08b)
+--
+-- CONTEXTO: hoy hay DOS caminos de escritura anónima a `leads`:
+--   (1) el RPC crear_lead_landing (SECURITY DEFINER) — el que USA el sitio
+--       (verificado en triada-home/inc/crm.php: POST a /rest/v1/rpc/crear_lead_landing,
+--       NO un INSERT directo a la tabla).
+--   (2) la policy leads_public_ins (anon INSERT directo con check origen='landing')
+--       — REDUNDANTE: el formulario ya no la usa. Deja abierto que cualquiera con
+--       la key publishable (pública en el front) inserte leads SALTÁNDOSE el escudo
+--       anti-abuso de 4 capas de lead.php (honeypot + HMAC + PoW + rate-limit).
+--
+-- DECISIÓN (dueño, 2026-07-02): dejar el RPC como ÚNICO camino anónimo y cerrar (2).
+--
+-- SEGURIDAD DE ESTE CAMBIO: NO rompe la captura de leads. El RPC es SECURITY
+-- DEFINER → inserta como owner, saltándose la RLS, sin depender de esta policy.
+-- Verificado que inc/crm.php llama al RPC, no a la tabla.
+--
+-- IDEMPOTENTE. Pegar en: Supabase → SQL Editor → New query → Run.
+-- ============================================================
+
+drop policy if exists leads_public_ins on leads;
+
+-- ============================================================
+-- VERIFICACIÓN
+-- (1) En SQL Editor — la consulta NO debe devolver filas (la policy ya no existe):
+--   select policyname from pg_policies
+--   where schemaname='public' and tablename='leads' and policyname='leads_public_ins';
+--
+-- (2) Por REST (sin login, con la key publishable):
+--   · POST /rest/v1/leads {"nombre":"x","origen":"landing"}      → 42501  (RLS niega el insert directo: ✅ cerrado)
+--   · POST /rest/v1/rpc/crear_lead_landing {"p_nombre":"x"}       → 200 "LEAD-xxxx"  (el camino real SIGUE vivo)
+--   · POST /rest/v1/rpc/crear_lead_landing {"p_nombre":""}        → 400 P0001 "nombre requerido"
+--
+-- Queda intacta la policy leads_org {authenticated} (los usuarios del CRM ven su org).
+-- La superficie anónima de `autodiagnosticos` (autodiag_public_ins) NO se toca aquí:
+-- se revisará cuando el Experience Center construya su Diagnóstico Rápido (D-06).
+-- ============================================================
