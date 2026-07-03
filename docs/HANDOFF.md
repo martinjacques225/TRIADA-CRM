@@ -22,7 +22,7 @@
 |---|---|
 | **Producto** | CRM de Diagnóstico 360 para consultoría (pipeline → diagnóstico → propuesta → cliente → factura) |
 | **Repo** | https://github.com/martinjacques225/TRIADA-CRM (rama `main`) |
-| **Deploy** | https://martinjacques225.github.io/TRIADA-CRM/ (GitHub Pages desde `main`, auto-deploy al push; ~1 min + hard-refresh Ctrl+Shift+R por caché de `.js`) |
+| **Deploy** | https://martinjacques225.github.io/TRIADA-CRM/ (GitHub Pages desde `main`, auto-deploy al push; ~1 min + hard-refresh Ctrl+Shift+R por caché de `.js`). ⚠️ **GOTCHA:** el paso "Deploy to GitHub Pages" (`actions/deploy-pages`) puede FALLAR con `Error: Deployment failed, try again later.` **aunque el push llegue a `origin/main` y el build pase** (build+upload OK, publish KO) → el sitio queda **congelado** en el build anterior. Se destraba **re-ejecutando el job** (Actions → run fallido → **"Re-run failed jobs"**). **SIEMPRE** verificá que el `Last-Modified` de github.io avanzó tras cambiar una demo; un cambio NO está en vivo hasta que avanza (ver §7, 2026-07-03). |
 | **Backend** | Supabase proyecto `pqrjndirqtucoumijben` (región São Paulo) |
 | **Stack** | Vanilla JS (ES Modules, sin build/bundler), Supabase JS por CDN, GitHub Pages |
 | **Modo de trabajo** | El usuario decide/diseña; Claude ejecuta con autonomía y **push directo**. Solo se pide permiso para *decisiones* (modelo de datos, taxonomías, etc.) |
@@ -603,6 +603,13 @@ Columnas del calendario agregadas a `citas` y verificadas en vivo. Persistencia 
 ---
 
 ## 7. Bitácora de sesiones (más reciente arriba)
+
+### 2026-07-03 — 🔗 Los 16 CTA de las demos → `/experiencias?d=<slug>#contacto` EN VIVO (deploy destrabado)
+- **Qué:** los 16 CTA de las demos (`demos/<slug>/index.html`) apuntan a `https://grupotriada.cl/experiencias?d=<slug>#contacto` (antes iban a `https://grupotriada.cl` pelado) para cerrar el funnel de atribución del Experience Center (D-05: el prospecto que abre una demo y hace clic en su CTA llega al hub con `origen='demo-<slug>'`). El cambio estaba en el **código y en `origin/main` desde el commit `5fb36c1`** (77/77 tests) pero **NO estaba en vivo**.
+- **🔴→✅ Corrige un ✅ falso:** el `5fb36c1` "en vivo" era cierto para el CÓDIGO, pero el deploy de GitHub Pages venía **FALLANDO desde el 2026-07-02 21:10** en el paso "Deploy to GitHub Pages" (`actions/deploy-pages`) con `Error: Deployment failed, try again later.` — build+upload OK, publish KO. Pages operativo (githubstatus), fuente correcta (Deploy from a branch/`main`), repo limpio (5 MB, `.nojekyll` presente) → era un **estado atascado del deployment**, no config ni tamaño ni Jekyll. Todo `github.io/TRIADA-CRM/` quedó **congelado** en el build viejo.
+- **Fix:** Actions → run `28669791468` → **"Re-run failed jobs"**. El deploy pasó, el sitio se descongeló (`Last-Modified` de github.io saltó de `2/7 21:10` a `3/7 15:45`) y **las 16 demos ya sirven `?d=<slug>#contacto`** (verificado por curl: conserje/tienda/proyectos/pedidos/analizador). El dueño confirmó el funnel de punta a punta: CTA → formulario y **el lead llegó al CRM con atribución**.
+- **GOTCHA reusable (a §0 Deploy):** el deploy de Pages puede **atascarse** aunque el push llegue a `origin/main` y el build pase; **re-run del job** lo destraba. **SIEMPRE** verificá que el `Last-Modified` de github.io avanzó tras cambiar una demo — un cambio no está en vivo hasta que avanza.
+- **Nota:** el detalle completo del funnel (pantalla negra por COOP+sandbox, aterrizaje en el form, rAF congelado en pestaña de fondo) vive en el HANDOFF del Experience Center (`triada-home/docs/experience-center/EXPERIENCE-CENTER-HANDOFF.md`, bitácora cont. 9-11); esos fixes fueron en `triada-home`, no en este repo. Acá el único cambio del repo CRM fue el `5fb36c1` (16 CTA) + el re-run del deploy.
 
 ### 2026-07-01 (cont. 12) — 🔧 Corrección: Dormitorio fuera del simulador (antes/después no calzaba)
 - El usuario avisó que **no se veía perfecto**. Verificación honesta del **slider al 50% en cada espacio** (había cantado "perfecto" habiendo mirado solo Cocina — lección: verificar el comparador de CADA espacio, no uno). Resultado: **Living y Cocina calzan perfecto**, **Local es aceptable** (la puerta a la calle alinea, perspectiva se mantiene), pero el **Dormitorio NO alinea**: la cama quedó en distinta posición/orientación entre "antes" y "después" (la IA **movió el mueble**), así que "salta" al cruzar el divisor.
