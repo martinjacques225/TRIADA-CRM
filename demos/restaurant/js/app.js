@@ -299,6 +299,13 @@ if (bootRol && ROLES[bootRol]) {
   const ADMIN_VISTAS = ['dashboard', 'mesas', 'caja', 'reservas', 'clientes', 'inventario'];
   if (bootRol === 'operacion' && ADMIN_VISTAS.includes(bootVista)) store.set({ adminScreen: bootVista });
 }
+// El tour del EC (iframe) pide cambiar de vista por postMessage: la demo mueve
+// su PROPIO hash (same-document, el estado en memoria sobrevive — el pedido QR
+// sigue en el KDS). Cross-origin el padre no puede lograrlo sin recargar.
+// Solo formato de ruta interna; equivale a un deep-link público, sin riesgo.
+window.addEventListener('message', (e) => {
+  if (typeof e.data === 'string' && /^#\/[a-z]+$/.test(e.data)) location.hash = e.data;
+});
 // Reanudar sesión: si no hay ruta (o es login) pero hay rol guardado, ir a su home.
 if (routeName() === 'login' && session.role) location.hash = '#/' + session.role;
 else if (!location.hash) location.hash = '#/login';
