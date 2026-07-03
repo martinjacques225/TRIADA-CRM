@@ -14,6 +14,10 @@ export { supabase } from '../../js/supabase.js';
 // clearReadCache.
 export * as db from '../../js/db.js';
 
+// Atribución del Experience Center (leads.origen_detalle): etiqueta comercial
+// compartida con el escritorio ('demo-conserje' → 'Demo · Conserje IA').
+export { origenDetalleLabel, esLeadDeDemo } from '../../js/mappers.js';
+
 // Sincronización en vivo (Supabase Realtime), compartida con el CRM de escritorio.
 export { startRealtime, stopRealtime } from '../../js/realtime.js';
 

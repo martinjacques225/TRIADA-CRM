@@ -1,5 +1,6 @@
 // modules/modals/modals.js
 import { prospectos, diagnosticos, citas, propuestas, clientes, facturas, autodiags, presupuestos } from '../../js/db.js';
+import { origenDetalleLabel } from '../../js/mappers.js';
 import { escHtml, PIPELINE_STAGES, RUBROS, TAMANOS, DOLORES, ORIGENES, DIAG_AREAS, toast, formatCLP, propEstadoLabel, scorePct } from '../../js/utils.js';
 import { attachFormatting, validateRut, validateEmail } from '../../js/format.js';
 import { openMeetingModal } from '../agenda/agenda.js';
@@ -145,6 +146,7 @@ export async function openProspectoDetail(id) {
       ${p.telefono ?`<div><span style="color:var(--text3)">Teléfono</span><br><strong>${escHtml(p.telefono)}</strong></div>`:''}
       ${p.tamano   ?`<div><span style="color:var(--text3)">Trabajadores</span><br><strong>${escHtml(p.tamano)}</strong></div>`:''}
       ${p.origen   ?`<div><span style="color:var(--text3)">Origen</span><br><strong>${escHtml(p.origen)}</strong></div>`:''}
+      ${p.origenDetalle?`<div><span style="color:var(--text3)">Vino de</span><br><strong style="color:var(--primary)">${escHtml(origenDetalleLabel(p.origenDetalle))}</strong></div>`:''}
     </div>
     ${p.notas?`<div style="background:var(--surface2);border-radius:8px;padding:12px;font-size:13.5px;color:var(--text2);margin-bottom:16px"><em>${escHtml(p.notas)}</em></div>`:''}
 

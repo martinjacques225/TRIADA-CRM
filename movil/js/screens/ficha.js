@@ -3,7 +3,7 @@
 // Identidad · contacto rápido · cambiar etapa · tabs (Datos/Diagnóstico/Citas/
 // Propuestas/Actividad) · resumen trIA · acciones (Nueva cita/propuesta/Hacer 360).
 // ============================================================================
-import { db, PIPELINE_STAGES, DIAG_AREAS, meetingType, scorePct, formatCLP, formatDate, escHtml, heat, initials, timeAgo } from '../core.js';
+import { db, PIPELINE_STAGES, DIAG_AREAS, meetingType, scorePct, formatCLP, formatDate, escHtml, heat, initials, timeAgo, origenDetalleLabel } from '../core.js';
 import { logo, ic, toast, openWhatsApp, openTel } from '../ui.js';
 import { openInformeByDiagId } from '../informe.js';
 
@@ -22,7 +22,7 @@ function tabDatos() {
   const l = _lead;
   return `<div class="card" style="padding:0;overflow:hidden">
     ${row('Rubro', l.rubro)}${row('Tamaño', l.tamano)}${row('Dolor principal', l.dolorPrincipal)}
-    ${row('Origen', l.origen)}${row('Región', l.region)}${row('RUT', l.rut)}
+    ${row('Origen', l.origen)}${l.origenDetalle ? row('Vino de', origenDetalleLabel(l.origenDetalle), 'var(--teal)') : ''}${row('Región', l.region)}${row('RUT', l.rut)}
     ${row('Teléfono', l.telefono, 'var(--teal)')}${row('Email', l.email, 'var(--teal)')}
     <div style="padding:13px 15px"><div style="font-size:13px;color:var(--text2);margin-bottom:5px">Notas</div><div style="font-size:13.5px;color:var(--text);line-height:1.5">${e(l.notas || 'Sin notas.')}</div></div>
   </div>`;
@@ -63,7 +63,7 @@ function tabAct() {
   const st = stageOf(_lead.estado);
   return `<div style="position:relative;padding-left:8px">
     ${dot(st.color, `Etapa actual: ${_lead.estado}`, timeAgo(_lead.fechaActualizacion || _lead.fechaCreacion))}
-    ${dot('var(--text3)', `Lead creado · origen ${_lead.origen || '—'}`, formatDate(_lead.fechaCreacion), true)}
+    ${dot('var(--text3)', `Lead creado · ${_lead.origenDetalle ? origenDetalleLabel(_lead.origenDetalle) : `origen ${_lead.origen || '—'}`}`, formatDate(_lead.fechaCreacion), true)}
   </div>`;
 }
 

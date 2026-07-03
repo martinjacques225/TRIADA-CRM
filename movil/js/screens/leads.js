@@ -2,7 +2,7 @@
 // screens/leads.js — bandeja de prospectos.
 // KPIs · buscador · filtro por etapa (chips) · tarjetas con contacto rápido.
 // ============================================================================
-import { db, store, PIPELINE_STAGES, escHtml, heat, initials, timeAgo } from '../core.js';
+import { db, store, PIPELINE_STAGES, escHtml, heat, initials, timeAgo, origenDetalleLabel } from '../core.js';
 import { logo, ic, toast, openWhatsApp, openTel } from '../ui.js';
 
 const e = escHtml;
@@ -15,7 +15,7 @@ let _q = '';
 function matches(l) {
   if (_filter !== 'Todos' && l.estado !== _filter) return false;
   if (_q) {
-    const hay = `${l.nombre || ''} ${l.empresa || ''} ${l.correlativo || ''} ${l.rubro || ''}`.toLowerCase();
+    const hay = `${l.nombre || ''} ${l.empresa || ''} ${l.correlativo || ''} ${l.rubro || ''} ${l.origenDetalle || ''} ${origenDetalleLabel(l.origenDetalle)}`.toLowerCase();
     if (!hay.includes(_q.toLowerCase())) return false;
   }
   return true;
@@ -35,6 +35,7 @@ function leadCard(l) {
       </div>
       <div style="display:flex;align-items:center;gap:7px;margin-top:11px;flex-wrap:wrap">
         <span class="badge" style="color:${st.color};background:${st.bg}">${e(l.estado)}</span>
+        ${l.origenDetalle ? `<span style="font-size:11px;font-weight:600;color:var(--teal);background:var(--teal-l);padding:4px 9px;border-radius:20px">${e(origenDetalleLabel(l.origenDetalle))}</span>` : ''}
         ${l.rubro ? `<span style="font-size:11px;font-weight:500;color:var(--text2);background:var(--surface2);padding:4px 9px;border-radius:20px">${e(l.rubro)}</span>` : ''}
         <span style="flex:1"></span>
         <button class="qa" data-wa="${e(l.telefono || '')}" aria-label="WhatsApp" style="width:33px;height:33px;border-radius:10px;background:var(--green-l);color:var(--green);border:0;display:flex;align-items:center;justify-content:center;cursor:pointer">${ic('whatsapp', { size: 16 })}</button>

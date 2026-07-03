@@ -47,6 +47,7 @@ export function leadFromSupa(row) {
     facturacionEst:     row.facturacion_est,
     dolorPrincipal:     row.dolor_principal,
     origen:             ORIGEN_FROM_DB[row.origen] || row.origen,
+    origenDetalle:      row.origen_detalle,
     estado:             row.estado,
     scoring:            row.scoring,
     responsable:        row.responsable,
@@ -54,6 +55,54 @@ export function leadFromSupa(row) {
     fechaCreacion:      row.created_at,
     fechaActualizacion: row.updated_at,
   };
+}
+
+// ─── Atribución del Experience Center (leads.origen_detalle) ─
+// La landing manda por el RPC crear_lead_landing v2 la página/demo exacta de
+// origen: 'home' | 'servicios' | 'experiencias' | 'diagnostico' | 'demo-<slug>'.
+// Solo lectura en el CRM (la escribe el RPC; leadToSupa no la manda).
+// Nota cruzada anti-deriva: los nombres salen del catálogo del Experience Center
+// (triada-home/inc/experiencias-data.php) — si se suma una demo allá, sumarla acá
+// (una demo desconocida NO rompe: cae al slug legible).
+const DEMO_NOMBRES = {
+  recorrido:    'El CRM en acción',
+  conserje:     'Conserje IA',
+  fugas:        'Detección de Fugas',
+  gemelo:       'Gemelo Virtual',
+  auditor:      'Auditor de Imagen',
+  remodela:     'Simulador de Remodelación',
+  documentos:   'Generador de Documentos',
+  academia:     'Academia Online',
+  tienda:       'Tienda Online',
+  inventario:   'Control de Inventario',
+  encuestas:    'Encuestas',
+  proyectos:    'Gestión de Proyectos',
+  analizador:   'Analizador Comercial',
+  documental:   'Centro Documental',
+  contratacion: 'Contratación Inteligente',
+  compras:      'Gestión de Compras',
+  pedidos:      'Pedidos Online',
+  restaurant:   'CRM de Restaurantes',
+  barberia:     'Barbería Triada',
+  diagnostico:  'Diagnóstico Digital Rápido',
+};
+
+/** 'demo-conserje' → 'Demo · Conserje IA' · 'diagnostico' → 'Diagnóstico web'
+    · 'home'/'servicios'/'experiencias' → 'Web · <página>' · vacío → ''. */
+export function origenDetalleLabel(v) {
+  const s = (v || '').toString().trim();
+  if (s === '') return '';
+  if (s === 'diagnostico') return 'Diagnóstico web';
+  if (s.startsWith('demo-')) {
+    const slug = s.slice(5);
+    return 'Demo · ' + (DEMO_NOMBRES[slug] || slug);
+  }
+  return 'Web · ' + s;
+}
+
+/** true si el lead vino de una demo del Experience Center. */
+export function esLeadDeDemo(v) {
+  return ((v || '').toString()).startsWith('demo-');
 }
 
 export function leadToSupa(data) {

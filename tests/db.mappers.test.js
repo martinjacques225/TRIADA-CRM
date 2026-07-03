@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
   clean, isMissingTable, isMissingCol, toOrigenSlug, toFactEstado,
-  leadToSupa, leadFromSupa,
+  leadToSupa, leadFromSupa, origenDetalleLabel, esLeadDeDemo,
   diagToSupa, diagFromSupa,
   citaToSupa, citaToSupaBase,
   clienteToSupa, facturaToSupa,
@@ -62,6 +62,35 @@ test('leadFromSupa: codigo→correlativo, giro→rubro, origen DB→UI; null→n
   assert.equal(ui.correlativo, 'L-001');
   assert.equal(ui.rubro, 'Salud');
   assert.equal(ui.origen, 'Meta Ads');
+});
+
+// ─── Atribución del Experience Center (origen_detalle) ───────
+test('leadFromSupa: origen_detalle → origenDetalle (atribución EC, RPC v2)', () => {
+  assert.equal(leadFromSupa({ id: '1', origen_detalle: 'demo-conserje' }).origenDetalle, 'demo-conserje');
+  assert.equal(leadFromSupa({ id: '1' }).origenDetalle, undefined); // fila sin la columna: no rompe
+});
+test('leadToSupa: NO manda origen_detalle (solo lo escribe el RPC de la landing)', () => {
+  assert.ok(!('origen_detalle' in leadToSupa({ nombre: 'Ana', origenDetalle: 'demo-conserje' })));
+});
+test('origenDetalleLabel: demo conocida → nombre comercial', () => {
+  assert.equal(origenDetalleLabel('demo-conserje'), 'Demo · Conserje IA');
+  assert.equal(origenDetalleLabel('demo-restaurant'), 'Demo · CRM de Restaurantes');
+});
+test('origenDetalleLabel: demo desconocida cae al slug legible (no rompe)', () => {
+  assert.equal(origenDetalleLabel('demo-cosa-nueva'), 'Demo · cosa-nueva');
+});
+test('origenDetalleLabel: diagnostico / páginas web / vacío', () => {
+  assert.equal(origenDetalleLabel('diagnostico'), 'Diagnóstico web');
+  assert.equal(origenDetalleLabel('experiencias'), 'Web · experiencias');
+  assert.equal(origenDetalleLabel('home'), 'Web · home');
+  assert.equal(origenDetalleLabel(''), '');
+  assert.equal(origenDetalleLabel(null), '');
+  assert.equal(origenDetalleLabel(undefined), '');
+});
+test('esLeadDeDemo: true solo para demo-*', () => {
+  assert.equal(esLeadDeDemo('demo-tienda'), true);
+  assert.equal(esLeadDeDemo('diagnostico'), false);
+  assert.equal(esLeadDeDemo(null), false);
 });
 
 // ─── diagnósticos: scores anidados ───────────────────────────

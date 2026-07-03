@@ -3,6 +3,7 @@
 // no se contactan. Cada lead trae acciones de contacto directo (WhatsApp, Zoom,
 // llamar) + agendar y abrir ficha. Incluye carga masiva de leads.
 import { prospectos } from '../../js/db.js';
+import { origenDetalleLabel, esLeadDeDemo } from '../../js/mappers.js';
 import { escHtml, PIPELINE_STAGES, stageBadge, toast } from '../../js/utils.js';
 
 const _i = (n, s) => (window.icon ? window.icon(n, '', s) : '');
@@ -14,6 +15,10 @@ let _q = '';
 const FILTERS = [
   { id: 'pendientes',  label: 'Por contactar', test: p => p.estado === 'Nuevo' },
   { id: 'contactados', label: 'Contactados',   test: p => p.estado === 'Contactado' },
+  // Atribución del Experience Center (leads.origen_detalle vía RPC v2):
+  // qué leads llegaron probando una demo o desde el Diagnóstico Digital Rápido.
+  { id: 'demos',       label: 'Desde demos',   test: p => esLeadDeDemo(p.origenDetalle) },
+  { id: 'diagnostico', label: 'Diagnóstico web', test: p => p.origenDetalle === 'diagnostico' },
   { id: 'todos',       label: 'Todos',         test: () => true },
 ];
 
@@ -83,7 +88,7 @@ function _renderList() {
   let list = _all.filter(f.test);
   if (_q) {
     const q = _q.toLowerCase();
-    list = list.filter(p => [p.nombre, p.empresa, p.email, p.telefono, p.rubro].some(v => (v || '').toLowerCase().includes(q)));
+    list = list.filter(p => [p.nombre, p.empresa, p.email, p.telefono, p.rubro, p.origenDetalle, origenDetalleLabel(p.origenDetalle)].some(v => (v || '').toLowerCase().includes(q)));
   }
   // Más recientes primero
   list.sort((a, b) => (b.fechaCreacion || '').localeCompare(a.fechaCreacion || ''));
@@ -114,7 +119,11 @@ function _leadCard(p) {
 
     <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">
       ${stageBadge(p.estado)}
-      ${p.origen ? `<span class="badge" style="background:var(--surface2);color:var(--text2);border-color:var(--border)">${escHtml(p.origen)}</span>` : ''}
+      ${p.origenDetalle
+        // La atribución del EC es más específica que el origen genérico ('Landing
+        // Web'): en la card gana el detalle; el origen completo queda en la ficha.
+        ? `<span class="badge" style="background:var(--primary-l);color:var(--primary);border-color:var(--primary)">${escHtml(origenDetalleLabel(p.origenDetalle))}</span>`
+        : (p.origen ? `<span class="badge" style="background:var(--surface2);color:var(--text2);border-color:var(--border)">${escHtml(p.origen)}</span>` : '')}
       ${p.dolorPrincipal ? `<span class="chip-dolor">${escHtml(p.dolorPrincipal)}</span>` : ''}
     </div>
 
