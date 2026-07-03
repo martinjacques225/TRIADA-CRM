@@ -286,6 +286,19 @@ document.addEventListener('keydown', (e) => {
 /* ============================ ARRANQUE ================================= */
 store.subscribe(render);
 window.addEventListener('hashchange', render);
+// Andamiaje de DEMO (como el selector de rol): el tour guiado del Experience
+// Center (grupotriada.cl/experiencias) llega por deep-link con ?rol=<estación>
+// — equivale a elegirla en el selector — y ?vista=<pantalla> aterriza esa
+// pantalla de Operación. Sin ?rol= válido, nada cambia.
+const bootQ = new URLSearchParams(location.search);
+const bootRol = bootQ.get('rol');
+if (bootRol && ROLES[bootRol]) {
+  session.role = bootRol;
+  sessionStorage.setItem(SESSION_KEY, bootRol);
+  const bootVista = bootQ.get('vista');
+  const ADMIN_VISTAS = ['dashboard', 'mesas', 'caja', 'reservas', 'clientes', 'inventario'];
+  if (bootRol === 'operacion' && ADMIN_VISTAS.includes(bootVista)) store.set({ adminScreen: bootVista });
+}
 // Reanudar sesión: si no hay ruta (o es login) pero hay rol guardado, ir a su home.
 if (routeName() === 'login' && session.role) location.hash = '#/' + session.role;
 else if (!location.hash) location.hash = '#/login';
