@@ -431,3 +431,118 @@ export function finToSupa(data) {
     estado:         data.estado      !== undefined ? toFinEstado(data.estado)    : undefined,
   });
 }
+
+// ─── ERP · PROYECTOS (extiende el espinazo del M5 con campos operativos) ──────
+export function proyectoFromSupa(row) {
+  if (!row) return null;
+  return {
+    id:               row.id,
+    correlativo:      row.codigo,
+    nombre:           row.nombre,
+    descripcion:      row.descripcion,
+    objetivo:         row.objetivo,
+    estado:           row.estado,
+    prioridad:        row.prioridad,
+    area:             row.area,
+    clienteId:        row.cliente_id,
+    responsable:      row.responsable,
+    tipo:             row.tipo,
+    tarifa:           row.tarifa,
+    presupuestoHoras: row.presupuesto_horas,
+    presupuestoMonto: row.presupuesto_monto,
+    facturable:       row.facturable,
+    progreso:         row.progreso,
+    fechaInicio:      row.fecha_inicio,
+    fechaObjetivo:    row.fecha_objetivo,
+    fecha:            row.created_at,
+  };
+}
+
+// Solo columnas del ERP (no toca campos que gestiona el AI Commander salvo los
+// operativos). clean() quita undefined → updates parciales seguros. `estado`/`prioridad`
+// se omiten si no vienen (la tabla tiene default 'activo'/'media').
+export function proyectoToSupa(data) {
+  return clean({
+    nombre:            data.nombre,
+    descripcion:       data.descripcion,
+    objetivo:          data.objetivo,
+    estado:            data.estado,
+    prioridad:         data.prioridad,
+    area:              data.area,
+    cliente_id:        data.clienteId,
+    tipo:              data.tipo,
+    tarifa:            data.tarifa,
+    presupuesto_horas: data.presupuestoHoras,
+    presupuesto_monto: data.presupuestoMonto,
+    facturable:        data.facturable,
+    fecha_inicio:      data.fechaInicio,
+    fecha_objetivo:    data.fechaObjetivo,
+  });
+}
+
+// ─── ERP · HORAS (timesheet) ──────────────────────────────────
+export function horaFromSupa(row) {
+  if (!row) return null;
+  return {
+    id:            row.id,
+    correlativo:   row.codigo,
+    proyectoId:    row.proyecto_id,
+    tareaId:       row.tarea_id,
+    profileId:     row.profile_id,
+    fecha:         row.fecha,
+    horas:         Number(row.horas) || 0,
+    facturable:    row.facturable,
+    nota:          row.nota,
+    fechaCreacion: row.created_at,
+  };
+}
+
+export function horaToSupa(data) {
+  return clean({
+    proyecto_id: data.proyectoId,
+    tarea_id:    data.tareaId,
+    profile_id:  data.profileId,
+    fecha:       data.fecha,
+    horas:       data.horas,
+    facturable:  data.facturable,
+    nota:        data.nota,
+  });
+}
+
+// ─── ERP · GASTOS (cuentas por pagar, confidencial) ───────────
+const VALID_GASTO_ESTADO = new Set(['pendiente', 'pagado']);
+export const toGastoEstado = (v) => VALID_GASTO_ESTADO.has((v || '').toString()) ? v : 'pendiente';
+
+export function gastoFromSupa(row) {
+  if (!row) return null;
+  return {
+    id:            row.id,
+    correlativo:   row.codigo,
+    proyectoId:    row.proyecto_id,
+    categoria:     row.categoria,
+    descripcion:   row.descripcion,
+    neto:          Number(row.neto)  || 0,
+    iva:           Number(row.iva)   || 0,
+    total:         Number(row.total) || 0,
+    estado:        row.estado,
+    fecha:         row.fecha,
+    vencimiento:   row.vencimiento,
+    docId:         row.doc_id,
+    fechaCreacion: row.created_at,
+  };
+}
+
+export function gastoToSupa(data) {
+  return clean({
+    proyecto_id: data.proyectoId,
+    categoria:   data.categoria,
+    descripcion: data.descripcion,
+    neto:        data.neto,
+    iva:         data.iva,
+    total:       data.total,
+    estado:      data.estado !== undefined ? toGastoEstado(data.estado) : undefined,
+    fecha:       data.fecha,
+    vencimiento: data.vencimiento,
+    doc_id:      data.docId,
+  });
+}
