@@ -13,6 +13,9 @@ import {
   presupFromSupa, presupToSupa,
   docFromSupa,
   finFromSupa, finToSupa,
+  proyectoFromSupa, proyectoToSupa,
+  horaFromSupa, horaToSupa,
+  gastoFromSupa, gastoToSupa,
 } from './mappers.js';
 
 // Reexport para no romper a quien importe isMissingTable desde db.js (módulos
@@ -391,6 +394,95 @@ export const presupuestos = {
   byCliente: async (clienteId) => {
     const { data, error } = await supabase.from('presupuestos').select('*').eq('cliente_id', clienteId).order('created_at', { ascending: false });
     _throw(error); return data.map(presupFromSupa);
+  },
+};
+
+// ─── ERP · PROYECTOS ─────────────────────────────────────────
+// Espinazo operativo del ERP. Es la MISMA tabla `proyectos` del M5 (AI Commander):
+// un objeto, dos vistas (kanban de desarrollo IA + control operativo/financiero).
+// Requiere supabase/erp_f1.sql (columnas tipo/tarifa/presupuesto_*/facturable).
+export const proyectos = {
+  getAll: async () => _cachedAll('proyectos', async () => {
+    const { data, error } = await supabase.from('proyectos').select('*').order('created_at', { ascending: false });
+    _throw(error); return data.map(proyectoFromSupa);
+  }),
+  get: async (id) => {
+    const { data, error } = await supabase.from('proyectos').select('*').eq('id', id).single();
+    _throw(error); return proyectoFromSupa(data);
+  },
+  add: async (data) => {
+    const payload = proyectoToSupa(data);
+    if (!payload.responsable && _uid) payload.responsable = _uid;
+    if (_uid) payload.created_by = _uid;
+    const { data: row, error } = await supabase.from('proyectos').insert(payload).select('id').single();
+    _throw(error); _invalidate('proyectos'); return row.id;
+  },
+  update: async (data) => {
+    const { id, ...rest } = data;
+    const { error } = await supabase.from('proyectos').update(proyectoToSupa(rest)).eq('id', id);
+    _throw(error); _invalidate('proyectos');
+  },
+  delete: async (id) => {
+    const { error } = await supabase.from('proyectos').delete().eq('id', id);
+    _throw(error); _invalidate('proyectos');
+  },
+  byCliente: async (clienteId) => {
+    const { data, error } = await supabase.from('proyectos').select('*').eq('cliente_id', clienteId).order('created_at', { ascending: false });
+    _throw(error); return data.map(proyectoFromSupa);
+  },
+};
+
+// ─── ERP · HORAS (timesheet) ─────────────────────────────────
+// Requiere supabase/erp_f1.sql. RLS por org.
+export const horas = {
+  getAll: async () => _cachedAll('horas', async () => {
+    const { data, error } = await supabase.from('horas').select('*').order('fecha', { ascending: false });
+    _throw(error); return data.map(horaFromSupa);
+  }),
+  byProyecto: async (proyectoId) => {
+    const { data, error } = await supabase.from('horas').select('*').eq('proyecto_id', proyectoId).order('fecha', { ascending: false });
+    _throw(error); return data.map(horaFromSupa);
+  },
+  add: async (data) => {
+    const payload = horaToSupa(data);
+    if (!payload.profile_id && _uid) payload.profile_id = _uid;
+    const { data: row, error } = await supabase.from('horas').insert(payload).select('id').single();
+    _throw(error); _invalidate('horas'); return row.id;
+  },
+  update: async (data) => {
+    const { id, ...rest } = data;
+    const { error } = await supabase.from('horas').update(horaToSupa(rest)).eq('id', id);
+    _throw(error); _invalidate('horas');
+  },
+  delete: async (id) => {
+    const { error } = await supabase.from('horas').delete().eq('id', id);
+    _throw(error); _invalidate('horas');
+  },
+};
+
+// ─── ERP · GASTOS (cuentas por pagar · CONFIDENCIAL, RLS finanzas) ──
+// Requiere supabase/erp_f1.sql. Solo admin/gerencia/finanzas leen/escriben (RLS).
+export const gastos = {
+  getAll: async () => _cachedAll('gastos', async () => {
+    const { data, error } = await supabase.from('gastos').select('*').order('fecha', { ascending: false });
+    _throw(error); return data.map(gastoFromSupa);
+  }),
+  byProyecto: async (proyectoId) => {
+    const { data, error } = await supabase.from('gastos').select('*').eq('proyecto_id', proyectoId).order('fecha', { ascending: false });
+    _throw(error); return data.map(gastoFromSupa);
+  },
+  add: async (data) => {
+    const { data: row, error } = await supabase.from('gastos').insert(gastoToSupa(data)).select('id').single();
+    _throw(error); _invalidate('gastos'); return row.id;
+  },
+  update: async (data) => {
+    const { id, ...rest } = data;
+    const { error } = await supabase.from('gastos').update(gastoToSupa(rest)).eq('id', id);
+    _throw(error); _invalidate('gastos');
+  },
+  delete: async (id) => {
+    const { error } = await supabase.from('gastos').delete().eq('id', id);
+    _throw(error); _invalidate('gastos');
   },
 };
 
