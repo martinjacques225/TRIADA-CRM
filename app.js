@@ -3,6 +3,7 @@ import { initDB, config, prospectos, diagnosticos, propuestas, citas, clientes, 
 import { requireAuth, signOut } from './js/auth.js';
 import { startRealtime } from './js/realtime.js';
 import { supabase } from './js/supabase.js';
+import { FEATURES } from './js/features.js';
 
 let _profile = null;
 
@@ -39,6 +40,7 @@ import * as ModClientes      from './modules/clientes/clientes.js';
 import * as ModPresupuestos  from './modules/presupuestos/presupuestos.js';
 import * as ModBiblioteca    from './modules/biblioteca/biblioteca.js';
 import * as ModFinanciero    from './modules/financiero/financiero.js';
+import * as ModErp           from './modules/erp/erp.js';
 
 import {
   closeModal,
@@ -73,6 +75,9 @@ const NAV_SECTIONS = [
     { id: 'presupuestos', icon: _icoPresup(),     label: 'Presupuesto' },
     { id: 'clientes',     icon: _icoClientes(),   label: 'Clientes' },
     { id: 'facturacion',  icon: _icoFactura(),    label: 'Facturación' },
+  ]},
+  { id: 'operacion', label: 'Operación', items: [
+    { id: 'erp',          icon: _icoErp(),        label: 'Centro de Mando' },
   ]},
   { label: 'Desarrollo', items: [
     { id: 'ai-commander', icon: _icoAi(),         label: 'Director de Orquesta' },
@@ -109,6 +114,7 @@ async function refreshCenter() {
     biblioteca:   ModBiblioteca.render,
     financiero:   ModFinanciero.render,
     'ai-commander': ModAiCommander.render,
+    erp:          ModErp.render,
     informes:     ModInformes.render,
     config:       ModConfig.render,
   };
@@ -149,7 +155,7 @@ export async function renderNav() {
         <span class="brand-tag">Consultoría 360</span>
       </span>
     </a>
-    ${NAV_SECTIONS.map(sec => `
+    ${NAV_SECTIONS.filter(sec => sec.id !== 'operacion' || (FEATURES.erp && _profile?.role === 'admin')).map(sec => `
       <div class="nav-section-label">${escHtml(sec.label)}</div>
       ${sec.items.map(i => _navItem(i, badges)).join('')}
     `).join('')}
@@ -481,5 +487,6 @@ function _icoClientes(){ return _ln('<circle cx="12" cy="8" r="3.5"/><path d="M5
 function _icoPresup() { return _ln('<rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 7h8M8 11h8M8 15h5"/><path d="M16.5 16.5 18 18l3-3"/>'); }
 function _icoBiblioteca(){ return _ln('<path d="M4 4.8A2.8 2.8 0 0 1 6.8 2H20v15H6.8A2.8 2.8 0 0 0 4 19.8z"/><path d="M20 17v5H6.8A2.8 2.8 0 0 1 4 19.2"/><path d="M8 6.5h7M8 9.5h5"/>'); }
 function _icoFinanciero(){ return _ln('<path d="M4 4v16h16"/><path d="M8 14l3-3 3 2 4.5-5.5"/><path d="M18.5 7.5H15M18.5 7.5V11"/>'); }
+function _icoErp()     { return _ln('<rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/>'); }
 
 document.addEventListener('DOMContentLoaded', init);
