@@ -519,6 +519,7 @@ export function gastoFromSupa(row) {
     id:            row.id,
     correlativo:   row.codigo,
     proyectoId:    row.proyecto_id,
+    proveedorId:   row.proveedor_id,
     categoria:     row.categoria,
     descripcion:   row.descripcion,
     neto:          Number(row.neto)  || 0,
@@ -534,7 +535,8 @@ export function gastoFromSupa(row) {
 
 export function gastoToSupa(data) {
   return clean({
-    proyecto_id: data.proyectoId,
+    proyecto_id:  data.proyectoId,
+    proveedor_id: data.proveedorId,
     categoria:   data.categoria,
     descripcion: data.descripcion,
     neto:        data.neto,
@@ -609,5 +611,76 @@ export function paramTribToSupa(data) {
     tope_gratificacion: data.topeGratificacion,
     pct_ppm:            data.pctPpm,
     pct_retencion:      data.pctRetencion,
+  });
+}
+
+// ─── ERP · PROVEEDORES (confidencial · finanzas) ──────────────
+export function proveedorFromSupa(row) {
+  if (!row) return null;
+  return {
+    id:          row.id,
+    correlativo: row.codigo,
+    nombre:      row.nombre,
+    rut:         row.rut,
+    contacto:    row.contacto,
+    email:       row.email,
+    telefono:    row.telefono,
+    notas:       row.notas,
+    activo:      row.activo,
+    fecha:       row.created_at,
+  };
+}
+
+export function proveedorToSupa(data) {
+  return clean({
+    nombre:   data.nombre,
+    rut:      data.rut,
+    contacto: data.contacto,
+    email:    data.email,
+    telefono: data.telefono,
+    notas:    data.notas,
+    activo:   data.activo,
+  });
+}
+
+// ─── ERP · ÓRDENES DE COMPRA (confidencial · finanzas) ────────
+const VALID_OC_ESTADO = new Set(['borrador', 'emitida', 'recepcionada', 'anulada']);
+export const toOcEstado = (v) => VALID_OC_ESTADO.has((v || '').toString()) ? v : 'borrador';
+
+export function ocFromSupa(row) {
+  if (!row) return null;
+  return {
+    id:            row.id,
+    correlativo:   row.codigo,
+    proveedorId:   row.proveedor_id,
+    proyectoId:    row.proyecto_id,
+    lineas:        row.lineas || [],
+    neto:          Number(row.neto)  || 0,
+    iva:           Number(row.iva)   || 0,
+    total:         Number(row.total) || 0,
+    estado:        row.estado,
+    fecha:         row.fecha,
+    fechaEntrega:  row.fecha_entrega,
+    notas:         row.notas,
+    gastoId:       row.gasto_id,
+    docId:         row.doc_id,
+    fechaCreacion: row.created_at,
+  };
+}
+
+export function ocToSupa(data) {
+  return clean({
+    proveedor_id:  data.proveedorId,
+    proyecto_id:   data.proyectoId,
+    lineas:        data.lineas,
+    neto:          data.neto,
+    iva:           data.iva,
+    total:         data.total,
+    estado:        data.estado !== undefined ? toOcEstado(data.estado) : undefined,
+    fecha:         data.fecha,
+    fecha_entrega: data.fechaEntrega,
+    notas:         data.notas,
+    gasto_id:      data.gastoId,
+    doc_id:        data.docId,
   });
 }

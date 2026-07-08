@@ -18,6 +18,8 @@ import {
   gastoFromSupa, gastoToSupa,
   movimientoFromSupa, movimientoToSupa,
   paramTribFromSupa, paramTribToSupa,
+  proveedorFromSupa, proveedorToSupa,
+  ocFromSupa, ocToSupa,
 } from './mappers.js';
 
 // Reexport para no romper a quien importe isMissingTable desde db.js (módulos
@@ -469,6 +471,10 @@ export const gastos = {
     const { data, error } = await supabase.from('gastos').select('*').order('fecha', { ascending: false });
     _throw(error); return data.map(gastoFromSupa);
   }),
+  get: async (id) => {
+    const { data, error } = await supabase.from('gastos').select('*').eq('id', id).single();
+    _throw(error); return gastoFromSupa(data);
+  },
   byProyecto: async (proyectoId) => {
     const { data, error } = await supabase.from('gastos').select('*').eq('proyecto_id', proyectoId).order('fecha', { ascending: false });
     _throw(error); return data.map(gastoFromSupa);
@@ -529,6 +535,58 @@ export const parametrosTributarios = {
     const { id, ...rest } = data;
     const { error } = await supabase.from('parametros_tributarios').update(paramTribToSupa(rest)).eq('id', id);
     _throw(error); _invalidate('parametros_tributarios');
+  },
+};
+
+// ─── ERP · PROVEEDORES (CONFIDENCIAL, RLS finanzas) ──────────
+// Requiere supabase/erp_f3.sql.
+export const proveedores = {
+  getAll: async () => _cachedAll('proveedores', async () => {
+    const { data, error } = await supabase.from('proveedores').select('*').order('nombre', { ascending: true });
+    _throw(error); return data.map(proveedorFromSupa);
+  }),
+  get: async (id) => {
+    const { data, error } = await supabase.from('proveedores').select('*').eq('id', id).single();
+    _throw(error); return proveedorFromSupa(data);
+  },
+  add: async (data) => {
+    const { data: row, error } = await supabase.from('proveedores').insert(proveedorToSupa(data)).select('id').single();
+    _throw(error); _invalidate('proveedores'); return row.id;
+  },
+  update: async (data) => {
+    const { id, ...rest } = data;
+    const { error } = await supabase.from('proveedores').update(proveedorToSupa(rest)).eq('id', id);
+    _throw(error); _invalidate('proveedores');
+  },
+  delete: async (id) => {
+    const { error } = await supabase.from('proveedores').delete().eq('id', id);
+    _throw(error); _invalidate('proveedores');
+  },
+};
+
+// ─── ERP · ÓRDENES DE COMPRA (CONFIDENCIAL, RLS finanzas) ────
+// Requiere supabase/erp_f3.sql. Cadena: OC → gasto → movimiento.
+export const ordenesCompra = {
+  getAll: async () => _cachedAll('ordenes_compra', async () => {
+    const { data, error } = await supabase.from('ordenes_compra').select('*').order('fecha', { ascending: false });
+    _throw(error); return data.map(ocFromSupa);
+  }),
+  get: async (id) => {
+    const { data, error } = await supabase.from('ordenes_compra').select('*').eq('id', id).single();
+    _throw(error); return ocFromSupa(data);
+  },
+  add: async (data) => {
+    const { data: row, error } = await supabase.from('ordenes_compra').insert(ocToSupa(data)).select('id').single();
+    _throw(error); _invalidate('ordenes_compra'); return row.id;
+  },
+  update: async (data) => {
+    const { id, ...rest } = data;
+    const { error } = await supabase.from('ordenes_compra').update(ocToSupa(rest)).eq('id', id);
+    _throw(error); _invalidate('ordenes_compra');
+  },
+  delete: async (id) => {
+    const { error } = await supabase.from('ordenes_compra').delete().eq('id', id);
+    _throw(error); _invalidate('ordenes_compra');
   },
 };
 
