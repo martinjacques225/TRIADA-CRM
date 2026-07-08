@@ -13,6 +13,7 @@ import { calcFlujoCaja, calcF29 } from './domain/finanzas.js';
 import { calcOC, ocToGasto, gastoToMovimiento } from './domain/compras.js';
 import { calcDigest } from './domain/digest.js';
 import { costoHora, calcMargenReal, resumenNomina, HORAS_MES } from './domain/nomina.js';
+import { isAAL2, hasVerifiedFactor, enrollMfaFlow, challengeMfaFlow } from '../../js/mfa.js';
 
 const _i  = (n, s) => (window.icon ? window.icon(n, '', s) : '');
 const _num = (v) => Number(String(v ?? '').replace(/[^\d.-]/g, '')) || 0;
@@ -506,9 +507,28 @@ async function _renderProyecto(id) {
 }
 
 // ══════════════ NÓMINA (F4 · confidencial) ══════════════
+// Puerta de MFA: la nómina completa exige verificación en dos pasos (aal2). Se
+// pide on-demand acá; el login del CRM NO se toca. La base también lo exige
+// (can_ver_nomina requiere aal2), así que esto es la experiencia, no el muro.
+async function _renderNominaMfaGate() {
+  const center = document.getElementById('center');
+  const tiene = await hasVerifiedFactor();
+  center.innerHTML = `<div class="view-animate">
+    ${_head('')}
+    ${_tabs('nomina')}
+    <div class="card card-pad" style="max-width:560px;margin:22px auto;text-align:center;border-left:3px solid var(--primary)">
+      <div style="font-size:16px;font-weight:600;color:var(--text);margin-bottom:8px">La nómina exige verificación en dos pasos</div>
+      <div style="font-size:13px;color:var(--text3);line-height:1.6;margin-bottom:18px">Es el módulo más sensible (sueldos y datos personales). ${tiene ? 'Ingresa el código de tu app de autenticación para continuar.' : 'Actívala con tu teléfono (Google Authenticator, Authy, 1Password…) para poder ver la nómina. Solo se pide aquí; el resto del CRM no cambia.'}</div>
+      <button class="btn btn-primary" onclick="window._erp.${tiene ? 'mfaChallenge' : 'mfaEnroll'}()">${tiene ? 'Ingresar código' : 'Activar verificación en dos pasos'}</button>
+    </div>
+  </div>`;
+}
+
 async function _renderNomina() {
   const center = document.getElementById('center');
   center.innerHTML = `<div class="view-animate">${_head('')}${_tabs('nomina')}<div class="card card-pad" style="text-align:center;color:var(--text3)">Cargando…</div></div>`;
+
+  if (!(await isAAL2())) return _renderNominaMfaGate();
 
   const periodo = _st.nomPeriodo || _today().slice(0, 7);
   const [emps, rems, team, proj, allHoras, gas] = await Promise.all([
@@ -853,6 +873,8 @@ function _wire() {
     setNomPeriodo: (v) => { _st.nomPeriodo = v || null; render(); },
     toggleRem:    () => { _st.remOpen = !_st.remOpen; _st.remEditId = null; render(); },
     editRem:      (id) => { _st.remEditId = id; _st.remOpen = true; render(); },
+    mfaEnroll:    async () => { if (await enrollMfaFlow()) render(); },
+    mfaChallenge: async () => { if (await challengeMfaFlow()) render(); },
     guardarEmp: async () => {
       const nombre = document.getElementById('nomEmpNom')?.value.trim();
       if (!nombre) { toast('Ponle el nombre a la persona', 'error'); return; }
