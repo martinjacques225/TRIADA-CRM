@@ -4,7 +4,7 @@
 // si cada proyecto gana plata. La rentabilidad se calcula con el dominio PURO (testeado);
 // los gastos son CONFIDENCIALES (la RLS los tapa a quien no es finanzas). Módulo
 // autocontenido: expone sus handlers en window._erp (patrón del AI Commander / window._aic).
-import { proyectos, horas, gastos, clientes, facturas, profiles, movimientos, parametrosTributarios, proveedores, ordenesCompra, activosLicencias } from '../../js/db.js';
+import { proyectos, horas, gastos, clientes, facturas, profiles, movimientos, parametrosTributarios, proveedores, ordenesCompra, activosLicencias, empleados, remuneraciones } from '../../js/db.js';
 import { supabase } from '../../js/supabase.js';
 import { formatCLP, escHtml, toast } from '../../js/utils.js';
 import { S } from '../../js/state.js';
@@ -12,30 +12,35 @@ import { calcRentabilidad } from './domain/rentabilidad.js';
 import { calcFlujoCaja, calcF29 } from './domain/finanzas.js';
 import { calcOC, ocToGasto, gastoToMovimiento } from './domain/compras.js';
 import { calcDigest } from './domain/digest.js';
+import { costoHora, calcMargenReal, resumenNomina, HORAS_MES } from './domain/nomina.js';
 
 const _i  = (n, s) => (window.icon ? window.icon(n, '', s) : '');
 const _num = (v) => Number(String(v ?? '').replace(/[^\d.-]/g, '')) || 0;
 const _today = () => new Date().toISOString().slice(0, 10);
 const _puedeFinanzas = () => { const p = S.profile || {}; return p.role === 'admin' || ['gerencia', 'finanzas'].includes(p.erp_role); };
+const _puedeNomina   = () => { const p = S.profile || {}; return p.role === 'admin' || ['gerencia', 'finanzas'].includes(p.erp_role); };
+const _tieneErp      = () => { const p = S.profile || {}; return p.role === 'admin' || !!p.erp_role; };
 const _groupBy = (arr, key) => arr.reduce((m, x) => { (m[x[key]] = m[x[key]] || []).push(x); return m; }, {});
 
-const _st = { view: 'cockpit', proyectoId: null, nuevoOpen: false, editOpen: false, tab: 'cockpit', ocLineas: [], provOpen: false, ocOpen: false, actOpen: false };
+const _st = { view: 'cockpit', proyectoId: null, nuevoOpen: false, editOpen: false, tab: 'cockpit', ocLineas: [], provOpen: false, ocOpen: false, actOpen: false, nomPeriodo: null, empOpen: false, empEditId: null, remOpen: false, remEditId: null, _rems: [] };
 
 export async function render() {
   _wire();
   if (_st.view === 'proyecto' && _st.proyectoId) return _renderProyecto(_st.proyectoId);
   // Las pestañas financieras solo existen para finanzas/gerencia/admin (la RLS también las tapa).
-  if (_st.tab !== 'cockpit' && !_puedeFinanzas()) _st.tab = 'cockpit';
+  if (_st.tab !== 'cockpit' && !_puedeFinanzas() && !(_st.tab === 'nomina' && _tieneErp())) _st.tab = 'cockpit';
   if (_st.tab === 'caja')    return _renderCaja();
   if (_st.tab === 'compras') return _renderCompras();
   if (_st.tab === 'equipo')  return _renderEquipo();
+  if (_st.tab === 'nomina')  return _puedeNomina() ? _renderNomina() : _renderMiNomina();
   return _renderCockpit();
 }
 
 function _tabs(active) {
   const t = (id, label) => `<button onclick="window._erp.tab('${id}')" style="padding:9px 16px;border:none;background:none;border-bottom:2px solid ${active === id ? 'var(--primary)' : 'transparent'};color:${active === id ? 'var(--primary)' : 'var(--text3)'};font-weight:600;font-size:13.5px;cursor:pointer">${label}</button>`;
   const fin = _puedeFinanzas();
-  return `<div style="display:flex;gap:4px;flex-wrap:wrap;border-bottom:1px solid var(--border);margin:2px 0 20px">${t('cockpit', 'Centro de Mando')}${fin ? t('caja', 'Caja & Flujo') + t('compras', 'Compras') + t('equipo', 'Equipo & Activos') : ''}</div>`;
+  const nom = _tieneErp();
+  return `<div style="display:flex;gap:4px;flex-wrap:wrap;border-bottom:1px solid var(--border);margin:2px 0 20px">${t('cockpit', 'Centro de Mando')}${fin ? t('caja', 'Caja & Flujo') + t('compras', 'Compras') + t('equipo', 'Equipo & Activos') : ''}${nom ? t('nomina', _puedeNomina() ? 'Nómina' : 'Mi liquidación') : ''}</div>`;
 }
 
 // Digest determinista de trIA (no IA generativa) + "Requiere tu atención".
@@ -500,6 +505,168 @@ async function _renderProyecto(id) {
   </div>`;
 }
 
+// ══════════════ NÓMINA (F4 · confidencial) ══════════════
+async function _renderNomina() {
+  const center = document.getElementById('center');
+  center.innerHTML = `<div class="view-animate">${_head('')}${_tabs('nomina')}<div class="card card-pad" style="text-align:center;color:var(--text3)">Cargando…</div></div>`;
+
+  const periodo = _st.nomPeriodo || _today().slice(0, 7);
+  const [emps, rems, team, proj, allHoras, gas] = await Promise.all([
+    empleados.getAll().catch(() => []),
+    remuneraciones.byPeriodo(periodo).catch(() => []),
+    profiles.listAll().catch(() => []),
+    proyectos.getAll().catch(() => []),
+    horas.getAll().catch(() => []),
+    gastos.getAll().catch(() => []),
+  ]);
+  _st._rems = rems;
+
+  const costoPorProfile = {};
+  emps.forEach(e => { if (e.profileId) costoPorProfile[e.profileId] = costoHora(e); });
+  const empName = Object.fromEntries(emps.map(e => [e.id, e.nombre]));
+  const hByP = _groupBy(allHoras, 'proyectoId');
+  const gByP = _groupBy(gas, 'proyectoId');
+  const tot = resumenNomina(rems);
+  const editEmp = _st.empEditId ? emps.find(e => e.id === _st.empEditId) : null;
+  const editRem = _st.remEditId ? rems.find(r => r.id === _st.remEditId) : null;
+  const margenRows = proj.filter(p => p.estado === 'activo')
+    .map(p => ({ p, m: calcMargenReal(p, hByP[p.id] || [], gByP[p.id] || [], costoPorProfile) }));
+
+  center.innerHTML = `<div class="view-animate">
+    ${_head('')}
+    ${_tabs('nomina')}
+
+    <div class="card card-pad" style="border-left:3px solid var(--primary);margin-bottom:20px">
+      <div style="font-size:12.5px;color:var(--text3)">La nómina es <strong>confidencial</strong> y vive en un almacén aislado (no alcanzable por internet). El ERP <strong>registra el costo</strong>: la liquidación se calcula fuera y se adjunta como PDF. Cada colaborador ve solo su liquidación.</div>
+    </div>
+
+    <div class="section-head"><h2>Equipo · costo-empresa</h2>
+      <button class="btn btn-primary btn-sm" onclick="window._erp.toggleEmp()">+ Persona</button>
+    </div>
+    ${(_st.empOpen || editEmp) ? _formEmpleado(team, editEmp) : ''}
+    <div class="card" style="overflow:hidden">
+      ${emps.length === 0
+        ? `<div class="card-pad" style="color:var(--text3);font-size:13.5px">Sin personas registradas. Agrega al equipo para costear las horas por su costo-empresa real.</div>`
+        : emps.map(e => `<div style="display:flex;align-items:center;gap:12px;padding:11px 16px;border-bottom:1px solid var(--border)">
+            <div style="flex:1;min-width:0">
+              <div style="font-size:13.5px;font-weight:600;color:var(--text)">${escHtml(e.nombre)}${e.activo === false ? ' · inactivo' : ''}</div>
+              <div style="font-size:12px;color:var(--text3)">${escHtml(e.cargo || 'Sin cargo')}${e.profileId ? '' : ' · sin usuario CRM'}</div>
+            </div>
+            <div style="text-align:right">
+              <div style="font-size:13px;font-weight:700">${formatCLP(e.costoEmpresaBase)}/mes</div>
+              <div style="font-size:11px;color:var(--text3)">≈ ${formatCLP(Math.round(costoHora(e)))}/h</div>
+            </div>
+            <button class="btn btn-ghost btn-sm" onclick="window._erp.editEmp('${e.id}')">Editar</button>
+          </div>`).join('')}
+    </div>
+
+    <div class="section-head" style="margin-top:24px"><h2>Libro de remuneraciones</h2>
+      <input type="month" value="${periodo}" onchange="window._erp.setNomPeriodo(this.value)" style="padding:7px 10px;border:1px solid var(--border);border-radius:8px;background:var(--surface);color:var(--text);font-size:13px">
+    </div>
+    <div class="kpi-grid" style="margin-bottom:12px">
+      ${_kpi('Imponible', formatCLP(tot.imponible), tot.n + ' liquidaciones', 'coins', 'var(--primary)', 'var(--primary-l)')}
+      ${_kpi('Líquido pagado', formatCLP(tot.liquido), 'del período', 'coins', 'var(--green)', 'var(--green-l)')}
+      ${_kpi('Costo-empresa', formatCLP(tot.costoEmpresa), 'costo total del equipo', 'coins', 'var(--violet)', 'var(--violet-l)')}
+    </div>
+    <div class="section-head" style="margin-top:2px"><span class="text-muted" style="font-size:13px">Período ${periodo}</span>
+      <button class="btn btn-primary btn-sm" onclick="window._erp.toggleRem()">+ Remuneración</button>
+    </div>
+    ${(_st.remOpen || editRem) ? _formRemuneracion(emps, periodo, editRem) : ''}
+    <div class="card" style="overflow:hidden">
+      ${rems.length === 0
+        ? `<div class="card-pad" style="color:var(--text3);font-size:13.5px">Sin remuneraciones cargadas para ${periodo}.</div>`
+        : rems.map(r => `<div style="display:flex;align-items:center;gap:12px;padding:11px 16px;border-bottom:1px solid var(--border)">
+            <div style="flex:1;min-width:0;font-size:13.5px;font-weight:600;color:var(--text)">${escHtml(r.empleadoNombre || empName[r.empleadoId] || '—')}</div>
+            <div style="width:135px;text-align:right;font-size:12.5px;color:var(--text3)">imp. ${formatCLP(r.imponible)}</div>
+            <div style="width:120px;text-align:right;font-weight:700;font-size:13px">${formatCLP(r.liquido)}</div>
+            ${r.pdfPath ? `<button class="btn btn-ghost btn-sm" onclick="window._erp.verLiq('${r.id}')">Ver PDF</button>` : `<span style="width:74px;font-size:11.5px;color:var(--text3);text-align:center">sin PDF</span>`}
+            <button class="btn btn-ghost btn-sm" onclick="window._erp.editRem('${r.id}')">Editar</button>
+            <button class="btn-icon btn-sm" title="Eliminar" onclick="window._erp.delRem('${r.id}')">${_i('trash', 15)}</button>
+          </div>`).join('')}
+    </div>
+
+    <div class="section-head" style="margin-top:24px"><h2>Margen real por proyecto</h2><span class="text-muted" style="font-size:13px">costo del equipo × horas</span></div>
+    <div class="card" style="overflow:hidden">
+      ${margenRows.length === 0
+        ? `<div class="card-pad" style="color:var(--text3);font-size:13.5px">Sin proyectos activos.</div>`
+        : margenRows.map(({ p, m }) => `<div style="display:flex;align-items:center;gap:12px;padding:11px 16px;border-bottom:1px solid var(--border)">
+            <div style="flex:1;min-width:0">
+              <div style="font-size:13.5px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escHtml(p.nombre || '—')}</div>
+              <div style="font-size:12px;color:var(--text3)">costo equipo ${formatCLP(m.costoHoras)} + gastos ${formatCLP(m.costoGastos)}${m.flags.includes('horas_sin_costo') ? ` · ⚠ ${m.horasSinCosto} h sin costo` : ''}</div>
+            </div>
+            <div style="text-align:right;flex-shrink:0">
+              <div style="font-size:13px;font-weight:700;color:${m.margen >= 0 ? 'var(--green)' : '#B23B3B'}">${formatCLP(m.margen)}${m.margenPct != null ? ` · ${m.margenPct}%` : ''}</div>
+              <div style="font-size:11px;color:var(--text3)">margen real</div>
+            </div>
+          </div>`).join('')}
+    </div>
+    <div style="font-size:12px;color:var(--text3);margin:10px 0 26px">El costo-hora es una aproximación (costo-empresa ÷ ${HORAS_MES} h/mes). El margen «real» usa el costo del equipo — distinto del margen referencial del Centro de Mando, que usa la tarifa manual del proyecto.</div>
+  </div>`;
+}
+
+// Vista mínima para un colaborador: SOLO sus propias liquidaciones (el RPC
+// listar_nomina ya filtra por fila propia; la UI no decide nada de seguridad).
+async function _renderMiNomina() {
+  const center = document.getElementById('center');
+  center.innerHTML = `<div class="view-animate">${_head('')}${_tabs('nomina')}<div class="card card-pad" style="text-align:center;color:var(--text3)">Cargando…</div></div>`;
+  const rems = await remuneraciones.byPeriodo(null).catch(() => []);
+  _st._rems = rems;
+  center.innerHTML = `<div class="view-animate">
+    ${_head('')}
+    ${_tabs('nomina')}
+    <div class="section-head"><h2>Mis liquidaciones</h2></div>
+    <div class="card" style="overflow:hidden">
+      ${rems.length === 0
+        ? `<div class="card-pad" style="color:var(--text3);font-size:13.5px">No tienes liquidaciones cargadas todavía.</div>`
+        : rems.map(r => `<div style="display:flex;align-items:center;gap:12px;padding:12px 16px;border-bottom:1px solid var(--border)">
+            <div style="flex:1;font-size:13.5px;font-weight:600;color:var(--text)">${escHtml(r.periodo)}</div>
+            <div style="width:130px;text-align:right;font-weight:700;font-size:13px">${formatCLP(r.liquido)}</div>
+            ${r.pdfPath ? `<button class="btn btn-ghost btn-sm" onclick="window._erp.verLiq('${r.id}')">Ver PDF</button>` : `<span style="width:74px;font-size:11.5px;color:var(--text3);text-align:center">sin PDF</span>`}
+          </div>`).join('')}
+    </div>
+    <div style="font-size:12px;color:var(--text3);margin:10px 0 26px">Solo tú y el área de finanzas pueden ver tu liquidación.</div>
+  </div>`;
+}
+
+function _formEmpleado(team, e) {
+  const v = e || {};
+  return `<div class="card card-pad" style="margin-bottom:12px;border-left:3px solid var(--primary)">
+    <div style="display:grid;grid-template-columns:1.4fr 1fr 1fr;gap:12px">
+      <div class="form-group" style="margin:0"><label>Nombre *</label><input id="nomEmpNom" type="text" value="${escHtml(v.nombre || '')}" placeholder="Nombre y apellido"></div>
+      <div class="form-group" style="margin:0"><label>Cargo</label><input id="nomEmpCargo" type="text" value="${escHtml(v.cargo || '')}" placeholder="Consultor / Diseñador…"></div>
+      <div class="form-group" style="margin:0"><label>RUT</label><input id="nomEmpRut" type="text" value="${escHtml(v.rut || '')}" placeholder="12.345.678-9"></div>
+      <div class="form-group" style="margin:0"><label>Costo-empresa mensual (CLP)</label><input id="nomEmpCosto" type="number" value="${v.costoEmpresaBase || ''}" placeholder="1800000"></div>
+      <div class="form-group" style="margin:0"><label>Usuario del CRM (para que vea su liquidación)</label><select id="nomEmpProf"><option value="">— sin vincular —</option>${team.map(m => `<option value="${m.id}"${v.profileId === m.id ? ' selected' : ''}>${escHtml(m.nombre)}${m.activo === false ? ' (inactivo)' : ''}</option>`).join('')}</select></div>
+      <div class="form-group" style="margin:0"><label>Cuenta bancaria</label><input id="nomEmpCuenta" type="text" value="${escHtml(v.cuentaBancaria || '')}" placeholder="Banco · N.º de cuenta"></div>
+      <div class="form-group" style="margin:0;grid-column:1/-1"><label>Dirección</label><input id="nomEmpDir" type="text" value="${escHtml(v.direccion || '')}" placeholder="Calle 123, comuna"></div>
+    </div>
+    <div style="display:flex;gap:8px;justify-content:flex-end;align-items:center;margin-top:8px">
+      ${e ? `<label style="display:flex;align-items:center;gap:6px;font-size:12.5px;color:var(--text3);margin-right:auto"><input id="nomEmpActivo" type="checkbox"${v.activo === false ? '' : ' checked'}> activo</label>` : ''}
+      <button class="btn btn-ghost btn-sm" onclick="window._erp.cancelEmp()">Cancelar</button>
+      <button class="btn btn-primary btn-sm" onclick="window._erp.guardarEmp()">${e ? 'Guardar cambios' : 'Agregar persona'}</button>
+    </div>
+  </div>`;
+}
+
+function _formRemuneracion(emps, periodo, r) {
+  const v = r || {};
+  const editing = !!r;
+  return `<div class="card card-pad" style="margin-bottom:12px;border-left:3px solid var(--primary)">
+    <div style="display:grid;grid-template-columns:1.4fr 1fr 1fr 1fr;gap:12px">
+      <div class="form-group" style="margin:0"><label>Persona *</label><select id="nomRemEmp"${editing ? ' disabled' : ''}><option value="">— Selecciona —</option>${emps.filter(e => e.activo !== false || e.id === v.empleadoId).map(e => `<option value="${e.id}"${v.empleadoId === e.id ? ' selected' : ''}>${escHtml(e.nombre)}</option>`).join('')}</select></div>
+      <div class="form-group" style="margin:0"><label>Período</label><input id="nomRemPer" type="month" value="${v.periodo || periodo}"${editing ? ' disabled' : ''}></div>
+      <div class="form-group" style="margin:0"><label>Imponible (CLP)</label><input id="nomRemImp" type="number" value="${v.imponible || ''}" placeholder="1200000"></div>
+      <div class="form-group" style="margin:0"><label>Líquido (CLP)</label><input id="nomRemLiq" type="number" value="${v.liquido || ''}" placeholder="950000"></div>
+      <div class="form-group" style="margin:0"><label>Costo-empresa (CLP)</label><input id="nomRemCosto" type="number" value="${v.costoEmpresa || ''}" placeholder="1500000"></div>
+      <div class="form-group" style="margin:0;grid-column:2/-1"><label>PDF de liquidación${editing && v.pdfPath ? ' (reemplaza el actual)' : ' (opcional)'}</label><input id="nomRemFile" type="file" accept="application/pdf"></div>
+    </div>
+    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:8px">
+      <button class="btn btn-ghost btn-sm" onclick="window._erp.toggleRem()">Cancelar</button>
+      <button class="btn btn-primary btn-sm" onclick="window._erp.guardarRem('${periodo}')">${editing ? 'Guardar cambios' : 'Guardar remuneración'}</button>
+    </div>
+  </div>`;
+}
+
 // ══════════════ HANDLERS (window._erp) ══════════════
 function _wire() {
   window._erp = {
@@ -678,6 +845,84 @@ function _wire() {
         else    await parametrosTributarios.add(payload);
         toast('Parámetros guardados', 'success'); render();
       } catch (err) { console.error(err); toast('No se pudieron guardar los parámetros', 'error'); }
+    },
+    // ── Nómina (F4) ──
+    toggleEmp:    () => { _st.empOpen = !_st.empOpen; _st.empEditId = null; render(); },
+    editEmp:      (id) => { _st.empEditId = id; _st.empOpen = false; render(); },
+    cancelEmp:    () => { _st.empOpen = false; _st.empEditId = null; render(); },
+    setNomPeriodo: (v) => { _st.nomPeriodo = v || null; render(); },
+    toggleRem:    () => { _st.remOpen = !_st.remOpen; _st.remEditId = null; render(); },
+    editRem:      (id) => { _st.remEditId = id; _st.remOpen = true; render(); },
+    guardarEmp: async () => {
+      const nombre = document.getElementById('nomEmpNom')?.value.trim();
+      if (!nombre) { toast('Ponle el nombre a la persona', 'error'); return; }
+      const chk = document.getElementById('nomEmpActivo');
+      try {
+        await empleados.save({
+          id:               _st.empEditId || null,
+          nombre,
+          cargo:            document.getElementById('nomEmpCargo')?.value.trim()  || null,
+          rut:              document.getElementById('nomEmpRut')?.value.trim()    || null,
+          costoEmpresaBase: _num(document.getElementById('nomEmpCosto')?.value),
+          profileId:        document.getElementById('nomEmpProf')?.value          || null,
+          cuentaBancaria:   document.getElementById('nomEmpCuenta')?.value.trim() || null,
+          direccion:        document.getElementById('nomEmpDir')?.value.trim()    || null,
+          activo:           chk ? chk.checked : true,
+        });
+        _st.empOpen = false; _st.empEditId = null;
+        toast('Persona guardada', 'success'); render();
+      } catch (err) { console.error(err); toast('No se pudo guardar (¿tienes acceso a nómina?)', 'error'); }
+    },
+    guardarRem: async (periodo) => {
+      const editId = _st.remEditId || null;
+      const prev = editId ? (_st._rems || []).find(x => x.id === editId) : null;
+      const empId = editId ? prev?.empleadoId : document.getElementById('nomRemEmp')?.value;
+      if (!empId) { toast('Elige a la persona', 'error'); return; }
+      const per = editId ? prev?.periodo : (document.getElementById('nomRemPer')?.value || periodo);
+      let uploadedPath = null;
+      try {
+        const file = document.getElementById('nomRemFile')?.files?.[0];
+        if (file) {
+          const isPdf = file.type === 'application/pdf' || /\.pdf$/i.test(file.name || '');
+          if (!isPdf) { toast('La liquidación debe ser un PDF', 'error'); return; }
+          const emps = await empleados.getAll();
+          const emp = emps.find(e => e.id === empId);
+          uploadedPath = await remuneraciones.uploadPdf(file, emp?.profileId || null);
+        }
+        try {
+          await remuneraciones.save({
+            id:           editId,
+            empleadoId:   empId,
+            periodo:      per,
+            imponible:    _num(document.getElementById('nomRemImp')?.value),
+            liquido:      _num(document.getElementById('nomRemLiq')?.value),
+            costoEmpresa: _num(document.getElementById('nomRemCosto')?.value),
+            pdfPath:      uploadedPath,   // sin archivo nuevo → null → el RPC conserva el actual
+          });
+        } catch (saveErr) {
+          if (uploadedPath) await remuneraciones.removePdf(uploadedPath);   // revertir la subida
+          throw saveErr;
+        }
+        if (editId && uploadedPath && prev?.pdfPath && prev.pdfPath !== uploadedPath) {
+          await remuneraciones.removePdf(prev.pdfPath);   // reemplazo: limpiar el PDF anterior
+        }
+        _st.remOpen = false; _st.remEditId = null;
+        toast('Remuneración guardada', 'success'); render();
+      } catch (err) { console.error(err); toast(err?.message || 'No se pudo guardar la remuneración', 'error'); }
+    },
+    verLiq: async (id) => {
+      const r = (_st._rems || []).find(x => x.id === id);
+      if (!r?.pdfPath) { toast('Esta remuneración no tiene PDF', 'error'); return; }
+      try { const url = await remuneraciones.signedUrl(r.pdfPath); window.open(url, '_blank', 'noopener'); }
+      catch (err) { console.error(err); toast('No se pudo abrir la liquidación', 'error'); }
+    },
+    delRem: async (id) => {
+      try {
+        const r = (_st._rems || []).find(x => x.id === id);
+        await remuneraciones.delete(id);
+        if (r?.pdfPath) await remuneraciones.removePdf(r.pdfPath);   // limpiar el PDF (best-effort)
+        toast('Remuneración eliminada', 'success'); render();
+      } catch (err) { console.error(err); toast('No se pudo eliminar', 'error'); }
     },
   };
 }
