@@ -4,12 +4,13 @@
 // si cada proyecto gana plata. La rentabilidad se calcula con el dominio PURO (testeado);
 // los gastos son CONFIDENCIALES (la RLS los tapa a quien no es finanzas). Módulo
 // autocontenido: expone sus handlers en window._erp (patrón del AI Commander / window._aic).
-import { proyectos, horas, gastos, clientes, facturas, profiles, movimientos, parametrosTributarios } from '../../js/db.js';
+import { proyectos, horas, gastos, clientes, facturas, profiles, movimientos, parametrosTributarios, proveedores, ordenesCompra } from '../../js/db.js';
 import { supabase } from '../../js/supabase.js';
 import { formatCLP, escHtml, toast } from '../../js/utils.js';
 import { S } from '../../js/state.js';
 import { calcRentabilidad } from './domain/rentabilidad.js';
 import { calcFlujoCaja, calcF29 } from './domain/finanzas.js';
+import { calcOC, ocToGasto, gastoToMovimiento } from './domain/compras.js';
 
 const _i  = (n, s) => (window.icon ? window.icon(n, '', s) : '');
 const _num = (v) => Number(String(v ?? '').replace(/[^\d.-]/g, '')) || 0;
@@ -17,17 +18,19 @@ const _today = () => new Date().toISOString().slice(0, 10);
 const _puedeFinanzas = () => { const p = S.profile || {}; return p.role === 'admin' || ['gerencia', 'finanzas'].includes(p.erp_role); };
 const _groupBy = (arr, key) => arr.reduce((m, x) => { (m[x[key]] = m[x[key]] || []).push(x); return m; }, {});
 
-const _st = { view: 'cockpit', proyectoId: null, nuevoOpen: false, editOpen: false, tab: 'cockpit' };
+const _st = { view: 'cockpit', proyectoId: null, nuevoOpen: false, editOpen: false, tab: 'cockpit', ocLineas: [], provOpen: false, ocOpen: false };
 
 export async function render() {
   _wire();
   if (_st.view === 'proyecto' && _st.proyectoId) return _renderProyecto(_st.proyectoId);
-  return _st.tab === 'caja' ? _renderCaja() : _renderCockpit();
+  if (_st.tab === 'caja')    return _renderCaja();
+  if (_st.tab === 'compras') return _renderCompras();
+  return _renderCockpit();
 }
 
 function _tabs(active) {
   const t = (id, label) => `<button onclick="window._erp.tab('${id}')" style="padding:9px 16px;border:none;background:none;border-bottom:2px solid ${active === id ? 'var(--primary)' : 'transparent'};color:${active === id ? 'var(--primary)' : 'var(--text3)'};font-weight:600;font-size:13.5px;cursor:pointer">${label}</button>`;
-  return `<div style="display:flex;gap:4px;border-bottom:1px solid var(--border);margin:2px 0 20px">${t('cockpit', 'Centro de Mando')}${t('caja', 'Caja & Flujo')}</div>`;
+  return `<div style="display:flex;gap:4px;border-bottom:1px solid var(--border);margin:2px 0 20px">${t('cockpit', 'Centro de Mando')}${t('caja', 'Caja & Flujo')}${t('compras', 'Compras')}</div>`;
 }
 
 // ══════════════ COCKPIT + CARTERA ══════════════
@@ -210,6 +213,105 @@ async function _renderCaja() {
   </div>`;
 }
 
+// ══════════════ COMPRAS (F3): proveedores + OC → gasto → movimiento ══════════════
+async function _renderCompras() {
+  const center = document.getElementById('center');
+  center.innerHTML = `<div class="view-animate">${_head('')}${_tabs('compras')}<div class="card card-pad" style="text-align:center;color:var(--text3)">Cargando…</div></div>`;
+
+  const [provs, ocs, proj] = await Promise.all([
+    proveedores.getAll().catch(() => []),
+    ordenesCompra.getAll().catch(() => []),
+    proyectos.getAll().catch(() => []),
+  ]);
+  const provName = Object.fromEntries(provs.map(p => [p.id, p.nombre]));
+  const projName = Object.fromEntries(proj.map(p => [p.id, p.nombre]));
+  const tot = calcOC(_st.ocLineas);
+
+  center.innerHTML = `<div class="view-animate">
+    ${_head('')}
+    ${_tabs('compras')}
+
+    <div class="section-head"><h2>Órdenes de compra</h2>
+      <button class="btn btn-primary btn-sm" onclick="window._erp.toggleOC()">+ Nueva OC</button>
+    </div>
+    ${_st.ocOpen ? _formOC(provs, proj, tot) : ''}
+    <div class="card" style="overflow:hidden">
+      ${ocs.length === 0
+        ? `<div class="card-pad" style="color:var(--text3);font-size:13.5px">Sin órdenes de compra. Crea un proveedor y luego una OC.</div>`
+        : ocs.map(o => `<div style="display:flex;align-items:center;gap:12px;padding:12px 16px;border-bottom:1px solid var(--border)">
+            <div style="width:105px;font-size:12.5px;font-weight:600;color:var(--text)">${escHtml(o.correlativo || '—')}</div>
+            <div style="flex:1;min-width:0;font-size:13px;color:var(--text)">${escHtml(provName[o.proveedorId] || 'Sin proveedor')}${o.proyectoId ? ' · ' + escHtml(projName[o.proyectoId] || '') : ''}</div>
+            <span class="badge" style="font-size:10.5px">${escHtml(o.estado)}</span>
+            <div style="width:115px;text-align:right;font-weight:700;font-size:13px">${formatCLP(o.total)}</div>
+            ${o.estado !== 'recepcionada' && o.estado !== 'anulada'
+              ? `<button class="btn btn-ghost btn-sm" title="Recepcionar: genera el gasto imputado al proyecto" onclick="window._erp.recepcionarOC('${o.id}')">Recepcionar</button>`
+              : `<span style="font-size:11.5px;color:var(--green);width:100px;text-align:center">✓ gasto creado</span>`}
+            <button class="btn-icon btn-sm" title="Eliminar" onclick="window._erp.delOC('${o.id}')">${_i('trash', 15)}</button>
+          </div>`).join('')}
+    </div>
+
+    <div class="section-head" style="margin-top:24px"><h2>Proveedores</h2>
+      <button class="btn btn-primary btn-sm" onclick="window._erp.toggleProv()">+ Proveedor</button>
+    </div>
+    ${_st.provOpen ? _formProveedor() : ''}
+    <div class="card" style="overflow:hidden">
+      ${provs.length === 0
+        ? `<div class="card-pad" style="color:var(--text3);font-size:13.5px">Sin proveedores. Crea el primero para poder emitir órdenes de compra.</div>`
+        : provs.map(p => `<div style="display:flex;align-items:center;gap:12px;padding:11px 16px;border-bottom:1px solid var(--border)">
+            <div style="width:105px;font-size:12.5px;color:var(--text3)">${escHtml(p.correlativo || '')}</div>
+            <div style="flex:1;min-width:0;font-size:13.5px;font-weight:600;color:var(--text)">${escHtml(p.nombre)}</div>
+            <div style="font-size:12.5px;color:var(--text3)">${escHtml(p.rut || '')}${p.contacto ? ' · ' + escHtml(p.contacto) : ''}</div>
+            <button class="btn-icon btn-sm" title="Eliminar" onclick="window._erp.delProveedor('${p.id}')">${_i('trash', 15)}</button>
+          </div>`).join('')}
+    </div>
+  </div>`;
+}
+
+function _formProveedor() {
+  return `<div class="card card-pad" style="margin-bottom:12px;border-left:3px solid var(--primary)">
+    <div style="display:grid;grid-template-columns:1.5fr 1fr 1fr auto;gap:12px;align-items:end">
+      <div class="form-group" style="margin:0"><label>Nombre *</label><input id="erpProvNom" type="text" placeholder="Proveedor SpA"></div>
+      <div class="form-group" style="margin:0"><label>RUT</label><input id="erpProvRut" type="text" placeholder="76.123.456-7"></div>
+      <div class="form-group" style="margin:0"><label>Contacto</label><input id="erpProvCont" type="text" placeholder="Nombre / email"></div>
+      <button class="btn btn-primary btn-sm" onclick="window._erp.crearProveedor()">Guardar</button>
+    </div>
+  </div>`;
+}
+
+function _formOC(provs, proj, tot) {
+  return `<div class="card card-pad" style="margin-bottom:12px;border-left:3px solid var(--primary)">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
+      <div class="form-group" style="margin:0"><label>Proveedor</label><select id="erpOcProv"><option value="">— Selecciona —</option>${provs.map(p => `<option value="${p.id}">${escHtml(p.nombre)}</option>`).join('')}</select></div>
+      <div class="form-group" style="margin:0"><label>Imputar a proyecto</label><select id="erpOcProy"><option value="">— Sin proyecto —</option>${proj.map(p => `<option value="${p.id}">${escHtml(p.nombre)}</option>`).join('')}</select></div>
+    </div>
+    <div style="border-top:1px solid var(--border);padding-top:12px">
+      <div style="font-size:12px;color:var(--text3);margin-bottom:8px;font-weight:600;letter-spacing:.04em;text-transform:uppercase">Líneas</div>
+      ${_st.ocLineas.length
+        ? _st.ocLineas.map((l, i) => `<div style="display:flex;align-items:center;gap:10px;padding:6px 0;font-size:13px">
+            <div style="flex:1;min-width:0">${escHtml(l.descripcion || '—')}</div>
+            <div style="width:60px;text-align:right;color:var(--text3)">${l.cantidad} ×</div>
+            <div style="width:110px;text-align:right">${formatCLP(l.precioUnit)}</div>
+            <div style="width:120px;text-align:right;font-weight:600">${formatCLP((Number(l.cantidad) || 0) * (Number(l.precioUnit) || 0))}</div>
+            <button class="btn-icon btn-sm" title="Quitar línea" onclick="window._erp.delLinea(${i})">${_i('trash', 14)}</button>
+          </div>`).join('')
+        : `<div style="font-size:13px;color:var(--text3);padding:4px 0">Agrega al menos una línea.</div>`}
+      <div style="display:grid;grid-template-columns:1fr 90px 140px auto;gap:10px;align-items:end;margin-top:10px">
+        <div class="form-group" style="margin:0"><label>Descripción</label><input id="erpLinDesc" type="text" placeholder="Notebook"></div>
+        <div class="form-group" style="margin:0"><label>Cant.</label><input id="erpLinCant" type="number" value="1"></div>
+        <div class="form-group" style="margin:0"><label>Precio unit.</label><input id="erpLinPrecio" type="number" placeholder="500000"></div>
+        <button class="btn btn-ghost btn-sm" onclick="window._erp.addLinea()">+ Línea</button>
+      </div>
+    </div>
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-top:14px;border-top:1px solid var(--border);padding-top:12px">
+      <div style="font-size:13px;color:var(--text3)">Neto ${formatCLP(tot.neto)} · IVA ${formatCLP(tot.iva)} · <strong style="color:var(--text)">Total ${formatCLP(tot.total)}</strong></div>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-ghost btn-sm" onclick="window._erp.toggleOC()">Cancelar</button>
+        <button class="btn btn-primary btn-sm" onclick="window._erp.crearOC()">Crear OC</button>
+      </div>
+    </div>
+  </div>`;
+}
+
 // ══════════════ DETALLE DE PROYECTO ══════════════
 async function _renderProyecto(id) {
   const center = document.getElementById('center');
@@ -292,6 +394,7 @@ async function _renderProyecto(id) {
             <div style="flex:1;font-size:13px;color:var(--text)">${escHtml(g.categoria || '')}${g.descripcion ? ' · ' + escHtml(g.descripcion) : ''}</div>
             <span class="badge" style="font-size:10.5px">${g.estado || 'pendiente'}</span>
             <div style="width:100px;text-align:right;font-weight:700;font-size:13px">${formatCLP(g.total)}</div>
+            ${g.estado === 'pendiente' ? `<button class="btn btn-ghost btn-sm" title="Registrar el pago: genera un egreso en la caja" onclick="window._erp.pagarGasto('${g.id}')">Pagar</button>` : `<span style="font-size:11.5px;color:var(--green);width:52px;text-align:center">✓ pagado</span>`}
             <button class="btn-icon btn-sm" title="Eliminar" onclick="window._erp.delGasto('${g.id}')">${_i('trash', 15)}</button>
           </div>`).join('')}
     </div>` : ''}
@@ -383,6 +486,66 @@ function _wire() {
       } catch (err) { console.error(err); toast('No se pudo registrar el movimiento', 'error'); }
     },
     delMovimiento: async (id) => { try { await movimientos.delete(id); render(); } catch (err) { console.error(err); toast('No se pudo eliminar', 'error'); } },
+    // ── Compras (F3): proveedores + OC → gasto → movimiento ──
+    toggleProv: () => { _st.provOpen = !_st.provOpen; render(); },
+    toggleOC:   () => { _st.ocOpen = !_st.ocOpen; if (!_st.ocOpen) _st.ocLineas = []; render(); },
+    addLinea: () => {
+      const desc   = document.getElementById('erpLinDesc')?.value.trim();
+      const cant   = _num(document.getElementById('erpLinCant')?.value);
+      const precio = _num(document.getElementById('erpLinPrecio')?.value);
+      if (!desc || !(cant > 0) || !(precio > 0)) { toast('Completa descripción, cantidad y precio', 'error'); return; }
+      _st.ocLineas.push({ descripcion: desc, cantidad: cant, precioUnit: precio });
+      render();
+    },
+    delLinea: (i) => { _st.ocLineas.splice(i, 1); render(); },
+    crearProveedor: async () => {
+      const nombre = document.getElementById('erpProvNom')?.value.trim();
+      if (!nombre) { toast('El proveedor necesita un nombre', 'error'); return; }
+      try {
+        await proveedores.add({
+          nombre,
+          rut:      document.getElementById('erpProvRut')?.value.trim()  || null,
+          contacto: document.getElementById('erpProvCont')?.value.trim() || null,
+        });
+        _st.provOpen = false; toast('Proveedor creado', 'success'); render();
+      } catch (err) { console.error(err); toast('No se pudo crear el proveedor', 'error'); }
+    },
+    delProveedor: async (id) => { try { await proveedores.delete(id); render(); } catch (err) { console.error(err); toast('No se pudo eliminar', 'error'); } },
+    crearOC: async () => {
+      if (!_st.ocLineas.length) { toast('Agrega al menos una línea', 'error'); return; }
+      const t = calcOC(_st.ocLineas);
+      try {
+        await ordenesCompra.add({
+          proveedorId: document.getElementById('erpOcProv')?.value || null,
+          proyectoId:  document.getElementById('erpOcProy')?.value || null,
+          lineas: _st.ocLineas, neto: t.neto, iva: t.iva, total: t.total,
+          estado: 'emitida', fecha: _today(),
+        });
+        _st.ocLineas = []; _st.ocOpen = false;
+        toast('Orden de compra creada', 'success'); render();
+      } catch (err) { console.error(err); toast('No se pudo crear la OC', 'error'); }
+    },
+    delOC: async (id) => { try { await ordenesCompra.delete(id); render(); } catch (err) { console.error(err); toast('No se pudo eliminar', 'error'); } },
+    recepcionarOC: async (id) => {
+      try {
+        const oc = await ordenesCompra.get(id);
+        if (!oc) { toast('OC no encontrada', 'error'); return; }
+        let provNombre = null;
+        if (oc.proveedorId) { const p = await proveedores.get(oc.proveedorId).catch(() => null); provNombre = p?.nombre || null; }
+        const gastoId = await gastos.add(ocToGasto(oc, provNombre, _today()));
+        await ordenesCompra.update({ id, estado: 'recepcionada', gastoId });
+        toast('OC recepcionada — gasto creado', 'success'); render();
+      } catch (err) { console.error(err); toast('No se pudo recepcionar la OC', 'error'); }
+    },
+    pagarGasto: async (id) => {
+      try {
+        const g = await gastos.get(id);
+        if (!g) { toast('Gasto no encontrado', 'error'); return; }
+        await movimientos.add(gastoToMovimiento(g, _today()));
+        await gastos.update({ id, estado: 'pagado' });
+        toast('Pago registrado — egreso en la caja', 'success'); render();
+      } catch (err) { console.error(err); toast('No se pudo registrar el pago', 'error'); }
+    },
     saveParams: async (periodo, id) => {
       const payload = {
         periodo,
