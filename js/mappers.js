@@ -546,3 +546,68 @@ export function gastoToSupa(data) {
     doc_id:      data.docId,
   });
 }
+
+// ─── ERP · MOVIMIENTOS (caja real · confidencial) ─────────────
+const VALID_MOV_TIPO = new Set(['ingreso', 'egreso']);
+export const toMovTipo = (v) => VALID_MOV_TIPO.has((v || '').toString()) ? v : 'ingreso';
+
+export function movimientoFromSupa(row) {
+  if (!row) return null;
+  return {
+    id:            row.id,
+    correlativo:   row.codigo,
+    tipo:          row.tipo,
+    fechaReal:     row.fecha_real,
+    monto:         Number(row.monto) || 0,
+    medio:         row.medio,
+    descripcion:   row.descripcion,
+    proyectoId:    row.proyecto_id,
+    facturaId:     row.factura_id,
+    gastoId:       row.gasto_id,
+    fechaCreacion: row.created_at,
+  };
+}
+
+export function movimientoToSupa(data) {
+  return clean({
+    tipo:        data.tipo !== undefined ? toMovTipo(data.tipo) : undefined,
+    fecha_real:  data.fechaReal,
+    monto:       data.monto,
+    medio:       data.medio,
+    descripcion: data.descripcion,
+    proyecto_id: data.proyectoId,
+    factura_id:  data.facturaId,
+    gasto_id:    data.gastoId,
+  });
+}
+
+// ─── ERP · PARÁMETROS TRIBUTARIOS (UF/UTM/topes · finanzas) ───
+export function paramTribFromSupa(row) {
+  if (!row) return null;
+  return {
+    id:                 row.id,
+    periodo:            row.periodo,
+    uf:                 row.uf,
+    utm:                row.utm,
+    imm:                row.imm,
+    topeImponible:      row.tope_imponible,
+    topeGratificacion:  row.tope_gratificacion,
+    pctPpm:             row.pct_ppm,
+    pctRetencion:       row.pct_retencion,
+    fecha:              row.created_at,
+    fechaActualizacion: row.updated_at,
+  };
+}
+
+export function paramTribToSupa(data) {
+  return clean({
+    periodo:            data.periodo,
+    uf:                 data.uf,
+    utm:                data.utm,
+    imm:                data.imm,
+    tope_imponible:     data.topeImponible,
+    tope_gratificacion: data.topeGratificacion,
+    pct_ppm:            data.pctPpm,
+    pct_retencion:      data.pctRetencion,
+  });
+}
