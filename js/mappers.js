@@ -684,3 +684,30 @@ export function ocToSupa(data) {
     doc_id:        data.docId,
   });
 }
+
+// ─── ERP · ACTIVOS / LICENCIAS (confidencial · finanzas) ──────
+export function activoFromSupa(row) {
+  if (!row) return null;
+  return {
+    id:              row.id,
+    correlativo:     row.codigo,
+    nombre:          row.nombre,
+    tipo:            row.tipo,
+    costoMensual:    Number(row.costo_mensual) || 0,
+    fechaRenovacion: row.fecha_renovacion,
+    estado:          row.estado,
+    notas:           row.notas,
+    fecha:           row.created_at,
+  };
+}
+
+export function activoToSupa(data) {
+  return clean({
+    nombre:           data.nombre,
+    tipo:             data.tipo,
+    costo_mensual:    data.costoMensual,
+    fecha_renovacion: data.fechaRenovacion,
+    estado:           data.estado,
+    notas:            data.notas,
+  });
+}

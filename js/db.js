@@ -20,6 +20,7 @@ import {
   paramTribFromSupa, paramTribToSupa,
   proveedorFromSupa, proveedorToSupa,
   ocFromSupa, ocToSupa,
+  activoFromSupa, activoToSupa,
 } from './mappers.js';
 
 // Reexport para no romper a quien importe isMissingTable desde db.js (módulos
@@ -214,33 +215,35 @@ export const citas = {
 // muestra (CEO, CTO, Gerenta de Finanzas, Diseñadora…). Son cosas distintas.
 function _profileFromRow(p) {
   return {
-    id:     p.id,
-    nombre: p.nombre || p.email || 'Consultor',
-    rol:    p.role || 'Consultor',
-    cargo:  p.cargo || '',
-    area:   p.area || '',
-    email:  p.email || '',
+    id:      p.id,
+    nombre:  p.nombre || p.email || 'Consultor',
+    rol:     p.role || 'Consultor',
+    cargo:   p.cargo || '',
+    area:    p.area || '',
+    email:   p.email || '',
+    erpRole: p.erp_role || null,   // capacidad ERP (gerencia/finanzas/operaciones/colaborador)
   };
 }
 export const profiles = {
   // Equipo ACTIVO (pickers de participantes, avatares). Cacheado.
   getAll: async () => _cachedAll('profiles', async () => {
     const { data, error } = await supabase.from('profiles')
-      .select('id, nombre, email, role, area, activo, cargo').order('nombre');
+      .select('id, nombre, email, role, area, activo, cargo, erp_role').order('nombre');
     _throw(error);
     return data.filter(p => p.activo !== false).map(_profileFromRow);
   }),
   // Todo el equipo (incluye inactivos) para el editor de Configuración (admin).
   listAll: async () => {
     const { data, error } = await supabase.from('profiles')
-      .select('id, nombre, email, role, area, activo, cargo').order('nombre');
+      .select('id, nombre, email, role, area, activo, cargo, erp_role').order('nombre');
     _throw(error);
     return data.map(p => ({ ..._profileFromRow(p), activo: p.activo !== false }));
   },
   // Editar nombre/cargo/area/activo. RLS: solo admin puede tocar a otros; el
   // trigger guard_profile_privesc bloquea cambios de role/org/activo a no-admin.
-  update: async ({ id, nombre, cargo, area, activo }) => {
-    const patch = clean({ nombre, cargo, area, activo });
+  update: async ({ id, nombre, cargo, area, activo, erpRole }) => {
+    // erp_role: solo un admin puede cambiarlo (lo impone guard_profile_privesc).
+    const patch = clean({ nombre, cargo, area, activo, erp_role: erpRole });
     const { error } = await supabase.from('profiles').update(patch).eq('id', id);
     _throw(error); _invalidate('profiles');
   },
@@ -587,6 +590,28 @@ export const ordenesCompra = {
   delete: async (id) => {
     const { error } = await supabase.from('ordenes_compra').delete().eq('id', id);
     _throw(error); _invalidate('ordenes_compra');
+  },
+};
+
+// ─── ERP · ACTIVOS / LICENCIAS (CONFIDENCIAL, RLS finanzas) ──
+// Requiere supabase/erp_f5.sql. Tracker de SaaS/licencias y su costo mensual.
+export const activosLicencias = {
+  getAll: async () => _cachedAll('activos_licencias', async () => {
+    const { data, error } = await supabase.from('activos_licencias').select('*').order('nombre', { ascending: true });
+    _throw(error); return data.map(activoFromSupa);
+  }),
+  add: async (data) => {
+    const { data: row, error } = await supabase.from('activos_licencias').insert(activoToSupa(data)).select('id').single();
+    _throw(error); _invalidate('activos_licencias'); return row.id;
+  },
+  update: async (data) => {
+    const { id, ...rest } = data;
+    const { error } = await supabase.from('activos_licencias').update(activoToSupa(rest)).eq('id', id);
+    _throw(error); _invalidate('activos_licencias');
+  },
+  delete: async (id) => {
+    const { error } = await supabase.from('activos_licencias').delete().eq('id', id);
+    _throw(error); _invalidate('activos_licencias');
   },
 };
 

@@ -155,7 +155,7 @@ export async function renderNav() {
         <span class="brand-tag">Consultoría 360</span>
       </span>
     </a>
-    ${NAV_SECTIONS.filter(sec => sec.id !== 'operacion' || (FEATURES.erp && _profile?.role === 'admin')).map(sec => `
+    ${NAV_SECTIONS.filter(sec => sec.id !== 'operacion' || (FEATURES.erp && (_profile?.role === 'admin' || !!_profile?.erp_role))).map(sec => `
       <div class="nav-section-label">${escHtml(sec.label)}</div>
       ${sec.items.map(i => _navItem(i, badges)).join('')}
     `).join('')}
@@ -197,7 +197,7 @@ async function init() {
   const user = await requireAuth();
   setCurrentUser(user.id);
   try {
-    const { data } = await supabase.from('profiles').select('nombre, role, area').eq('id', user.id).single();
+    const { data } = await supabase.from('profiles').select('nombre, role, area, erp_role').eq('id', user.id).single();
     if (data) data.area = AREA_FROM_DB[data.area] || data.area; // slug DB → label UI
     _profile = data;
     S.profile = data;

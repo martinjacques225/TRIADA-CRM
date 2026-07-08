@@ -4,13 +4,14 @@
 // si cada proyecto gana plata. La rentabilidad se calcula con el dominio PURO (testeado);
 // los gastos son CONFIDENCIALES (la RLS los tapa a quien no es finanzas). Módulo
 // autocontenido: expone sus handlers en window._erp (patrón del AI Commander / window._aic).
-import { proyectos, horas, gastos, clientes, facturas, profiles, movimientos, parametrosTributarios, proveedores, ordenesCompra } from '../../js/db.js';
+import { proyectos, horas, gastos, clientes, facturas, profiles, movimientos, parametrosTributarios, proveedores, ordenesCompra, activosLicencias } from '../../js/db.js';
 import { supabase } from '../../js/supabase.js';
 import { formatCLP, escHtml, toast } from '../../js/utils.js';
 import { S } from '../../js/state.js';
 import { calcRentabilidad } from './domain/rentabilidad.js';
 import { calcFlujoCaja, calcF29 } from './domain/finanzas.js';
 import { calcOC, ocToGasto, gastoToMovimiento } from './domain/compras.js';
+import { calcDigest } from './domain/digest.js';
 
 const _i  = (n, s) => (window.icon ? window.icon(n, '', s) : '');
 const _num = (v) => Number(String(v ?? '').replace(/[^\d.-]/g, '')) || 0;
@@ -18,19 +19,44 @@ const _today = () => new Date().toISOString().slice(0, 10);
 const _puedeFinanzas = () => { const p = S.profile || {}; return p.role === 'admin' || ['gerencia', 'finanzas'].includes(p.erp_role); };
 const _groupBy = (arr, key) => arr.reduce((m, x) => { (m[x[key]] = m[x[key]] || []).push(x); return m; }, {});
 
-const _st = { view: 'cockpit', proyectoId: null, nuevoOpen: false, editOpen: false, tab: 'cockpit', ocLineas: [], provOpen: false, ocOpen: false };
+const _st = { view: 'cockpit', proyectoId: null, nuevoOpen: false, editOpen: false, tab: 'cockpit', ocLineas: [], provOpen: false, ocOpen: false, actOpen: false };
 
 export async function render() {
   _wire();
   if (_st.view === 'proyecto' && _st.proyectoId) return _renderProyecto(_st.proyectoId);
+  // Las pestañas financieras solo existen para finanzas/gerencia/admin (la RLS también las tapa).
+  if (_st.tab !== 'cockpit' && !_puedeFinanzas()) _st.tab = 'cockpit';
   if (_st.tab === 'caja')    return _renderCaja();
   if (_st.tab === 'compras') return _renderCompras();
+  if (_st.tab === 'equipo')  return _renderEquipo();
   return _renderCockpit();
 }
 
 function _tabs(active) {
   const t = (id, label) => `<button onclick="window._erp.tab('${id}')" style="padding:9px 16px;border:none;background:none;border-bottom:2px solid ${active === id ? 'var(--primary)' : 'transparent'};color:${active === id ? 'var(--primary)' : 'var(--text3)'};font-weight:600;font-size:13.5px;cursor:pointer">${label}</button>`;
-  return `<div style="display:flex;gap:4px;border-bottom:1px solid var(--border);margin:2px 0 20px">${t('cockpit', 'Centro de Mando')}${t('caja', 'Caja & Flujo')}${t('compras', 'Compras')}</div>`;
+  const fin = _puedeFinanzas();
+  return `<div style="display:flex;gap:4px;flex-wrap:wrap;border-bottom:1px solid var(--border);margin:2px 0 20px">${t('cockpit', 'Centro de Mando')}${fin ? t('caja', 'Caja & Flujo') + t('compras', 'Compras') + t('equipo', 'Equipo & Activos') : ''}</div>`;
+}
+
+// Digest determinista de trIA (no IA generativa) + "Requiere tu atención".
+function _digestCard(d) {
+  const col = d.criticos ? '#B23B3B' : 'var(--primary)';
+  const dot = (nivel) => nivel === 'critico' ? '#B23B3B' : nivel === 'aviso' ? 'var(--amber)' : 'var(--text3)';
+  return `<div class="card card-pad" style="border-left:3px solid ${col};margin-bottom:20px">
+    <div style="display:flex;align-items:baseline;gap:9px;flex-wrap:wrap;margin-bottom:7px">
+      <span style="font-size:10.5px;letter-spacing:.13em;text-transform:uppercase;color:var(--primary);font-weight:700">trIA · lectura del día</span>
+      <span style="font-size:10.5px;color:var(--text3)">determinista, sin IA generativa</span>
+    </div>
+    <div style="font-size:15px;font-weight:600;color:var(--text);${d.alerts.length ? 'margin-bottom:12px' : ''}">${escHtml(d.titular)}</div>
+    ${d.alerts.length ? `<div style="display:flex;flex-direction:column;gap:9px">
+      ${d.alerts.map(a => `<div style="display:flex;align-items:center;gap:10px;font-size:13px;flex-wrap:wrap">
+        <span style="width:8px;height:8px;border-radius:50%;background:${dot(a.nivel)};flex-shrink:0"></span>
+        <span style="font-weight:600;color:var(--text)">${escHtml(a.titulo)}</span>
+        <span style="color:var(--text3)">${escHtml(a.detalle)}</span>
+        ${a.monto ? `<span style="margin-left:auto;font-weight:700;color:${a.nivel === 'critico' ? '#B23B3B' : 'var(--text)'}">${formatCLP(a.monto)}</span>` : ''}
+      </div>`).join('')}
+    </div>` : ''}
+  </div>`;
 }
 
 // ══════════════ COCKPIT + CARTERA ══════════════
@@ -39,7 +65,7 @@ async function _renderCockpit() {
   center.innerHTML = `<div class="view-animate">${_head('')}<div class="card card-pad" style="text-align:center;color:var(--text3)">Cargando…</div></div>`;
 
   const finanzas = _puedeFinanzas();
-  const [proj, fac, team, cli, org, gas, allHoras] = await Promise.all([
+  const [proj, fac, team, cli, org, gas, allHoras, acts] = await Promise.all([
     proyectos.getAll().catch(() => []),
     facturas.getAll().catch(() => []),
     profiles.getAll().catch(() => []),
@@ -47,7 +73,9 @@ async function _renderCockpit() {
     supabase.from('org_settings').select('display_name,tenant_tipo').limit(1).then(r => (r.data && r.data[0]) || null).catch(() => null),
     finanzas ? gastos.getAll().catch(() => []) : Promise.resolve([]),
     horas.getAll().catch(() => []),
+    finanzas ? activosLicencias.getAll().catch(() => []) : Promise.resolve([]),
   ]);
+  const dg = calcDigest({ proyectos: proj, facturas: fac, gastos: gas, horas: allHoras, activos: acts }, _today());
 
   const activos   = proj.filter(p => p.estado === 'activo').length;
   const saldo     = (f) => Math.max(0, (Number(f.monto) || 0) - (Number(f.pagado) || 0));
@@ -63,6 +91,7 @@ async function _renderCockpit() {
   center.innerHTML = `<div class="view-animate">
     ${_head(tenantChip)}
     ${_tabs('cockpit')}
+    ${_digestCard(dg)}
     <div class="kpi-grid">
       ${_kpi('Proyectos activos', activos, 'En curso', 'checkCirc', 'var(--primary)', 'var(--primary-l)')}
       ${_kpi('Por cobrar', formatCLP(porCobrar), 'Pendientes / parciales', 'coins', 'var(--amber)', 'var(--amber-l)')}
@@ -312,6 +341,76 @@ function _formOC(provs, proj, tot) {
   </div>`;
 }
 
+// ══════════════ EQUIPO & ACTIVOS (F5) ══════════════
+const ERP_ROLES = [['', '— sin acceso ERP —'], ['gerencia', 'Gerencia'], ['finanzas', 'Finanzas'], ['operaciones', 'Operaciones'], ['colaborador', 'Colaborador']];
+
+async function _renderEquipo() {
+  const center = document.getElementById('center');
+  center.innerHTML = `<div class="view-animate">${_head('')}${_tabs('equipo')}<div class="card card-pad" style="text-align:center;color:var(--text3)">Cargando…</div></div>`;
+
+  const esAdmin = S.profile?.role === 'admin';
+  const [team, acts] = await Promise.all([
+    profiles.listAll().catch(() => []),
+    activosLicencias.getAll().catch(() => []),
+  ]);
+  const vigentes = acts.filter(a => a.estado === 'activo');
+  const totalMensual = vigentes.reduce((s, a) => s + a.costoMensual, 0);
+
+  center.innerHTML = `<div class="view-animate">
+    ${_head('')}
+    ${_tabs('equipo')}
+
+    <div class="section-head"><h2>Equipo & accesos al ERP</h2><span class="text-muted" style="font-size:13px">${esAdmin ? 'Solo un admin puede cambiar accesos' : 'Solo lectura'}</span></div>
+    <div class="card" style="overflow:hidden">
+      ${team.length === 0
+        ? `<div class="card-pad" style="color:var(--text3);font-size:13.5px">Sin miembros.</div>`
+        : team.map(m => `<div style="display:flex;align-items:center;gap:12px;padding:11px 16px;border-bottom:1px solid var(--border)">
+            <div style="width:34px;height:34px;border-radius:50%;background:var(--navy);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12.5px;flex-shrink:0">${escHtml((m.nombre || '?')[0].toUpperCase())}</div>
+            <div style="flex:1;min-width:0">
+              <div style="font-size:13.5px;font-weight:600;color:var(--text)">${escHtml(m.nombre)}</div>
+              <div style="font-size:12px;color:var(--text3)">${escHtml(m.cargo || m.rol || '')}</div>
+            </div>
+            <div style="width:210px">
+              <select ${esAdmin ? `onchange="window._erp.setErpRole('${m.id}', this.value)"` : 'disabled'}>
+                ${ERP_ROLES.map(([v, l]) => `<option value="${v}"${(m.erpRole || '') === v ? ' selected' : ''}>${l}</option>`).join('')}
+              </select>
+            </div>
+          </div>`).join('')}
+    </div>
+    <div style="font-size:12.5px;color:var(--text3);margin:10px 0 26px">Quien tenga un acceso ERP asignado verá la sección «Operación». <strong>Gerencia</strong> y <strong>Finanzas</strong> ven además caja, gastos y compras (lo impone la RLS, no solo la UI).</div>
+
+    <div class="section-head"><h2>Activos & licencias</h2>
+      <button class="btn btn-primary btn-sm" onclick="window._erp.toggleAct()">+ Activo</button>
+    </div>
+    <div class="kpi-grid" style="margin-bottom:12px">
+      ${_kpi('Costo mensual', formatCLP(totalMensual), vigentes.length + ' activos vigentes', 'coins', 'var(--violet)', 'var(--violet-l)')}
+    </div>
+    ${_st.actOpen ? _formActivo() : ''}
+    <div class="card" style="overflow:hidden">
+      ${acts.length === 0
+        ? `<div class="card-pad" style="color:var(--text3);font-size:13.5px">Sin activos. Registra tus SaaS (Supabase, SiteGround, Claude…) para ver el costo mensual y avisos de renovación.</div>`
+        : acts.map(a => `<div style="display:flex;align-items:center;gap:12px;padding:11px 16px;border-bottom:1px solid var(--border)">
+            <div style="flex:1;min-width:0;font-size:13.5px;font-weight:600;color:var(--text)">${escHtml(a.nombre)}</div>
+            <div style="font-size:12.5px;color:var(--text3)">${escHtml(a.tipo || '')}${a.fechaRenovacion ? ' · renueva ' + escHtml((a.fechaRenovacion || '').slice(0, 10)) : ''}</div>
+            <div style="width:130px;text-align:right;font-weight:700;font-size:13px">${formatCLP(a.costoMensual)}/mes</div>
+            <button class="btn-icon btn-sm" title="Eliminar" onclick="window._erp.delActivo('${a.id}')">${_i('trash', 15)}</button>
+          </div>`).join('')}
+    </div>
+  </div>`;
+}
+
+function _formActivo() {
+  return `<div class="card card-pad" style="margin-bottom:12px;border-left:3px solid var(--primary)">
+    <div style="display:grid;grid-template-columns:1.4fr 1fr 1fr 1fr auto;gap:12px;align-items:end">
+      <div class="form-group" style="margin:0"><label>Nombre *</label><input id="erpActNom" type="text" placeholder="Supabase Pro"></div>
+      <div class="form-group" style="margin:0"><label>Tipo</label><input id="erpActTipo" type="text" placeholder="SaaS"></div>
+      <div class="form-group" style="margin:0"><label>Costo mensual (CLP)</label><input id="erpActCosto" type="number" placeholder="24000"></div>
+      <div class="form-group" style="margin:0"><label>Renovación</label><input id="erpActFecha" type="date"></div>
+      <button class="btn btn-primary btn-sm" onclick="window._erp.crearActivo()">Guardar</button>
+    </div>
+  </div>`;
+}
+
 // ══════════════ DETALLE DE PROYECTO ══════════════
 async function _renderProyecto(id) {
   const center = document.getElementById('center');
@@ -537,6 +636,26 @@ function _wire() {
         toast('OC recepcionada — gasto creado', 'success'); render();
       } catch (err) { console.error(err); toast('No se pudo recepcionar la OC', 'error'); }
     },
+    // ── Equipo & Activos (F5) ──
+    setErpRole: async (id, val) => {
+      try { await profiles.update({ id, erpRole: val || null }); toast('Acceso ERP actualizado', 'success'); render(); }
+      catch (err) { console.error(err); toast('No se pudo cambiar el acceso (solo admin)', 'error'); }
+    },
+    toggleAct: () => { _st.actOpen = !_st.actOpen; render(); },
+    crearActivo: async () => {
+      const nombre = document.getElementById('erpActNom')?.value.trim();
+      if (!nombre) { toast('El activo necesita un nombre', 'error'); return; }
+      try {
+        await activosLicencias.add({
+          nombre,
+          tipo:            document.getElementById('erpActTipo')?.value.trim() || null,
+          costoMensual:    _num(document.getElementById('erpActCosto')?.value) || 0,
+          fechaRenovacion: document.getElementById('erpActFecha')?.value || null,
+        });
+        _st.actOpen = false; toast('Activo registrado', 'success'); render();
+      } catch (err) { console.error(err); toast('No se pudo registrar el activo', 'error'); }
+    },
+    delActivo: async (id) => { try { await activosLicencias.delete(id); render(); } catch (err) { console.error(err); toast('No se pudo eliminar', 'error'); } },
     pagarGasto: async (id) => {
       try {
         const g = await gastos.get(id);
