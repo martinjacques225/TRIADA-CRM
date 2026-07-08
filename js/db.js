@@ -16,6 +16,8 @@ import {
   proyectoFromSupa, proyectoToSupa,
   horaFromSupa, horaToSupa,
   gastoFromSupa, gastoToSupa,
+  movimientoFromSupa, movimientoToSupa,
+  paramTribFromSupa, paramTribToSupa,
 } from './mappers.js';
 
 // Reexport para no romper a quien importe isMissingTable desde db.js (módulos
@@ -483,6 +485,50 @@ export const gastos = {
   delete: async (id) => {
     const { error } = await supabase.from('gastos').delete().eq('id', id);
     _throw(error); _invalidate('gastos');
+  },
+};
+
+// ─── ERP · MOVIMIENTOS (caja real · CONFIDENCIAL, RLS finanzas) ──
+// Requiere supabase/erp_f2.sql.
+export const movimientos = {
+  getAll: async () => _cachedAll('movimientos', async () => {
+    const { data, error } = await supabase.from('movimientos').select('*').order('fecha_real', { ascending: false });
+    _throw(error); return data.map(movimientoFromSupa);
+  }),
+  add: async (data) => {
+    const { data: row, error } = await supabase.from('movimientos').insert(movimientoToSupa(data)).select('id').single();
+    _throw(error); _invalidate('movimientos'); return row.id;
+  },
+  update: async (data) => {
+    const { id, ...rest } = data;
+    const { error } = await supabase.from('movimientos').update(movimientoToSupa(rest)).eq('id', id);
+    _throw(error); _invalidate('movimientos');
+  },
+  delete: async (id) => {
+    const { error } = await supabase.from('movimientos').delete().eq('id', id);
+    _throw(error); _invalidate('movimientos');
+  },
+};
+
+// ─── ERP · PARÁMETROS TRIBUTARIOS (UF/UTM/topes · RLS finanzas) ──
+// Requiere supabase/erp_f2.sql. 1 fila por (org, periodo).
+export const parametrosTributarios = {
+  getAll: async () => _cachedAll('parametros_tributarios', async () => {
+    const { data, error } = await supabase.from('parametros_tributarios').select('*').order('periodo', { ascending: false });
+    _throw(error); return data.map(paramTribFromSupa);
+  }),
+  getByPeriodo: async (periodo) => {
+    const { data, error } = await supabase.from('parametros_tributarios').select('*').eq('periodo', periodo).limit(1);
+    _throw(error); return data && data[0] ? paramTribFromSupa(data[0]) : null;
+  },
+  add: async (data) => {
+    const { data: row, error } = await supabase.from('parametros_tributarios').insert(paramTribToSupa(data)).select('id').single();
+    _throw(error); _invalidate('parametros_tributarios'); return row.id;
+  },
+  update: async (data) => {
+    const { id, ...rest } = data;
+    const { error } = await supabase.from('parametros_tributarios').update(paramTribToSupa(rest)).eq('id', id);
+    _throw(error); _invalidate('parametros_tributarios');
   },
 };
 

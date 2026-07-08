@@ -4,11 +4,12 @@
 // si cada proyecto gana plata. La rentabilidad se calcula con el dominio PURO (testeado);
 // los gastos son CONFIDENCIALES (la RLS los tapa a quien no es finanzas). Módulo
 // autocontenido: expone sus handlers en window._erp (patrón del AI Commander / window._aic).
-import { proyectos, horas, gastos, clientes, facturas, profiles } from '../../js/db.js';
+import { proyectos, horas, gastos, clientes, facturas, profiles, movimientos, parametrosTributarios } from '../../js/db.js';
 import { supabase } from '../../js/supabase.js';
 import { formatCLP, escHtml, toast } from '../../js/utils.js';
 import { S } from '../../js/state.js';
 import { calcRentabilidad } from './domain/rentabilidad.js';
+import { calcFlujoCaja, calcF29 } from './domain/finanzas.js';
 
 const _i  = (n, s) => (window.icon ? window.icon(n, '', s) : '');
 const _num = (v) => Number(String(v ?? '').replace(/[^\d.-]/g, '')) || 0;
@@ -16,11 +17,17 @@ const _today = () => new Date().toISOString().slice(0, 10);
 const _puedeFinanzas = () => { const p = S.profile || {}; return p.role === 'admin' || ['gerencia', 'finanzas'].includes(p.erp_role); };
 const _groupBy = (arr, key) => arr.reduce((m, x) => { (m[x[key]] = m[x[key]] || []).push(x); return m; }, {});
 
-const _st = { view: 'cockpit', proyectoId: null, nuevoOpen: false, editOpen: false };
+const _st = { view: 'cockpit', proyectoId: null, nuevoOpen: false, editOpen: false, tab: 'cockpit' };
 
 export async function render() {
   _wire();
-  return _st.view === 'proyecto' && _st.proyectoId ? _renderProyecto(_st.proyectoId) : _renderCockpit();
+  if (_st.view === 'proyecto' && _st.proyectoId) return _renderProyecto(_st.proyectoId);
+  return _st.tab === 'caja' ? _renderCaja() : _renderCockpit();
+}
+
+function _tabs(active) {
+  const t = (id, label) => `<button onclick="window._erp.tab('${id}')" style="padding:9px 16px;border:none;background:none;border-bottom:2px solid ${active === id ? 'var(--primary)' : 'transparent'};color:${active === id ? 'var(--primary)' : 'var(--text3)'};font-weight:600;font-size:13.5px;cursor:pointer">${label}</button>`;
+  return `<div style="display:flex;gap:4px;border-bottom:1px solid var(--border);margin:2px 0 20px">${t('cockpit', 'Centro de Mando')}${t('caja', 'Caja & Flujo')}</div>`;
 }
 
 // ══════════════ COCKPIT + CARTERA ══════════════
@@ -52,6 +59,7 @@ async function _renderCockpit() {
 
   center.innerHTML = `<div class="view-animate">
     ${_head(tenantChip)}
+    ${_tabs('cockpit')}
     <div class="kpi-grid">
       ${_kpi('Proyectos activos', activos, 'En curso', 'checkCirc', 'var(--primary)', 'var(--primary-l)')}
       ${_kpi('Por cobrar', formatCLP(porCobrar), 'Pendientes / parciales', 'coins', 'var(--amber)', 'var(--amber-l)')}
@@ -126,6 +134,79 @@ function _formEconomia(p) {
     <div class="form-group" style="margin:0"><label>Valor acordado / ingreso (CLP)</label><input id="erpEcoMonto" type="number" value="${p.presupuestoMonto ?? ''}" placeholder="1000000"></div>
     <div class="form-group" style="margin:0"><label>Presupuesto de horas</label><input id="erpEcoHoras" type="number" value="${p.presupuestoHoras ?? ''}" placeholder="40"></div>
     <button class="btn btn-primary btn-sm" onclick="window._erp.saveEconomia('${p.id}')">Guardar</button>
+  </div>`;
+}
+
+// ══════════════ CAJA & FLUJO (F2) ══════════════
+async function _renderCaja() {
+  const center = document.getElementById('center');
+  center.innerHTML = `<div class="view-animate">${_head('')}${_tabs('caja')}<div class="card card-pad" style="text-align:center;color:var(--text3)">Cargando…</div></div>`;
+
+  const periodo = _today().slice(0, 7);
+  const [mov, fac, gas, params] = await Promise.all([
+    movimientos.getAll().catch(() => []),
+    facturas.getAll().catch(() => []),
+    gastos.getAll().catch(() => []),
+    parametrosTributarios.getByPeriodo(periodo).catch(() => null),
+  ]);
+
+  const fl  = calcFlujoCaja(mov, fac, gas, _today());
+  const f29 = calcF29(fac, gas, params || {}, periodo);
+  const money = formatCLP;
+
+  center.innerHTML = `<div class="view-animate">
+    ${_head('')}
+    ${_tabs('caja')}
+
+    <div class="kpi-grid">
+      ${_kpi('Saldo en caja', money(fl.saldoCaja), 'Ingresos − egresos reales', 'coins', 'var(--primary)', 'var(--primary-l)')}
+      ${_kpi('Por cobrar', money(fl.porCobrar), fl.vencidoCobrar > 0 ? money(fl.vencidoCobrar) + ' vencido' : 'al día', 'checkCirc', 'var(--green)', 'var(--green-l)')}
+      ${_kpi('Por pagar', money(fl.porPagar), fl.vencidoPagar > 0 ? money(fl.vencidoPagar) + ' vencido' : 'al día', 'coins', '#B23B3B', 'color-mix(in srgb,#B23B3B 15%,var(--surface))')}
+      ${_kpi('Proyección', money(fl.proyeccion), 'caja + cobrar − pagar', 'chart', 'var(--violet)', 'var(--violet-l)')}
+    </div>
+
+    <div class="section-head" style="margin-top:26px"><h2>Borrador F29 · ${periodo}</h2></div>
+    <div class="card card-pad">
+      <div style="display:flex;flex-wrap:wrap;gap:22px;align-items:flex-end">
+        <div><div class="kpi-label">IVA débito (ventas)</div><div class="kpi-value kpi-value-sm">${money(f29.ivaDebito)}</div></div>
+        <div><div class="kpi-label">IVA crédito (gastos)</div><div class="kpi-value kpi-value-sm">${money(f29.ivaCredito)}</div></div>
+        <div><div class="kpi-label">PPM</div><div class="kpi-value kpi-value-sm">${money(f29.ppm)}</div></div>
+        <div style="margin-left:auto;text-align:right"><div class="kpi-label">Total F29 estimado</div><div class="kpi-value">${money(f29.totalF29)}</div></div>
+      </div>
+      <div style="margin-top:12px;font-size:12px;color:var(--text3)">Borrador de apoyo — <strong>no reemplaza a tu contador</strong>. Asume que el monto de la factura incluye IVA.</div>
+      ${f29.flags.includes('sin_ppm') ? `<div style="margin-top:8px;font-size:12.5px;color:#9A6a1a;background:color-mix(in srgb,var(--amber) 12%,var(--surface));border-radius:8px;padding:8px 12px">⚠ Falta el % PPM del período (complétalo abajo para estimar el PPM).</div>` : ''}
+    </div>
+
+    <div class="section-head" style="margin-top:22px"><h2>Parámetros del período</h2><span class="text-muted" style="font-size:13px">${periodo}</span></div>
+    <div class="card card-pad">
+      <div style="display:grid;grid-template-columns:repeat(4,1fr) auto;gap:12px;align-items:end">
+        <div class="form-group" style="margin:0"><label>UF</label><input id="erpPUF" type="number" value="${params?.uf ?? ''}" placeholder="38000"></div>
+        <div class="form-group" style="margin:0"><label>UTM</label><input id="erpPUTM" type="number" value="${params?.utm ?? ''}" placeholder="66000"></div>
+        <div class="form-group" style="margin:0"><label>% PPM</label><input id="erpPPPM" type="number" step="0.1" value="${params?.pctPpm ?? ''}" placeholder="1"></div>
+        <div class="form-group" style="margin:0"><label>% Retención</label><input id="erpPRet" type="number" step="0.1" value="${params?.pctRetencion ?? ''}" placeholder="14.5"></div>
+        <button class="btn btn-primary btn-sm" onclick="window._erp.saveParams('${periodo}','${params?.id || ''}')">Guardar</button>
+      </div>
+    </div>
+
+    <div class="section-head" style="margin-top:22px"><h2>Movimientos de caja</h2></div>
+    <div class="card card-pad" style="margin-bottom:10px">
+      <div style="display:grid;grid-template-columns:120px 1fr 140px auto;gap:10px;align-items:end">
+        <div class="form-group" style="margin:0"><label>Tipo</label><select id="erpMTipo"><option value="ingreso">Ingreso</option><option value="egreso">Egreso</option></select></div>
+        <div class="form-group" style="margin:0"><label>Descripción</label><input id="erpMDesc" type="text" placeholder="Detalle"></div>
+        <div class="form-group" style="margin:0"><label>Monto (CLP)</label><input id="erpMMonto" type="number" placeholder="100000"></div>
+        <button class="btn btn-primary btn-sm" onclick="window._erp.addMovimiento()">+ Movimiento</button>
+      </div>
+    </div>
+    <div class="card" style="overflow:hidden">
+      ${mov.length === 0
+        ? `<div class="card-pad" style="color:var(--text3);font-size:13.5px">Sin movimientos registrados.</div>`
+        : mov.slice(0, 40).map(m => `<div style="display:flex;align-items:center;gap:12px;padding:10px 16px;border-bottom:1px solid var(--border)">
+            <div style="width:74px;font-size:12.5px;color:var(--text3)">${escHtml((m.fechaReal || '').slice(0, 10))}</div>
+            <div style="flex:1;font-size:13px;color:var(--text)">${escHtml(m.descripcion || '')}</div>
+            <div style="width:120px;text-align:right;font-weight:700;font-size:13px;color:${m.tipo === 'ingreso' ? 'var(--green)' : '#B23B3B'}">${m.tipo === 'ingreso' ? '+' : '−'}${money(m.monto)}</div>
+            <button class="btn-icon btn-sm" title="Eliminar" onclick="window._erp.delMovimiento('${m.id}')">${_i('trash', 15)}</button>
+          </div>`).join('')}
+    </div>
   </div>`;
 }
 
@@ -222,6 +303,7 @@ function _wire() {
   window._erp = {
     toggleNuevo: () => { _st.nuevoOpen = !_st.nuevoOpen; render(); },
     toggleEdit:  () => { _st.editOpen = !_st.editOpen; render(); },
+    tab:         (t) => { _st.tab = t; render(); },
     open:  (id) => { _st.view = 'proyecto'; _st.proyectoId = id; _st.editOpen = false; render(); },
     back:  ()   => { _st.view = 'cockpit'; _st.proyectoId = null; _st.editOpen = false; render(); },
     crearProyecto: async () => {
@@ -288,5 +370,32 @@ function _wire() {
     },
     delHora: async (id) => { try { await horas.delete(id); render(); } catch (err) { console.error(err); toast('No se pudo eliminar', 'error'); } },
     delGasto: async (id) => { try { await gastos.delete(id); render(); } catch (err) { console.error(err); toast('No se pudo eliminar', 'error'); } },
+    addMovimiento: async () => {
+      const monto = _num(document.getElementById('erpMMonto')?.value);
+      if (!(monto > 0)) { toast('Indica el monto', 'error'); return; }
+      try {
+        await movimientos.add({
+          tipo:        document.getElementById('erpMTipo')?.value || 'ingreso',
+          descripcion: document.getElementById('erpMDesc')?.value.trim() || null,
+          monto, fechaReal: _today(),
+        });
+        toast('Movimiento registrado', 'success'); render();
+      } catch (err) { console.error(err); toast('No se pudo registrar el movimiento', 'error'); }
+    },
+    delMovimiento: async (id) => { try { await movimientos.delete(id); render(); } catch (err) { console.error(err); toast('No se pudo eliminar', 'error'); } },
+    saveParams: async (periodo, id) => {
+      const payload = {
+        periodo,
+        uf:           _num(document.getElementById('erpPUF')?.value)  || null,
+        utm:          _num(document.getElementById('erpPUTM')?.value) || null,
+        pctPpm:       _num(document.getElementById('erpPPPM')?.value) || null,
+        pctRetencion: _num(document.getElementById('erpPRet')?.value) || null,
+      };
+      try {
+        if (id) await parametrosTributarios.update({ id, ...payload });
+        else    await parametrosTributarios.add(payload);
+        toast('Parámetros guardados', 'success'); render();
+      } catch (err) { console.error(err); toast('No se pudieron guardar los parámetros', 'error'); }
+    },
   };
 }
