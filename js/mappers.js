@@ -711,3 +711,70 @@ export function activoToSupa(data) {
     notas:            data.notas,
   });
 }
+
+// ─── ERP · NÓMINA (F4 · confidencial · schema `erp`, solo por RPC) ────────────
+// Las lecturas vienen de la forma que devuelven los RPC (listar_empleados /
+// listar_nomina), no de la tabla cruda. Las escrituras arman los parámetros
+// posicionales `p_*` del RPC — SIN clean(): los RPC no tienen defaults, hay que
+// mandar todos los argumentos (con null explícito).
+export function empleadoFromSupa(row) {
+  if (!row) return null;
+  return {
+    id:               row.id,
+    correlativo:      row.codigo,
+    nombre:           row.nombre,
+    rut:              row.rut,
+    cargo:            row.cargo,
+    cuentaBancaria:   row.cuenta_bancaria,
+    direccion:        row.direccion,
+    fechaIngreso:     row.fecha_ingreso,
+    costoEmpresaBase: Number(row.costo_empresa_base) || 0,
+    activo:           row.activo,
+    profileId:        row.profile_id,
+  };
+}
+
+export function empleadoToRpc(data) {
+  return {
+    p_id:                 data.id || null,
+    p_nombre:             data.nombre,
+    p_rut:                data.rut || null,
+    p_cargo:              data.cargo || null,
+    p_cuenta_bancaria:    data.cuentaBancaria || null,
+    p_direccion:          data.direccion || null,
+    p_fecha_ingreso:      data.fechaIngreso || null,
+    p_costo_empresa_base: Number(data.costoEmpresaBase) || 0,
+    p_activo:             data.activo == null ? true : !!data.activo,
+    p_profile_id:         data.profileId || null,
+    p_notas:              data.notas || null,
+  };
+}
+
+export function remuneracionFromSupa(row) {
+  if (!row) return null;
+  return {
+    id:             row.id,
+    correlativo:    row.codigo,
+    empleadoId:     row.empleado_id,
+    empleadoNombre: row.empleado_nombre,
+    periodo:        row.periodo,
+    imponible:      Number(row.imponible) || 0,
+    liquido:        Number(row.liquido) || 0,
+    costoEmpresa:   Number(row.costo_empresa) || 0,
+    pdfPath:        row.pdf_path,
+    notas:          row.notas,
+  };
+}
+
+export function remuneracionToRpc(data) {
+  return {
+    p_id:            data.id || null,
+    p_empleado_id:   data.empleadoId,
+    p_periodo:       data.periodo,
+    p_imponible:     Number(data.imponible) || 0,
+    p_liquido:       Number(data.liquido) || 0,
+    p_costo_empresa: Number(data.costoEmpresa) || 0,
+    p_pdf_path:      data.pdfPath || null,
+    p_notas:         data.notas || null,
+  };
+}

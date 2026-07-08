@@ -21,6 +21,8 @@ import {
   proveedorFromSupa, proveedorToSupa,
   ocFromSupa, ocToSupa,
   activoFromSupa, activoToSupa,
+  empleadoFromSupa, empleadoToRpc,
+  remuneracionFromSupa, remuneracionToRpc,
 } from './mappers.js';
 
 // Reexport para no romper a quien importe isMissingTable desde db.js (módulos
@@ -612,6 +614,65 @@ export const activosLicencias = {
   delete: async (id) => {
     const { error } = await supabase.from('activos_licencias').delete().eq('id', id);
     _throw(error); _invalidate('activos_licencias');
+  },
+};
+
+// ─── ERP · NÓMINA (F4 · CONFIDENCIAL — schema `erp` NO expuesto, solo por RPC) ──
+// Las tablas empleados/remuneraciones viven en el schema `erp`, inalcanzable por
+// REST aunque la RLS falle. TODO pasa por RPC `security definer` con guardia
+// can_ver_nomina() (o fila propia) y read-audit REDACTADO (sin monto). Requiere
+// supabase/erp_f4.sql. Estos son los ÚNICOS repos del CRM que llaman a .rpc().
+export const empleados = {
+  getAll: async () => _cachedAll('erp_empleados', async () => {
+    const { data, error } = await supabase.rpc('listar_empleados');
+    _throw(error); return (data || []).map(empleadoFromSupa);
+  }),
+  // Alta o edición (según venga id). Devuelve el id.
+  save: async (data) => {
+    const { data: id, error } = await supabase.rpc('guardar_empleado', empleadoToRpc(data));
+    _throw(error); _invalidate('erp_empleados'); return id;
+  },
+};
+
+export const remuneraciones = {
+  // No se cachea: la lista varía por período y es pequeña (equipo interno).
+  // Un colaborador recibe SOLO su propia liquidación (lo decide el RPC, no la UI).
+  byPeriodo: async (periodo = null) => {
+    const { data, error } = await supabase.rpc('listar_nomina', { p_periodo: periodo });
+    _throw(error); return (data || []).map(remuneracionFromSupa);
+  },
+  save: async (data) => {
+    const { data: id, error } = await supabase.rpc('guardar_remuneracion', remuneracionToRpc(data));
+    _throw(error); return id;
+  },
+  delete: async (id) => {
+    const { error } = await supabase.rpc('eliminar_remuneracion', { p_id: id });
+    _throw(error);
+  },
+  // Sube el PDF de liquidación al bucket privado 'nomina' bajo {org_id}/{uid}/.
+  // `ownerUid` = auth.uid del EMPLEADO dueño (su profile_id) para que él pueda
+  // verla; si no tiene usuario CRM, cae al del cargador (solo nómina la verá).
+  uploadPdf: async (file, ownerUid) => {
+    if (!file) throw new Error('No hay archivo para subir');
+    const orgId = await _getOrgId();
+    const uid = ownerUid || _uid;
+    if (!uid) throw new Error('Sin destinatario para la liquidación');
+    const path = `${orgId}/${uid}/${crypto.randomUUID()}.pdf`;
+    const { error } = await supabase.storage.from('nomina')
+      .upload(path, file, { contentType: file.type || 'application/pdf', upsert: false });
+    _throw(error); return path;
+  },
+  // URL firmada temporal para ver la liquidación (bucket privado). Default 1 hora.
+  signedUrl: async (path, expiresIn = 3600) => {
+    const { data, error } = await supabase.storage.from('nomina').createSignedUrl(path, expiresIn);
+    _throw(error); return data.signedUrl;
+  },
+  // Limpia un PDF del bucket (best-effort). Se usa al eliminar o reemplazar una
+  // liquidación, y para revertir una subida si falla el guardado de la fila.
+  removePdf: async (path) => {
+    if (!path) return;
+    try { await supabase.storage.from('nomina').remove([path]); }
+    catch (err) { console.warn('No se pudo limpiar el PDF de nómina:', err?.message || err); }
   },
 };
 
