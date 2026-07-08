@@ -1,6 +1,6 @@
 # HANDOFF — TRIADA CRM
 > **Documento vivo. Fuente de verdad del estado del proyecto.**
-> Última actualización: **2026-06-30**
+> Última actualización: **2026-07-07**
 
 ---
 
@@ -43,7 +43,22 @@
 
 ---
 
-## 1. Estado actual (al 2026-06-30)
+## 1. Estado actual (al 2026-07-07)
+
+### 🏗️ ERP Tríada — F0·F1·F2·F3·F5 EN VIVO (2026-07-07) · la capa de OPERACIÓN del CRM
+> **INT-1 del Plan Maestro.** El ERP **no es un sistema nuevo**: es un grupo de módulos ("Operación") dentro de ESTE repo y el MISMO proyecto Supabase, detrás del flag `FEATURES.erp` (`js/features.js`).
+> 📄 **Plan maestro del ERP: `PROYECTO CONSULTORIA/ERP-TRIADA-PLAN-CONSTRUCCION.md`** — leer su bloque **«⚡ ESTADO DE CONSTRUCCIÓN»** al retomar; trae el patrón de fase, los rollbacks y el bloqueo de F4.
+>
+> - **Decisión de arquitectura (FIRME, del dueño):** un solo código + un solo Supabase, **multi-tenant**. Tríada = **tenant #1** (`org_settings.tenant_tipo='interno'`); cada cliente futuro = tenant nuevo desde un **template estándar**, moldeable por **configuración** (`org_settings`: branding / terminología / campos custom / módulos on-off). **Guardarraíl: cero lógica hardcodeada por tenant** (nada de `if (org==='triada')`).
+> - **Fases EN VIVO:** **F0** cimientos (`14b9437`) · **F1** Proyectos+Horas+Gastos+**Rentabilidad** (`f5432ce`, fix `8c2f6c3` = editor de tarifa/valor) · **F2** Caja+Flujo+**borrador F29**+parámetros tributarios (`b039b42`) · **F3** Proveedores+OC con **cadena OC→gasto→movimiento** (`cac4f23`) · **F5** Cockpit con **digest determinista de trIA** + «Equipo & Activos» + hardening (`1f942d8`). **⬜ F4 Nómina NO empezada** (bloqueada por el papeleo de Ley 21.719).
+> - **Migraciones Supabase aplicadas** (espejo + rollback en `supabase/`): `erp_f0_core` · `erp_f1_horas_gastos` · `erp_f2_caja_parametros` · `erp_f3_compras` · `erp_f5_hardening_activos`.
+> - **Tablas nuevas:** `org_settings`, `horas`, `gastos`, `movimientos`, `parametros_tributarios`, `proveedores`, `ordenes_compra`, `activos_licencias`. **Extendidas:** `profiles.erp_role`, `proyectos` (+`tipo`/`tarifa`/`presupuesto_*`/`facturable`), `gastos.proveedor_id`. Los `proyectos`/`tareas` del **M5 (AI Commander) se EXTIENDEN, no se clonan** — un objeto, dos vistas.
+> - **Permisos:** columna **aditiva** `profiles.erp_role` (`gerencia`/`finanzas`/`operaciones`/`colaborador`; **NULL = sin acceso ERP**) — **no toca `role`** (admin/consultor). Helpers `is_gerencia()`/`is_finanzas()`/`can_ver_finanzas()`/`can_ver_nomina()` en **`SECURITY INVOKER`** (cero advisor nuevo). **`guard_profile_privesc()` extendido a `erp_role`** (solo un admin lo cambia). El nav «Operación» se abre a `admin` **o** a quien tenga `erp_role` asignado (editor en la pestaña *Equipo & Activos*, admin-only).
+> - **🔒 3 huecos de seguridad hallados y CERRADOS:** (1) la policy `actividad_read_org` dejaba a **cualquier** usuario de la org leer el `payload` del audit **con los montos de `gastos`** → ahora las entidades confidenciales solo las lee `can_ver_finanzas()`; (2) helpers como DEFINER → se hicieron INVOKER; (3) `org_id` nullable → **`NOT NULL`** en las 8 tablas (verificadas 0 huérfanas antes de aplicar).
+> - **Lógica financiera 100% DETERMINISTA** en `modules/erp/domain/` (`rentabilidad.js`, `finanzas.js`, `compras.js`, `digest.js`), **testeada en node**: la IA **nunca** calcula ni recibe PII. El "digest de trIA" del cockpit son **cuentas**, no IA generativa (se rotula como tal).
+> - **Verificado:** `node --check` en cada archivo · **109/109 tests** (`npm test`) · `get_advisors` **sin hallazgos nuevos** tras cada migración · deploy verificado **en vivo** (marcadores presentes en el `.js` que sirve GitHub Pages, por el gotcha de `deploy-pages`) · **F0 y F1 probados logueado por el dueño**.
+> - **⬜ Falta para «ERP v1»:** paridad móvil (`movil/js/screens/erp.js` + tarjeta "Hoy") · QA 3 temas × 2 densidades × ≤900px · export PDF del F29 · (opcional) fork de charts theme-aware.
+> - **⚠️ Rollback de cualquier fase:** `git revert <commit>` + `supabase/erp_fN_rollback.sql`.
 
 ### 🆕 Módulo Financiero trIA (M2 "Lector IA" del Plan Maestro) — análisis financiero SIN API (2026-06-30 cont.)
 > **Flagship de la Ola 1.** Mismo enfoque "dirigir en vez de llamar" de la Mesa de Orquesta, especializado en finanzas. **Construido y verificado en preview (E2E por DOM); falta la mirada logueada del usuario + un F29 real.**
