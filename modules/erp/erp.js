@@ -16,7 +16,7 @@ const _today = () => new Date().toISOString().slice(0, 10);
 const _puedeFinanzas = () => { const p = S.profile || {}; return p.role === 'admin' || ['gerencia', 'finanzas'].includes(p.erp_role); };
 const _groupBy = (arr, key) => arr.reduce((m, x) => { (m[x[key]] = m[x[key]] || []).push(x); return m; }, {});
 
-const _st = { view: 'cockpit', proyectoId: null, nuevoOpen: false };
+const _st = { view: 'cockpit', proyectoId: null, nuevoOpen: false, editOpen: false };
 
 export async function render() {
   _wire();
@@ -120,6 +120,15 @@ function _formNuevo(cli) {
   </div>`;
 }
 
+function _formEconomia(p) {
+  return `<div style="margin-top:14px;border-top:1px solid var(--border);padding-top:14px;display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:12px;align-items:end">
+    <div class="form-group" style="margin:0"><label>Tarifa por hora (CLP)</label><input id="erpEcoTarifa" type="number" value="${p.tarifa ?? ''}" placeholder="20000"></div>
+    <div class="form-group" style="margin:0"><label>Valor acordado / ingreso (CLP)</label><input id="erpEcoMonto" type="number" value="${p.presupuestoMonto ?? ''}" placeholder="1000000"></div>
+    <div class="form-group" style="margin:0"><label>Presupuesto de horas</label><input id="erpEcoHoras" type="number" value="${p.presupuestoHoras ?? ''}" placeholder="40"></div>
+    <button class="btn btn-primary btn-sm" onclick="window._erp.saveEconomia('${p.id}')">Guardar</button>
+  </div>`;
+}
+
 // ══════════════ DETALLE DE PROYECTO ══════════════
 async function _renderProyecto(id) {
   const center = document.getElementById('center');
@@ -148,12 +157,17 @@ async function _renderProyecto(id) {
 
     <!-- Rentabilidad -->
     <div class="card card-pad" style="border-left:3px solid ${margenCol}">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+        <div class="kpi-label" style="font-size:12.5px">Rentabilidad del proyecto</div>
+        <button class="btn btn-ghost btn-sm" onclick="window._erp.toggleEdit()">✎ Editar tarifa / valor</button>
+      </div>
       <div style="display:flex;flex-wrap:wrap;gap:22px;align-items:flex-end">
         <div><div class="kpi-label">Ingreso comprometido</div><div class="kpi-value kpi-value-sm">${formatCLP(r.ingreso)}</div></div>
         <div><div class="kpi-label">Costo (horas + gastos)</div><div class="kpi-value kpi-value-sm">${formatCLP(r.costoTotal)}</div><div class="kpi-sub">${r.totalHoras} h${p.tarifa ? ` × $${Number(p.tarifa).toLocaleString('es-CL')}` : ''} + ${formatCLP(r.costoGastos)} gastos</div></div>
         <div style="margin-left:auto;text-align:right"><div class="kpi-label">Margen</div><div class="kpi-value" style="color:${margenCol}">${formatCLP(r.margen)}</div>${r.margenPct != null ? `<div class="kpi-sub" style="color:${margenCol}">${r.margenPct}%</div>` : ''}</div>
       </div>
-      ${r.flags.length ? `<div style="margin-top:12px;font-size:12.5px;color:#9A6a1a;background:color-mix(in srgb,var(--amber) 12%,var(--surface));border-radius:8px;padding:8px 12px">⚠ Dato faltante: ${r.flags.map(f => f === 'sin_tarifa' ? 'falta la tarifa por hora' : 'falta el valor acordado').join(' · ')}. El margen es referencial hasta completarlo (edítalo en el proyecto).</div>` : ''}
+      ${r.flags.length ? `<div style="margin-top:12px;font-size:12.5px;color:#9A6a1a;background:color-mix(in srgb,var(--amber) 12%,var(--surface));border-radius:8px;padding:8px 12px">⚠ Dato faltante: ${r.flags.map(f => f === 'sin_tarifa' ? 'falta la tarifa por hora' : 'falta el valor acordado (lo que cobras por el proyecto)').join(' · ')}. Toca <strong>«✎ Editar tarifa / valor»</strong> aquí arriba para completarlo — el margen es referencial hasta entonces.</div>` : ''}
+      ${_st.editOpen ? _formEconomia(p) : ''}
     </div>
 
     <!-- Horas -->
@@ -207,8 +221,9 @@ async function _renderProyecto(id) {
 function _wire() {
   window._erp = {
     toggleNuevo: () => { _st.nuevoOpen = !_st.nuevoOpen; render(); },
-    open:  (id) => { _st.view = 'proyecto'; _st.proyectoId = id; render(); },
-    back:  ()   => { _st.view = 'cockpit'; _st.proyectoId = null; render(); },
+    toggleEdit:  () => { _st.editOpen = !_st.editOpen; render(); },
+    open:  (id) => { _st.view = 'proyecto'; _st.proyectoId = id; _st.editOpen = false; render(); },
+    back:  ()   => { _st.view = 'cockpit'; _st.proyectoId = null; _st.editOpen = false; render(); },
     crearProyecto: async () => {
       const nombre = document.getElementById('erpNomP')?.value.trim();
       if (!nombre) { toast('Ponle un nombre al proyecto', 'error'); return; }
@@ -225,6 +240,19 @@ function _wire() {
         toast('Proyecto creado', 'success');
         render();
       } catch (err) { console.error(err); toast('No se pudo crear el proyecto', 'error'); }
+    },
+    saveEconomia: async (id) => {
+      try {
+        await proyectos.update({
+          id,
+          tarifa:           _num(document.getElementById('erpEcoTarifa')?.value) || null,
+          presupuestoMonto: _num(document.getElementById('erpEcoMonto')?.value) || null,
+          presupuestoHoras: _num(document.getElementById('erpEcoHoras')?.value) || null,
+        });
+        _st.editOpen = false;
+        toast('Valores actualizados', 'success');
+        render();
+      } catch (err) { console.error(err); toast('No se pudo actualizar', 'error'); }
     },
     addHora: async (pid) => {
       const h = _num(document.getElementById('erpHHoras')?.value);
