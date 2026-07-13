@@ -90,6 +90,31 @@ export function clearReadCache(table) {
   else { _readCache.clear(); _readInflight.clear(); }
 }
 
+// ─── ACADEMIA · aspirantes/inscripciones/progreso (SOLO LECTURA) ──────────────
+// Tablas public.academia_* con RLS (supabase/academia_f1.sql): un reclutador ve
+// SOLO sus inscripciones; admin/gerencia (is_gerencia) ven toda la org; el resto
+// ve vacío. El RUT NO se lee aquí (vive en schema `academia` fuera de PostgREST;
+// solo por RPC academia_revelar_rut con MFA aal2). Patrón direct-select idéntico a
+// leads; los embeds anidados heredan la misma RLS por tabla. Se pide el MÍNIMO de
+// columnas que la vista realmente muestra (minimización, Ley 21.719).
+export const academia = {
+  modulos: async () => _cachedAll('academia_modulos', async () => {
+    const { data, error } = await supabase.from('academia_modulos')
+      .select('id, code, title, route_code, slides_total').order('code');
+    _throw(error); return data || [];
+  }),
+  inscripciones: async () => _cachedAll('academia_inscripciones', async () => {
+    const { data, error } = await supabase.from('academia_inscripciones').select(`
+        id, status, route_code, enrolled_at, completed_at,
+        aspirante:academia_aspirantes!aspirant_id ( codigo, full_name, personal_email, commune ),
+        reclutador:academia_reclutadores!recruiter_id ( display_name ),
+        programa:academia_programas!program_id ( name ),
+        progreso:academia_progreso_modulos ( max_slide, theory_passed_at )
+      `).order('enrolled_at', { ascending: false });
+    _throw(error); return data || [];
+  }),
+};
+
 // ─── PROSPECTOS → leads ───────────────────────────────────────
 export const prospectos = {
   getAll:   async ()       => _cachedAll('leads', async () => {

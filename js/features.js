@@ -5,4 +5,8 @@
 //      Para apagarla por completo (a todos, incluido admin), poné erp:false.
 export const FEATURES = {
   erp: true,
+  // academia: sección "Formación" (vista read-only de aspirantes de la Academia).
+  // La RLS es la barrera real (un reclutador ve solo lo suyo; admin/erp_role ven
+  // la org; el resto ve lista vacía). Este flag solo muestra/oculta el ítem.
+  academia: true,
 };

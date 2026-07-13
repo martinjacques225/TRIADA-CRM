@@ -41,6 +41,7 @@ import * as ModPresupuestos  from './modules/presupuestos/presupuestos.js';
 import * as ModBiblioteca    from './modules/biblioteca/biblioteca.js';
 import * as ModFinanciero    from './modules/financiero/financiero.js';
 import * as ModErp           from './modules/erp/erp.js';
+import * as ModAcademia      from './modules/academia/academia.js';
 
 import {
   closeModal,
@@ -79,6 +80,9 @@ const NAV_SECTIONS = [
   { id: 'operacion', label: 'Operación', items: [
     { id: 'erp',          icon: _icoErp(),        label: 'Centro de Mando' },
   ]},
+  { id: 'formacion', label: 'Formación', items: [
+    { id: 'academia',     icon: _icoLeads(),      label: 'Academia' },
+  ]},
   { label: 'Desarrollo', items: [
     { id: 'ai-commander', icon: _icoAi(),         label: 'Director de Orquesta' },
   ]},
@@ -115,6 +119,7 @@ async function refreshCenter() {
     financiero:   ModFinanciero.render,
     'ai-commander': ModAiCommander.render,
     erp:          ModErp.render,
+    academia:     ModAcademia.render,
     informes:     ModInformes.render,
     config:       ModConfig.render,
   };
@@ -155,7 +160,7 @@ export async function renderNav() {
         <span class="brand-tag">Consultoría 360</span>
       </span>
     </a>
-    ${NAV_SECTIONS.filter(sec => sec.id !== 'operacion' || (FEATURES.erp && (_profile?.role === 'admin' || !!_profile?.erp_role))).map(sec => `
+    ${NAV_SECTIONS.filter(sec => (sec.id !== 'operacion' || (FEATURES.erp && (_profile?.role === 'admin' || !!_profile?.erp_role))) && (sec.id !== 'formacion' || FEATURES.academia)).map(sec => `
       <div class="nav-section-label">${escHtml(sec.label)}</div>
       ${sec.items.map(i => _navItem(i, badges)).join('')}
     `).join('')}
