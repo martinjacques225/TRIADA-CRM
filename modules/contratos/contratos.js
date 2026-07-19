@@ -84,7 +84,7 @@ function derive(values, tpl) {
   const dk = c.dateInput || 'fecha';
   if (values[dk]) {
     const [y, m, dd] = values[dk].split('-').map(Number);
-    if (y && m && dd) { d.fecha_dia = String(dd); d.fecha_mes = MESES[m - 1] || ''; d.fecha_larga = `${dd} de ${MESES[m - 1] || ''} de ${y}`; }
+    if (y && m && dd) { d.fecha_dia = String(dd); d.fecha_mes = MESES[m - 1] || ''; d.fecha_anio = String(y); d.fecha_larga = `${dd} de ${MESES[m - 1] || ''} de ${y}`; }
   }
   return d;
 }

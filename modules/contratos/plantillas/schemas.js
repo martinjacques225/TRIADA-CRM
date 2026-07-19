@@ -1633,8 +1633,7 @@ export const TEMPLATES = [
       { id: 'documento', titulo: 'Datos del contrato', abierto: true, campos: [
         { k: 'correlativo', label: 'N.º de contrato', type: 'text', prefijo: 'TRD-IMP-', default: '', ph: 'auto al emitir' },
         { k: 'fecha', label: 'Fecha de firma', type: 'date' },
-        { k: 'ciudad', label: 'Ciudad de suscripción', type: 'text', default: 'Talca' },
-        { k: 'comuna', label: 'Comuna (jurisdicción)', type: 'text', default: 'Talca' },
+        { k: 'ciudad', label: 'Ciudad de suscripción (Región del Maule)', type: 'text', default: 'Talca' },
         { k: 'cohorte', label: 'Cohorte', type: 'select', default: '1', opciones: ['1', '2'] },
       ] },
       { id: 'programa', titulo: 'Programa', abierto: true, campos: [
@@ -1645,6 +1644,7 @@ export const TEMPLATES = [
       ] },
       { id: 'avanzado', titulo: 'Cláusulas', abierto: false, campos: [
         { k: 'subsanacion_dias', label: 'Subsanación por incumplimiento (días)', type: 'number', default: '10' },
+        { k: 'portabilidad_dias', label: 'Plazo de portabilidad al término (días)', type: 'number', default: '15' },
       ] },
       { id: 'proveedor', titulo: 'Tríada (representante legal)', abierto: false, campos: [
         { k: 'proveedor_representante_rut', label: 'RUT de Martín Jacques', type: 'rut', default: '19.807.642-2', help: 'Precargado.' },
