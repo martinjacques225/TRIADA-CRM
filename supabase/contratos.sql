@@ -130,9 +130,9 @@ begin
     returning ultimo into n;
   return n;
 end $$;
--- revoke a PUBLIC (no solo anon): PUBLIC hereda EXECUTE por defecto → sin esto el RPC
--- queda expuesto a anon vía /rest/v1/rpc. Luego se concede solo a authenticated.
-revoke all on function public.next_contrato_correlativo(text) from public;
+-- Cerrar a anon: Supabase concede EXECUTE a anon vía default privileges, así que hay que
+-- revocar de anon (y de public). Luego se concede solo a authenticated.
+revoke all on function public.next_contrato_correlativo(text) from anon, public;
 grant execute on function public.next_contrato_correlativo(text) to authenticated;
 
 -- 9) Storage privado: bucket 'contratos' → {org_id}/{uuid}.html
@@ -152,6 +152,22 @@ create policy contratos_stg_insert on storage.objects for insert to authenticate
 drop policy if exists contratos_stg_delete on storage.objects;
 create policy contratos_stg_delete on storage.objects for delete to authenticated
   using (bucket_id = 'contratos' and (storage.foldername(name))[1] = (select public.auth_org_id())::text and (select public.is_admin()));
+
+-- 10) Auditoría de accesos a la PII (Fase 5). El módulo llama a este RPC antes de
+--     abrir/descargar un contrato → registro en actividad (base del Protocolo de Brechas).
+--     SECURITY DEFINER para escribir en actividad (deny-all al cliente); verifica la org.
+create or replace function public.log_contrato_acceso(p_id uuid) returns void
+language plpgsql security definer set search_path = public as $$
+declare v_org uuid := auth_org_id(); v_correlativo text;
+begin
+  if v_org is null then raise exception 'Sin sesión'; end if;
+  select correlativo into v_correlativo from public.contratos where id = p_id and org_id = v_org;
+  if not found then raise exception 'Contrato no encontrado en tu organización'; end if;
+  insert into public.actividad (entidad, entidad_id, accion, usuario, org_id, payload)
+  values ('contratos', p_id, 'descarga', auth.uid(), v_org, jsonb_build_object('correlativo', v_correlativo));
+end $$;
+revoke all on function public.log_contrato_acceso(uuid) from anon, public;
+grant execute on function public.log_contrato_acceso(uuid) to authenticated;
 
 -- ============================================================
 -- Verificación rápida (con la sesión de un usuario de la org):

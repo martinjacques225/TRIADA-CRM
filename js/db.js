@@ -830,6 +830,12 @@ export const contratos = {
     }
     _invalidate('contratos'); return { id: rowId, correlativo, numero };
   },
+  // Registra en actividad el acceso a la PII de un contrato (base del Protocolo de Brechas).
+  // No bloquea la operación si el registro falla; solo avisa en consola.
+  logAcceso: async (id) => {
+    const { error } = await supabase.rpc('log_contrato_acceso', { p_id: id });
+    if (error) console.warn('No se pudo registrar el acceso al contrato:', error.message);
+  },
   // URL firmada temporal del HTML-master (bucket privado). Corta a propósito (15 min).
   signedUrl: async (storagePath, expiresIn = 900) => {
     const { data, error } = await supabase.storage.from('contratos').createSignedUrl(storagePath, expiresIn);

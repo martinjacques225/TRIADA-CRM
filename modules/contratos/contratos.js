@@ -453,6 +453,7 @@ async function doEmit(tpl, btn) {
 // ── Acciones de lista ────────────────────────────────────────────────────────────
 async function _downloadRow(row) {
   const tpl = tplById(row.tipo); if (!tpl) return;
+  contratosDB.logAcceso(row.id); // audita el acceso a la PII (no bloquea)
   const merged = mergeHtml(await loadTemplate(tpl), row.datos || {}, tpl);
   _downloadBlob(merged, `Contrato-${slug(tpl.nombre)}-${slug(row.clienteNombre)}.html`);
   toast('Descargado — pásalo por render.py para el PDF final', 'success');
@@ -461,6 +462,7 @@ async function _downloadRow(row) {
 async function _viewMaster(row) {
   if (!row.storagePath) { toast('Este contrato no tiene archivo asociado', 'error'); return; }
   try {
+    contratosDB.logAcceso(row.id); // audita el acceso a la PII (no bloquea)
     const url = await contratosDB.signedUrl(row.storagePath);
     window.open(url, '_blank', 'noopener');
   } catch (err) { console.error(err); toast('No se pudo abrir el documento', 'error'); }
