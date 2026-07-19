@@ -97,6 +97,10 @@ function mergeHtml(templateHtml, values, tpl) {
     const v = d[el.getAttribute('data-k')];
     if (v != null && String(v).trim() !== '') el.textContent = v;
   });
+  // Interruptor de firma: si está apagado, se quita la firma precargada de Martín.
+  if (String(values.incluir_firma_martin != null ? values.incluir_firma_martin : 'si') !== 'si') {
+    doc.querySelectorAll('.firma-martin').forEach((el) => el.remove());
+  }
   return '<!DOCTYPE html>\n' + doc.documentElement.outerHTML;
 }
 
@@ -243,6 +247,7 @@ async function openEditor(tplId, contract = null) {
   tpl.grupos.forEach((g) => g.campos.forEach((c) => { values[c.k] = c.default != null ? c.default : ''; }));
   values.fecha = todayISO();
   if (contract && contract.datos) Object.assign(values, contract.datos);
+  if (values.incluir_firma_martin == null) values.incluir_firma_martin = 'si'; // firma precargada por defecto
   _state.values = values;
 
   const canSave = _state.persistOk;
@@ -262,6 +267,7 @@ async function openEditor(tplId, contract = null) {
     <div class="ct-editor__body">
       <form class="ct-form" autocomplete="off">
         ${tpl.grupos.map((g) => _grupo(g, values)).join('')}
+        ${_firmaGroup(values)}
         <div class="ct-form__note">${_i('shield', 14)} Los datos se fusionan en tu navegador. ${canSave ? 'Al emitir se asigna folio y se archiva el documento.' : 'Aún no se guardan (falta la migración).'}</div>
       </form>
 
@@ -285,8 +291,29 @@ function _grupo(g, values) {
   </details>`;
 }
 
+// Interruptor global (no es un campo de plantilla): controla si la firma de Martín
+// se incluye en el documento. Va al final del formulario, en su propio grupo.
+const FIRMA_CAMPO = {
+  k: 'incluir_firma_martin', label: 'Incluir mi firma (Martín Jacques)', type: 'toggle',
+  help: 'Predefinido. Desactívalo si quieres el contrato SIN tu firma (para firmarlo a mano).',
+};
+function _firmaGroup(values) {
+  return `<details class="ct-group" open>
+    <summary class="ct-group__sum">Firma<span class="ct-group__chev">${_i('chevD', 16)}</span></summary>
+    <div class="ct-group__body">${_campo(FIRMA_CAMPO, values[FIRMA_CAMPO.k])}</div>
+  </details>`;
+}
+
 function _campo(c, val) {
   const v = val != null ? val : '';
+  if (c.type === 'toggle') {
+    const on = String(v) === 'si';
+    const help = c.help ? `<div class="ct-help">${escHtml(c.help)}</div>` : '';
+    return `<label class="ct-field ct-field--toggle" data-field="${c.k}">
+      <span class="ct-toggle-row"><span class="ct-label">${escHtml(c.label)}</span>
+        <span class="ct-switch"><input type="checkbox" data-k="${c.k}"${on ? ' checked' : ''}><span class="ct-switch__track"><span class="ct-switch__knob"></span></span></span>
+      </span>${help}</label>`;
+  }
   const req = c.required ? '<span class="ct-req" title="Obligatorio">*</span>' : '';
   const help = c.help ? `<div class="ct-help">${escHtml(c.help)}</div>` : '';
   let control;
@@ -315,10 +342,11 @@ function _wireEditor(root, tpl) {
     else if (act === 'emit') doEmit(tpl, btn);
   });
 
+  const readVal = (input) => (input.type === 'checkbox' ? (input.checked ? 'si' : '') : input.value);
   const form = root.querySelector('.ct-form');
   form.addEventListener('input', (e) => {
     const input = e.target.closest('[data-k]'); if (!input) return;
-    _state.values[input.getAttribute('data-k')] = input.value;
+    _state.values[input.getAttribute('data-k')] = readVal(input);
     validateField(input);
     clearTimeout(_debounce);
     _debounce = setTimeout(() => refreshPreview(tpl), 250);
@@ -326,7 +354,7 @@ function _wireEditor(root, tpl) {
   });
   form.addEventListener('change', (e) => {
     const input = e.target.closest('[data-k]'); if (!input) return;
-    _state.values[input.getAttribute('data-k')] = input.value;
+    _state.values[input.getAttribute('data-k')] = readVal(input);
     refreshPreview(tpl);
   });
 

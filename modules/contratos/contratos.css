@@ -90,6 +90,17 @@ select.ct-input { cursor: pointer; }
 .ct-money-calc { display: flex; gap: 12px; flex-wrap: wrap; font-size: 12px; color: var(--text2); margin-top: 2px; }
 .ct-money-calc strong { color: var(--primary); }
 
+/* Interruptor (switch) — p.ej. incluir firma */
+.ct-toggle-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.ct-field--toggle .ct-label { margin: 0; }
+.ct-switch { position: relative; display: inline-flex; flex: 0 0 auto; cursor: pointer; }
+.ct-switch input { position: absolute; opacity: 0; width: 100%; height: 100%; margin: 0; cursor: pointer; z-index: 1; }
+.ct-switch__track { width: 42px; height: 24px; border-radius: 24px; background: var(--surface3); transition: background .15s; display: inline-block; }
+.ct-switch__knob { position: absolute; top: 3px; left: 3px; width: 18px; height: 18px; border-radius: 50%; background: #fff; box-shadow: var(--shadow-sm); transition: transform .15s; }
+.ct-switch input:checked + .ct-switch__track { background: var(--primary); }
+.ct-switch input:checked + .ct-switch__track .ct-switch__knob { transform: translateX(18px); }
+.ct-switch input:focus-visible + .ct-switch__track { outline: 2px solid var(--primary); outline-offset: 2px; }
+
 .ct-field--err .ct-input { border-color: var(--danger); }
 .ct-err { color: var(--danger); font-size: 11.5px; }
 
