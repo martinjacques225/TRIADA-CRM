@@ -1611,4 +1611,44 @@ export const TEMPLATES = [
       }
     ]
   },
+  {
+    id: 'impulsa',
+    nombre: 'Adhesión — Programa Impulsa Pyme',
+    desc: 'Adhesión al programa Impulsa Pyme (6 meses, precio fijo $300.000 neto).',
+    file: 'contrato-impulsa-adhesion.html',
+    prefijo: 'TRD-IMP-',
+    icon: 'rocket',
+    computed: { dateInput: 'fecha', money: null },
+    grupos: [
+      { id: 'cliente', titulo: 'Datos del beneficiario', abierto: true, campos: [
+        { k: 'cliente_razon_social', label: 'Razón social o nombre', type: 'text', required: true, ph: 'Ej: Panadería San José EIRL' },
+        { k: 'cliente_rut', label: 'RUT', type: 'rut', required: true, ph: '76.123.456-7' },
+        { k: 'cliente_giro', label: 'Giro', type: 'text', ph: 'Ej: panadería' },
+        { k: 'cliente_representante', label: 'Representante legal', type: 'text', required: true },
+        { k: 'cliente_representante_rut', label: 'RUT del representante', type: 'rut', required: true },
+        { k: 'cliente_domicilio', label: 'Domicilio', type: 'text' },
+        { k: 'cliente_correo', label: 'Correo', type: 'email' },
+        { k: 'cliente_telefono', label: 'Teléfono', type: 'tel' },
+      ] },
+      { id: 'documento', titulo: 'Datos del contrato', abierto: true, campos: [
+        { k: 'correlativo', label: 'N.º de contrato', type: 'text', prefijo: 'TRD-IMP-', default: '', ph: 'auto al emitir' },
+        { k: 'fecha', label: 'Fecha de firma', type: 'date' },
+        { k: 'ciudad', label: 'Ciudad de suscripción', type: 'text', default: 'Talca' },
+        { k: 'comuna', label: 'Comuna (jurisdicción)', type: 'text', default: 'Talca' },
+        { k: 'cohorte', label: 'Cohorte', type: 'select', default: '1', opciones: ['1', '2'] },
+      ] },
+      { id: 'programa', titulo: 'Programa', abierto: true, campos: [
+        { k: 'fecha_inicio_programa', label: 'Inicio del programa', type: 'text', ph: 'Ej: 1 de agosto de 2026', help: 'Los 6 meses corren desde esta fecha.' },
+        { k: 'dominio_asignado', label: 'Dominio .cl del beneficiario', type: 'text', ph: 'minegocio.cl' },
+        { k: 'medio_pago', label: 'Medio de pago', type: 'text', default: 'transferencia electrónica' },
+        { k: 'plazo_pago_dias', label: 'Plazo de pago (días)', type: 'number', default: '5' },
+      ] },
+      { id: 'avanzado', titulo: 'Cláusulas', abierto: false, campos: [
+        { k: 'subsanacion_dias', label: 'Subsanación por incumplimiento (días)', type: 'number', default: '10' },
+      ] },
+      { id: 'proveedor', titulo: 'Tríada (representante legal)', abierto: false, campos: [
+        { k: 'proveedor_representante_rut', label: 'RUT de Martín Jacques', type: 'rut', default: '19.807.642-2', help: 'Precargado.' },
+      ] },
+    ],
+  },
 ];
