@@ -18,6 +18,7 @@
 import { contratos as contratosDB } from '../../js/db.js';
 import { escHtml, formatDate, toast } from '../../js/utils.js';
 import { S } from '../../js/state.js';
+import { TEMPLATES } from './plantillas/schemas.js';
 
 const _i = (n, s) => (window.icon ? window.icon(n, '', s) : '');
 
@@ -33,75 +34,7 @@ const MESES = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio',
   'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
 
 // ── Registro de plantillas (crecerá a las 9 en fases siguientes) ───────────────
-const TEMPLATES = [
-  {
-    id: 'asesoria',
-    nombre: 'Asesoría y Consultoría',
-    desc: 'Acompañamiento en tecnología, ventas y finanzas. Obligación de medios.',
-    file: 'contrato-asesoria.html',
-    prefijo: 'TRD-ASE-',
-    icon: 'handshake',
-    schema: asesoriaSchema(),
-  },
-];
 const tplById = (id) => TEMPLATES.find((t) => t.id === id);
-
-function asesoriaSchema() {
-  return {
-    grupos: [
-      {
-        id: 'cliente', titulo: 'Datos del cliente', abierto: true,
-        campos: [
-          { k: 'cliente_razon_social', label: 'Razón social o nombre', type: 'text', required: true, ph: 'Ej: Comercial Los Robles SpA' },
-          { k: 'cliente_rut', label: 'RUT', type: 'rut', required: true, ph: '76.123.456-7' },
-          { k: 'cliente_giro', label: 'Giro', type: 'text', ph: 'Ej: comercio al por menor' },
-          { k: 'cliente_representante', label: 'Representante legal', type: 'text', required: true, ph: 'Nombre y apellido' },
-          { k: 'cliente_representante_rut', label: 'RUT del representante', type: 'rut', required: true, ph: '12.345.678-9' },
-          { k: 'cliente_domicilio', label: 'Domicilio', type: 'text', ph: 'Calle, número, comuna' },
-          { k: 'cliente_correo', label: 'Correo', type: 'email', ph: 'correo@empresa.cl' },
-          { k: 'cliente_telefono', label: 'Teléfono', type: 'tel', ph: '+56 9 ...' },
-        ],
-      },
-      {
-        id: 'documento', titulo: 'Datos del contrato', abierto: true,
-        campos: [
-          { k: 'correlativo', label: 'N.º de contrato', type: 'text', prefijo: 'TRD-ASE-', default: '', ph: 'auto al emitir', help: 'Al emitir se asigna automático por tu organización. En borrador puedes dejarlo vacío.' },
-          { k: 'fecha', label: 'Fecha de firma', type: 'date' },
-          { k: 'ciudad', label: 'Ciudad de suscripción', type: 'text', default: 'Talca' },
-          { k: 'comuna', label: 'Comuna (jurisdicción)', type: 'text', default: 'Talca' },
-          { k: 'modalidad', label: 'Modalidad', type: 'select', default: 'por proyecto', opciones: ['por proyecto', 'retainer mensual'] },
-          { k: 'num_reuniones', label: 'N.º de reuniones por período', type: 'number', ph: 'Ej: 4' },
-          { k: 'num_horas', label: 'Horas de dedicación por período', type: 'number', ph: 'Ej: 20' },
-        ],
-      },
-      {
-        id: 'montos', titulo: 'Honorarios', abierto: true,
-        campos: [
-          { k: 'honorarios_neto', label: 'Honorarios netos (CLP)', type: 'money', required: true, help: 'El IVA (19%) y el total se calculan solos.' },
-          { k: 'anticipo_pct', label: 'Anticipo a la firma', type: 'text', default: '50%' },
-          { k: 'pago_modo', label: 'Facturación del retainer', type: 'select', default: 'anticipado', opciones: ['anticipado', 'vencido'] },
-          { k: 'plazo_pago_dias', label: 'Plazo de pago (días)', type: 'number', default: '5' },
-        ],
-      },
-      {
-        id: 'avanzado', titulo: 'Plazos y cláusulas', abierto: false,
-        campos: [
-          { k: 'respuesta_dias', label: 'Respuesta del cliente (días hábiles)', type: 'number', default: '3' },
-          { k: 'confidencialidad_anios', label: 'Confidencialidad (años)', type: 'number', default: '2' },
-          { k: 'no_solicitacion_meses', label: 'No captación de personal (meses)', type: 'number', default: '12' },
-          { k: 'aviso_termino_dias', label: 'Aviso de término (días)', type: 'number', default: '30' },
-          { k: 'subsanacion_dias', label: 'Subsanación por incumplimiento (días)', type: 'number', default: '10' },
-        ],
-      },
-      {
-        id: 'proveedor', titulo: 'Tríada (representante legal)', abierto: false,
-        campos: [
-          { k: 'proveedor_representante_rut', label: 'RUT de Martín Jacques', type: 'rut', default: PROVEEDOR.representante_rut, help: 'Precargado. Firma como representante del Asesor.' },
-        ],
-      },
-    ],
-  };
-}
 
 // ── Estado del módulo ──────────────────────────────────────────────────────────
 const _state = { tplId: null, values: {}, editId: null, editEstado: null, persistOk: true, list: [], tplHtmlCache: {} };
@@ -131,26 +64,35 @@ function slug(s) {
     .replace(/[^a-zA-Z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 40) || 'cliente';
 }
 
-// ── Derivar campos calculados ───────────────────────────────────────────────────
-function derive(values) {
+// ── Derivar campos calculados (según tpl.computed: fecha + montos) ───────────────
+function derive(values, tpl) {
   const d = { proveedor_representante_rut: PROVEEDOR.representante_rut, ...values };
-  const neto = parseMoney(values.honorarios_neto);
-  if (neto > 0) {
-    const iva = Math.round(neto * 0.19);
-    d.honorarios_neto = fmtCLP(neto); d.subtotal_neto = fmtCLP(neto);
-    d.iva_19 = fmtCLP(iva); d.total_pagar = fmtCLP(neto + iva);
-  } else { d.honorarios_neto = d.subtotal_neto = d.iva_19 = d.total_pagar = ''; }
-  if (values.fecha) {
-    const [y, m, dd] = values.fecha.split('-').map(Number);
+  const c = (tpl && tpl.computed) || {};
+  // Montos: del neto base se calcula IVA (19%) y total; mirrorKeys muestran el mismo neto.
+  if (c.money && c.money.baseKey) {
+    const neto = parseMoney(values[c.money.baseKey]);
+    const todos = [c.money.baseKey, ...(c.money.mirrorKeys || []), ...(c.money.ivaKeys || []), ...(c.money.totalKeys || [])];
+    if (neto > 0) {
+      const iva = Math.round(neto * 0.19);
+      d[c.money.baseKey] = fmtCLP(neto);
+      (c.money.mirrorKeys || []).forEach((k) => { d[k] = fmtCLP(neto); });
+      (c.money.ivaKeys || []).forEach((k) => { d[k] = fmtCLP(iva); });
+      (c.money.totalKeys || []).forEach((k) => { d[k] = fmtCLP(neto + iva); });
+    } else { todos.forEach((k) => { d[k] = ''; }); }
+  }
+  // Fecha: del input date salen día / mes / forma larga.
+  const dk = c.dateInput || 'fecha';
+  if (values[dk]) {
+    const [y, m, dd] = values[dk].split('-').map(Number);
     if (y && m && dd) { d.fecha_dia = String(dd); d.fecha_mes = MESES[m - 1] || ''; d.fecha_larga = `${dd} de ${MESES[m - 1] || ''} de ${y}`; }
   }
   return d;
 }
 
 // ── Fusión (textContent = anti-XSS) ─────────────────────────────────────────────
-function mergeHtml(templateHtml, values) {
+function mergeHtml(templateHtml, values, tpl) {
   const doc = new DOMParser().parseFromString(templateHtml, 'text/html');
-  const d = derive(values);
+  const d = derive(values, tpl);
   doc.querySelectorAll('[data-k]').forEach((el) => {
     const v = d[el.getAttribute('data-k')];
     if (v != null && String(v).trim() !== '') el.textContent = v;
@@ -298,7 +240,7 @@ async function openEditor(tplId, contract = null) {
   _state.editEstado = contract ? contract.estado : null;
 
   const values = {};
-  tpl.schema.grupos.forEach((g) => g.campos.forEach((c) => { values[c.k] = c.default != null ? c.default : ''; }));
+  tpl.grupos.forEach((g) => g.campos.forEach((c) => { values[c.k] = c.default != null ? c.default : ''; }));
   values.fecha = todayISO();
   if (contract && contract.datos) Object.assign(values, contract.datos);
   _state.values = values;
@@ -319,7 +261,7 @@ async function openEditor(tplId, contract = null) {
 
     <div class="ct-editor__body">
       <form class="ct-form" autocomplete="off">
-        ${tpl.schema.grupos.map((g) => _grupo(g, values)).join('')}
+        ${tpl.grupos.map((g) => _grupo(g, values)).join('')}
         <div class="ct-form__note">${_i('shield', 14)} Los datos se fusionan en tu navegador. ${canSave ? 'Al emitir se asigna folio y se archiva el documento.' : 'Aún no se guardan (falta la migración).'}</div>
       </form>
 
@@ -380,7 +322,7 @@ function _wireEditor(root, tpl) {
     validateField(input);
     clearTimeout(_debounce);
     _debounce = setTimeout(() => refreshPreview(tpl), 250);
-    updateMoneyCalc(root);
+    updateMoneyCalc(root, tpl);
   });
   form.addEventListener('change', (e) => {
     const input = e.target.closest('[data-k]'); if (!input) return;
@@ -388,7 +330,7 @@ function _wireEditor(root, tpl) {
     refreshPreview(tpl);
   });
 
-  updateMoneyCalc(root);
+  updateMoneyCalc(root, tpl);
   window.addEventListener('resize', () => fitPreview(root));
 }
 
@@ -402,9 +344,10 @@ function validateField(input) {
   }
 }
 
-function updateMoneyCalc(root) {
+function updateMoneyCalc(root, tpl) {
   const box = root.querySelector('[data-calc="montos"]'); if (!box) return;
-  const neto = parseMoney(_state.values.honorarios_neto);
+  const baseKey = tpl && tpl.computed && tpl.computed.money && tpl.computed.money.baseKey;
+  const neto = baseKey ? parseMoney(_state.values[baseKey]) : 0;
   if (neto > 0) {
     const iva = Math.round(neto * 0.19);
     box.innerHTML = `<span>Neto ${fmtCLP(neto)}</span><span>IVA 19% ${fmtCLP(iva)}</span><strong>Total ${fmtCLP(neto + iva)}</strong>`;
@@ -416,7 +359,7 @@ async function refreshPreview(tpl) {
   const frame = document.querySelector('.ct-preview__frame'); if (!frame) return;
   try {
     const html = await loadTemplate(tpl);
-    frame.srcdoc = mergeHtml(html, _state.values);
+    frame.srcdoc = mergeHtml(html, _state.values, tpl);
     frame.onload = () => fitPreview(document.querySelector('.ct-editor'));
   } catch (err) { console.error('Vista previa:', err); toast(err?.message || 'No se pudo cargar la plantilla', 'error'); }
 }
@@ -436,7 +379,7 @@ function fitPreview(root) {
 async function doPrint(tpl) {
   const missing = requiredMissing(tpl);
   if (missing) { toast(`Falta completar: ${missing}`, 'error'); return; }
-  const merged = mergeHtml(await loadTemplate(tpl), _state.values);
+  const merged = mergeHtml(await loadTemplate(tpl), _state.values, tpl);
   const script = `<script>(function(){function go(){try{window.focus();}catch(e){}window.print();}if(document.fonts&&document.fonts.ready){document.fonts.ready.then(function(){setTimeout(go,80);});}else{setTimeout(go,400);}})();<\/script>`;
   const printable = merged.replace('</body>', script + '</body>');
   const ifr = document.createElement('iframe');
@@ -451,7 +394,7 @@ async function doPrint(tpl) {
 }
 
 async function doDownload(tpl) {
-  const merged = mergeHtml(await loadTemplate(tpl), _state.values);
+  const merged = mergeHtml(await loadTemplate(tpl), _state.values, tpl);
   _downloadBlob(merged, `Contrato-Asesoria-${slug(_state.values.cliente_razon_social)}.html`);
   toast('Descargado — pásalo por render.py para el PDF final', 'success');
 }
@@ -466,7 +409,7 @@ function _downloadBlob(html, name) {
 
 function requiredMissing(tpl) {
   const faltan = [];
-  tpl.schema.grupos.forEach((g) => g.campos.forEach((c) => { if (c.required && String(_state.values[c.k] || '').trim() === '') faltan.push(c.label); }));
+  tpl.grupos.forEach((g) => g.campos.forEach((c) => { if (c.required && String(_state.values[c.k] || '').trim() === '') faltan.push(c.label); }));
   return faltan.length ? faltan.slice(0, 3).join(', ') + (faltan.length > 3 ? '…' : '') : null;
 }
 
@@ -497,7 +440,7 @@ async function doEmit(tpl, btn) {
   if (!confirm('Al emitir se asigna un folio y el contrato queda inmutable. ¿Continuar?')) return;
   btn.disabled = true; btn.textContent = 'Emitiendo…';
   try {
-    const masterHtml = mergeHtml(await loadTemplate(tpl), _state.values);
+    const masterHtml = mergeHtml(await loadTemplate(tpl), _state.values, tpl);
     const { correlativo } = await contratosDB.emitir({ ..._meta(tpl), masterHtml });
     toast(`Contrato emitido ✓ — folio ${correlativo}`, 'success');
     await render();
@@ -510,7 +453,7 @@ async function doEmit(tpl, btn) {
 // ── Acciones de lista ────────────────────────────────────────────────────────────
 async function _downloadRow(row) {
   const tpl = tplById(row.tipo); if (!tpl) return;
-  const merged = mergeHtml(await loadTemplate(tpl), row.datos || {});
+  const merged = mergeHtml(await loadTemplate(tpl), row.datos || {}, tpl);
   _downloadBlob(merged, `Contrato-${slug(tpl.nombre)}-${slug(row.clienteNombre)}.html`);
   toast('Descargado — pásalo por render.py para el PDF final', 'success');
 }
