@@ -39,6 +39,7 @@ import * as ModProspectos    from './modules/prospectos/prospectos.js';
 import * as ModClientes      from './modules/clientes/clientes.js';
 import * as ModPresupuestos  from './modules/presupuestos/presupuestos.js';
 import * as ModBiblioteca    from './modules/biblioteca/biblioteca.js';
+import * as ModContratos     from './modules/contratos/contratos.js';
 import * as ModFinanciero    from './modules/financiero/financiero.js';
 import * as ModErp           from './modules/erp/erp.js';
 import * as ModAcademia      from './modules/academia/academia.js';
@@ -74,6 +75,7 @@ const NAV_SECTIONS = [
     { id: 'diagnosticos', icon: _icoDiag(),       label: 'Diagnóstico' },
     { id: 'propuestas',   icon: _icoProp(),       label: 'Propuesta' },
     { id: 'presupuestos', icon: _icoPresup(),     label: 'Presupuesto' },
+    { id: 'contratos',    icon: _icoContrato(),   label: 'Contratos' },
     { id: 'clientes',     icon: _icoClientes(),   label: 'Clientes' },
     { id: 'facturacion',  icon: _icoFactura(),    label: 'Facturación' },
   ]},
@@ -116,6 +118,7 @@ async function refreshCenter() {
     clientes:     ModClientes.render,
     facturacion:  ModFacturacion.render,
     biblioteca:   ModBiblioteca.render,
+    contratos:    ModContratos.render,
     financiero:   ModFinanciero.render,
     'ai-commander': ModAiCommander.render,
     erp:          ModErp.render,
@@ -482,6 +485,7 @@ function _icoPipe()   { return _ln('<rect x="3" y="4" width="5" height="16" rx="
 function _icoDiag()   { return _ln('<path d="M3 12h3l2-5 4 11 2.5-7 1.5 3h5"/>'); }
 function _icoAgenda() { return _ln('<rect x="3" y="4.5" width="18" height="16" rx="2"/><path d="M3 9h18M8 2.5v4M16 2.5v4"/><path d="M8 13h2M14 13h2M8 17h2"/>'); }
 function _icoProp()   { return _ln('<path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/><path d="M9 13h6M9 16.5h4"/>'); }
+function _icoContrato(){ return _ln('<path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/><path d="M8 17.2c1-1.3 1.8-1.3 2.5 0s1.5 1.3 2.5 0 1.8-1.3 2.5 0"/>'); }
 function _icoChart()  { return _ln('<path d="M4 20V4M4 20h16"/><rect x="7" y="11" width="3" height="6"/><rect x="12" y="7" width="3" height="10"/><rect x="17" y="13" width="3" height="4"/>'); }
 function _icoConfig() { return _ln('<path d="M4 6h10M18 6h2M4 12h2M10 12h10M4 18h7M15 18h5"/><circle cx="16" cy="6" r="2"/><circle cx="8" cy="12" r="2"/><circle cx="13" cy="18" r="2"/>'); }
 function _icoFactura(){ return _ln('<path d="M6 2h12v20l-3-2-3 2-3-2-3 2z"/><path d="M9 7h6M9 11h6M9 15h3"/>'); }

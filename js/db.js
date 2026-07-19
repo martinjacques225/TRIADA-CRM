@@ -758,6 +758,95 @@ export const documentos = {
   },
 };
 
+// ─── CONTRATOS (Módulo Contratos · Fase 2) ────────────────────────────────────
+// Guarda los contratos generados. El HTML-master autocontenido (CSS + fuentes
+// embebidas, ya poblado) se archiva en el bucket privado 'contratos'; el PDF final se
+// obtiene pasándolo por render.py (Nivel 2). org_id lo estampa el trigger; el correlativo
+// por (org,tipo) lo asigna el RPC SECURITY DEFINER next_contrato_correlativo. Ver supabase/contratos.sql.
+function contratoFromSupa(r) {
+  return {
+    id: r.id, tipo: r.tipo, numero: r.numero, correlativo: r.correlativo,
+    titulo: r.titulo, estado: r.estado,
+    clienteNombre: r.cliente_nombre, clienteRut: r.cliente_rut,
+    datos: r.datos || {}, storagePath: r.storage_path, masterSha256: r.master_sha256,
+    retenerHasta: r.retener_hasta, creadoPor: r.creado_por,
+    fecha: r.created_at, updatedAt: r.updated_at,
+  };
+}
+async function _sha256Hex(str) {
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
+  return [...new Uint8Array(buf)].map((b) => b.toString(16).padStart(2, '0')).join('');
+}
+function _retenerHasta(anios = 6) {
+  const d = new Date(); d.setFullYear(d.getFullYear() + anios);
+  return d.toISOString().slice(0, 10);
+}
+
+export const contratos = {
+  getAll: async () => _cachedAll('contratos', async () => {
+    const { data, error } = await supabase.from('contratos').select('*').order('created_at', { ascending: false });
+    _throw(error); return data.map(contratoFromSupa);
+  }),
+  // Guarda o actualiza un BORRADOR (editable). No asigna correlativo ni archiva master.
+  saveDraft: async ({ id, tipo, titulo, clienteNombre, clienteRut, datos }) => {
+    const payload = clean({
+      tipo, titulo, cliente_nombre: clienteNombre || null, cliente_rut: clienteRut || null,
+      datos: datos || {}, estado: 'borrador',
+    });
+    if (id) {
+      const { error } = await supabase.from('contratos').update(payload).eq('id', id);
+      _throw(error); _invalidate('contratos'); return id;
+    }
+    const { data, error } = await supabase.from('contratos').insert(payload).select('id').single();
+    _throw(error); _invalidate('contratos'); return data.id;
+  },
+  // EMITE: asigna correlativo (org,tipo), archiva el HTML-master y lo marca 'emitido'
+  // (inmutable de ahí en adelante). Revierte el archivo si la fila falla.
+  emitir: async ({ id, tipo, prefijo, titulo, clienteNombre, clienteRut, datos, masterHtml }) => {
+    if (!masterHtml) throw new Error('Falta el HTML del contrato para emitir');
+    const orgId = await _getOrgId();
+    const { data: numero, error: rerr } = await supabase.rpc('next_contrato_correlativo', { p_tipo: tipo });
+    _throw(rerr);
+    const correlativo = `${prefijo || ''}${String(numero).padStart(4, '0')}`;
+    const path = `${orgId}/${crypto.randomUUID()}.html`;
+    const blob = new Blob([masterHtml], { type: 'text/html;charset=utf-8' });
+    const { error: upErr } = await supabase.storage.from('contratos').upload(path, blob, { contentType: 'text/html', upsert: false });
+    _throw(upErr);
+    const sha = await _sha256Hex(masterHtml);
+    const payload = clean({
+      tipo, correlativo, numero, titulo,
+      cliente_nombre: clienteNombre || null, cliente_rut: clienteRut || null,
+      datos: datos || {}, storage_path: path, master_sha256: sha,
+      estado: 'emitido', retener_hasta: _retenerHasta(6),
+    });
+    let rowId = id;
+    if (id) {
+      const { error } = await supabase.from('contratos').update(payload).eq('id', id);
+      if (error) { try { await supabase.storage.from('contratos').remove([path]); } catch (_) {} _throw(error); }
+    } else {
+      const { data, error } = await supabase.from('contratos').insert(payload).select('id').single();
+      if (error) { try { await supabase.storage.from('contratos').remove([path]); } catch (_) {} _throw(error); }
+      rowId = data.id;
+    }
+    _invalidate('contratos'); return { id: rowId, correlativo, numero };
+  },
+  // URL firmada temporal del HTML-master (bucket privado). Corta a propósito (15 min).
+  signedUrl: async (storagePath, expiresIn = 900) => {
+    const { data, error } = await supabase.storage.from('contratos').createSignedUrl(storagePath, expiresIn);
+    _throw(error); return data.signedUrl;
+  },
+  // Borra un borrador (RLS: solo borradores, autor o admin) y limpia su master si tuviera.
+  remove: async (id, storagePath) => {
+    const { error } = await supabase.from('contratos').delete().eq('id', id);
+    _throw(error);
+    if (storagePath) {
+      try { await supabase.storage.from('contratos').remove([storagePath]); }
+      catch (err) { console.warn('Contrato borrado, pero no se pudo limpiar el master de Storage:', err?.message || err); }
+    }
+    _invalidate('contratos');
+  },
+};
+
 // ─── ANÁLISIS FINANCIEROS (Módulo Financiero trIA · M2 "Lector IA") ───────────
 // Guarda el prompt-director, los adjuntos (bucket privado 'financiero') y el
 // informe parseado. La org_id la auto-estampa el trigger; el path del archivo lo
