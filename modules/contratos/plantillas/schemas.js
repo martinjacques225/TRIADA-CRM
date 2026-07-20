@@ -753,7 +753,7 @@ export const TEMPLATES = [
             "opciones": [
               "Esencial",
               "Crecimiento",
-              "Integral"
+              "Full"
             ],
             "default": "Crecimiento"
           }
@@ -769,7 +769,7 @@ export const TEMPLATES = [
             "label": "Canon mensual (neto)",
             "type": "money",
             "required": true,
-            "help": "Valor neto; el IVA se agrega cuando corresponda. Debe coincidir con el plan (Esencial $59.000 · Crecimiento $129.000 · Integral $249.000)."
+            "help": "Valor neto; el IVA se agrega cuando corresponda. Debe coincidir con el plan (Esencial $120.000 · Crecimiento $200.000 · Full $300.000)."
           },
           {
             "k": "plazo_pago_dias",
@@ -964,7 +964,7 @@ export const TEMPLATES = [
             "opciones": [
               "Esencial",
               "Crecimiento",
-              "Integral"
+              "Full"
             ],
             "default": "Esencial"
           }
@@ -979,7 +979,7 @@ export const TEMPLATES = [
             "k": "canon_mensual",
             "label": "Canon mensual (neto)",
             "type": "money",
-            "help": "Debe coincidir con el plan: Esencial $59.000 · Crecimiento $129.000 · Integral $249.000."
+            "help": "Debe coincidir con el plan: Esencial $120.000 · Crecimiento $200.000 · Full $300.000."
           },
           {
             "k": "plazo_pago_dias",
