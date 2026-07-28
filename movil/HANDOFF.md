@@ -85,7 +85,12 @@ y en preview los mocks `/_preview/mock-{supabase,db}.js` (vía import-map de `pr
   sin dirección no se podía arreglar en terreno, porque "Editar" sigue siendo de una fase próxima.
   Sin API de geocodificación: los mapas resuelven el texto escrito.
 - **🔙 Botón físico "atrás" (Android).** Antes cerraba la app de golpe (la PWA no empujaba entradas al
-  historial). Ahora `app._initBackButton()` mantiene una entrada **colchón** y la repone en cada `popstate`;
+  historial). **⚠️ Ojo con la trampa que costó una segunda vuelta (2026-07-28):** Chrome marca como
+  **saltable** toda entrada empujada **sin gesto del usuario** (anti *back-trap*), así que el colchón del
+  arranque se saltaba y la app se cerraba igual — y **desde la consola no se nota**, porque un
+  `history.back()` programático no aplica esa regla. Por eso el colchón se **re-arma con cada toque**
+  (`pointerdown`/`touchstart`/`keydown`). Verificar esto **en el teléfono**, no en el escritorio.
+  Ahora `app._initBackButton()` mantiene una entrada **colchón** y la repone en cada `popstate`;
   el orden es: **visor a pantalla completa → hoja abierta → pantalla previa → preguntar "¿Salir de la app?"**
   (con la pregunta abierta, otro "atrás" sale, como en Android). `navigate(n, p, {root:true})` corta la pila
   en login y en el Hoy post-login. Verificable en preview con `history.back()`; **el cierre real de la app

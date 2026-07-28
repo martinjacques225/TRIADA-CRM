@@ -91,16 +91,46 @@ const app = {
   // cerraba. Ahora mantenemos SIEMPRE una entrada "colchón" por encima de la de
   // carga: cuando el sistema la consume nos avisa (popstate), la reponemos y
   // decidimos nosotros qué significa "atrás" en ese momento.
+  //
+  // ⚠️ LA TRAMPA (por esto la v1 seguía cerrando la app en el teléfono):
+  // Chrome marca como **saltable** toda entrada empujada SIN un gesto del usuario
+  // — es su intervención anti back-trap, para que una web no te secuestre el botón
+  // atrás al cargar. El colchón que empujábamos en el arranque caía justo ahí: el
+  // botón atrás pasaba de largo y salía igual. (Desde la consola no se nota: un
+  // `history.back()` programático no aplica esa regla.) Solución: el colchón se
+  // **re-arma con cada toque en pantalla**, que sí es un gesto legítimo y produce
+  // una entrada que Chrome respeta.
   _initBackButton() {
-    try { history.pushState({ triada: 'app' }, ''); } catch (_) { return; }
+    this._cushion = false;          // ¿hay colchón por encima?
+    this._cushionTrusted = false;   // ¿lo empujó un gesto real del usuario?
+    this._armCushion();             // intento temprano (vale donde no aplica la regla)
+    const rearm = () => this._armCushion(true);
+    window.addEventListener('pointerdown', rearm, { capture: true, passive: true });
+    window.addEventListener('touchstart', rearm, { capture: true, passive: true });
+    window.addEventListener('keydown', rearm, { capture: true });
     window.addEventListener('popstate', () => this._onHardwareBack());
+  },
+
+  // conGesto=true → viene de un toque real: si el colchón vigente se empujó sin
+  // gesto (y Chrome podría saltárselo), lo tapamos con uno que sí va a respetar.
+  _armCushion(conGesto = false) {
+    if (this._cushion && (this._cushionTrusted || !conGesto)) return;
+    try {
+      history.pushState({ triada: 'app' }, '');
+      this._cushion = true;
+      this._cushionTrusted = conGesto;
+    } catch (_) {}
   },
 
   _onHardwareBack() {
     // El usuario ya confirmó salir: damos el segundo paso atrás y soltamos la app.
     if (this._exiting) { history.back(); return; }
 
-    try { history.pushState({ triada: 'app' }, ''); } catch (_) {}   // repone el colchón
+    // El sistema se comió el colchón: reponerlo al toque (por si llega un segundo
+    // "atrás" sin que medie un toque) y marcarlo como no confiable, para que el
+    // próximo toque en pantalla lo cubra con uno que Chrome no salte.
+    this._cushion = false; this._cushionTrusted = false;
+    this._armCushion();
 
     // 1) Visor a pantalla completa (Informe 360 / Cotización / Informe financiero).
     const viewer = document.querySelector('.informe-viewer');

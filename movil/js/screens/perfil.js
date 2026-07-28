@@ -2,7 +2,7 @@
 // screens/perfil.js — Mi cuenta (sincronizada con el perfil del CRM).
 // Identidad · cuenta · tema (claro/oscuro/matrix) · equipo · cerrar sesión.
 // ============================================================================
-import { db, store, escHtml, initials, memberColor, areaLabel } from '../core.js';
+import { db, store, escHtml, initials, memberColor, areaLabel, APP_VERSION } from '../core.js';
 import { ic, toast, openSheet, closeSheet, supabaseUpdatePassword } from '../ui.js';
 import { pushState, enablePush, disablePush } from '../push.js';
 
@@ -77,6 +77,8 @@ export default {
         <div class="card" style="padding:0;overflow:hidden">${team.length ? team.map((m, i) => teamRow(m, i, i === team.length - 1)).join('') : `<div class="muted" style="padding:16px;font-size:13px;text-align:center">Solo tú por ahora.</div>`}</div>
 
         <button class="btn" id="pfLogout" style="width:100%;margin-top:22px;height:48px;border:1px solid var(--danger);background:var(--surface);color:var(--danger);font-size:14.5px">${ic('logout', { size: 18 })} Cerrar sesión</button>
+
+        <div style="text-align:center;font-size:11px;color:var(--text3);margin-top:16px">Tríada CRM · versión ${e(APP_VERSION)}</div>
       </div>
     </section>`;
   },
