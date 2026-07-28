@@ -99,6 +99,25 @@ y en preview los mocks `/_preview/mock-{supabase,db}.js` (vía import-map de `pr
   y **hundido al tocar** (tarjetas, botones, chips, hojas, pestañas, íconos). Acciones rápidas `.qa`
   unificadas por clase (35 px). **Barrita sobre la pestaña activa** del tab bar.
 
+## 3.ter Sistema visual (pasada de diseño, 2026-07-28)
+
+- **Escala tipográfica: 11 / 12 / 13 / 15 / 17 / 20 / 24 / 30.** Ocho pasos, no 29 tamaños sueltos.
+  Al escribir pantallas nuevas, usar SOLO esos valores. Excepciones a propósito: el logotipo del
+  splash (44px, portada) y los documentos A4 (`informe.js`, `cotizacion.js`, `pdfshare.js`), que
+  tienen su propia geometría verificada — **no aplicarles la escala**.
+- **Contraste:** todo texto informativo pasa 4.5:1. `--text3` (#606C87) es el gris de la info
+  secundaria; **`--muted` (#94A0B6) es decorativo — no usarlo para texto.** Las insignias de etapa y
+  de tipo de reunión viven en `js/utils.js` (compartido con el escritorio) y ya están corregidas.
+- **Área táctil 44×44:** los controles chicos NO se agrandan; se les extiende el área con un
+  `::after` invisible (ver el bloque "Área de toque mínima" en `app.css`). Al crear un control
+  chico nuevo, sumarlo a esa lista de selectores.
+- **Bloque "Ahora" (Hoy):** primera tarjeta = respuesta a "¿qué hago ahora?" — reunión dentro de
+  4 h con cuenta regresiva y su acción (Cómo llegar / Entrar a la reunión / Avisar que voy), o el
+  lead más caliente sin contactar, o "Al día". Regla: **nunca dejar la tarjeta sin acción**.
+- **Cómo auditar:** en el preview, medir en vez de mirar (tamaños en uso, contraste calculado,
+  tamaño real de cada objetivo táctil). ⚠️ El navegador embebido **sirve JS y CSS viejos desde
+  caché**: para verificar de verdad, cambiar el puerto del server en `.claude/launch.json`.
+
 ## 4. Lo que queda (opcional, no bloquea)
 
 - **Notificaciones push reales** (que suene el teléfono con los recordatorios de `citas.recordatorios`).

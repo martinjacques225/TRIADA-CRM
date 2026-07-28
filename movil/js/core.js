@@ -52,7 +52,7 @@ export { openFinReport } from '../../modules/financiero/presentation/informe-fin
 // Versión visible en Mi cuenta. Se sube A MANO al desplegar (junto con el CACHE
 // de sw.js): sirve para saber, sin adivinar, qué build está corriendo el teléfono
 // cuando alguien reporta "esto no me funciona".
-export const APP_VERSION = '2026-07-28';
+export const APP_VERSION = '2026-07-28.2';
 
 // ── Estado de la app (en memoria, una sola instancia) ──────────────────────
 export const store = {
@@ -69,13 +69,13 @@ export const store = {
 export function heat(scoring) {
   if (typeof scoring === 'number') {
     if (scoring >= 70) return { color: '#C04F3F', label: 'Caliente' };
-    if (scoring >= 45) return { color: '#C2871A', label: 'Tibio' };
+    if (scoring >= 45) return { color: '#8A5F10', label: 'Tibio' };
     return { color: '#5E6A85', label: 'Frío' };
   }
   const s = (scoring || '').toString().toLowerCase();
   if (s.startsWith('cal')) return { color: '#C04F3F', label: 'Caliente' };
   if (s.startsWith('frio') || s.startsWith('frío')) return { color: '#5E6A85', label: 'Frío' };
-  return { color: '#C2871A', label: 'Tibio' };
+  return { color: '#8A5F10', label: 'Tibio' };
 }
 
 // Iniciales para avatares (máx 2).

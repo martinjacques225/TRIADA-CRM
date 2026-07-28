@@ -321,11 +321,11 @@ const app = {
 
   // Hoja "cambiar etapa" (usada por Ficha y Pipeline). onChange(estadoNuevo).
   openEtapaSheet(lead, onChange) {
-    const opt = (s) => `<button data-stage="${escHtml(s.id)}" style="display:flex;align-items:center;gap:11px;width:100%;background:${s.bg};border:1px solid ${s.color}22;border-radius:var(--radius-sm);padding:12px 14px;cursor:pointer;text-align:left"><span style="width:10px;height:10px;border-radius:50%;background:${s.color};flex:none"></span><span style="flex:1;font-weight:600;font-size:14px;color:${s.color}">${escHtml(s.id)}</span>${lead.estado === s.id ? `<span style="color:${s.color};display:flex">${ic('check', { size: 16, sw: 2.6 })}</span>` : ''}</button>`;
+    const opt = (s) => `<button data-stage="${escHtml(s.id)}" style="display:flex;align-items:center;gap:11px;width:100%;background:${s.bg};border:1px solid ${s.color}22;border-radius:var(--radius-sm);padding:12px 14px;cursor:pointer;text-align:left"><span style="width:10px;height:10px;border-radius:50%;background:${s.color};flex:none"></span><span style="flex:1;font-weight:600;font-size:15px;color:${s.color}">${escHtml(s.id)}</span>${lead.estado === s.id ? `<span style="color:${s.color};display:flex">${ic('check', { size: 16, sw: 2.6 })}</span>` : ''}</button>`;
     openSheet(`
       <div class="sheet__body">
         <div class="sheet__title" style="margin-bottom:3px">Cambiar etapa</div>
-        <div class="muted" style="font-size:12.5px;margin-bottom:14px">${escHtml(lead.nombre || '')}${lead.empresa ? ' · ' + escHtml(lead.empresa) : ''}</div>
+        <div class="muted" style="font-size:13px;margin-bottom:14px">${escHtml(lead.nombre || '')}${lead.empresa ? ' · ' + escHtml(lead.empresa) : ''}</div>
         <div style="display:flex;flex-direction:column;gap:7px">${PIPELINE_STAGES.map(opt).join('')}</div>
       </div>`, {
       onMount: (el) => el.querySelectorAll('[data-stage]').forEach((b) => b.addEventListener('click', async () => {
@@ -481,7 +481,7 @@ const app = {
       return;
     }
     const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
-    const step = (n, html) => `<div style="display:flex;gap:11px;align-items:flex-start;margin-bottom:12px"><span style="width:24px;height:24px;border-radius:50%;background:var(--teal);color:#fff;font-weight:700;font-size:12px;display:flex;align-items:center;justify-content:center;flex:none">${n}</span><div style="flex:1;font-size:13.5px;color:var(--text);line-height:1.5">${html}</div></div>`;
+    const step = (n, html) => `<div style="display:flex;gap:11px;align-items:flex-start;margin-bottom:12px"><span style="width:24px;height:24px;border-radius:50%;background:var(--teal);color:#fff;font-weight:700;font-size:12px;display:flex;align-items:center;justify-content:center;flex:none">${n}</span><div style="flex:1;font-size:13px;color:var(--text);line-height:1.5">${html}</div></div>`;
     const steps = isIOS
       ? step(1, 'Abre este enlace <b>en Safari</b> (en iPhone solo Safari puede instalar).') + step(2, 'Toca <b>Compartir</b> (el cuadro con la flecha ↑, abajo).') + step(3, 'Baja y toca <b>"Agregar a inicio"</b> → <b>Agregar</b>.')
       : step(1, 'Abre este enlace <b>en Chrome</b>.') + step(2, 'Toca el menú <b>⋮</b> (arriba a la derecha).') + step(3, 'Toca <b>"Instalar aplicación"</b> (o "Agregar a pantalla de inicio").');

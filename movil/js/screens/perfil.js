@@ -32,9 +32,9 @@ export default {
       const on = store.theme === id;
       return `<button class="pf-theme" data-theme="${id}" style="flex:1;height:48px;border:1px solid var(--border);background:var(--surface);color:var(--text);border-radius:var(--radius-sm);font-family:var(--font);font-weight:700;font-size:13px;cursor:pointer;position:relative;transition:var(--tr);${on ? 'border-color:var(--teal);box-shadow:0 0 0 2px var(--teal)' : ''}">${label}${on ? `<span style="position:absolute;top:5px;right:7px;color:var(--teal);display:flex">${ic('check', { size: 13, sw: 2.8 })}</span>` : ''}</button>`;
     };
-    const teamRow = (m, i, last) => `<div style="display:flex;align-items:center;gap:12px;padding:12px 15px;${last ? '' : 'border-bottom:1px solid var(--border)'}"><span style="width:38px;height:38px;border-radius:50%;background:${memberColor(i)};color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;flex:none">${e(initials(m.nombre))}</span><div style="flex:1;min-width:0"><div class="ell" style="font-size:14px;font-weight:600;color:var(--ink)">${e(m.nombre)}</div><div class="ell" style="font-size:11.5px;color:var(--text2)">${e(m.cargo || m.rol || 'Consultor')}${m.area ? ' · ' + e(areaLabel(m.area)) : ''}</div></div></div>`;
-    const acctRow = (id, icon, label) => `<button class="pf-acct" data-acct="${id}" style="width:100%;display:flex;align-items:center;gap:12px;padding:14px 15px;background:none;border:0;cursor:pointer;text-align:left">${ic(icon, { size: 19, sw: 1.7 })}<span style="flex:1;font-size:14px;font-weight:600;color:var(--ink)">${label}</span>${ic('next', { size: 17, sw: 2 })}</button>`;
-    const sectionTitle = (t) => `<div style="font-size:11.5px;font-weight:700;letter-spacing:.06em;color:var(--text3);text-transform:uppercase;margin:22px 4px 9px">${t}</div>`;
+    const teamRow = (m, i, last) => `<div style="display:flex;align-items:center;gap:12px;padding:12px 15px;${last ? '' : 'border-bottom:1px solid var(--border)'}"><span style="width:38px;height:38px;border-radius:50%;background:${memberColor(i)};color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;flex:none">${e(initials(m.nombre))}</span><div style="flex:1;min-width:0"><div class="ell" style="font-size:15px;font-weight:600;color:var(--ink)">${e(m.nombre)}</div><div class="ell" style="font-size:12px;color:var(--text2)">${e(m.cargo || m.rol || 'Consultor')}${m.area ? ' · ' + e(areaLabel(m.area)) : ''}</div></div></div>`;
+    const acctRow = (id, icon, label) => `<button class="pf-acct" data-acct="${id}" style="width:100%;display:flex;align-items:center;gap:12px;padding:14px 15px;background:none;border:0;cursor:pointer;text-align:left">${ic(icon, { size: 19, sw: 1.7 })}<span style="flex:1;font-size:15px;font-weight:600;color:var(--ink)">${label}</span>${ic('next', { size: 17, sw: 2 })}</button>`;
+    const sectionTitle = (t) => `<div style="font-size:12px;font-weight:700;letter-spacing:.06em;color:var(--text3);text-transform:uppercase;margin:22px 4px 9px">${t}</div>`;
 
     return `
     <section class="screen">
@@ -45,14 +45,14 @@ export default {
 
       <div class="pad">
         <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:20px;box-shadow:var(--shadow-sm);text-align:center">
-          <div style="width:74px;height:74px;border-radius:50%;background:linear-gradient(150deg,var(--teal),var(--navy));color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:26px;margin:0 auto 12px">${e(initials(nombre))}</div>
-          <div class="serif" style="font-size:21px;font-weight:600;color:var(--ink)">${e(nombre)}</div>
+          <div style="width:74px;height:74px;border-radius:50%;background:linear-gradient(150deg,var(--teal),var(--navy));color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:24px;margin:0 auto 12px">${e(initials(nombre))}</div>
+          <div class="serif" style="font-size:20px;font-weight:600;color:var(--ink)">${e(nombre)}</div>
           <div class="ell" style="font-size:13px;color:var(--text2);margin-top:2px">${e(email)}</div>
           <div style="display:flex;align-items:center;justify-content:center;gap:7px;margin-top:11px;flex-wrap:wrap">
             <span style="font-size:11px;font-weight:700;color:var(--navy);background:var(--navy-l);padding:4px 11px;border-radius:20px">${e(me.cargo || me.rol || 'Consultor')}</span>
             ${me.area ? `<span style="font-size:11px;font-weight:700;color:var(--teal);background:var(--teal-l);padding:4px 11px;border-radius:20px">${e(areaLabel(me.area))}</span>` : ''}
           </div>
-          <div style="display:flex;align-items:center;justify-content:center;gap:6px;margin-top:14px;font-size:11.5px;color:var(--text3)">${ic('refresh', { size: 14, sw: 1.8 })}Sincronizado con tu cuenta de Tríada CRM</div>
+          <div style="display:flex;align-items:center;justify-content:center;gap:6px;margin-top:14px;font-size:12px;color:var(--text3)">${ic('refresh', { size: 14, sw: 1.8 })}Sincronizado con tu cuenta de Tríada CRM</div>
         </div>
 
         ${sectionTitle('Cuenta')}
@@ -63,7 +63,7 @@ export default {
           <div style="display:flex;align-items:center;gap:11px">
             <span style="width:38px;height:38px;border-radius:11px;background:var(--teal-l);color:var(--teal);display:flex;align-items:center;justify-content:center;flex:none">${ic('bell', { size: 19 })}</span>
             <div style="flex:1;min-width:0">
-              <div style="font-size:14px;font-weight:600;color:var(--ink)">Avisos de reuniones</div>
+              <div style="font-size:15px;font-weight:600;color:var(--ink)">Avisos de reuniones</div>
               <div style="font-size:12px;color:var(--text2)">${e(PUSH_LABEL[pState] || PUSH_LABEL.off)}</div>
             </div>
             ${pState === 'unsupported' || pState === 'denied' ? '' : `<button class="btn btn--sm ${pState === 'on' ? 'btn--ghost' : 'btn--primary'}" id="pfPush">${pState === 'on' ? 'Desactivar' : 'Activar'}</button>`}
@@ -76,7 +76,7 @@ export default {
         ${sectionTitle('Equipo')}
         <div class="card" style="padding:0;overflow:hidden">${team.length ? team.map((m, i) => teamRow(m, i, i === team.length - 1)).join('') : `<div class="muted" style="padding:16px;font-size:13px;text-align:center">Solo tú por ahora.</div>`}</div>
 
-        <button class="btn" id="pfLogout" style="width:100%;margin-top:22px;height:48px;border:1px solid var(--danger);background:var(--surface);color:var(--danger);font-size:14.5px">${ic('logout', { size: 18 })} Cerrar sesión</button>
+        <button class="btn" id="pfLogout" style="width:100%;margin-top:22px;height:48px;border:1px solid var(--danger);background:var(--surface);color:var(--danger);font-size:15px">${ic('logout', { size: 18 })} Cerrar sesión</button>
 
         <div style="text-align:center;font-size:11px;color:var(--text3);margin-top:16px">Tríada CRM · versión ${e(APP_VERSION)}</div>
       </div>

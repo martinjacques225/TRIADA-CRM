@@ -5,11 +5,16 @@
    No mezclar con la piel del informe (esa usa la marca del sitio a propósito).
    ============================================================================ */
 :root{
+  /* Contraste medido sobre --surface (WCAG AA pide 4.5:1 en texto normal):
+     text 12.1 · text2 5.4 · text3 5.3 en blanco y 4.7 en superficies teñidas (era 2.6/2.4 con #94A0B6:
+     ilegible al sol, y es el color de casi toda la info secundaria) · green 5.1 y amber
+     5.0 sobre sus fondos teñidos (eran 3.0 y 2.7). --muted queda como gris
+     decorativo (líneas, puntos): NO usar para texto. */
   --bg:#F4F6F8;--surface:#FFFFFF;--surface2:#F0F2F6;--surface3:#E7EBF1;--border:#E5E9F0;--border2:#D6DCE6;
-  --ink:#142037;--text:#2A3553;--text2:#5E6A85;--text3:#94A0B6;
+  --ink:#142037;--text:#2A3553;--text2:#5E6A85;--text3:#606C87;
   --primary:#0C7C88;--primary-d:#0A626C;--primary-l:#E2F0F1;--teal:#0C7C88;--teal-d:#0A626C;--teal-l:#E2F0F1;
-  --navy:#16234A;--navy-d:#0F1933;--navy-l:#E9ECF4;--green:#2E9B73;--green-l:#E4F2EB;--violet:#5160C0;--violet-l:#ECEEFA;
-  --amber:#C2871A;--amber-l:#F8F0DD;--danger:#C04F3F;--danger-l:#F9E9E6;--brass:#B8893B;--muted:#94A0B6;
+  --navy:#16234A;--navy-d:#0F1933;--navy-l:#E9ECF4;--green:#20724F;--green-l:#E4F2EB;--violet:#5160C0;--violet-l:#ECEEFA;
+  --amber:#8A5F10;--amber-l:#F8F0DD;--danger:#C04F3F;--danger-l:#F9E9E6;--brass:#B8893B;--muted:#94A0B6;
   --shadow-sm:0 1px 2px rgba(20,32,55,.05),0 1px 1px rgba(20,32,55,.03);
   --shadow:0 4px 14px rgba(20,32,55,.07),0 1px 3px rgba(20,32,55,.05);
   --shadow-lg:0 18px 48px rgba(20,32,55,.16),0 6px 16px rgba(20,32,55,.08);
@@ -19,8 +24,8 @@
   --serif:'Newsreader',Georgia,'Times New Roman',serif;
   --ease:cubic-bezier(.22,.61,.36,1);--tr:.18s cubic-bezier(.4,0,.2,1);
 }
-[data-theme="dark"]{--bg:#0B1220;--surface:#111A2C;--surface2:#16223A;--surface3:#1E2C48;--border:#233351;--border2:#2E4063;--ink:#ECF1FA;--text:#C5D0E4;--text2:#8C99B5;--text3:#5C6B8A;--primary:#2BBCC4;--primary-d:#1E9AA2;--primary-l:#0E2E33;--teal:#2BBCC4;--teal-d:#1E9AA2;--teal-l:#0E2E33;--navy:#2C3E72;--navy-l:#1A2742;--green:#3FB587;--green-l:#112A21;--violet:#7C8AE0;--violet-l:#1A2042;--amber:#DDA73A;--amber-l:#2A220C;--danger:#E0705F;--danger-l:#2E1512;--brass:#CBA15A;--shadow-sm:0 1px 2px rgba(0,0,0,.3);--shadow:0 4px 16px rgba(0,0,0,.4);--shadow-lg:0 18px 50px rgba(0,0,0,.55);--ring:0 0 0 3px rgba(43,188,196,.22);}
-[data-theme="matrix"]{--bg:#04080A;--surface:#07110E;--surface2:#0A1813;--surface3:#0F231A;--border:#16382A;--border2:#1F4E39;--ink:#C6FBD7;--text:#7CE6A2;--text2:#4FB87C;--text3:#2F7A50;--primary:#2EE66B;--primary-d:#1FB851;--primary-l:#0B2616;--teal:#2EE66B;--teal-d:#1FB851;--teal-l:#0B2616;--navy:#3DF07A;--navy-l:#0B2616;--green:#39FF6A;--green-l:#0B2616;--violet:#4FE0A0;--violet-l:#0B2616;--amber:#A8E04F;--amber-l:#0B2616;--danger:#FF6B5C;--danger-l:#0B2616;--brass:#6FE6A0;--shadow-sm:0 1px 2px rgba(0,0,0,.5);--shadow:0 4px 18px rgba(0,40,15,.55);--shadow-lg:0 18px 50px rgba(0,0,0,.7);--ring:0 0 0 3px rgba(46,230,107,.30);}
+[data-theme="dark"]{--bg:#0B1220;--surface:#111A2C;--surface2:#16223A;--surface3:#1E2C48;--border:#233351;--border2:#2E4063;--ink:#ECF1FA;--text:#C5D0E4;--text2:#8C99B5;--text3:#8E9BB8;--primary:#2BBCC4;--primary-d:#1E9AA2;--primary-l:#0E2E33;--teal:#2BBCC4;--teal-d:#1E9AA2;--teal-l:#0E2E33;--navy:#2C3E72;--navy-l:#1A2742;--green:#3FB587;--green-l:#112A21;--violet:#7C8AE0;--violet-l:#1A2042;--amber:#DDA73A;--amber-l:#2A220C;--danger:#E0705F;--danger-l:#2E1512;--brass:#CBA15A;--shadow-sm:0 1px 2px rgba(0,0,0,.3);--shadow:0 4px 16px rgba(0,0,0,.4);--shadow-lg:0 18px 50px rgba(0,0,0,.55);--ring:0 0 0 3px rgba(43,188,196,.22);}
+[data-theme="matrix"]{--bg:#04080A;--surface:#07110E;--surface2:#0A1813;--surface3:#0F231A;--border:#16382A;--border2:#1F4E39;--ink:#C6FBD7;--text:#7CE6A2;--text2:#4FB87C;--text3:#46AC72;--primary:#2EE66B;--primary-d:#1FB851;--primary-l:#0B2616;--teal:#2EE66B;--teal-d:#1FB851;--teal-l:#0B2616;--navy:#3DF07A;--navy-l:#0B2616;--green:#39FF6A;--green-l:#0B2616;--violet:#4FE0A0;--violet-l:#0B2616;--amber:#A8E04F;--amber-l:#0B2616;--danger:#FF6B5C;--danger-l:#0B2616;--brass:#6FE6A0;--shadow-sm:0 1px 2px rgba(0,0,0,.5);--shadow:0 4px 18px rgba(0,40,15,.55);--shadow-lg:0 18px 50px rgba(0,0,0,.7);--ring:0 0 0 3px rgba(46,230,107,.30);}
 
 *{box-sizing:border-box}
 html,body{margin:0;padding:0;height:100%}
@@ -32,8 +37,11 @@ body{
   overscroll-behavior-y:none;
   transition:background .3s var(--ease),color .3s var(--ease);
 }
+/* font-size:inherit en botones: Chrome les pone 13.333px por defecto, un tamaño
+   fuera de la escala que se colaba en cada botón sin talla explícita. */
+button{font-size:inherit}
 button,input,textarea,select{font-family:inherit}
-input,textarea{font-size:16px} /* evita el zoom de iOS al enfocar (<16px lo gatilla) */
+input,textarea{font-size:17px} /* >=16px: por debajo, iOS hace zoom al enfocar */
 a{color:inherit;text-decoration:none}
 h1,h2,h3,h4,p{margin:0}
 ::-webkit-scrollbar{width:0;height:0;display:none}

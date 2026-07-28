@@ -52,15 +52,19 @@ export function toast(msg, type = 'info', duration = 3000) {
   setTimeout(() => { t.classList.remove('show'); setTimeout(() => t.remove(), 320); }, duration);
 }
 
+// Colores de etapa: el `color` va SOBRE `bg` en las insignias (texto de 11px), así
+// que cada par debe pasar 4.5:1 (WCAG AA). Los originales no llegaban — Nuevo y
+// Descartado quedaban en 2.35, Cliente en 3.0 y Agendado en 2.7: ilegibles al sol,
+// que es donde se usa el móvil. Mismo tono, más oscuro. (Compartido con el móvil.)
 export const PIPELINE_STAGES = [
-  { id: 'Nuevo',                 color: '#94A0B6', bg: '#F0F2F6',   icon: '🆕', iconName: 'sparkle' },
+  { id: 'Nuevo',                 color: '#5E6A85', bg: '#F0F2F6',   icon: '🆕', iconName: 'sparkle' },
   { id: 'Contactado',            color: '#5160C0', bg: '#ECEEFA',   icon: '📞', iconName: 'phone' },
-  { id: 'Diagnóstico Agendado',  color: '#C2871A', bg: '#F8F0DD',   icon: '📅', iconName: 'calClock' },
-  { id: 'Diagnóstico Realizado', color: '#0C7C88', bg: '#E2F0F1',   icon: '🔍', iconName: 'search' },
+  { id: 'Diagnóstico Agendado',  color: '#8A5F10', bg: '#F8F0DD',   icon: '📅', iconName: 'calClock' },
+  { id: 'Diagnóstico Realizado', color: '#0A626C', bg: '#E2F0F1',   icon: '🔍', iconName: 'search' },
   { id: 'Propuesta Enviada',     color: '#16234A', bg: '#E9ECF4',   icon: '📋', iconName: 'fileText' },
-  { id: 'Negociando',            color: '#C04F3F', bg: '#F9E9E6',   icon: '🤝', iconName: 'handshake' },
-  { id: 'Cliente',               color: '#2E9B73', bg: '#E4F2EB',   icon: '✅', iconName: 'checkCirc' },
-  { id: 'Descartado',            color: '#94A0B6', bg: '#F0F2F6',   icon: '❌', iconName: 'xCirc' },
+  { id: 'Negociando',            color: '#A8412F', bg: '#F9E9E6',   icon: '🤝', iconName: 'handshake' },
+  { id: 'Cliente',               color: '#20724F', bg: '#E4F2EB',   icon: '✅', iconName: 'checkCirc' },
+  { id: 'Descartado',            color: '#626E8A', bg: '#F0F2F6',   icon: '❌', iconName: 'xCirc' },
 ];
 
 // Renderiza el ícono de línea de una etapa (cae al emoji si la lib no cargó)
@@ -250,12 +254,12 @@ export const DIAG_GRUPOS = {
 // ('Diagnóstico 360', 'Seguimiento'…) se mapean al leer (toMeetingType).
 export const MEETING_TYPES = [
   { id: 'emergencia',  label: 'Emergencia',         color: '#C04F3F', icon: 'alert',     desc: 'Atención inmediata' },
-  { id: 'rutina',      label: 'Rutina',             color: '#2E9B73', icon: 'refresh',   desc: 'Operación periódica' },
+  { id: 'rutina',      label: 'Rutina',             color: '#20724F', icon: 'refresh',   desc: 'Operación periódica' },
   { id: 'negocio',     label: 'Negocio',            color: '#16234A', icon: 'handshake', desc: 'Oportunidad comercial' },
   { id: 'diagnostico', label: 'Diagnóstico 360',    color: '#0C7C88', icon: 'clipCheck', desc: 'Levantamiento 360' },
-  { id: 'seguimiento', label: 'Seguimiento',        color: '#C2871A', icon: 'phone',     desc: 'Contacto de avance' },
+  { id: 'seguimiento', label: 'Seguimiento',        color: '#8A5F10', icon: 'phone',     desc: 'Contacto de avance' },
   { id: 'propuesta',   label: 'Propuesta / cierre', color: '#5160C0', icon: 'propuesta', desc: 'Presentación o cierre' },
-  { id: 'interna',     label: 'Interna de equipo',  color: '#B8893B', icon: 'users',     desc: 'Coordinación interna' },
+  { id: 'interna',     label: 'Interna de equipo',  color: '#7E5A22', icon: 'users',     desc: 'Coordinación interna' },
 ];
 
 const LEGACY_TIPO = {

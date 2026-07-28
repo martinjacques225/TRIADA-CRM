@@ -18,9 +18,9 @@
   padding:calc(16px + env(safe-area-inset-top)) 18px 12px}
 .hdr--bar{display:flex;align-items:center;justify-content:space-between}
 .hdr--back{display:flex;align-items:center;gap:6px;padding-left:14px;border-bottom:1px solid var(--border)}
-.hdr__title{margin:0;font-family:var(--serif);font-size:26px;font-weight:600;color:var(--ink)}
+.hdr__title{margin:0;font-family:var(--serif);font-size:24px;font-weight:600;color:var(--ink)}
 .hdr__title--sm{font-size:20px}
-.hdr__sub{font-size:11.5px;color:var(--text2)}
+.hdr__sub{font-size:12px;color:var(--text2)}
 
 /* ── Marca ───────────────────────────────────────────────────── */
 .wordmark{font-family:var(--serif);font-weight:600;color:var(--ink);line-height:1}
@@ -47,7 +47,7 @@
 .ell{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
 .section-title{margin:0;font-family:var(--serif);font-size:20px;font-weight:600;color:var(--ink)}
 .section-head{display:flex;align-items:center;justify-content:space-between;margin:24px 0 11px}
-.link{font-size:12.5px;font-weight:600;color:var(--teal);cursor:pointer}
+.link{font-size:13px;font-weight:600;color:var(--teal);cursor:pointer}
 
 /* ── Tarjetas ────────────────────────────────────────────────── */
 .card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
@@ -70,9 +70,9 @@
 
 /* ── Dirección de terreno ─────────────────────────────────────── */
 /* Tarjeta del lead: franja con la dirección + acceso directo a la ruta. */
-.lead-dir{display:flex;align-items:center;gap:8px;width:100%;margin-top:11px;padding:9px 11px;
+.lead-dir{display:flex;align-items:center;gap:8px;width:100%;min-height:44px;margin-top:11px;padding:9px 11px;
   background:var(--surface2);border:0;border-radius:var(--radius-sm);color:var(--text2);
-  font-family:var(--font);font-size:12.5px;text-align:left;cursor:pointer;
+  font-family:var(--font);font-size:13px;text-align:left;cursor:pointer;
   transition:transform .12s var(--ease),background var(--tr)}
 .lead-dir:active{background:var(--surface3);transform:scale(.985)}
 .lead-dir__go{margin-left:auto;flex:none;display:inline-flex;align-items:center;gap:5px;
@@ -89,13 +89,30 @@
 .fk-dir__ic{width:38px;height:38px;border-radius:12px;flex:none;display:flex;align-items:center;justify-content:center}
 .fk-dir__main{display:flex;flex-direction:column;min-width:0;flex:1;gap:1px}
 /* La dirección es EL dato de la ficha: hasta dos líneas antes de recortar. */
-.fk-dir__t{font-size:13.5px;font-weight:700;color:var(--ink);line-height:1.3;overflow:hidden;
+.fk-dir__t{font-size:13px;font-weight:700;color:var(--ink);line-height:1.3;overflow:hidden;
   display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2}
 .fk-dir__d{font-size:11px;color:var(--text3)}
-.fk-dir__go{flex:none;display:inline-flex;align-items:center;gap:5px;background:var(--teal);color:#fff;
+.fk-dir__go{flex:none;min-height:44px;display:inline-flex;align-items:center;gap:5px;background:var(--teal);color:#fff;
   border:0;border-radius:var(--radius-sm);padding:10px 12px;font-family:var(--font);font-weight:700;
-  font-size:12.5px;cursor:pointer;white-space:nowrap;transition:transform .12s var(--ease),background var(--tr)}
+  font-size:13px;cursor:pointer;white-space:nowrap;transition:transform .12s var(--ease),background var(--tr)}
 .fk-dir__go:active{background:var(--teal-d);transform:scale(.96)}
+
+/* ── "Ahora" (Hoy) ────────────────────────────────────────────
+   La primera tarjeta responde "¿qué hago ahora?": la reunión que viene con su
+   cuenta regresiva, o el lead más caliente esperando, o "al día". Una sola
+   acción primaria; el resto, subordinado. */
+.ahora{background:var(--surface);border:1px solid var(--border);border-left:3px solid var(--teal);
+  border-radius:var(--radius);padding:16px;margin-top:18px;box-shadow:var(--shadow-sm)}
+.ahora--ya{border-left-color:var(--danger);box-shadow:var(--shadow)}
+.ahora--calma{border-left-color:var(--green)}
+.ahora__eyebrow{display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:700;
+  letter-spacing:.08em;text-transform:uppercase;color:var(--teal)}
+.ahora--ya .ahora__eyebrow{color:var(--danger)}
+.ahora--calma .ahora__eyebrow{color:var(--green)}
+.ahora__t{font-family:var(--serif);font-size:24px;font-weight:600;color:var(--ink);line-height:1.18;margin-top:7px}
+.ahora__d{font-size:13px;color:var(--text2);margin-top:4px;line-height:1.4}
+.ahora__acciones{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+.ahora__cta{flex:1 1 auto;min-width:140px;height:46px;font-size:13px;padding:0 14px}
 
 /* ── KPIs ────────────────────────────────────────────────────── */
 .kpi-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:9px;margin-top:16px}
@@ -103,16 +120,16 @@
 .kpi{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
   padding:13px 11px;box-shadow:var(--shadow-sm);cursor:pointer}
 .kpi--sm{border-radius:var(--radius-sm);padding:9px 8px;text-align:center;cursor:default}
-.kpi__num{font-family:var(--serif);font-size:27px;font-weight:600;color:var(--ink);line-height:1;font-variant-numeric:tabular-nums}
-.kpi--sm .kpi__num{font-size:19px}
+.kpi__num{font-family:var(--serif);font-size:30px;font-weight:600;color:var(--ink);line-height:1;font-variant-numeric:tabular-nums}
+.kpi--sm .kpi__num{font-size:20px}
 .kpi__label{font-size:11px;color:var(--text2);margin-top:5px;line-height:1.25}
-.kpi--sm .kpi__label{font-size:9.5px;margin-top:2px;line-height:1.1}
+.kpi--sm .kpi__label{font-size:11px;margin-top:2px;line-height:1.1}
 
 /* ── Chips ───────────────────────────────────────────────────── */
 .chip-row{display:flex;gap:8px;overflow-x:auto;padding:8px 18px 6px}
 .chip-wrap{display:flex;flex-wrap:wrap;gap:7px}
 .chip{flex:none;border:1px solid var(--border);background:var(--surface);color:var(--text2);
-  border-radius:20px;padding:7px 14px;font-size:12.5px;font-weight:600;cursor:pointer;
+  border-radius:20px;padding:7px 14px;font-size:13px;font-weight:600;cursor:pointer;
   white-space:nowrap;transition:var(--tr)}
 .chip:active{transform:scale(.95)}
 .chip--on{border-color:var(--teal);background:var(--teal-l);color:var(--teal-d)}
@@ -140,9 +157,9 @@
 .btn--primary:active{background:var(--teal-d)}
 .btn--navy:active{background:var(--navy-d)}
 .btn--ghost:active{background:var(--surface2)}
-.btn--block{width:100%;height:50px;font-size:15.5px}
-.btn--lg{height:50px;font-size:15.5px;padding:0 22px}
-.btn--sm{height:40px;font-size:14px;padding:0 16px}
+.btn--block{width:100%;height:50px;font-size:15px}
+.btn--lg{height:50px;font-size:15px;padding:0 22px}
+.btn--sm{height:44px;font-size:15px;padding:0 16px}   /* 44 = mínimo táctil, no 40 */
 
 /* ── FABs + tab bar ──────────────────────────────────────────── */
 .fab{position:absolute;right:18px;z-index:60;border:0;cursor:pointer;display:flex;
@@ -170,13 +187,13 @@
    centrados en los 60px de alto útil de la barra; el safe-area solo afecta abajo). */
 .tabbar__item--on::before{content:'';position:absolute;top:-9px;width:24px;height:3px;
   border-radius:0 0 3px 3px;background:var(--teal)}
-.tabbar__item span{font-size:10.5px;font-weight:600}
+.tabbar__item span{font-size:11px;font-weight:600}
 
 /* ── Inputs ──────────────────────────────────────────────────── */
 .field{margin-bottom:14px}
-.field__label{display:block;font-size:12.5px;font-weight:700;color:var(--text2);margin:0 0 7px}
+.field__label{display:block;font-size:13px;font-weight:700;color:var(--text2);margin:0 0 7px}
 .field__label--opt span{color:var(--text3);font-weight:500}
-.field__hint{font-size:11.5px;color:var(--text3);margin:6px 0 0}
+.field__hint{font-size:12px;color:var(--text3);margin:6px 0 0}
 .input{width:100%;height:48px;border:1px solid var(--border);background:var(--surface);border-radius:var(--radius-sm);
   padding:0 14px;font-size:15px;color:var(--text);outline:none;transition:border-color var(--tr),box-shadow var(--tr)}
 .input:focus{border-color:var(--teal);box-shadow:var(--ring)}
@@ -199,7 +216,7 @@
   padding:10px 0 calc(26px + env(safe-area-inset-bottom));max-height:88%;overflow-y:auto;animation:sheetIn .3s var(--ease)}
 .sheet__grab{width:38px;height:4px;border-radius:2px;background:var(--border2);margin:6px auto 4px}
 .sheet__body{padding:14px 20px 0}
-.sheet__title{font-family:var(--serif);font-size:19px;font-weight:600;color:var(--ink);margin-bottom:14px}
+.sheet__title{font-family:var(--serif);font-size:20px;font-weight:600;color:var(--ink);margin-bottom:14px}
 .sheet-row{width:100%;display:flex;align-items:center;gap:14px;background:var(--surface);border:1px solid var(--border);
   border-radius:var(--radius);padding:14px;margin-bottom:10px;cursor:pointer;text-align:left;
   font-family:var(--font);transition:transform .12s var(--ease),background var(--tr)}
@@ -207,17 +224,17 @@
 .sheet-row:active{background:var(--surface2);transform:scale(.985)}
 .sheet-row__icon{width:42px;height:42px;border-radius:12px;display:flex;align-items:center;justify-content:center;flex:none}
 .sheet-row__t{display:block;font-weight:700;font-size:15px;color:var(--ink)}
-.sheet-row__d{display:block;font-size:12.5px;color:var(--text2)}
+.sheet-row__d{display:block;font-size:13px;color:var(--text2)}
 .sheet-link{width:100%;display:flex;align-items:center;gap:13px;background:none;border:0;border-bottom:1px solid var(--border);
   padding:14px 2px;cursor:pointer;text-align:left}
 .sheet-link:last-child{border-bottom:0}
-.sheet-link span{flex:1;font-weight:600;font-size:14.5px;color:var(--ink)}
+.sheet-link span{flex:1;font-weight:600;font-size:15px;color:var(--ink)}
 
 /* ── trIA ────────────────────────────────────────────────────── */
 .tria-line{display:flex;align-items:flex-start;gap:11px;background:linear-gradient(150deg,var(--teal-l),var(--surface));
   border:1px solid var(--border);border-radius:var(--radius);padding:13px 14px;margin-top:16px}
-.tria-tag{font-size:10px;font-weight:700;letter-spacing:.12em;color:var(--teal);text-transform:uppercase}
-.tria-ia{font-size:9px;font-weight:700;letter-spacing:.08em;color:var(--text3);background:var(--surface2);padding:1px 6px;border-radius:20px}
+.tria-tag{font-size:11px;font-weight:700;letter-spacing:.12em;color:var(--teal);text-transform:uppercase}
+.tria-ia{font-size:11px;font-weight:700;letter-spacing:.08em;color:var(--text3);background:var(--surface2);padding:1px 6px;border-radius:20px}
 .tria-breath{display:flex;animation:triaBreath 3.6s ease-in-out infinite}
 .tria-dot{width:7px;height:7px;border-radius:50%;background:var(--text3);animation:triaDotB .9s infinite ease-in-out}
 @keyframes triaDotB{0%,60%,100%{opacity:.35;transform:translateY(0)}30%{opacity:1;transform:translateY(-3px)}}
@@ -225,7 +242,7 @@
 /* ── Toast ───────────────────────────────────────────────────── */
 #toast-root{position:absolute;left:0;right:0;bottom:calc(94px + env(safe-area-inset-bottom));z-index:200;
   display:flex;flex-direction:column;align-items:center;gap:8px;pointer-events:none;padding:0 24px}
-.toast{max-width:340px;background:var(--ink);color:#fff;border-radius:12px;padding:12px 16px;font-size:13.5px;
+.toast{max-width:340px;background:var(--ink);color:#fff;border-radius:12px;padding:12px 16px;font-size:13px;
   font-weight:500;box-shadow:var(--shadow-lg);animation:toastIn 3s var(--ease) forwards;display:flex;align-items:center;gap:9px}
 .toast--ok{background:var(--green)}
 .toast--err{background:var(--danger)}
@@ -239,7 +256,7 @@
 .empty{text-align:center;padding:50px 30px}
 .empty__icon{width:64px;height:64px;border-radius:18px;background:var(--surface2);display:flex;align-items:center;
   justify-content:center;margin:0 auto 16px;color:var(--text3)}
-.empty__t{font-family:var(--serif);font-size:18px;font-weight:600;color:var(--ink)}
+.empty__t{font-family:var(--serif);font-size:17px;font-weight:600;color:var(--ink)}
 .empty__d{font-size:13px;color:var(--text2);margin:6px 0 16px}
 
 /* ── Segmented (conmutador) ──────────────────────────────────── */
@@ -267,7 +284,7 @@
 /* ── Aviso de nueva versión (PWA update) ─────────────────────── */
 .upd-bar{position:absolute;left:50%;transform:translateX(-50%);bottom:calc(94px + env(safe-area-inset-bottom));z-index:210;
   display:flex;align-items:center;gap:12px;background:var(--ink);color:#fff;border-radius:14px;padding:10px 10px 10px 16px;
-  box-shadow:var(--shadow-lg);font-size:13.5px;font-weight:500;max-width:330px;animation:toastIn .3s var(--ease)}
+  box-shadow:var(--shadow-lg);font-size:13px;font-weight:500;max-width:330px;animation:toastIn .3s var(--ease)}
 .upd-bar button{border:0;background:var(--teal);color:#fff;font-family:var(--font);font-weight:700;font-size:13px;
   padding:8px 14px;border-radius:9px;cursor:pointer;white-space:nowrap}
 
@@ -294,11 +311,26 @@
 .notif-bubble .nb-ic{width:38px;height:38px;border-radius:11px;background:var(--teal);color:#fff;
   display:flex;align-items:center;justify-content:center;flex:none}
 .notif-bubble .nb-main{display:flex;flex-direction:column;gap:2px;min-width:0;flex:1}
-.notif-bubble .nb-eyebrow{display:flex;align-items:center;gap:4px;font-size:10px;font-weight:700;
+.notif-bubble .nb-eyebrow{display:flex;align-items:center;gap:4px;font-size:11px;font-weight:700;
   letter-spacing:.08em;text-transform:uppercase;color:var(--teal)}
-.notif-bubble .nb-title{font-size:14px;font-weight:700;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.notif-bubble .nb-title{font-size:15px;font-weight:700;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .notif-bubble .nb-sub{font-size:12px;color:var(--text2);line-height:1.35}
 @media (prefers-reduced-motion:reduce){.notif-bubble{transition:opacity .2s}}
+
+/* ── Área de toque mínima (44×44) ─────────────────────────────
+   El dedo no apunta como el mouse: Apple y Material piden 44pt/48dp. Varios
+   controles se ven bien a 33-40px, así que en vez de agrandarlos (rompería el
+   diseño) se les EXTIENDE el área sensible con un pseudo-elemento invisible.
+   El botón se ve igual; el dedo acierta igual. */
+.qa, .icon-btn, .avatar, .chip, .fk-tab, .lead-dir, .seg__item, .ag-chip, .ag-seg, .pl-move,
+.pp-del, .pp-dec, .pp-inc, .pp-estado, .dg-tab{position:relative}
+.qa::after, .icon-btn::after, .avatar::after, .chip::after, .fk-tab::after,
+.seg__item::after, .ag-chip::after, .ag-seg::after, .pl-move::after,
+.pp-del::after, .pp-dec::after, .pp-inc::after, .pp-estado::after, .dg-tab::after{
+  content:'';position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
+  width:max(100%,44px);height:max(100%,44px)}
+/* Sin puntero propio: el pseudo-elemento no debe tapar el contenido de la tarjeta. */
+.qa::after, .icon-btn::after, .avatar::after{border-radius:inherit}
 
 /* Oculto accesible */
 .visually-hidden{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}

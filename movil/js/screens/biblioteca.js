@@ -28,7 +28,7 @@ const isAdmin = () => store.profile?.rol === 'admin';
 
 // estilo de chip de filtro (activo/inactivo) — inline para no depender de CSS nuevo
 function chipStyle(on) {
-  return `padding:7px 13px;border-radius:999px;font-size:12.5px;font-weight:600;white-space:nowrap;cursor:pointer;border:1px solid ${on ? 'transparent' : 'var(--line,#e4e7ee)'};background:${on ? 'var(--teal,#0C7C88)' : 'transparent'};color:${on ? '#fff' : 'var(--text3,#8a94a6)'}`;
+  return `padding:7px 13px;border-radius:999px;font-size:13px;font-weight:600;white-space:nowrap;cursor:pointer;border:1px solid ${on ? 'transparent' : 'var(--line,#e4e7ee)'};background:${on ? 'var(--teal,#0C7C88)' : 'transparent'};color:${on ? '#fff' : 'var(--text3,#8a94a6)'}`;
 }
 
 export default {
@@ -63,7 +63,7 @@ export default {
 
         <div style="display:flex;align-items:center;gap:8px;background:var(--surface2,#f2f4f7);border:1px solid var(--line,#e4e7ee);border-radius:12px;padding:9px 12px;margin-bottom:11px;color:var(--text3,#8a94a6)">
           ${ic('search', { size: 17 })}
-          <input id="bibQ" type="search" placeholder="Buscar documento…" value="${e(_state.q)}" autocomplete="off" style="border:none;background:transparent;outline:none;flex:1;min-width:0;font-size:14px;color:var(--text,#1a2332)">
+          <input id="bibQ" type="search" placeholder="Buscar documento…" value="${e(_state.q)}" autocomplete="off" style="border:none;background:transparent;outline:none;flex:1;min-width:0;font-size:15px;color:var(--text,#1a2332)">
         </div>
 
         <div style="display:flex;gap:7px;overflow-x:auto;padding-bottom:4px;margin-bottom:14px;-webkit-overflow-scrolling:touch">
@@ -110,11 +110,11 @@ function _row(d, nameById) {
   const autor = d.subidoPor && nameById[d.subidoPor] ? ` · ${e(nameById[d.subidoPor])}` : '';
   return `<article class="card card--tap" data-doc="${d.id}" data-name="${e((d.nombre || '').toLowerCase())}" style="display:flex;align-items:center;gap:12px;padding:13px">
     <span style="width:42px;height:48px;border-radius:10px;flex:none;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;background:${c}16;color:${c}">
-      ${ic('fileText', { size: 19 })}<span style="font-size:8px;font-weight:800;letter-spacing:.03em">${e(ext(d.nombre))}</span>
+      ${ic('fileText', { size: 19 })}<span style="font-size:11px;font-weight:800;letter-spacing:.03em">${e(ext(d.nombre))}</span>
     </span>
     <span style="flex:1;min-width:0">
-      <span style="display:block;font-weight:600;font-size:14px;color:var(--ink,#16234A);line-height:1.3;word-break:break-word">${e(d.nombre)}</span>
-      <span style="display:flex;flex-wrap:wrap;align-items:center;gap:5px 8px;margin-top:4px;font-size:11.5px;color:var(--text3,#8a94a6)">
+      <span style="display:block;font-weight:600;font-size:15px;color:var(--ink,#16234A);line-height:1.3;word-break:break-word">${e(d.nombre)}</span>
+      <span style="display:flex;flex-wrap:wrap;align-items:center;gap:5px 8px;margin-top:4px;font-size:12px;color:var(--text3,#8a94a6)">
         <span style="font-weight:700;padding:2px 7px;border-radius:999px;color:${c};background:${c}16">${e(d.categoria)}</span>
         <span>${fmtBytes(d.sizeBytes)} · ${e(formatDate(d.fecha))}${autor}</span>
       </span>
@@ -145,7 +145,7 @@ function _openUpload(app) {
       <label style="display:flex;flex-direction:column;align-items:center;gap:8px;text-align:center;padding:24px 16px;border:2px dashed var(--line,#e4e7ee);border-radius:14px;color:var(--text3,#8a94a6);cursor:pointer">
         <input id="bibFiles" type="file" multiple hidden>
         ${ic('plus', { size: 24 })}
-        <span id="bibFilesHint" style="font-size:13.5px;font-weight:600;color:var(--text2,#5a6376)">Elegir archivos</span>
+        <span id="bibFilesHint" style="font-size:13px;font-weight:600;color:var(--text2,#5a6376)">Elegir archivos</span>
         <span style="font-size:12px">PDF, Word, Excel, imágenes… (varios a la vez)</span>
       </label>
       <div class="muted" style="font-size:12px;margin:12px 0 7px">Categoría</div>
@@ -215,7 +215,7 @@ function _openEdit(app, id) {
   if (!d) return;
   let cat = d.categoria;
   const chips = CATS.map((c) => `<button data-pick="${c}" style="${chipStyle(c === d.categoria)}">${c}</button>`).join('');
-  const inputStyle = 'width:100%;padding:11px 13px;border:1px solid var(--line,#e4e7ee);border-radius:11px;font-size:14px;color:var(--text,#1a2332);background:var(--surface,#fff);outline:none;box-sizing:border-box';
+  const inputStyle = 'width:100%;padding:11px 13px;border:1px solid var(--line,#e4e7ee);border-radius:11px;font-size:15px;color:var(--text,#1a2332);background:var(--surface,#fff);outline:none;box-sizing:border-box';
   openSheet(`
     <div class="sheet__body">
       <div class="sheet__title">Editar documento</div>

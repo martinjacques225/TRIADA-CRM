@@ -22,11 +22,12 @@ export const splash = {
           </svg>
         </div>
         <div style="display:flex;flex-direction:column;align-items:center;gap:12px;opacity:0;animation:fadeUp .6s var(--ease) .92s forwards">
+          <!-- 44px: tamaño de portada, a propósito fuera de la escala de UI (11-30). -->
           <div style="font-family:var(--serif);font-weight:500;font-size:44px;color:#fff;letter-spacing:-.01em;line-height:1">Tríada<span style="color:#2BBCC4">·</span></div>
           <div style="font-size:11px;font-weight:700;letter-spacing:.26em;color:#8FA0C4;text-transform:uppercase">Consultoría 360 · CRM</div>
         </div>
       </div>
-      <div style="position:absolute;bottom:calc(40px + env(safe-area-inset-bottom));left:0;right:0;text-align:center;font-size:12.5px;color:#5C6B92;opacity:0;animation:fadeIn .5s 1.5s forwards">Toca para continuar</div>
+      <div style="position:absolute;bottom:calc(40px + env(safe-area-inset-bottom));left:0;right:0;text-align:center;font-size:13px;color:#5C6B92;opacity:0;animation:fadeIn .5s 1.5s forwards">Toca para continuar</div>
     </section>`;
   },
   mount(app) {
@@ -50,7 +51,7 @@ export const login = {
         <div class="eyebrow" style="margin-top:4px">Consultoría 360 · CRM</div>
       </div>
       <form id="loginForm" autocomplete="on" style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:24px 22px;box-shadow:var(--shadow)">
-        <div class="serif" style="font-size:22px;font-weight:600;color:var(--ink);margin-bottom:18px">Inicia sesión</div>
+        <div class="serif" style="font-size:24px;font-weight:600;color:var(--ink);margin-bottom:18px">Inicia sesión</div>
         <label class="field__label" for="lgEmail">Email</label>
         <div class="input-wrap" style="margin-bottom:15px">
           <span style="color:var(--text3);display:flex">${ic('mail', { size: 18, sw: 1.7 })}</span>
@@ -66,7 +67,7 @@ export const login = {
         <div id="lgErr" class="auth-err-m" hidden></div>
         <div id="lgMsg" class="auth-ok-m" hidden></div>
         <button type="submit" id="lgBtn" class="btn btn--primary btn--block">Entrar</button>
-        <div id="lgCrear" style="text-align:center;margin-top:14px;font-size:12.5px;color:var(--text2);cursor:pointer">¿Te invitaron? <span style="color:var(--teal);font-weight:600">Crea tu contraseña</span></div>
+        <div id="lgCrear" style="text-align:center;margin-top:14px;font-size:13px;color:var(--text2);cursor:pointer">¿Te invitaron? <span style="color:var(--teal);font-weight:600">Crea tu contraseña</span></div>
       </form>
       <div style="text-align:center;margin-top:26px;font-size:12px;color:var(--text3)">Acceso reservado al equipo de Tríada Consultoría.</div>
     </section>`;
@@ -116,7 +117,7 @@ export const crearpass = {
         <div class="logo-tile" style="width:64px;height:64px;border-radius:18px">${logo(40, { sw: 12 })}</div>
       </div>
       <form id="cpForm" style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:24px 22px;box-shadow:var(--shadow)">
-        <div class="serif" style="font-size:22px;font-weight:600;color:var(--ink)">Crea tu contraseña</div>
+        <div class="serif" style="font-size:24px;font-weight:600;color:var(--ink)">Crea tu contraseña</div>
         <div style="font-size:13px;color:var(--text2);margin:6px 0 20px;line-height:1.5">Te invitaron al equipo de Tríada. Define tu contraseña para activar <b style="color:var(--text)">${email}</b>.</div>
         <label class="field__label" for="cp1">Nueva contraseña</label>
         <div class="input-wrap" style="margin-bottom:15px"><span style="color:var(--text3);display:flex">${ic('lock', { size: 18, sw: 1.7 })}</span><input id="cp1" class="input" type="password" autocomplete="new-password" minlength="8" placeholder="Mínimo 8 caracteres"></div>

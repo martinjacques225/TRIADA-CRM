@@ -137,7 +137,7 @@ export function openComoLlegar(lead) {
   openSheet(`
     <div class="sheet__body">
       <div class="sheet__title" style="margin-bottom:3px">Cómo llegar</div>
-      <div class="muted" style="font-size:12.5px;margin-bottom:14px;display:flex;gap:7px;align-items:flex-start">
+      <div class="muted" style="font-size:13px;margin-bottom:14px;display:flex;gap:7px;align-items:flex-start">
         <span style="color:var(--teal);flex:none;display:flex;margin-top:1px">${ic('pin', { size: 15 })}</span>
         <span>${escHtml(dir)}</span>
       </div>

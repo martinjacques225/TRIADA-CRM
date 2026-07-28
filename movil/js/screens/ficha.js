@@ -15,7 +15,7 @@ let _tab = 'datos';
 let _lead = null, _diags = [], _citas = [], _props = [];
 
 function row(label, value, accent) {
-  return `<div style="display:flex;justify-content:space-between;gap:14px;padding:13px 15px;border-bottom:1px solid var(--border)"><span style="font-size:13px;color:var(--text2)">${e(label)}</span><span class="ell" style="font-size:13.5px;font-weight:600;color:${accent || 'var(--ink)'};text-align:right">${e(value || '—')}</span></div>`;
+  return `<div style="display:flex;justify-content:space-between;gap:14px;padding:13px 15px;border-bottom:1px solid var(--border)"><span style="font-size:13px;color:var(--text2)">${e(label)}</span><span class="ell" style="font-size:13px;font-weight:600;color:${accent || 'var(--ink)'};text-align:right">${e(value || '—')}</span></div>`;
 }
 
 function tabDatos() {
@@ -25,7 +25,7 @@ function tabDatos() {
     ${row('Origen', l.origen)}${l.origenDetalle ? row('Vino de', origenDetalleLabel(l.origenDetalle), 'var(--teal)') : ''}
     ${row('Dirección', l.direccion)}${row('Comuna', l.comuna)}${row('Región', l.region)}${row('RUT', l.rut)}
     ${row('Teléfono', l.telefono, 'var(--teal)')}${row('Email', l.email, 'var(--teal)')}
-    <div style="padding:13px 15px"><div style="font-size:13px;color:var(--text2);margin-bottom:5px">Notas</div><div style="font-size:13.5px;color:var(--text);line-height:1.5">${e(l.notas || 'Sin notas.')}</div></div>
+    <div style="padding:13px 15px"><div style="font-size:13px;color:var(--text2);margin-bottom:5px">Notas</div><div style="font-size:13px;color:var(--text);line-height:1.5">${e(l.notas || 'Sin notas.')}</div></div>
   </div>`;
 }
 
@@ -40,9 +40,9 @@ function tabDiag() {
   const base = ev.length ? ev : DIAG_AREAS;
   const overall = Math.round(base.reduce((s, a) => s + sc[a.id], 0) / base.length);
   const oc = overall >= 80 ? 'var(--green)' : overall >= 50 ? 'var(--amber)' : 'var(--danger)';
-  const cell = (a) => `<div style="text-align:center;background:${a.color}1A;border-radius:var(--radius-sm);padding:9px 4px;min-width:0"><div class="serif tabular" style="font-size:18px;font-weight:600;color:${a.color}">${sc[a.id]}</div><div style="font-size:9px;color:var(--text2);margin-top:2px;line-height:1.12">${e(a.label)}</div></div>`;
+  const cell = (a) => `<div style="text-align:center;background:${a.color}1A;border-radius:var(--radius-sm);padding:9px 4px;min-width:0"><div class="serif tabular" style="font-size:17px;font-weight:600;color:${a.color}">${sc[a.id]}</div><div style="font-size:11px;color:var(--text2);margin-top:2px;line-height:1.12">${e(a.label)}</div></div>`;
   return `<div class="card" style="padding:16px">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px"><span style="font-weight:700;font-size:14px;color:var(--ink)">Diagnóstico 360${d.correlativo ? ' · ' + e(d.correlativo) : ''}</span><span class="badge" style="color:var(--green);background:var(--green-l)">${e(d.estado || 'borrador')}</span></div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px"><span style="font-weight:700;font-size:15px;color:var(--ink)">Diagnóstico 360${d.correlativo ? ' · ' + e(d.correlativo) : ''}</span><span class="badge" style="color:var(--green);background:var(--green-l)">${e(d.estado || 'borrador')}</span></div>
     <div style="display:flex;align-items:center;gap:6px;margin-bottom:12px"><span class="serif tabular" style="font-size:30px;font-weight:600;color:${oc};line-height:1">${overall}</span><span style="font-size:12px;color:var(--text3)">/100 · Índice general</span></div>
     <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px">${base.map(cell).join('')}</div>
     <button class="btn btn--ghost" data-act="informe" data-diag="${e(d.id)}" style="width:100%;margin-top:14px;height:42px;color:var(--teal)">${ic('fileText', { size: 17 })} Abrir informe completo</button>
@@ -50,7 +50,7 @@ function tabDiag() {
 }
 
 function tabCitas() {
-  const items = _citas.map((c) => { const t = meetingType(c.tipo); return `<div class="card" style="display:flex;align-items:center;gap:12px"><div style="width:3px;align-self:stretch;border-radius:2px;background:${t.color}"></div><div style="flex:1;min-width:0"><div class="ell" style="font-weight:700;font-size:13.5px;color:var(--ink)">${e(c.titulo || t.label)}</div><div style="font-size:11.5px;color:var(--text2);margin-top:2px">${e(formatDate(c.fecha))} · ${e(c.hora || '')} · ${c.durMin || 60} min</div></div><span style="font-size:11px;font-weight:600;color:${t.color}">${e(t.label)}</span></div>`; }).join('');
+  const items = _citas.map((c) => { const t = meetingType(c.tipo); return `<div class="card" style="display:flex;align-items:center;gap:12px"><div style="width:3px;align-self:stretch;border-radius:2px;background:${t.color}"></div><div style="flex:1;min-width:0"><div class="ell" style="font-weight:700;font-size:13px;color:var(--ink)">${e(c.titulo || t.label)}</div><div style="font-size:12px;color:var(--text2);margin-top:2px">${e(formatDate(c.fecha))} · ${e(c.hora || '')} · ${c.durMin || 60} min</div></div><span style="font-size:11px;font-weight:600;color:${t.color}">${e(t.label)}</span></div>`; }).join('');
   return `<div class="list">${items || `<div class="card muted" style="text-align:center;padding:20px;font-size:13px">Sin citas vinculadas.</div>`}<button class="btn" data-act="cita" style="height:44px;border:1px dashed var(--border2);background:var(--surface);color:var(--teal)">+ Nueva cita</button></div>`;
 }
 
@@ -60,7 +60,7 @@ function tabProp() {
 }
 
 function tabAct() {
-  const dot = (color, t, sub, last) => `<div style="position:relative;padding:0 0 ${last ? '0' : '16px'} 20px;border-left:2px solid ${last ? 'transparent' : 'var(--border)'}"><span style="position:absolute;left:-6px;top:2px;width:10px;height:10px;border-radius:50%;background:${color}"></span><div style="font-size:13px;font-weight:600;color:var(--ink)">${e(t)}</div><div style="font-size:11.5px;color:var(--text3)">${e(sub)}</div></div>`;
+  const dot = (color, t, sub, last) => `<div style="position:relative;padding:0 0 ${last ? '0' : '16px'} 20px;border-left:2px solid ${last ? 'transparent' : 'var(--border)'}"><span style="position:absolute;left:-6px;top:2px;width:10px;height:10px;border-radius:50%;background:${color}"></span><div style="font-size:13px;font-weight:600;color:var(--ink)">${e(t)}</div><div style="font-size:12px;color:var(--text3)">${e(sub)}</div></div>`;
   const st = stageOf(_lead.estado);
   return `<div style="position:relative;padding-left:8px">
     ${dot(st.color, `Etapa actual: ${_lead.estado}`, timeAgo(_lead.fechaActualizacion || _lead.fechaCreacion))}
@@ -105,7 +105,7 @@ function sheetDireccion(app) {
   openSheet(`
     <div class="sheet__body">
       <div class="sheet__title" style="margin-bottom:3px">Dirección</div>
-      <div class="muted" style="font-size:12.5px;margin-bottom:14px">${e(l.empresa || l.nombre || '')}</div>
+      <div class="muted" style="font-size:13px;margin-bottom:14px">${e(l.empresa || l.nombre || '')}</div>
       <div class="field"><label class="field__label" for="dirCalle">Calle y número</label>
         <input id="dirCalle" class="input" placeholder="Av. San Miguel 1234, oficina 3" value="${e(l.direccion || '')}"></div>
       <div class="field"><label class="field__label" for="dirComuna">Comuna</label>
@@ -149,20 +149,20 @@ export default {
       db.propuestas.byProspecto(id).catch(() => []),
     ]);
     const l = _lead, st = stageOf(l.estado), ht = heat(l.scoring);
-    const tab = (key, label) => `<button class="fk-tab" data-tab="${key}" style="flex:none;background:none;border:0;border-bottom:2px solid ${_tab === key ? 'var(--teal)' : 'transparent'};color:${_tab === key ? 'var(--ink)' : 'var(--text2)'};font-family:var(--font);font-weight:700;font-size:13.5px;padding:8px 10px 11px;cursor:pointer;white-space:nowrap">${label}</button>`;
+    const tab = (key, label) => `<button class="fk-tab" data-tab="${key}" style="flex:none;background:none;border:0;border-bottom:2px solid ${_tab === key ? 'var(--teal)' : 'transparent'};color:${_tab === key ? 'var(--ink)' : 'var(--text2)'};font-family:var(--font);font-weight:700;font-size:13px;padding:8px 10px 11px;cursor:pointer;white-space:nowrap">${label}</button>`;
 
     return `
     <section class="screen">
       <header class="hdr" style="display:flex;align-items:center;gap:4px;padding-bottom:10px">
         <button class="icon-btn icon-btn--bare" id="fkBack" style="width:38px;height:38px" aria-label="Volver">${ic('back', { size: 22, sw: 1.9 })}</button>
-        <span class="tabular" style="flex:1;font-size:12.5px;color:var(--text3)">${e(l.correlativo || '')}</span>
+        <span class="tabular" style="flex:1;font-size:13px;color:var(--text3)">${e(l.correlativo || '')}</span>
         <button class="icon-btn icon-btn--bare" id="fkEdit" style="width:38px;height:38px" aria-label="Editar">${ic('edit', { size: 20 })}</button>
       </header>
 
       <div style="padding:4px 18px 130px">
         <div style="display:flex;align-items:center;gap:14px">
-          <div style="width:60px;height:60px;border-radius:17px;background:${st.bg};color:${st.color};display:flex;align-items:center;justify-content:center;font-weight:700;font-size:21px;flex:none">${e(initials(l.nombre))}</div>
-          <div style="flex:1;min-width:0"><div class="serif" style="font-size:23px;font-weight:600;color:var(--ink);line-height:1.15">${e(l.nombre)}</div><div class="ell" style="font-size:13.5px;color:var(--text2)">${e(l.empresa || '—')}</div></div>
+          <div style="width:60px;height:60px;border-radius:17px;background:${st.bg};color:${st.color};display:flex;align-items:center;justify-content:center;font-weight:700;font-size:20px;flex:none">${e(initials(l.nombre))}</div>
+          <div style="flex:1;min-width:0"><div class="serif" style="font-size:24px;font-weight:600;color:var(--ink);line-height:1.15">${e(l.nombre)}</div><div class="ell" style="font-size:13px;color:var(--text2)">${e(l.empresa || '—')}</div></div>
         </div>
         <div style="display:flex;align-items:center;gap:8px;margin-top:13px">
           <span class="badge" style="color:${st.color};background:${st.bg}"><span class="dot"></span>${e(l.estado)}</span>
@@ -189,7 +189,7 @@ export default {
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:14px">
           <button class="btn btn--ghost" data-act="cita" style="height:46px;color:var(--ink)">Nueva cita</button>
           <button class="btn btn--ghost" data-act="prop" style="height:46px;color:var(--ink)">Nueva propuesta</button>
-          <button class="btn btn--navy" data-act="diag" style="grid-column:1/3;height:48px;font-size:14.5px">${ic('diag360', { size: 18 })} Hacer Diagnóstico 360</button>
+          <button class="btn btn--navy" data-act="diag" style="grid-column:1/3;height:48px;font-size:15px">${ic('diag360', { size: 18 })} Hacer Diagnóstico 360</button>
         </div>
       </div>
     </section>`;

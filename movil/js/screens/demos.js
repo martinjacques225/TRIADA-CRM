@@ -220,13 +220,13 @@ function demoCard(d) {
       <div style="display:flex;align-items:center;gap:13px;padding:16px 16px 0">
         <span style="width:54px;height:54px;border-radius:16px;display:flex;align-items:center;justify-content:center;color:#fff;flex:none;background:linear-gradient(150deg,${d.grad[0]},${d.grad[1]});box-shadow:var(--shadow-sm)">${ic(d.icon, { size: 26, sw: 1.9 })}</span>
         <div style="flex:1;min-width:0">
-          <div class="serif" style="font-size:18px;font-weight:600;color:var(--ink);line-height:1.15">${e(d.nombre)}</div>
-          <div class="ell" style="font-size:12.5px;color:var(--teal);font-weight:600;margin-top:2px">${e(d.tagline)}</div>
+          <div class="serif" style="font-size:17px;font-weight:600;color:var(--ink);line-height:1.15">${e(d.nombre)}</div>
+          <div class="ell" style="font-size:13px;color:var(--teal);font-weight:600;margin-top:2px">${e(d.tagline)}</div>
         </div>
         <span class="badge" style="color:var(--green);background:var(--green-l);flex:none"><span class="dot"></span>En vivo</span>
       </div>
       <p style="margin:11px 16px 0;font-size:13px;color:var(--text2);line-height:1.5">${e(d.desc)}</p>
-      <div class="chip-wrap" style="padding:12px 16px 0">${d.chips.map((c) => `<span class="chip" style="cursor:default;padding:5px 11px;font-size:11.5px">${e(c)}</span>`).join('')}</div>
+      <div class="chip-wrap" style="padding:12px 16px 0">${d.chips.map((c) => `<span class="chip" style="cursor:default;padding:5px 11px;font-size:12px">${e(c)}</span>`).join('')}</div>
       <div style="display:flex;gap:9px;padding:14px 16px">
         <button class="btn btn--primary btn--sm" data-open="${e(d.id)}" style="flex:1">${ic('external', { size: 16, sw: 2 })} Abrir demo</button>
         <button class="btn btn--ghost btn--sm" data-share="${e(d.id)}" aria-label="Compartir enlace" style="width:46px;padding:0">${ic('share', { size: 17 })}</button>
@@ -254,7 +254,7 @@ export default {
         <div class="list list--lg">
           ${DEMOS.map(demoCard).join('')}
         </div>
-        <div style="display:flex;align-items:center;justify-content:center;gap:7px;margin-top:22px;font-size:11.5px;color:var(--text3)">
+        <div style="display:flex;align-items:center;justify-content:center;gap:7px;margin-top:22px;font-size:12px;color:var(--text3)">
           ${ic('external', { size: 13, sw: 1.8 })} Se abren en una pestaña aparte; vuelves a la app cuando quieras.
         </div>
       </div>

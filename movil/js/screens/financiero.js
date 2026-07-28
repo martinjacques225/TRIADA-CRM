@@ -36,7 +36,7 @@ let _items = [];
 
 // estilo de chip toggle (inline, no depende de CSS nuevo)
 const chip = (on) => `padding:8px 14px;border-radius:999px;font-size:13px;font-weight:600;white-space:nowrap;cursor:pointer;border:1px solid ${on ? 'transparent' : 'var(--line,#e4e7ee)'};background:${on ? 'var(--teal,#0C7C88)' : 'transparent'};color:${on ? '#fff' : 'var(--text3,#8a94a6)'}`;
-const inputStyle = 'width:100%;padding:11px 13px;border:1px solid var(--line,#e4e7ee);border-radius:11px;font-size:14px;color:var(--text,#1a2332);background:var(--surface,#fff);outline:none;box-sizing:border-box';
+const inputStyle = 'width:100%;padding:11px 13px;border:1px solid var(--line,#e4e7ee);border-radius:11px;font-size:15px;color:var(--text,#1a2332);background:var(--surface,#fff);outline:none;box-sizing:border-box';
 
 export default {
   chrome: false,
@@ -89,8 +89,8 @@ function _card(a) {
   return `<article class="card card--tap" data-open="${a.id}" style="display:flex;align-items:center;gap:12px;padding:13px">
     <span style="width:42px;height:42px;border-radius:11px;flex:none;display:flex;align-items:center;justify-content:center;font-size:20px;background:var(--surface2,#f2f4f7)">${t.icon}</span>
     <span style="flex:1;min-width:0">
-      <span style="display:block;font-weight:600;font-size:14px;color:var(--ink,#16234A);line-height:1.3;word-break:break-word">${e(a.titulo || t.label)}</span>
-      <span style="display:flex;flex-wrap:wrap;align-items:center;gap:5px 8px;margin-top:4px;font-size:11.5px;color:var(--text3,#8a94a6)">
+      <span style="display:block;font-weight:600;font-size:15px;color:var(--ink,#16234A);line-height:1.3;word-break:break-word">${e(a.titulo || t.label)}</span>
+      <span style="display:flex;flex-wrap:wrap;align-items:center;gap:5px 8px;margin-top:4px;font-size:12px;color:var(--text3,#8a94a6)">
         <span style="font-weight:700;padding:2px 7px;border-radius:999px;color:${em.color};background:${em.color}16">${e(em.label)}</span>
         <span>${e(a.periodo || '')} · ${e(formatDate(a.fecha))}</span>
       </span>
@@ -131,8 +131,8 @@ function _renderFlow() {
       <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px">
         ${FIN_TIPOS.map((x) => `<button data-tipo="${x.id}" style="display:flex;align-items:center;gap:11px;text-align:left;padding:12px 13px;border-radius:12px;cursor:pointer;border:1.5px solid ${x.id === _a.tipo ? 'var(--teal,#0C7C88)' : 'var(--line,#e4e7ee)'};background:${x.id === _a.tipo ? 'var(--teal,#0C7C88)10' : 'transparent'}">
           <span style="font-size:20px">${x.icon}</span>
-          <span style="flex:1"><span style="display:block;font-weight:600;font-size:14px;color:var(--ink,#16234A)">${e(x.label)}</span>
-          <span style="display:block;font-size:11.5px;color:var(--text3,#8a94a6);line-height:1.35;margin-top:2px">${e(x.desc)}</span></span>
+          <span style="flex:1"><span style="display:block;font-weight:600;font-size:15px;color:var(--ink,#16234A)">${e(x.label)}</span>
+          <span style="display:block;font-size:12px;color:var(--text3,#8a94a6);line-height:1.35;margin-top:2px">${e(x.desc)}</span></span>
         </button>`).join('')}
       </div>
 
@@ -148,7 +148,7 @@ function _renderFlow() {
 
       <button class="btn btn--primary btn--block" id="finGo" style="margin-top:16px">✨ Generar informe</button>
       <button class="btn btn--ghost btn--block" id="finManual" style="margin-top:8px">o hacerlo manual (copiar/pegar)</button>
-      <div class="muted" id="finHint" style="font-size:11.5px;text-align:center;margin-top:8px">La IA lee tus datos y arma el informe sola.</div>
+      <div class="muted" id="finHint" style="font-size:12px;text-align:center;margin-top:8px">La IA lee tus datos y arma el informe sola.</div>
 
       ${_a.manual ? _manualBlock() : ''}
     </div>
@@ -157,11 +157,11 @@ function _renderFlow() {
 
 function _docsBlock(t) {
   return `
-    <div class="muted" style="font-size:11.5px;margin-bottom:8px;line-height:1.4">Sugerido para <b>${e(t.label)}</b>: ${e(t.docs)}</div>
+    <div class="muted" style="font-size:12px;margin-bottom:8px;line-height:1.4">Sugerido para <b>${e(t.label)}</b>: ${e(t.docs)}</div>
     <label style="display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center;padding:20px 16px;border:2px dashed var(--line,#e4e7ee);border-radius:14px;color:var(--text3,#8a94a6);cursor:pointer">
       <input id="finFiles" type="file" accept="image/*,application/pdf,.xlsx,.xls,.doc,.docx" multiple hidden>
       ${ic('plus', { size: 24 })}
-      <span style="font-size:13.5px;font-weight:600;color:var(--text2,#5a6376)">Adjuntar o tomar foto</span>
+      <span style="font-size:13px;font-weight:600;color:var(--text2,#5a6376)">Adjuntar o tomar foto</span>
       <span style="font-size:12px">F29, liquidaciones, balance… (PDF o foto)</span>
     </label>
     ${_a.documentos.length ? `<div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:11px">
@@ -174,10 +174,10 @@ function _docsBlock(t) {
 
 function _cifrasBlock(t) {
   return `
-    <div class="muted" style="font-size:11.5px;margin-bottom:8px">Tipea lo que tengas (en pesos). Lo que falte, la IA lo trata como supuesto.</div>
+    <div class="muted" style="font-size:12px;margin-bottom:8px">Tipea lo que tengas (en pesos). Lo que falte, la IA lo trata como supuesto.</div>
     <div style="display:flex;flex-direction:column;gap:9px">
       ${(t.cifras || []).map((c) => `<div>
-        <div class="muted" style="font-size:11.5px;margin-bottom:4px">${e(c.label)}</div>
+        <div class="muted" style="font-size:12px;margin-bottom:4px">${e(c.label)}</div>
         <input data-cifra="${c.id}" value="${e(_a.cifras?.[c.id] ?? '')}" placeholder="${e(c.hint || '')}" inputmode="numeric" autocomplete="off" style="${inputStyle}">
       </div>`).join('')}
     </div>`;
@@ -186,14 +186,14 @@ function _cifrasBlock(t) {
 function _manualBlock() {
   return `
     <div class="card" style="margin-top:16px;padding:14px">
-      <div style="font-weight:600;font-size:14px;color:var(--ink,#16234A);margin-bottom:8px">Modo manual</div>
+      <div style="font-weight:600;font-size:15px;color:var(--ink,#16234A);margin-bottom:8px">Modo manual</div>
       <div class="muted" style="font-size:12px;margin-bottom:8px">Copia el prompt, pégalo en ${e(LECTOR.label)} con tus documentos y trae la respuesta.</div>
       <textarea id="finPrompt" readonly rows="6" style="${inputStyle};font-family:ui-monospace,monospace;font-size:12px;resize:vertical">${e(_a.prompt)}</textarea>
       <div style="display:flex;gap:8px;margin-top:9px">
         <button class="btn btn--ghost" id="finCopy" style="flex:1">📋 Copiar</button>
         <a class="btn btn--ghost" href="${e(LECTOR.url)}" target="_blank" rel="noopener" style="flex:1;text-align:center">Abrir ${e(LECTOR.label)} ↗</a>
       </div>
-      <div class="muted" style="font-size:11.5px;margin:12px 0 5px">Pega aquí la respuesta (JSON) de la IA</div>
+      <div class="muted" style="font-size:12px;margin:12px 0 5px">Pega aquí la respuesta (JSON) de la IA</div>
       <textarea id="finResp" rows="5" placeholder="Pega el bloque que empieza con &#96;&#96;&#96;json…" style="${inputStyle};font-family:ui-monospace,monospace;font-size:12px;resize:vertical">${e(_a.respuestaRaw)}</textarea>
       <button class="btn btn--primary btn--block" id="finReport" style="margin-top:11px">📄 Ver informe</button>
       <button class="btn btn--ghost btn--block" id="finSave" style="margin-top:8px">💾 Guardar</button>

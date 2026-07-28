@@ -24,7 +24,7 @@ function optStyle(m, sel) {
 }
 function optBtn(area, i, m) {
   const sel = _ans[area][i] === m.frac;
-  return `<button type="button" class="dg-opt" data-area="${area}" data-i="${i}" data-v="${m.frac}" data-r="${m.v}" role="radio" aria-checked="${sel}" title="${m.label}" style="${optStyle(m, sel)}"><span style="font-size:15px;font-weight:800;line-height:1">${m.v}</span><span style="font-size:9px;font-weight:600;line-height:1.1">${m.short}</span></button>`;
+  return `<button type="button" class="dg-opt" data-area="${area}" data-i="${i}" data-v="${m.frac}" data-r="${m.v}" role="radio" aria-checked="${sel}" title="${m.label}" style="${optStyle(m, sel)}"><span style="font-size:15px;font-weight:800;line-height:1">${m.v}</span><span style="font-size:11px;font-weight:600;line-height:1.1">${m.short}</span></button>`;
 }
 
 // Bloque de UN área: título con ícono + puntaje en vivo, luego sus subgrupos y preguntas.
@@ -37,7 +37,7 @@ function areaBlock(area) {
     let qs = '';
     for (let k = 0; k < g.n; k++, i++) {
       qs += `<div class="card" style="padding:14px">
-        <div style="font-size:13.5px;color:var(--text);line-height:1.5;margin-bottom:12px">${e(preguntas[i])}</div>
+        <div style="font-size:13px;color:var(--text);line-height:1.5;margin-bottom:12px">${e(preguntas[i])}</div>
         <div class="dg-opts" style="display:flex;gap:5px" role="radiogroup">${SCALE.map((m) => optBtn(area, i, m)).join('')}</div>
       </div>`;
     }
@@ -49,8 +49,8 @@ function areaBlock(area) {
   return `<section id="dgArea-${area}" class="dg-area" data-area="${area}" style="margin-bottom:24px">
     <header style="display:flex;align-items:center;gap:11px;padding:2px 0 14px">
       <span style="width:34px;height:34px;border-radius:10px;background:${a.color}1A;color:${a.color};display:flex;align-items:center;justify-content:center;flex:none">${areaIcon(area, 19)}</span>
-      <div style="flex:1;min-width:0"><div class="serif" style="font-size:18px;font-weight:600;color:var(--ink)">${e(a.label)}</div><div style="font-size:11px;color:var(--text3)">${preguntas.length} preguntas</div></div>
-      <div class="tabular" style="font-size:16px;font-weight:700;color:${a.color}"><span id="dgAreaScore-${area}">0</span><span style="opacity:.55;font-size:12px">%</span></div>
+      <div style="flex:1;min-width:0"><div class="serif" style="font-size:17px;font-weight:600;color:var(--ink)">${e(a.label)}</div><div style="font-size:11px;color:var(--text3)">${preguntas.length} preguntas</div></div>
+      <div class="tabular" style="font-size:17px;font-weight:700;color:${a.color}"><span id="dgAreaScore-${area}">0</span><span style="opacity:.55;font-size:12px">%</span></div>
     </header>
     ${groups}
   </section>`;
@@ -72,18 +72,18 @@ export default {
     _lead = _leadId ? await db.prospectos.get(_leadId).catch(() => null) : null;
     const empresa = (_lead && (_lead.empresa || _lead.nombre)) || 'Sin prospecto';
 
-    const sumCell = (a) => `<div style="text-align:center;min-width:0"><div class="serif tabular" id="dgSum-${a.id}" style="font-size:23px;font-weight:600;color:#fff;line-height:1">0</div><div style="width:18px;height:3px;border-radius:2px;background:${a.color};margin:4px auto 4px"></div><div style="font-size:9.5px;color:#9FB0D4;line-height:1.15">${e(a.label)}</div></div>`;
+    const sumCell = (a) => `<div style="text-align:center;min-width:0"><div class="serif tabular" id="dgSum-${a.id}" style="font-size:24px;font-weight:600;color:#fff;line-height:1">0</div><div style="width:18px;height:3px;border-radius:2px;background:${a.color};margin:4px auto 4px"></div><div style="font-size:11px;color:#9FB0D4;line-height:1.15">${e(a.label)}</div></div>`;
 
     return `
     <section class="screen" style="display:flex;flex-direction:column">
       <header class="hdr" style="padding-bottom:12px;border-bottom:1px solid var(--border)">
         <div style="display:flex;align-items:center;gap:6px;margin-bottom:12px">
           <button class="icon-btn icon-btn--bare" id="dgBack" style="width:38px;height:38px" aria-label="Volver">${ic('back', { size: 22, sw: 1.9 })}</button>
-          <div style="flex:1"><div class="serif" style="font-size:19px;font-weight:600;color:var(--ink)">Diagnóstico 360</div><div class="ell hdr__sub">${e(empresa)}</div></div>
-          <div style="text-align:right"><div class="tabular" style="font-size:16px;font-weight:700;color:var(--ink)"><span id="dgCount">0</span><span style="color:var(--text3);font-weight:500">/${TOTAL}</span></div></div>
+          <div style="flex:1"><div class="serif" style="font-size:20px;font-weight:600;color:var(--ink)">Diagnóstico 360</div><div class="ell hdr__sub">${e(empresa)}</div></div>
+          <div style="text-align:right"><div class="tabular" style="font-size:17px;font-weight:700;color:var(--ink)"><span id="dgCount">0</span><span style="color:var(--text3);font-weight:500">/${TOTAL}</span></div></div>
         </div>
         <div style="height:6px;border-radius:3px;background:var(--surface2);overflow:hidden"><div id="dgProgress" style="height:100%;border-radius:3px;background:linear-gradient(90deg,var(--violet),var(--teal),var(--green));width:0;transition:width .3s var(--ease)"></div></div>
-        <div style="display:flex;flex-wrap:wrap;gap:2px 10px;margin-top:9px">${SCALE.map((m) => `<span style="font-size:10px;color:var(--text3)"><b style="color:${m.color};font-variant-numeric:tabular-nums">${m.v}</b> ${m.label}</span>`).join('')}</div>
+        <div style="display:flex;flex-wrap:wrap;gap:2px 10px;margin-top:9px">${SCALE.map((m) => `<span style="font-size:11px;color:var(--text3)"><b style="color:${m.color};font-variant-numeric:tabular-nums">${m.v}</b> ${m.label}</span>`).join('')}</div>
         <div class="chip-row" id="dgTabs" style="gap:7px;margin-top:12px;padding:0">${tabsHtml()}</div>
       </header>
 

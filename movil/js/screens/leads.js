@@ -26,12 +26,12 @@ function leadCard(l) {
   return `
     <div class="card card--tap" data-lead="${e(l.id)}" style="border-left:3px solid ${st.color}">
       <div style="display:flex;align-items:flex-start;gap:11px">
-        <div style="width:42px;height:42px;border-radius:11px;background:${st.bg};color:${st.color};display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;flex:none">${e(initials(l.nombre))}</div>
+        <div style="width:42px;height:42px;border-radius:11px;background:${st.bg};color:${st.color};display:flex;align-items:center;justify-content:center;font-weight:700;font-size:15px;flex:none">${e(initials(l.nombre))}</div>
         <div style="flex:1;min-width:0">
-          <div style="display:flex;align-items:center;gap:6px;min-width:0"><span class="ell" style="font-weight:700;font-size:14.5px;color:var(--ink)">${e(l.nombre)}</span><span class="heat" style="background:${ht.color}"></span><span style="font-size:10px;color:${ht.color};font-weight:600;flex:none">${ht.label}</span></div>
-          <div class="ell" style="font-size:12.5px;color:var(--text2)">${e(l.empresa || '—')}</div>
+          <div style="display:flex;align-items:center;gap:6px;min-width:0"><span class="ell" style="font-weight:700;font-size:15px;color:var(--ink)">${e(l.nombre)}</span><span class="heat" style="background:${ht.color}"></span><span style="font-size:11px;color:${ht.color};font-weight:600;flex:none">${ht.label}</span></div>
+          <div class="ell" style="font-size:13px;color:var(--text2)">${e(l.empresa || '—')}</div>
         </div>
-        <div style="text-align:right;flex:none"><div class="tabular" style="font-size:10.5px;color:var(--text3);white-space:nowrap">${e(l.correlativo || '')}</div><div style="font-size:11px;color:var(--text3);margin-top:2px;white-space:nowrap">${e(timeAgo(l.fechaCreacion))}</div></div>
+        <div style="text-align:right;flex:none"><div class="tabular" style="font-size:11px;color:var(--text3);white-space:nowrap">${e(l.correlativo || '')}</div><div style="font-size:11px;color:var(--text3);margin-top:2px;white-space:nowrap">${e(timeAgo(l.fechaCreacion))}</div></div>
       </div>
       <div style="display:flex;align-items:center;gap:7px;margin-top:11px;flex-wrap:wrap">
         <span class="badge" style="color:${st.color};background:${st.bg}">${e(l.estado)}</span>
