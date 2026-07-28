@@ -1,7 +1,7 @@
 # HANDOFF — Tríada CRM Móvil (PWA de terreno)
 
 > Documento vivo · fuente de verdad del proyecto.
-> Última actualización: **2026-07-27** · Estado: **✅ COMPLETO y DESPLEGADO** · 🟡 lo de §3.bis (dirección + botón atrás) está **en el código, sin desplegar**
+> Última actualización: **2026-07-27** · Estado: **✅ COMPLETO y DESPLEGADO** (incluye §3.bis: dirección + botón atrás, commit `4388a2c`)
 
 ---
 
@@ -76,7 +76,7 @@ y en preview los mocks `/_preview/mock-{supabase,db}.js` (vía import-map de `pr
 ## 3.bis Terreno: dirección del lead y botón atrás (2026-07-27)
 
 - **📍 Dirección + "Cómo llegar".** `leads.direccion` y `leads.comuna` (migración `supabase/leads_direccion_2026-07-27.sql`,
-  🟡 **correr antes de desplegar**). Helper compartido **`js/geo.js`** (vía `core.js`): arma la consulta —
+  **✅ aplicada en producción el 2026-07-27**). Helper compartido **`js/geo.js`** (vía `core.js`): arma la consulta —
   dirección + comuna + región + ", Chile" — y las URLs de **Google Maps** (ruta ya iniciada), **Waze**,
   **Apple Maps** (solo iPhone) y "ver en el mapa". La **región sola no cuenta** como dirección.
   · **Captura:** campos Dirección + Comuna. · **Tarjeta de lead** y **cita presencial en Hoy:** franja
