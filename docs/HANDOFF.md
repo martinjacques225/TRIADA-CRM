@@ -1,6 +1,6 @@
 # HANDOFF — TRIADA CRM
 > **Documento vivo. Fuente de verdad del estado del proyecto.**
-> Última actualización: **2026-07-07**
+> Última actualización: **2026-07-27**
 
 ---
 
@@ -397,7 +397,7 @@
   - `lead_origen`: `manual, landing, meta_ads, google_ads, whatsapp, referido` — **solo estos 6**.
   - `lead_estado`: `Nuevo, Contactado, Diagnóstico Agendado, Diagnóstico Realizado, Propuesta Enviada, Negociando, Cliente, Descartado`.
   - `lead_score`: `caliente, tibio, frio` · `diag_estado`: `borrador, en_revision, aprobado, rechazado` · `prop_estado`: `borrador, enviada, negociando, aceptada, rechazada` · `fact_estado`: `pendiente, parcial, pagado, vencido` · `area_t`: `comercial, finanzas, desarrollo, rrhh, operaciones, tecnologia, ventas`.
-- **`leads`:** id, **codigo**, nombre, empresa, rut, email, telefono, **giro** (=rubro en UI), tamano, region, facturacion_est, dolor_principal, origen, estado, scoring, responsable, notas, created_at, updated_at. *(No existe `historial`.)*
+- **`leads`:** id, **codigo**, nombre, empresa, rut, email, telefono, **giro** (=rubro en UI), tamano, region, **direccion**, **comuna**, facturacion_est, dolor_principal, origen, estado, scoring, responsable, notas, created_at, updated_at. *(No existe `historial`.)* `direccion`/`comuna` se agregan con `supabase/leads_direccion_2026-07-27.sql` — 🟡 correr antes de desplegar el JS que las escribe.
 - **`clientes`:** id, **codigo**, lead_id, **razon_social**, rut, **giro**, **direccion**, responsable, created_at.
 - **`facturas`:** id, **codigo**, **cliente_id**, monto, pagado, estado, **emision**, **vencimiento**, created_at.
 - **`diagnosticos`:** id, codigo, lead_id, scores(jsonb), hallazgos(jsonb), oportunidades(jsonb), estado, responsable, created_at.
@@ -618,6 +618,18 @@ Columnas del calendario agregadas a `citas` y verificadas en vivo. Persistencia 
 ---
 
 ## 7. Bitácora de sesiones (más reciente arriba)
+
+### 2026-07-27 — 📍 Dirección del lead + "Cómo llegar" · 🔙 botón atrás de Android en la PWA
+- **Problema real de terreno (reportado por el dueño):** el CRM **no pedía dirección**. Al visitar una comuna fuera de Talca no había desde dónde navegar ni cómo volver. Segundo problema: en la app móvil el **botón físico "atrás" cerraba la app de golpe**, sin preguntar y sin volver a la pantalla anterior.
+- **Datos:** migración `supabase/leads_direccion_2026-07-27.sql` → `leads.direccion` + `leads.comuna` (text, nullable, idempotente, con `comment on column`). `js/mappers.js` los mapea en ambos sentidos. ⚠️ **Correr el SQL ANTES de desplegar el JS** (si no, un lead con dirección falla al guardar: la columna no existiría).
+- **Helper compartido `js/geo.js`** (puro, testeado): `direccionCompleta` / `direccionCorta` / `tieneDireccion` / `mapsQuery` (agrega ", Chile" y **no duplica** el país) + URLs de Google Maps (ruta con `dir_action=navigate`), Waze, Apple Maps y "ver en el mapa". Regla: **la región sola NO es dirección** (media zona del país) → sin dirección ni comuna, no hay botón ni URL. Sin API de geocodificación: los mapas resuelven el texto (principio "demo simulada, API diferida").
+- **Escritorio:** el modal de prospecto suma la sección "Dónde está (para visitas en terreno)" (Dirección + Comuna); la ficha muestra el bloque DIRECCIÓN con **Cómo llegar / Waze / Ver en el mapa**, o un aviso punteado si falta; la tarjeta de Leads muestra la dirección y un botón de mapa. `styles.css`: `.btn` ahora lleva `text-decoration:none` (los botones-enlace salían subrayados).
+- **Móvil:** captura con Dirección+Comuna; tarjeta de lead con franja "dirección → Cómo llegar"; ficha con bloque de dirección **editable desde el teléfono** (hoja con los dos campos → guarda en Supabase; antes NO se podía editar un lead desde el móvil, así que un lead sin dirección quedaba muerto en terreno); **Hoy** muestra la ruta en las citas **presenciales** con lead direccionado. La hoja "Cómo llegar" ofrece Google Maps · Waze · (Apple Maps en iPhone) · ver en el mapa · copiar dirección. `modoDe()` en `hoy.js` ahora distingue Zoom / Telefónica / Presencial (antes toda cita sin enlace era "Presencial").
+- **Botón atrás (Android) — `movil/js/app.js`:** patrón *colchón*: se empuja una entrada de historial al arrancar y se repone en cada `popstate`, así la app decide qué significa "atrás": **visor a pantalla completa → cerrarlo · hoja abierta → cerrarla · hay pantalla previa → volver · en la raíz → preguntar "¿Salir de la app?"** (y si vuelve a tocar atrás con la pregunta abierta, sale: el gesto de Android). `navigate(name, params, {root:true})` para login/Hoy → atrás no devuelve al splash ni al login; tope de 40 entradas; red de seguridad si el navegador no puede cerrar.
+- **Estética móvil:** el `:hover` se quedaba pegado tras tocar (no hay puntero que se vaya) → realce solo con mouse (`@media (hover:hover)`) y **hundido al tocar** en tarjetas, botones, chips, hojas y pestañas; acciones rápidas `.qa` unificadas por clase (35 px, antes 33/34 con estilos inline); **barrita sobre la pestaña activa** del tab bar; dirección a dos líneas en la ficha.
+- **✅ Verificado en el harness de preview (Chrome, viewport 375×812):** las 3 URLs de mapas correctas y escapadas; franja en tarjeta y en cita presencial; la hoja no abre la ficha ni salta a la agenda (stopPropagation); alta de lead con y sin dirección; edición de dirección desde la ficha móvil (guardada + repintada); modal de escritorio guarda dirección/comuna (round-trip contra la capa de datos); atrás cierra hoja → vuelve de ficha a leads → pregunta en la raíz → sale al confirmar. **16 tests nuevos** en `tests/geo.test.js` + 2 de mapeo; suite completa **135/135**.
+- **🟡 Falta (pasos del dueño):** (1) correr el SQL en Supabase; (2) desplegar (push a `main`) y hard-refresh; (3) probar el cierre real de la app en el teléfono (en un navegador de escritorio solo se puede verificar la secuencia de historial, no que Android cierre la PWA).
+- **⬜ Ideas que quedaron fuera:** dirección en la carga masiva de leads (hoy el formato es `Nombre; Empresa; Email; Teléfono; Rubro`), dirección propia de la cita (hoy la ruta sale del lead) y guardar coordenadas.
 
 ### 2026-07-19 — 📄 Módulo **Contratos** — Fases 1–5 (piloto · persistencia · 10 plantillas · Impulsa · endurecimiento)
 - **Qué:** nuevo módulo `modules/contratos/` (gemelo de `biblioteca`). Genera contratos a partir de las MISMAS plantillas de la fábrica de escritorio (`05-VENTAS/_fuente`), rellena los `<span class="fill">` con datos de un formulario y exporta. Registrado en `app.js` (import + nav «Gestión» + mapa de vistas + ícono `_icoContrato`) e `index.html` (link CSS). Piloto = **Contrato de Asesoría** (36 campos, 30 claves).

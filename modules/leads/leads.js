@@ -4,6 +4,7 @@
 // llamar) + agendar y abrir ficha. Incluye carga masiva de leads.
 import { prospectos } from '../../js/db.js';
 import { origenDetalleLabel, esLeadDeDemo } from '../../js/mappers.js';
+import { direccionCorta, tieneDireccion, googleMapsUrl } from '../../js/geo.js';
 import { escHtml, PIPELINE_STAGES, stageBadge, toast } from '../../js/utils.js';
 
 const _i = (n, s) => (window.icon ? window.icon(n, '', s) : '');
@@ -127,15 +128,17 @@ function _leadCard(p) {
       ${p.dolorPrincipal ? `<span class="chip-dolor">${escHtml(p.dolorPrincipal)}</span>` : ''}
     </div>
 
-    ${(p.email || p.telefono) ? `<div style="font-size:12.5px;color:var(--text2);display:flex;flex-direction:column;gap:3px">
+    ${(p.email || p.telefono || tieneDireccion(p)) ? `<div style="font-size:12.5px;color:var(--text2);display:flex;flex-direction:column;gap:3px">
       ${p.email ? `<span style="display:inline-flex;align-items:center;gap:6px">${_i('mail', 13)} ${escHtml(p.email)}</span>` : ''}
       ${p.telefono ? `<span style="display:inline-flex;align-items:center;gap:6px">${_i('phone', 13)} ${escHtml(p.telefono)}</span>` : ''}
+      ${tieneDireccion(p) ? `<span style="display:inline-flex;align-items:center;gap:6px;min-width:0"><span style="flex-shrink:0;display:flex">${_i('mapPin', 13)}</span><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escHtml(direccionCorta(p))}</span></span>` : ''}
     </div>` : ''}
 
     <div style="display:flex;gap:6px;flex-wrap:wrap;border-top:1px solid var(--border);padding-top:11px;margin-top:auto">
       <button class="btn btn-sm" style="background:#25D366;color:#fff;border:none;${tieneTel ? '' : 'opacity:.45;'}" onclick="window._app.contactWhatsApp('${p.id}')" title="WhatsApp">${_i('whatsapp', 15)} WhatsApp</button>
       <button class="btn btn-sm" style="background:#2D8CFF;color:#fff;border:none" onclick="window._app.contactZoom('${p.id}')" title="Iniciar Zoom">${_i('video', 14)} Zoom</button>
       <button class="btn btn-ghost btn-sm" style="${tieneTel ? '' : 'opacity:.45;'}" onclick="window._app.callProspecto('${p.id}')" title="Llamar">${_i('phone', 14)} Llamar</button>
+      ${tieneDireccion(p) ? `<a class="btn btn-ghost btn-sm" href="${escHtml(googleMapsUrl(p))}" target="_blank" rel="noopener noreferrer" title="Cómo llegar — abre Google Maps con la ruta">${_i('mapPin', 14)}</a>` : ''}
       <button class="btn btn-ghost btn-sm" onclick="window._app.openCitaModalForProspecto('${p.id}')" title="Agendar">${_i('agenda', 14)}</button>
       <button class="btn btn-ghost btn-sm" onclick="window._app.openProspectoDetail('${p.id}')" title="Ver ficha" style="margin-left:auto">Ficha →</button>
     </div>

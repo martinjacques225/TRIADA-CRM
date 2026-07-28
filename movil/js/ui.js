@@ -2,7 +2,7 @@
 // ui.js — helpers de presentación compartidos por todas las pantallas.
 // (render seguro, logo de marca, set de íconos de línea, hojas inferiores, toasts)
 // ============================================================================
-import { html, raw } from './core.js';
+import { html, raw, escHtml, direccionCompleta, tieneDireccion, googleMapsUrl, googleMapsVerUrl, wazeUrl, appleMapsUrl } from './core.js';
 export { html, raw };
 
 // ── Logo de los 3 chevrons ─────────────────────────────────────────────────
@@ -53,6 +53,9 @@ const ICONS = {
   clock:      '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/>',
   pin:        '<path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="2.6"/>',
   edit:       '<path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/>',
+  navigate:   '<path d="m3 11 18-8-8 18-2.2-7.8L3 11Z"/>',
+  map:        '<path d="m9 4 6 2.5 5-2v15l-5 2-6-2.5-5 2v-15l5-2Z"/><path d="M9 4v15M15 6.5v15"/>',
+  copy:       '<rect x="9" y="9" width="12" height="12" rx="2.5"/><path d="M6 15H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v1"/>',
   logout:     '<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="m16 17 5-5-5-5M21 12H9"/>',
   trash:      '<path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>',
   share:      '<path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><path d="M16 6l-4-4-4 4M12 2v14"/>',
@@ -110,6 +113,57 @@ export function openTel(phone) {
   const d = String(phone || '').replace(/[^\d+]/g, '');
   if (!d) { toast('Sin teléfono registrado', 'info'); return; }
   window.location.href = `tel:${d}`;
+}
+
+// ── Cómo llegar (mapas) ─────────────────────────────────────────────────────
+// En terreno el problema no es solo llegar: es saber volver desde una comuna que
+// no conoces. Abrimos la dirección del lead en la app de navegación que el
+// vendedor prefiera; el teléfono se encarga del resto (ruta, tráfico, vuelta).
+// Cada enlace geocodifica el TEXTO de la dirección → sin API ni costo.
+export function openComoLlegar(lead) {
+  if (!tieneDireccion(lead)) {
+    toast('Este lead no tiene dirección cargada', 'info');
+    return;
+  }
+  const dir = direccionCompleta(lead);
+  const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+  const row = (url, icon, bg, fg, t, d) => `
+    <button class="sheet-row" data-url="${escHtml(url)}">
+      <span class="sheet-row__icon" style="background:${bg};color:${fg}">${ic(icon, { size: 21, sw: 1.9 })}</span>
+      <span style="flex:1;min-width:0"><span class="sheet-row__t">${escHtml(t)}</span><span class="sheet-row__d">${escHtml(d)}</span></span>
+      ${ic('next', { size: 19, sw: 2 })}
+    </button>`;
+
+  openSheet(`
+    <div class="sheet__body">
+      <div class="sheet__title" style="margin-bottom:3px">Cómo llegar</div>
+      <div class="muted" style="font-size:12.5px;margin-bottom:14px;display:flex;gap:7px;align-items:flex-start">
+        <span style="color:var(--teal);flex:none;display:flex;margin-top:1px">${ic('pin', { size: 15 })}</span>
+        <span>${escHtml(dir)}</span>
+      </div>
+      ${row(googleMapsUrl(lead), 'navigate', 'var(--teal-l)', 'var(--teal)', 'Google Maps', 'Inicia la ruta en auto')}
+      ${row(wazeUrl(lead), 'navigate', 'var(--violet-l)', 'var(--violet)', 'Waze', 'Navegación con tráfico en vivo')}
+      ${isIOS ? row(appleMapsUrl(lead), 'navigate', 'var(--navy-l)', 'var(--navy)', 'Mapas de Apple', 'La app de mapas del iPhone') : ''}
+      ${row(googleMapsVerUrl(lead), 'map', 'var(--surface2)', 'var(--text2)', 'Ver en el mapa', 'Ubicarte antes de salir, sin navegar')}
+      <button class="sheet-row" data-copy="${escHtml(dir)}">
+        <span class="sheet-row__icon" style="background:var(--surface2);color:var(--text2)">${ic('copy', { size: 19, sw: 1.9 })}</span>
+        <span style="flex:1;min-width:0"><span class="sheet-row__t">Copiar dirección</span><span class="sheet-row__d">Para pegarla en un WhatsApp</span></span>
+      </button>
+    </div>`, {
+    onMount: (el, close) => {
+      el.querySelectorAll('[data-url]').forEach((b) => b.addEventListener('click', () => {
+        haptic();
+        window.open(b.getAttribute('data-url'), '_blank', 'noopener');
+        close();
+      }));
+      el.querySelector('[data-copy]').addEventListener('click', async () => {
+        const txt = el.querySelector('[data-copy]').getAttribute('data-copy');
+        try { await navigator.clipboard.writeText(txt); toast('Dirección copiada ✓', 'ok'); }
+        catch (_) { toast('No se pudo copiar en este teléfono', 'err'); }
+        close();
+      });
+    },
+  });
 }
 
 // Cambiar contraseña vía Supabase (defensivo: el mock del preview no tiene updateUser).

@@ -2,31 +2,51 @@
 // screens/hoy.js — pantalla de aterrizaje (Hoy).
 // Saludo + línea trIA + KPIs + "Tu día" (citas de hoy) + leads recientes.
 // ============================================================================
-import { db, store, PIPELINE_STAGES, meetingType, todayStr, escHtml, heat, initials, timeAgo } from '../core.js';
-import { logo, ic, toast, openWhatsApp, openTel } from '../ui.js';
+import { db, store, PIPELINE_STAGES, meetingType, todayStr, escHtml, heat, initials, timeAgo, direccionCorta, tieneDireccion } from '../core.js';
+import { logo, ic, toast, openWhatsApp, openTel, openComoLlegar } from '../ui.js';
 
 const e = escHtml;
 const stageOf = (estado) => PIPELINE_STAGES.find((s) => s.id === estado) || { color: '#94A0B6', bg: '#F0F2F6' };
 const longDate = () => { const s = new Date().toLocaleDateString('es-CL', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }); return s.charAt(0).toUpperCase() + s.slice(1); };
-const modoDe = (lugar) => /https?:|meet\.|zoom|teams/i.test(lugar || '') ? 'Zoom' : 'Presencial';
+// Cómo es la reunión, según el lugar: enlace → videollamada · teléfono → llamada ·
+// cualquier otra cosa → presencial. Solo en las presenciales tiene sentido la ruta.
+const modoDe = (lugar) => {
+  const s = String(lugar || '');
+  if (/https?:|meet\.|zoom|teams|videollamada/i.test(s)) return 'Zoom';
+  if (/tel[eé]|fono|llamada|whatsapp/i.test(s)) return 'Telefónica';
+  return 'Presencial';
+};
+
+let _leads = [];   // leads del día en memoria: los usa "Cómo llegar" de cada cita
 
 function citaCard(c) {
   const t = meetingType(c.tipo);
+  // Reunión presencial con lead direccionado → la ruta, a un toque, antes de salir.
+  const lead = c.prospectoId ? _leads.find((l) => l.id === c.prospectoId) : null;
+  const conRuta = modoDe(c.lugar) === 'Presencial' && lead && tieneDireccion(lead);
   return `
-    <div class="card card--tap" data-cita="${e(c.id)}" style="display:flex;align-items:center;gap:13px">
-      <div style="display:flex;flex-direction:column;align-items:center;min-width:46px">
-        <span class="serif tabular" style="font-size:17px;font-weight:600;color:var(--ink)">${e(c.hora || '—')}</span>
-        <span class="tabular" style="font-size:10.5px;color:var(--text3)">${c.durMin || 60} min</span>
-      </div>
-      <div style="width:3px;align-self:stretch;border-radius:2px;background:${t.color}"></div>
-      <div style="flex:1;min-width:0">
-        <div class="ell" style="font-weight:700;font-size:14px;color:var(--ink)">${e(c.titulo || t.label)}</div>
-        <div style="display:flex;align-items:center;gap:7px;margin-top:3px">
-          <span style="font-size:11px;font-weight:600;color:${t.color}">${e(t.label)}</span>
-          <span style="font-size:11px;color:var(--text3)">·</span>
-          <span style="font-size:11.5px;color:var(--text2)">${modoDe(c.lugar)}</span>
+    <div class="card card--tap" data-cita="${e(c.id)}">
+      <div style="display:flex;align-items:center;gap:13px">
+        <div style="display:flex;flex-direction:column;align-items:center;min-width:46px">
+          <span class="serif tabular" style="font-size:17px;font-weight:600;color:var(--ink)">${e(c.hora || '—')}</span>
+          <span class="tabular" style="font-size:10.5px;color:var(--text3)">${c.durMin || 60} min</span>
+        </div>
+        <div style="width:3px;align-self:stretch;border-radius:2px;background:${t.color}"></div>
+        <div style="flex:1;min-width:0">
+          <div class="ell" style="font-weight:700;font-size:14px;color:var(--ink)">${e(c.titulo || t.label)}</div>
+          <div style="display:flex;align-items:center;gap:7px;margin-top:3px">
+            <span style="font-size:11px;font-weight:600;color:${t.color}">${e(t.label)}</span>
+            <span style="font-size:11px;color:var(--text3)">·</span>
+            <span style="font-size:11.5px;color:var(--text2)">${modoDe(c.lugar)}</span>
+          </div>
         </div>
       </div>
+      ${conRuta ? `
+      <button class="lead-dir" data-map="${e(lead.id)}" aria-label="Cómo llegar a ${e(lead.empresa || lead.nombre)}">
+        <span style="color:var(--teal);flex:none;display:flex">${ic('pin', { size: 15 })}</span>
+        <span class="ell">${e(direccionCorta(lead))}</span>
+        <span class="lead-dir__go">${ic('navigate', { size: 14, sw: 2 })} Cómo llegar</span>
+      </button>` : ''}
     </div>`;
 }
 
@@ -45,8 +65,8 @@ function leadCard(l) {
       <div style="display:flex;align-items:center;gap:8px;margin-top:11px">
         <span class="badge" style="color:${st.color};background:${st.bg}"><span class="dot"></span>${e(l.estado)}</span>
         <span style="flex:1"></span>
-        <button class="qa" data-wa="${e(l.telefono || '')}" aria-label="WhatsApp" style="width:34px;height:34px;border-radius:10px;background:var(--green-l);color:var(--green);border:0;display:flex;align-items:center;justify-content:center;cursor:pointer">${ic('whatsapp', { size: 17 })}</button>
-        <button class="qa" data-tel="${e(l.telefono || '')}" aria-label="Llamar" style="width:34px;height:34px;border-radius:10px;background:var(--teal-l);color:var(--teal);border:0;display:flex;align-items:center;justify-content:center;cursor:pointer">${ic('phone', { size: 16 })}</button>
+        <button class="qa qa--wa" data-wa="${e(l.telefono || '')}" aria-label="WhatsApp">${ic('whatsapp', { size: 17 })}</button>
+        <button class="qa qa--tel" data-tel="${e(l.telefono || '')}" aria-label="Llamar">${ic('phone', { size: 16 })}</button>
       </div>
     </div>`;
 }
@@ -57,6 +77,7 @@ export default {
     const [leads, citas, props] = await Promise.all([
       db.prospectos.getAll(), db.citas.getAll(), db.propuestas.getAll(),
     ]);
+    _leads = leads;
     const today = todayStr();
     const porContactar = leads.filter((l) => l.estado === 'Nuevo').length;
     const citasHoy = citas.filter((c) => c.fecha === today).sort((a, b) => (a.hora || '').localeCompare(b.hora || ''));
@@ -112,6 +133,10 @@ export default {
     host.querySelectorAll('[data-go]').forEach((el) => el.addEventListener('click', () => app.navigate(el.getAttribute('data-go'))));
     host.querySelector('#bell')?.addEventListener('click', () => app.openCampana());
     host.querySelectorAll('[data-cita]').forEach((el) => el.addEventListener('click', () => app.navigate('agenda')));
+    host.querySelectorAll('[data-map]').forEach((b) => b.addEventListener('click', (ev) => {
+      ev.stopPropagation();   // sin esto, además de abrir el mapa saltaría a la agenda
+      openComoLlegar(_leads.find((l) => l.id === b.getAttribute('data-map')));
+    }));
     host.querySelectorAll('[data-lead]').forEach((el) => el.addEventListener('click', () => app.navigate('ficha', { leadId: el.getAttribute('data-lead') })));
     host.querySelectorAll('.qa').forEach((b) => b.addEventListener('click', (ev) => {
       ev.stopPropagation();

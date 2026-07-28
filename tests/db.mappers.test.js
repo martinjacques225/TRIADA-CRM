@@ -64,6 +64,21 @@ test('leadFromSupa: codigo→correlativo, giro→rubro, origen DB→UI; null→n
   assert.equal(ui.origen, 'Meta Ads');
 });
 
+// ─── Dirección de terreno (ida y vuelta, para "Cómo llegar") ─
+test('lead: direccion/comuna viajan UI↔DB con el mismo nombre', () => {
+  const out = leadToSupa({ nombre: 'Ana', direccion: 'Balmaceda 55', comuna: 'Molina' });
+  assert.equal(out.direccion, 'Balmaceda 55');
+  assert.equal(out.comuna, 'Molina');
+  const ui = leadFromSupa({ id: '1', direccion: 'Balmaceda 55', comuna: 'Molina' });
+  assert.equal(ui.direccion, 'Balmaceda 55');
+  assert.equal(ui.comuna, 'Molina');
+});
+test('lead: sin dirección no manda las columnas (clean descarta undefined)', () => {
+  const out = leadToSupa({ nombre: 'Ana' });
+  assert.ok(!('direccion' in out));
+  assert.ok(!('comuna' in out));
+});
+
 // ─── Atribución del Experience Center (origen_detalle) ───────
 test('leadFromSupa: origen_detalle → origenDetalle (atribución EC, RPC v2)', () => {
   assert.equal(leadFromSupa({ id: '1', origen_detalle: 'demo-conserje' }).origenDetalle, 'demo-conserje');

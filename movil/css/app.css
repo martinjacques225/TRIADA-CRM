@@ -33,7 +33,9 @@
 .avatar{border-radius:50%;border:0;cursor:pointer;background:var(--teal);color:#fff;font-weight:700;
   display:flex;align-items:center;justify-content:center;flex:none}
 .icon-btn{border-radius:12px;border:0;background:var(--surface);box-shadow:var(--shadow-sm);
-  display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--text2);position:relative}
+  display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--text2);position:relative;
+  transition:transform .12s var(--ease)}
+.icon-btn:active,.avatar:active{transform:scale(.92)}
 .icon-btn--bare{background:none;box-shadow:none}
 .dot-badge{position:absolute;top:7px;right:8px;width:8px;height:8px;border-radius:50%;background:var(--danger);border:2px solid var(--surface)}
 
@@ -50,10 +52,50 @@
 /* ── Tarjetas ────────────────────────────────────────────────── */
 .card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
   padding:13px 14px;box-shadow:var(--shadow-sm)}
-.card--tap{cursor:pointer;transition:var(--tr)}
-.card--tap:hover{transform:translateY(-1px);box-shadow:var(--shadow)}
+.card--tap{cursor:pointer;transition:transform .12s var(--ease),box-shadow var(--tr)}
+/* El teléfono no tiene puntero: el hover se queda "pegado" tras tocar. El realce
+   va solo donde hay mouse; en el táctil manda el hundido del :active. */
+@media (hover:hover){.card--tap:hover{transform:translateY(-1px);box-shadow:var(--shadow)}}
+.card--tap:active{transform:scale(.985);box-shadow:var(--shadow-sm)}
 .list{display:flex;flex-direction:column;gap:9px}
 .list--lg{gap:10px}
+
+/* ── Acciones rápidas de la tarjeta (WhatsApp / llamar / Zoom) ── */
+.qa{width:35px;height:35px;border-radius:11px;border:0;flex:none;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;transition:transform .12s var(--ease),filter var(--tr)}
+.qa:active{transform:scale(.9)}
+.qa--wa{background:var(--green-l);color:var(--green)}
+.qa--tel{background:var(--teal-l);color:var(--teal)}
+.qa--zoom{background:var(--violet-l);color:var(--violet)}
+
+/* ── Dirección de terreno ─────────────────────────────────────── */
+/* Tarjeta del lead: franja con la dirección + acceso directo a la ruta. */
+.lead-dir{display:flex;align-items:center;gap:8px;width:100%;margin-top:11px;padding:9px 11px;
+  background:var(--surface2);border:0;border-radius:var(--radius-sm);color:var(--text2);
+  font-family:var(--font);font-size:12.5px;text-align:left;cursor:pointer;
+  transition:transform .12s var(--ease),background var(--tr)}
+.lead-dir:active{background:var(--surface3);transform:scale(.985)}
+.lead-dir__go{margin-left:auto;flex:none;display:inline-flex;align-items:center;gap:5px;
+  color:var(--teal);font-weight:700;font-size:12px;white-space:nowrap}
+
+/* Ficha: bloque "dónde está" (editar a la izquierda, navegar a la derecha). */
+.fk-dir{display:flex;align-items:center;gap:10px;margin-top:14px;padding:10px 11px;
+  background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow-sm)}
+.fk-dir--empty{width:100%;border-style:dashed;cursor:pointer;text-align:left;font-family:var(--font);
+  transition:transform .12s var(--ease),background var(--tr)}
+.fk-dir--empty:active{background:var(--surface2);transform:scale(.99)}
+.fk-dir__edit{display:flex;align-items:center;gap:10px;flex:1;min-width:0;background:none;border:0;
+  padding:0;text-align:left;font-family:var(--font);cursor:pointer}
+.fk-dir__ic{width:38px;height:38px;border-radius:12px;flex:none;display:flex;align-items:center;justify-content:center}
+.fk-dir__main{display:flex;flex-direction:column;min-width:0;flex:1;gap:1px}
+/* La dirección es EL dato de la ficha: hasta dos líneas antes de recortar. */
+.fk-dir__t{font-size:13.5px;font-weight:700;color:var(--ink);line-height:1.3;overflow:hidden;
+  display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2}
+.fk-dir__d{font-size:11px;color:var(--text3)}
+.fk-dir__go{flex:none;display:inline-flex;align-items:center;gap:5px;background:var(--teal);color:#fff;
+  border:0;border-radius:var(--radius-sm);padding:10px 12px;font-family:var(--font);font-weight:700;
+  font-size:12.5px;cursor:pointer;white-space:nowrap;transition:transform .12s var(--ease),background var(--tr)}
+.fk-dir__go:active{background:var(--teal-d);transform:scale(.96)}
 
 /* ── KPIs ────────────────────────────────────────────────────── */
 .kpi-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:9px;margin-top:16px}
@@ -72,6 +114,7 @@
 .chip{flex:none;border:1px solid var(--border);background:var(--surface);color:var(--text2);
   border-radius:20px;padding:7px 14px;font-size:12.5px;font-weight:600;cursor:pointer;
   white-space:nowrap;transition:var(--tr)}
+.chip:active{transform:scale(.95)}
 .chip--on{border-color:var(--teal);background:var(--teal-l);color:var(--teal-d)}
 
 /* ── Badges / etapas ─────────────────────────────────────────── */
@@ -84,12 +127,19 @@
 .btn{border:0;border-radius:var(--radius-sm);font-family:var(--font);font-weight:700;cursor:pointer;
   transition:var(--tr);display:inline-flex;align-items:center;justify-content:center;gap:8px}
 .btn--primary{background:var(--teal);color:#fff;box-shadow:var(--shadow-sm)}
-.btn--primary:hover{background:var(--teal-d);transform:translateY(-1px)}
-.btn--primary:active{transform:translateY(0)}
 .btn--navy{background:var(--navy);color:#fff}
-.btn--navy:hover{background:var(--navy-d)}
 .btn--ghost{background:var(--surface);color:var(--text);border:1px solid var(--border)}
-.btn--ghost:hover{background:var(--surface2)}
+/* El realce al pasar por encima es solo para el mouse: en el teléfono se quedaba
+   "pegado" después de tocar (no hay puntero que se vaya). Al tacto: hundido. */
+@media (hover:hover){
+  .btn--primary:hover{background:var(--teal-d);transform:translateY(-1px)}
+  .btn--navy:hover{background:var(--navy-d)}
+  .btn--ghost:hover{background:var(--surface2)}
+}
+.btn:active{transform:scale(.97)}
+.btn--primary:active{background:var(--teal-d)}
+.btn--navy:active{background:var(--navy-d)}
+.btn--ghost:active{background:var(--surface2)}
 .btn--block{width:100%;height:50px;font-size:15.5px}
 .btn--lg{height:50px;font-size:15.5px;padding:0 22px}
 .btn--sm{height:40px;font-size:14px;padding:0 16px}
@@ -110,9 +160,16 @@
   background:color-mix(in srgb,var(--surface) 88%,transparent);
   backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-top:1px solid var(--border);
   display:flex;align-items:center;justify-content:space-around}
-.tabbar__item{background:none;border:0;cursor:pointer;display:flex;flex-direction:column;align-items:center;
-  gap:3px;width:60px;color:var(--text3);transition:color var(--tr)}
+.tabbar__item{position:relative;background:none;border:0;cursor:pointer;display:flex;flex-direction:column;
+  align-items:center;gap:3px;width:60px;color:var(--text3);
+  transition:color var(--tr),transform .12s var(--ease)}
+.tabbar__item:active{transform:scale(.92)}
 .tabbar__item--on{color:var(--teal)}
+/* Barrita en el borde superior de la barra, sobre la pestaña activa: se ve de un
+   vistazo dónde estás parado. El -9px la pega al borde (los ítems quedan
+   centrados en los 60px de alto útil de la barra; el safe-area solo afecta abajo). */
+.tabbar__item--on::before{content:'';position:absolute;top:-9px;width:24px;height:3px;
+  border-radius:0 0 3px 3px;background:var(--teal)}
 .tabbar__item span{font-size:10.5px;font-weight:600}
 
 /* ── Inputs ──────────────────────────────────────────────────── */
@@ -144,8 +201,10 @@
 .sheet__body{padding:14px 20px 0}
 .sheet__title{font-family:var(--serif);font-size:19px;font-weight:600;color:var(--ink);margin-bottom:14px}
 .sheet-row{width:100%;display:flex;align-items:center;gap:14px;background:var(--surface);border:1px solid var(--border);
-  border-radius:var(--radius);padding:14px;margin-bottom:10px;cursor:pointer;text-align:left;transition:var(--tr)}
-.sheet-row:hover{background:var(--surface2)}
+  border-radius:var(--radius);padding:14px;margin-bottom:10px;cursor:pointer;text-align:left;
+  font-family:var(--font);transition:transform .12s var(--ease),background var(--tr)}
+@media (hover:hover){.sheet-row:hover{background:var(--surface2)}}
+.sheet-row:active{background:var(--surface2);transform:scale(.985)}
 .sheet-row__icon{width:42px;height:42px;border-radius:12px;display:flex;align-items:center;justify-content:center;flex:none}
 .sheet-row__t{display:block;font-weight:700;font-size:15px;color:var(--ink)}
 .sheet-row__d{display:block;font-size:12.5px;color:var(--text2)}

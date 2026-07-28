@@ -18,6 +18,13 @@ export * as db from '../../js/db.js';
 // compartida con el escritorio ('demo-conserje' → 'Demo · Conserje IA').
 export { origenDetalleLabel, esLeadDeDemo } from '../../js/mappers.js';
 
+// Dirección del lead → navegación en mapas ("Cómo llegar"), compartida con el
+// escritorio: misma consulta, mismos enlaces (Google Maps / Waze / Apple Maps).
+export {
+  direccionCompleta, direccionCorta, tieneDireccion, mapsQuery,
+  googleMapsUrl, googleMapsVerUrl, wazeUrl, appleMapsUrl, mapaPorDefectoUrl,
+} from '../../js/geo.js';
+
 // Sincronización en vivo (Supabase Realtime), compartida con el CRM de escritorio.
 export { startRealtime, stopRealtime } from '../../js/realtime.js';
 

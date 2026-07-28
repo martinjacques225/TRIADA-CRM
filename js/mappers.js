@@ -44,6 +44,9 @@ export function leadFromSupa(row) {
     rubro:              row.giro,
     tamano:             row.tamano,
     region:             row.region,
+    // Dirección de terreno (para "Cómo llegar" con Google Maps/Waze). Ver js/geo.js.
+    direccion:          row.direccion,
+    comuna:             row.comuna,
     facturacionEst:     row.facturacion_est,
     dolorPrincipal:     row.dolor_principal,
     origen:             ORIGEN_FROM_DB[row.origen] || row.origen,
@@ -115,6 +118,8 @@ export function leadToSupa(data) {
     giro:            data.rubro,
     tamano:          data.tamano,
     region:          data.region,
+    direccion:       data.direccion,
+    comuna:          data.comuna,
     facturacion_est: data.facturacionEst,
     dolor_principal: data.dolorPrincipal,
     origen:          toOrigenSlug(data.origen),

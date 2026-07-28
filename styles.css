@@ -352,7 +352,9 @@ body {
 .topbar-search input::placeholder { color: var(--text3); }
 
 /* ─── Buttons ─── */
-.btn { display: inline-flex; align-items: center; gap: 8px; justify-content: center; font-size: 13.5px; font-weight: 600; padding: 9px 18px; border-radius: 980px; border: 1px solid transparent; cursor: pointer; transition: var(--tr); font-family: var(--font); white-space: nowrap; }
+/* text-decoration: none → los botones que son enlaces (<a class="btn">, p. ej.
+   "Cómo llegar") no salen subrayados. */
+.btn { display: inline-flex; align-items: center; gap: 8px; justify-content: center; font-size: 13.5px; font-weight: 600; padding: 9px 18px; border-radius: 980px; border: 1px solid transparent; cursor: pointer; transition: var(--tr); font-family: var(--font); white-space: nowrap; text-decoration: none; }
 .btn svg { width: 16px; height: 16px; stroke-width: 1.9; }
 .btn-primary   { background: var(--primary); color: #fff; box-shadow: 0 2px 8px rgba(12,124,136,.22); }
 .btn-primary:hover   { background: var(--primary-d); box-shadow: 0 8px 20px rgba(12,124,136,.3); transform: translateY(-1px); }

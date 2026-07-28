@@ -3,8 +3,8 @@
 // Identidad · contacto rápido · cambiar etapa · tabs (Datos/Diagnóstico/Citas/
 // Propuestas/Actividad) · resumen trIA · acciones (Nueva cita/propuesta/Hacer 360).
 // ============================================================================
-import { db, PIPELINE_STAGES, DIAG_AREAS, meetingType, scorePct, formatCLP, formatDate, escHtml, heat, initials, timeAgo, origenDetalleLabel } from '../core.js';
-import { logo, ic, toast, openWhatsApp, openTel } from '../ui.js';
+import { db, PIPELINE_STAGES, DIAG_AREAS, meetingType, scorePct, formatCLP, formatDate, escHtml, heat, initials, timeAgo, origenDetalleLabel, direccionCompleta, tieneDireccion } from '../core.js';
+import { logo, ic, toast, openWhatsApp, openTel, openComoLlegar, openSheet, haptic } from '../ui.js';
 import { openInformeByDiagId } from '../informe.js';
 
 const e = escHtml;
@@ -22,7 +22,8 @@ function tabDatos() {
   const l = _lead;
   return `<div class="card" style="padding:0;overflow:hidden">
     ${row('Rubro', l.rubro)}${row('Tamaño', l.tamano)}${row('Dolor principal', l.dolorPrincipal)}
-    ${row('Origen', l.origen)}${l.origenDetalle ? row('Vino de', origenDetalleLabel(l.origenDetalle), 'var(--teal)') : ''}${row('Región', l.region)}${row('RUT', l.rut)}
+    ${row('Origen', l.origen)}${l.origenDetalle ? row('Vino de', origenDetalleLabel(l.origenDetalle), 'var(--teal)') : ''}
+    ${row('Dirección', l.direccion)}${row('Comuna', l.comuna)}${row('Región', l.region)}${row('RUT', l.rut)}
     ${row('Teléfono', l.telefono, 'var(--teal)')}${row('Email', l.email, 'var(--teal)')}
     <div style="padding:13px 15px"><div style="font-size:13px;color:var(--text2);margin-bottom:5px">Notas</div><div style="font-size:13.5px;color:var(--text);line-height:1.5">${e(l.notas || 'Sin notas.')}</div></div>
   </div>`;
@@ -71,6 +72,70 @@ function tabBody() {
   return ({ datos: tabDatos, diag: tabDiag, citas: tabCitas, prop: tabProp, act: tabAct }[_tab] || tabDatos)();
 }
 
+// ── Dónde está el cliente ───────────────────────────────────────────────────
+// Lo primero que se necesita en terreno: la dirección visible y la ruta a un
+// toque. Si el lead vino sin dirección (landing, carga masiva), el mismo bloque
+// invita a cargarla ahí mismo — sin volver al computador.
+function bloqueDireccion(l) {
+  if (!tieneDireccion(l)) {
+    return `<button class="fk-dir fk-dir--empty" data-dir="edit">
+      <span class="fk-dir__ic" style="background:var(--surface2);color:var(--text3)">${ic('pin', { size: 18 })}</span>
+      <span class="fk-dir__main">
+        <span class="fk-dir__t" style="color:var(--text2)">Agregar dirección</span>
+        <span class="fk-dir__d">Para poder navegar hasta la empresa</span>
+      </span>
+      <span style="color:var(--text3);display:flex;flex:none">${ic('plus', { size: 18, sw: 2.2 })}</span>
+    </button>`;
+  }
+  return `<div class="fk-dir">
+    <button class="fk-dir__edit" data-dir="edit" aria-label="Editar dirección">
+      <span class="fk-dir__ic" style="background:var(--teal-l);color:var(--teal)">${ic('pin', { size: 18 })}</span>
+      <span class="fk-dir__main">
+        <span class="fk-dir__d">Dirección · toca para editar</span>
+        <span class="fk-dir__t">${e(direccionCompleta(l))}</span>
+      </span>
+    </button>
+    <button class="fk-dir__go" data-dir="go">${ic('navigate', { size: 15, sw: 2 })} Cómo llegar</button>
+  </div>`;
+}
+
+// Hoja para cargar/corregir la dirección desde el teléfono (guarda en Supabase).
+function sheetDireccion(app) {
+  const l = _lead;
+  openSheet(`
+    <div class="sheet__body">
+      <div class="sheet__title" style="margin-bottom:3px">Dirección</div>
+      <div class="muted" style="font-size:12.5px;margin-bottom:14px">${e(l.empresa || l.nombre || '')}</div>
+      <div class="field"><label class="field__label" for="dirCalle">Calle y número</label>
+        <input id="dirCalle" class="input" placeholder="Av. San Miguel 1234, oficina 3" value="${e(l.direccion || '')}"></div>
+      <div class="field"><label class="field__label" for="dirComuna">Comuna</label>
+        <input id="dirComuna" class="input" placeholder="Molina" value="${e(l.comuna || '')}"></div>
+      <div class="field__hint" style="margin:-6px 0 14px">Se guarda en la ficha: desde acá y desde el CRM del computador.</div>
+      <button class="btn btn--primary btn--block" id="dirSave">Guardar dirección</button>
+    </div>`, {
+    onMount: (el, close) => {
+      const inp = el.querySelector('#dirCalle');
+      setTimeout(() => inp.focus(), 120);
+      el.querySelector('#dirSave').addEventListener('click', async () => {
+        const btn = el.querySelector('#dirSave');
+        btn.disabled = true;
+        // Borrar el campo debe BORRAR el dato: '' → null (no cadena vacía en la fila).
+        const direccion = el.querySelector('#dirCalle').value.trim() || null;
+        const comuna = el.querySelector('#dirComuna').value.trim() || null;
+        try {
+          await db.prospectos.update({ id: l.id, direccion, comuna });
+          _lead = { ..._lead, direccion, comuna };
+          toast('Dirección guardada ✓', 'ok');
+          close();
+          app.renderScreen({ preserveScroll: true });
+        } catch (err) {
+          console.error(err); toast('No se pudo guardar la dirección', 'err'); btn.disabled = false;
+        }
+      });
+    },
+  });
+}
+
 export default {
   chrome: false,
   async render(app) {
@@ -103,6 +168,8 @@ export default {
           <span class="badge" style="color:${st.color};background:${st.bg}"><span class="dot"></span>${e(l.estado)}</span>
           <span class="badge" style="color:${ht.color};background:var(--surface);border:1px solid var(--border)"><span class="dot"></span>${ht.label}</span>
         </div>
+
+        ${bloqueDireccion(l)}
 
         <div style="display:flex;gap:8px;margin-top:16px">
           <button class="btn" id="fkWa" style="flex:1;height:46px;background:var(--green);color:#fff;font-size:13px">${ic('whatsapp', { size: 17 })} WhatsApp</button>
@@ -137,6 +204,13 @@ export default {
     host.querySelector('#fkTel')?.addEventListener('click', () => openTel(_lead.telefono));
     host.querySelector('#fkZoom')?.addEventListener('click', () => toast('Zoom: se conecta en una fase próxima', 'info'));
     host.querySelector('#fkEtapa')?.addEventListener('click', () => app.openEtapaSheet(_lead, () => app.renderScreen()));
+
+    // Dirección: "Cómo llegar" abre la hoja de mapas; el resto del bloque, la edición.
+    host.querySelectorAll('[data-dir]').forEach((b) => b.addEventListener('click', () => {
+      haptic();
+      if (b.getAttribute('data-dir') === 'go') openComoLlegar(_lead);
+      else sheetDireccion(app);
+    }));
 
     const body = host.querySelector('#fkBody');
     host.querySelector('#fkTabs').addEventListener('click', (ev) => {

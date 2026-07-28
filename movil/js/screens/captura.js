@@ -46,6 +46,12 @@ export default {
           <div><label class="field__label" for="capEmail">Email</label><input id="capEmail" class="input" inputmode="email" placeholder="correo@…"></div>
         </div>
 
+        <div class="row2" style="margin-bottom:6px">
+          <div style="flex:1.5"><label class="field__label" for="capDireccion">Dirección</label><input id="capDireccion" class="input" placeholder="Av. San Miguel 1234"></div>
+          <div><label class="field__label" for="capComuna">Comuna</label><input id="capComuna" class="input" placeholder="Molina"></div>
+        </div>
+        <div class="field__hint" style="margin-bottom:16px">Con esto la ficha te abre la ruta en Google Maps o Waze — y sabes cómo volver.</div>
+
         <label class="field__label">Rubro</label>${chipGroup('rubro', RUBROS)}
         <label class="field__label" style="margin-top:16px">Tamaño</label>${chipGroup('tamano', TAMANOS)}
         <label class="field__label" style="margin-top:16px">Dolor principal</label>${chipGroup('dolor', DOLORES)}
@@ -87,6 +93,9 @@ export default {
       try {
         const id = await db.prospectos.add({
           nombre, empresa: val('capEmpresa'), telefono: val('capTel'), email: val('capEmail'),
+          // Vacío → undefined (leadToSupa lo descarta): no se manda la columna si
+          // el vendedor no cargó dirección, y la fila no queda con cadenas vacías.
+          direccion: val('capDireccion') || undefined, comuna: val('capComuna') || undefined,
           rubro: _form.rubro, tamano: _form.tamano, dolorPrincipal: _form.dolor,
           origen: _form.origen || 'Referido', rut, notas: val('capNotas'), estado: 'Nuevo',
         });

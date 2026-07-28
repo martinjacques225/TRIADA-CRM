@@ -45,7 +45,7 @@ function stub(title, sub, chrome = false) {
     },
     mount() {
       const b = document.getElementById('stubBack');
-      if (b) b.addEventListener('click', () => history.length > 1 ? app.back() : app.navigate('hoy'));
+      if (b) b.addEventListener('click', () => app.back());
     },
   };
 }
@@ -64,9 +64,15 @@ const app = {
   _history: [],
 
   // — Router —
-  async navigate(name, params = {}) {
+  // `root: true` arranca una pila nueva (login, y el "Hoy" de después de entrar):
+  // desde ahí, atrás no debe devolverte al splash ni a la pantalla de acceso.
+  async navigate(name, params = {}, { root = false } = {}) {
     if (!SCREENS[name]) name = 'hoy';
-    if (store.screen && store.screen !== name) this._history.push({ name: store.screen, params: this.params });
+    if (root) this._history = [];
+    else if (store.screen && store.screen !== name) {
+      this._history.push({ name: store.screen, params: this.params });
+      if (this._history.length > 40) this._history.shift();   // tope: una sesión larga no se come la memoria
+    }
     store.screen = name; this.params = params;
     closeSheet();
     await this.renderScreen();
@@ -77,6 +83,78 @@ const app = {
     store.screen = prev.name; this.params = prev.params;
     closeSheet();
     this.renderScreen();
+  },
+
+  // — Botón físico "atrás" (Android) —
+  // Antes cerraba la app de golpe: la PWA nunca empujaba entradas al historial,
+  // así que el primer "atrás" ya no tenía nada que consumir y el sistema la
+  // cerraba. Ahora mantenemos SIEMPRE una entrada "colchón" por encima de la de
+  // carga: cuando el sistema la consume nos avisa (popstate), la reponemos y
+  // decidimos nosotros qué significa "atrás" en ese momento.
+  _initBackButton() {
+    try { history.pushState({ triada: 'app' }, ''); } catch (_) { return; }
+    window.addEventListener('popstate', () => this._onHardwareBack());
+  },
+
+  _onHardwareBack() {
+    // El usuario ya confirmó salir: damos el segundo paso atrás y soltamos la app.
+    if (this._exiting) { history.back(); return; }
+
+    try { history.pushState({ triada: 'app' }, ''); } catch (_) {}   // repone el colchón
+
+    // 1) Visor a pantalla completa (Informe 360 / Cotización / Informe financiero).
+    const viewer = document.querySelector('.informe-viewer');
+    if (viewer) { viewer.querySelector('[id$="Close"]')?.click(); return; }
+
+    const sheetRoot = document.getElementById('sheet-root');
+
+    // 2) Ya estás preguntando si salir y vuelves a tocar atrás: salir (el
+    //    "atrás dos veces para cerrar" de Android). Sin esto, atrás cerraría la
+    //    pregunta y la app nunca se cerraría con el botón físico.
+    if (sheetRoot && sheetRoot.querySelector('[data-exit]')) { this._exitApp(); return; }
+
+    // 3) Cualquier otra hoja inferior abierta (crear, más, trIA, etapa, cómo llegar…).
+    if (sheetRoot && sheetRoot.children.length) { closeSheet(); return; }
+
+    // 4) Hay pantalla previa: volver, como en cualquier app.
+    if (this._history.length) { haptic(); this.back(); return; }
+
+    // 5) Estás en la raíz: preguntar antes de cerrar.
+    this._confirmExit();
+  },
+
+  // Salir de la app es una decisión, no un resbalón del dedo estando en Hoy.
+  _confirmExit() {
+    if (document.getElementById('sheet-root')?.querySelector('[data-exit]')) return; // ya está preguntando
+    haptic(14);
+    openSheet(`
+      <div class="sheet__body">
+        <div class="sheet__title" style="margin-bottom:3px">¿Salir de la app?</div>
+        <div class="muted" style="font-size:13px;margin-bottom:16px">Tus datos quedan guardados. Al volver a abrirla sigues con la sesión iniciada.</div>
+        <div style="display:flex;gap:9px">
+          <button class="btn btn--ghost" data-exit="no" style="flex:1;height:48px">Seguir acá</button>
+          <button class="btn btn--primary" data-exit="si" style="flex:1;height:48px">Salir</button>
+        </div>
+      </div>`, {
+      onMount: (el, close) => {
+        el.querySelector('[data-exit="no"]').addEventListener('click', close);
+        el.querySelector('[data-exit="si"]').addEventListener('click', () => this._exitApp());
+      },
+    });
+  },
+
+  _exitApp() {
+    this._exiting = true;
+    closeSheet();
+    history.back();   // suelta el colchón → el popstate siguiente da el paso que cierra
+    // Red de seguridad: en una pestaña de escritorio (o si no hay a dónde salir)
+    // el navegador no cierra nada. No dejamos la app sin colchón ni con la bandera puesta.
+    setTimeout(() => {
+      if (!this._exiting) return;
+      this._exiting = false;
+      try { history.pushState({ triada: 'app' }, ''); } catch (_) {}
+      toast('Este navegador no deja cerrar la app: usa el botón de inicio del teléfono', 'info', 4000);
+    }, 900);
   },
   async renderScreen(opts = {}) {
     const scr = SCREENS[store.screen] || SCREENS.hoy;
@@ -247,9 +325,9 @@ const app = {
   },
   async _routeFromSession() {
     const { user, flow } = await (this._session || Promise.resolve({ user: null, flow: null }));
-    if (user && (flow === 'invite' || flow === 'recovery')) { store.user = user; return this.navigate('crearpass'); }
+    if (user && (flow === 'invite' || flow === 'recovery')) { store.user = user; return this.navigate('crearpass', {}, { root: true }); }
     if (user) return this.onAuthSuccess(user);
-    return this.navigate('login');
+    return this.navigate('login', {}, { root: true });
   },
   async onAuthSuccess(user) {
     store.user = user;
@@ -263,7 +341,8 @@ const app = {
     const dest = this._bootScreen || 'hoy';
     const params = this._bootParams || {};
     this._bootScreen = null; this._bootParams = {};
-    return this.navigate(dest, params);
+    // Raíz: desde Hoy, "atrás" pregunta si salir — no vuelve al login ni al splash.
+    return this.navigate(dest, params, { root: true });
   },
   async signIn(email, password) {
     try {
@@ -294,8 +373,8 @@ const app = {
   async signOut() {
     stopRealtime();
     try { await supabase.auth.signOut(); } catch (_) {}
-    store.user = null; store.profile = null; this._history = [];
-    return this.navigate('login');
+    store.user = null; store.profile = null;
+    return this.navigate('login', {}, { root: true });
   },
 
   // Banner "nueva versión disponible" → activa el SW que espera y recarga.
@@ -411,6 +490,7 @@ window.addEventListener('appinstalled', () => { app._installPrompt = null; toast
   app.setTheme(q.get('theme') || ls('__movil_dev_theme') || localStorage.getItem('triada_cfg_theme') || 'light');
   registerServiceWorker();
   app._initPull();
+  app._initBackButton();
   app._session = resolveSession();
   if (skipSplash) { app._splashDone = true; await app._routeFromSession(); }
   else { store.screen = 'splash'; await app.renderScreen(); }

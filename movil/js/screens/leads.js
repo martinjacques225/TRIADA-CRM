@@ -2,8 +2,8 @@
 // screens/leads.js — bandeja de prospectos.
 // KPIs · buscador · filtro por etapa (chips) · tarjetas con contacto rápido.
 // ============================================================================
-import { db, store, PIPELINE_STAGES, escHtml, heat, initials, timeAgo, origenDetalleLabel } from '../core.js';
-import { logo, ic, toast, openWhatsApp, openTel } from '../ui.js';
+import { db, store, PIPELINE_STAGES, escHtml, heat, initials, timeAgo, origenDetalleLabel, direccionCorta, tieneDireccion } from '../core.js';
+import { logo, ic, toast, openWhatsApp, openTel, openComoLlegar } from '../ui.js';
 
 const e = escHtml;
 const stageOf = (estado) => PIPELINE_STAGES.find((s) => s.id === estado) || { color: '#94A0B6', bg: '#F0F2F6' };
@@ -38,10 +38,16 @@ function leadCard(l) {
         ${l.origenDetalle ? `<span style="font-size:11px;font-weight:600;color:var(--teal);background:var(--teal-l);padding:4px 9px;border-radius:20px">${e(origenDetalleLabel(l.origenDetalle))}</span>` : ''}
         ${l.rubro ? `<span style="font-size:11px;font-weight:500;color:var(--text2);background:var(--surface2);padding:4px 9px;border-radius:20px">${e(l.rubro)}</span>` : ''}
         <span style="flex:1"></span>
-        <button class="qa" data-wa="${e(l.telefono || '')}" aria-label="WhatsApp" style="width:33px;height:33px;border-radius:10px;background:var(--green-l);color:var(--green);border:0;display:flex;align-items:center;justify-content:center;cursor:pointer">${ic('whatsapp', { size: 16 })}</button>
-        <button class="qa" data-tel="${e(l.telefono || '')}" aria-label="Llamar" style="width:33px;height:33px;border-radius:10px;background:var(--teal-l);color:var(--teal);border:0;display:flex;align-items:center;justify-content:center;cursor:pointer">${ic('phone', { size: 15 })}</button>
-        <button class="qa" data-zoom="${e(l.id)}" aria-label="Zoom" style="width:33px;height:33px;border-radius:10px;background:var(--violet-l);color:var(--violet);border:0;display:flex;align-items:center;justify-content:center;cursor:pointer">${ic('video', { size: 16 })}</button>
+        <button class="qa qa--wa" data-wa="${e(l.telefono || '')}" aria-label="WhatsApp">${ic('whatsapp', { size: 16 })}</button>
+        <button class="qa qa--tel" data-tel="${e(l.telefono || '')}" aria-label="Llamar">${ic('phone', { size: 15 })}</button>
+        <button class="qa qa--zoom" data-zoom="${e(l.id)}" aria-label="Zoom">${ic('video', { size: 16 })}</button>
       </div>
+      ${tieneDireccion(l) ? `
+      <button class="lead-dir" data-map="${e(l.id)}" aria-label="Cómo llegar a ${e(l.empresa || l.nombre)}">
+        <span style="color:var(--teal);flex:none;display:flex">${ic('pin', { size: 15 })}</span>
+        <span class="ell">${e(direccionCorta(l))}</span>
+        <span class="lead-dir__go">${ic('navigate', { size: 14, sw: 2 })} Cómo llegar</span>
+      </button>` : ''}
     </div>`;
 }
 
@@ -130,6 +136,13 @@ export default {
         if (qa.hasAttribute('data-wa')) openWhatsApp(qa.getAttribute('data-wa'));
         else if (qa.hasAttribute('data-tel')) openTel(qa.getAttribute('data-tel'));
         else toast('Zoom: se conecta en una fase próxima', 'info');
+        return;
+      }
+      // "Cómo llegar" no debe abrir la ficha: se corta acá.
+      const dirBtn = ev.target.closest('[data-map]');
+      if (dirBtn) {
+        ev.stopPropagation();
+        openComoLlegar(_leads.find((l) => l.id === dirBtn.getAttribute('data-map')));
         return;
       }
       const card = ev.target.closest('[data-lead]');

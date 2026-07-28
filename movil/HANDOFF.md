@@ -1,7 +1,7 @@
 # HANDOFF — Tríada CRM Móvil (PWA de terreno)
 
 > Documento vivo · fuente de verdad del proyecto.
-> Última actualización: **2026-06-25** · Estado: **✅ COMPLETO y DESPLEGADO**
+> Última actualización: **2026-07-27** · Estado: **✅ COMPLETO y DESPLEGADO** · 🟡 lo de §3.bis (dirección + botón atrás) está **en el código, sin desplegar**
 
 ---
 
@@ -72,6 +72,27 @@ y en preview los mocks `/_preview/mock-{supabase,db}.js` (vía import-map de `pr
   - **Auth → URL Configuration:** Site URL = `…/TRIADA-CRM/movil/` + Redirect URLs con `…/TRIADA-CRM/` y `…/TRIADA-CRM/movil/`.
   - **Auth → Users → Invite** a vicente@ e ignacia@ (el trigger `handle_new_user` les crea el perfil solo).
   - Que ambos abran el email → "Crea tu contraseña" → entran.
+
+## 3.bis Terreno: dirección del lead y botón atrás (2026-07-27)
+
+- **📍 Dirección + "Cómo llegar".** `leads.direccion` y `leads.comuna` (migración `supabase/leads_direccion_2026-07-27.sql`,
+  🟡 **correr antes de desplegar**). Helper compartido **`js/geo.js`** (vía `core.js`): arma la consulta —
+  dirección + comuna + región + ", Chile" — y las URLs de **Google Maps** (ruta ya iniciada), **Waze**,
+  **Apple Maps** (solo iPhone) y "ver en el mapa". La **región sola no cuenta** como dirección.
+  · **Captura:** campos Dirección + Comuna. · **Tarjeta de lead** y **cita presencial en Hoy:** franja
+  `dirección → Cómo llegar` (abre la hoja; no navega a la ficha ni a la agenda). · **Ficha:** bloque de
+  dirección **editable desde el teléfono** (hoja con los 2 campos → `db.prospectos.update`) — antes un lead
+  sin dirección no se podía arreglar en terreno, porque "Editar" sigue siendo de una fase próxima.
+  Sin API de geocodificación: los mapas resuelven el texto escrito.
+- **🔙 Botón físico "atrás" (Android).** Antes cerraba la app de golpe (la PWA no empujaba entradas al
+  historial). Ahora `app._initBackButton()` mantiene una entrada **colchón** y la repone en cada `popstate`;
+  el orden es: **visor a pantalla completa → hoja abierta → pantalla previa → preguntar "¿Salir de la app?"**
+  (con la pregunta abierta, otro "atrás" sale, como en Android). `navigate(n, p, {root:true})` corta la pila
+  en login y en el Hoy post-login. Verificable en preview con `history.back()`; **el cierre real de la app
+  solo se puede comprobar en el teléfono**.
+- **✨ Estética táctil.** El `:hover` quedaba pegado tras tocar → realce solo con mouse (`@media (hover:hover)`)
+  y **hundido al tocar** (tarjetas, botones, chips, hojas, pestañas, íconos). Acciones rápidas `.qa`
+  unificadas por clase (35 px). **Barrita sobre la pestaña activa** del tab bar.
 
 ## 4. Lo que queda (opcional, no bloquea)
 

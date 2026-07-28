@@ -1,6 +1,7 @@
 // modules/modals/modals.js
 import { prospectos, diagnosticos, citas, propuestas, clientes, facturas, autodiags, presupuestos } from '../../js/db.js';
 import { origenDetalleLabel } from '../../js/mappers.js';
+import { direccionCompleta, tieneDireccion, googleMapsUrl, googleMapsVerUrl, wazeUrl } from '../../js/geo.js';
 import { escHtml, PIPELINE_STAGES, RUBROS, TAMANOS, DOLORES, ORIGENES, DIAG_AREAS, toast, formatCLP, propEstadoLabel, scorePct } from '../../js/utils.js';
 import { attachFormatting, validateRut, validateEmail } from '../../js/format.js';
 import { openMeetingModal } from '../agenda/agenda.js';
@@ -9,6 +10,8 @@ import { renderDiagnosticoModal } from '../diagnosticos/diagnosticos.js';
 import { renderFacturaModal } from '../facturacion/facturacion.js';
 import { renderAddClienteModal } from '../clientes/clientes.js';
 import { renderPresupuestoModal } from '../presupuestos/presupuestos.js';
+
+const _i = (n, s) => (window.icon ? window.icon(n, '', s) : '');
 
 function _openModal(title, size = '') {
   document.getElementById('modalTitle').textContent = title;
@@ -49,6 +52,12 @@ export async function openProspectoModal(id = null) {
       </div>
     </div>
 
+    <div class="form-section">Dónde está (para visitas en terreno)</div>
+    <div class="form-row">
+      <div class="form-group"><label>Dirección</label><input id="pDireccion" value="${escHtml(p.direccion||'')}" placeholder="Av. San Miguel 1234, oficina 3"><div class="form-hint">Con esto la ficha muestra el botón "Cómo llegar" (Google Maps / Waze)</div></div>
+      <div class="form-group"><label>Comuna</label><input id="pComuna" value="${escHtml(p.comuna||'')}" placeholder="Molina"></div>
+    </div>
+
     <div class="form-section">Clasificación y pipeline</div>
     <div class="form-row">
       <div class="form-group"><label>N° trabajadores</label>
@@ -85,6 +94,9 @@ export async function openProspectoModal(id = null) {
       rut,
       email,
       telefono:       document.getElementById('pTelefono').value.trim(),
+      // '' → null: borrar el campo borra el dato (y no deja cadenas vacías en la fila).
+      direccion:      document.getElementById('pDireccion').value.trim() || null,
+      comuna:         document.getElementById('pComuna').value.trim() || null,
       rubro:          document.getElementById('pRubro').value,
       tamano:         document.getElementById('pTamano').value,
       estado:         document.getElementById('pEstado').value,
@@ -102,6 +114,31 @@ export async function openProspectoModal(id = null) {
       toast(err?.message || 'No se pudo guardar el prospecto', 'error');
     }
   };
+}
+
+// Bloque "dónde está" de la ficha: la dirección + los enlaces para llegar. Si el
+// lead no tiene dirección ni comuna, invita a cargarla (en terreno es lo que falta).
+function _bloqueDireccion(p) {
+  const dir = direccionCompleta(p);
+  if (!tieneDireccion(p)) {
+    return `<div style="display:flex;align-items:center;gap:10px;background:var(--surface2);border:1px dashed var(--border);border-radius:10px;padding:11px 13px;margin-bottom:16px;font-size:13px;color:var(--text3)">
+      ${_i('mapPin', 16)} Sin dirección cargada — agrégala en <strong style="color:var(--text2)">Editar</strong> para poder navegar hasta allá.
+    </div>`;
+  }
+  return `<div style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:12px 13px;margin-bottom:16px">
+    <div style="display:flex;gap:9px;align-items:flex-start">
+      <span style="color:var(--primary);flex-shrink:0;display:flex;margin-top:1px">${_i('mapPin', 17)}</span>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;font-weight:700">Dirección</div>
+        <div style="font-size:14px;font-weight:700;color:var(--navy)">${escHtml(dir)}</div>
+      </div>
+    </div>
+    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:10px">
+      <a class="btn btn-sm btn-primary" href="${escHtml(googleMapsUrl(p))}" target="_blank" rel="noopener noreferrer">${_i('mapPin', 14)} Cómo llegar</a>
+      <a class="btn btn-sm btn-ghost" href="${escHtml(wazeUrl(p))}" target="_blank" rel="noopener noreferrer">Waze</a>
+      <a class="btn btn-sm btn-ghost" href="${escHtml(googleMapsVerUrl(p))}" target="_blank" rel="noopener noreferrer">Ver en el mapa</a>
+    </div>
+  </div>`;
 }
 
 export async function openProspectoDetail(id) {
@@ -148,6 +185,7 @@ export async function openProspectoDetail(id) {
       ${p.origen   ?`<div><span style="color:var(--text3)">Origen</span><br><strong>${escHtml(p.origen)}</strong></div>`:''}
       ${p.origenDetalle?`<div><span style="color:var(--text3)">Vino de</span><br><strong style="color:var(--primary)">${escHtml(origenDetalleLabel(p.origenDetalle))}</strong></div>`:''}
     </div>
+    ${_bloqueDireccion(p)}
     ${p.notas?`<div style="background:var(--surface2);border-radius:8px;padding:12px;font-size:13.5px;color:var(--text2);margin-bottom:16px"><em>${escHtml(p.notas)}</em></div>`:''}
 
     <div style="display:flex;gap:8px;margin-bottom:18px;flex-wrap:wrap">
