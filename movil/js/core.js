@@ -28,6 +28,14 @@ export {
 // Sincronización en vivo (Supabase Realtime), compartida con el CRM de escritorio.
 export { startRealtime, stopRealtime } from '../../js/realtime.js';
 
+// Estandarización de datos (MISMA que el escritorio): MAYÚSCULAS, RUT
+// 12.345.678-9 y teléfono +56912345678. `attachFormatting` cablea los inputs con
+// [data-fmt] y, de paso, pone inputmode="tel" → teclado numérico en el teléfono.
+export {
+  attachFormatting, normalizeText, normalizeEmail,
+  formatRut, validateRut, formatPhoneCL, validatePhoneCL, validateEmail,
+} from '../../js/format.js';
+
 // Helpers + constantes oficiales del CRM (cuestionario 360 EXACTO incluido).
 export {
   escHtml, html, raw,
@@ -52,7 +60,7 @@ export { openFinReport } from '../../modules/financiero/presentation/informe-fin
 // Versión visible en Mi cuenta. Se sube A MANO al desplegar (junto con el CACHE
 // de sw.js): sirve para saber, sin adivinar, qué build está corriendo el teléfono
 // cuando alguien reporta "esto no me funciona".
-export const APP_VERSION = '2026-07-28.2';
+export const APP_VERSION = '2026-07-29.1';
 
 // ── Estado de la app (en memoria, una sola instancia) ──────────────────────
 export const store = {

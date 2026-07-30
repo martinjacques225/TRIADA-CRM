@@ -3,7 +3,7 @@
 // Identidad · contacto rápido · cambiar etapa · tabs (Datos/Diagnóstico/Citas/
 // Propuestas/Actividad) · resumen trIA · acciones (Nueva cita/propuesta/Hacer 360).
 // ============================================================================
-import { db, PIPELINE_STAGES, DIAG_AREAS, meetingType, scorePct, formatCLP, formatDate, escHtml, heat, initials, timeAgo, origenDetalleLabel, direccionCompleta, tieneDireccion } from '../core.js';
+import { db, PIPELINE_STAGES, DIAG_AREAS, meetingType, scorePct, formatCLP, formatDate, escHtml, heat, initials, timeAgo, origenDetalleLabel, direccionCompleta, tieneDireccion, attachFormatting, normalizeText } from '../core.js';
 import { logo, ic, toast, openWhatsApp, openTel, openComoLlegar, openSheet, haptic } from '../ui.js';
 import { openInformeByDiagId } from '../informe.js';
 
@@ -107,21 +107,22 @@ function sheetDireccion(app) {
       <div class="sheet__title" style="margin-bottom:3px">Dirección</div>
       <div class="muted" style="font-size:13px;margin-bottom:14px">${e(l.empresa || l.nombre || '')}</div>
       <div class="field"><label class="field__label" for="dirCalle">Calle y número</label>
-        <input id="dirCalle" class="input" placeholder="Av. San Miguel 1234, oficina 3" value="${e(l.direccion || '')}"></div>
+        <input id="dirCalle" class="input" data-fmt="upper" autocapitalize="characters" placeholder="AV. SAN MIGUEL 1234, OFICINA 3" value="${e(l.direccion || '')}"></div>
       <div class="field"><label class="field__label" for="dirComuna">Comuna</label>
-        <input id="dirComuna" class="input" placeholder="Molina" value="${e(l.comuna || '')}"></div>
+        <input id="dirComuna" class="input" data-fmt="upper" autocapitalize="characters" placeholder="MOLINA" value="${e(l.comuna || '')}"></div>
       <div class="field__hint" style="margin:-6px 0 14px">Se guarda en la ficha: desde acá y desde el CRM del computador.</div>
       <button class="btn btn--primary btn--block" id="dirSave">Guardar dirección</button>
     </div>`, {
     onMount: (el, close) => {
       const inp = el.querySelector('#dirCalle');
+      attachFormatting(el);            // MAYÚSCULAS en vivo, igual que en el resto del CRM
       setTimeout(() => inp.focus(), 120);
       el.querySelector('#dirSave').addEventListener('click', async () => {
         const btn = el.querySelector('#dirSave');
         btn.disabled = true;
         // Borrar el campo debe BORRAR el dato: '' → null (no cadena vacía en la fila).
-        const direccion = el.querySelector('#dirCalle').value.trim() || null;
-        const comuna = el.querySelector('#dirComuna').value.trim() || null;
+        const direccion = normalizeText(el.querySelector('#dirCalle').value) || null;
+        const comuna = normalizeText(el.querySelector('#dirComuna').value) || null;
         try {
           await db.prospectos.update({ id: l.id, direccion, comuna });
           _lead = { ..._lead, direccion, comuna };

@@ -65,10 +65,12 @@ test('leadFromSupa: codigo→correlativo, giro→rubro, origen DB→UI; null→n
 });
 
 // ─── Dirección de terreno (ida y vuelta, para "Cómo llegar") ─
+// Ojo: al ESCRIBIR el texto va en MAYÚSCULAS (canon del CRM desde 2026-07-29,
+// ver tests/format.test.js); al LEER se devuelve tal cual está en la fila.
 test('lead: direccion/comuna viajan UI↔DB con el mismo nombre', () => {
   const out = leadToSupa({ nombre: 'Ana', direccion: 'Balmaceda 55', comuna: 'Molina' });
-  assert.equal(out.direccion, 'Balmaceda 55');
-  assert.equal(out.comuna, 'Molina');
+  assert.equal(out.direccion, 'BALMACEDA 55');
+  assert.equal(out.comuna, 'MOLINA');
   const ui = leadFromSupa({ id: '1', direccion: 'Balmaceda 55', comuna: 'Molina' });
   assert.equal(ui.direccion, 'Balmaceda 55');
   assert.equal(ui.comuna, 'Molina');
@@ -147,8 +149,9 @@ test('citaToSupaBase NO incluye columnas del calendario; citaToSupa SÍ', () => 
 
 // ─── clientes: cadena de fallback de razón social ────────────
 test('clienteToSupa: razon_social cae a empresa o nombre si no hay razonSocial', () => {
-  assert.equal(clienteToSupa({ empresa: 'ACME SpA' }).razon_social, 'ACME SpA');
-  assert.equal(clienteToSupa({ nombre: 'Juan' }).razon_social, 'Juan');
+  // El fallback es lo que se prueba; el texto sale en MAYÚSCULAS por el canon.
+  assert.equal(clienteToSupa({ empresa: 'ACME SpA' }).razon_social, 'ACME SPA');
+  assert.equal(clienteToSupa({ nombre: 'Juan' }).razon_social, 'JUAN');
   assert.equal(clienteToSupa({ razonSocial: 'R', empresa: 'E' }).razon_social, 'R');
 });
 

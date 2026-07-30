@@ -4,10 +4,23 @@
 // db.js en un test rompía. Estas funciones no tocan red ni estado → testeables.
 // db.js las importa y reexporta `isMissingTable` para no romper imports externos.
 
+import { normalizeText, normalizeEmail, formatRut, formatPhoneCL } from './format.js';
+
 // ─── Helpers ─────────────────────────────────────────────────
 export function clean(obj) {
   return Object.fromEntries(Object.entries(obj).filter(([, v]) => v !== undefined));
 }
+
+// ─── Normalización de entrada (última línea de defensa) ──────
+// La UI ya formatea mientras se escribe, pero TODO lo que se escribe en Supabase
+// pasa por acá: escritorio, PWA móvil, carga masiva y cualquier camino futuro.
+// Así "sin importar cómo se ingrese" el dato queda canónico (ver js/format.js).
+// Respetan undefined (no se manda la columna) y null (borrar el dato): solo
+// transforman cuando hay texto.
+const _txt  = (v) => (typeof v === 'string' ? normalizeText(v)  : v);
+const _rut  = (v) => (typeof v === 'string' ? formatRut(v)      : v);
+const _tel  = (v) => (typeof v === 'string' ? formatPhoneCL(v)  : v);
+const _mail = (v) => (typeof v === 'string' ? normalizeEmail(v) : v);
 
 // Detección de errores de Postgres/PostgREST (puras, reciben el error)
 export function isMissingTable(err) {
@@ -110,23 +123,25 @@ export function esLeadDeDemo(v) {
 
 export function leadToSupa(data) {
   return clean({
-    nombre:          data.nombre,
-    empresa:         data.empresa,
-    rut:             data.rut,
-    email:           data.email,
-    telefono:        data.telefono,
+    nombre:          _txt(data.nombre),
+    empresa:         _txt(data.empresa),
+    rut:             _rut(data.rut),
+    email:           _mail(data.email),
+    telefono:        _tel(data.telefono),
+    // giro/tamano/dolor_principal/origen/estado son CATÁLOGOS (<select>): van
+    // literales. Pasarlos a mayúsculas rompería el pipeline y los filtros.
     giro:            data.rubro,
     tamano:          data.tamano,
-    region:          data.region,
-    direccion:       data.direccion,
-    comuna:          data.comuna,
+    region:          _txt(data.region),
+    direccion:       _txt(data.direccion),
+    comuna:          _txt(data.comuna),
     facturacion_est: data.facturacionEst,
     dolor_principal: data.dolorPrincipal,
     origen:          toOrigenSlug(data.origen),
     estado:          data.estado || 'Nuevo',
     scoring:         data.scoring,
     responsable:     data.responsable,
-    notas:           data.notas,
+    notas:           _txt(data.notas),
   });
 }
 
@@ -271,10 +286,10 @@ export function clienteFromSupa(row) {
 export function clienteToSupa(data) {
   return clean({
     lead_id:      data.leadId,
-    razon_social: data.razonSocial || data.empresa || data.nombre,
-    rut:          data.rut,
-    giro:         data.giro,
-    direccion:    data.direccion,
+    razon_social: _txt(data.razonSocial || data.empresa || data.nombre),
+    rut:          _rut(data.rut),
+    giro:         _txt(data.giro),
+    direccion:    _txt(data.direccion),
     responsable:  data.responsable,
   });
 }

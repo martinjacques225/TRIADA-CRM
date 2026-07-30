@@ -6,7 +6,7 @@
 // detecta cliente": basta crear la ficha desde este módulo.
 import { clientes, facturas } from '../../js/db.js';
 import { escHtml, formatCLP, toast } from '../../js/utils.js';
-import { attachFormatting, validateRut } from '../../js/format.js';
+import { attachFormatting, validateRut, formatRut, normalizeText } from '../../js/format.js';
 
 const _i = (n, s) => (window.icon ? window.icon(n, '', s) : '');
 
@@ -128,16 +128,16 @@ export function renderAddClienteModal(prospectosAll, onSave, preselLeadId = null
     <div class="form-row">
       <div class="form-group">
         <label>RUT</label>
-        <input id="cliRut" data-fmt="rut" placeholder="76.123.456-7">
+        <input id="cliRut" data-fmt="rut" placeholder="12.345.678-5">
       </div>
       <div class="form-group">
         <label>Giro</label>
-        <input id="cliGiro" placeholder="Ej: Comercio / retail">
+        <input id="cliGiro" data-fmt="upper" placeholder="EJ: COMERCIO / RETAIL">
       </div>
     </div>
     <div class="form-group">
       <label>Dirección</label>
-      <input id="cliDireccion" placeholder="Calle 123, Comuna, Ciudad">
+      <input id="cliDireccion" data-fmt="upper" placeholder="CALLE 123, COMUNA, CIUDAD">
     </div>`;
 
   attachFormatting(body);
@@ -160,16 +160,17 @@ export function renderAddClienteModal(prospectosAll, onSave, preselLeadId = null
 
   document.getElementById('modalSave').onclick = async () => {
     const leadId      = document.getElementById('cliProspecto').value || null;
-    const razonSocial = document.getElementById('cliRazon').value.trim();
-    const rut         = document.getElementById('cliRut').value.trim();
+    const razonSocial = normalizeText(document.getElementById('cliRazon').value);
+    const rut         = formatRut(document.getElementById('cliRut').value);
     if (!razonSocial) { toast('La razón social es obligatoria', 'error'); return; }
-    if (rut && !validateRut(rut)) { toast('El RUT no es válido', 'error'); return; }
+    // El RUT no bloquea: se guarda canónico y, si el DV no calza, se avisa.
+    if (rut && !validateRut(rut)) toast('Ojo: el dígito verificador del RUT no calza — se guardó igual', 'info', 5000);
     const data = {
       leadId,
       razonSocial,
       rut,
-      giro:      document.getElementById('cliGiro').value.trim(),
-      direccion: document.getElementById('cliDireccion').value.trim(),
+      giro:      normalizeText(document.getElementById('cliGiro').value),
+      direccion: normalizeText(document.getElementById('cliDireccion').value),
     };
     try {
       await clientes.add(data);

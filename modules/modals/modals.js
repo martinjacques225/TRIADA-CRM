@@ -3,7 +3,7 @@ import { prospectos, diagnosticos, citas, propuestas, clientes, facturas, autodi
 import { origenDetalleLabel } from '../../js/mappers.js';
 import { direccionCompleta, tieneDireccion, googleMapsUrl, googleMapsVerUrl, wazeUrl } from '../../js/geo.js';
 import { escHtml, PIPELINE_STAGES, RUBROS, TAMANOS, DOLORES, ORIGENES, DIAG_AREAS, toast, formatCLP, propEstadoLabel, scorePct } from '../../js/utils.js';
-import { attachFormatting, validateRut, validateEmail } from '../../js/format.js';
+import { attachFormatting, validateRut, validateEmail, formatRut, formatPhoneCL, normalizeText, normalizeEmail } from '../../js/format.js';
 import { openMeetingModal } from '../agenda/agenda.js';
 import { renderPropuestaModal } from '../propuestas/propuestas.js';
 import { renderDiagnosticoModal } from '../diagnosticos/diagnosticos.js';
@@ -42,11 +42,11 @@ export async function openProspectoModal(id = null) {
       <div class="form-group"><label>Empresa</label><input id="pEmpresa" data-fmt="upper" value="${escHtml(p.empresa||'')}" placeholder="NOMBRE DE LA EMPRESA"></div>
     </div>
     <div class="form-row">
-      <div class="form-group"><label>RUT empresa</label><input id="pRut" data-fmt="rut" value="${escHtml(p.rut||'')}" placeholder="76.123.456-7"><div class="form-hint">Se valida automáticamente (módulo 11)</div></div>
+      <div class="form-group"><label>RUT empresa</label><input id="pRut" data-fmt="rut" value="${escHtml(p.rut||'')}" placeholder="12.345.678-5"><div class="form-hint">Se ordena solo (12.345.678-9). Si el dígito verificador no calza te avisa, pero igual guarda.</div></div>
       <div class="form-group"><label>Email</label><input id="pEmail" type="email" data-fmt="email" value="${escHtml(p.email||'')}" placeholder="correo@empresa.cl"></div>
     </div>
     <div class="form-row">
-      <div class="form-group"><label>Teléfono / WhatsApp</label><input id="pTelefono" data-fmt="phone" value="${escHtml(p.telefono||'')}" placeholder="+56 9 1234 5678"></div>
+      <div class="form-group"><label>Teléfono / WhatsApp</label><input id="pTelefono" type="tel" data-fmt="phone" value="${escHtml(p.telefono||'')}" placeholder="+56912345678"></div>
       <div class="form-group"><label>Rubro</label>
         <select id="pRubro"><option value="">Selecciona…</option>${RUBROS.map(r=>`<option${p.rubro===r?' selected':''}>${r}</option>`).join('')}</select>
       </div>
@@ -54,8 +54,8 @@ export async function openProspectoModal(id = null) {
 
     <div class="form-section">Dónde está (para visitas en terreno)</div>
     <div class="form-row">
-      <div class="form-group"><label>Dirección</label><input id="pDireccion" value="${escHtml(p.direccion||'')}" placeholder="Av. San Miguel 1234, oficina 3"><div class="form-hint">Con esto la ficha muestra el botón "Cómo llegar" (Google Maps / Waze)</div></div>
-      <div class="form-group"><label>Comuna</label><input id="pComuna" value="${escHtml(p.comuna||'')}" placeholder="Molina"></div>
+      <div class="form-group"><label>Dirección</label><input id="pDireccion" data-fmt="upper" value="${escHtml(p.direccion||'')}" placeholder="AV. SAN MIGUEL 1234, OFICINA 3"><div class="form-hint">Con esto la ficha muestra el botón "Cómo llegar" (Google Maps / Waze)</div></div>
+      <div class="form-group"><label>Comuna</label><input id="pComuna" data-fmt="upper" value="${escHtml(p.comuna||'')}" placeholder="MOLINA"></div>
     </div>
 
     <div class="form-section">Clasificación y pipeline</div>
@@ -76,37 +76,42 @@ export async function openProspectoModal(id = null) {
       </div>
     </div>
     <div class="form-group"><label>Notas internas</label>
-      <textarea id="pNotas">${escHtml(p.notas||'')}</textarea>
+      <textarea id="pNotas" data-fmt="upper">${escHtml(p.notas||'')}</textarea>
     </div>`;
 
   attachFormatting(body);
 
   document.getElementById('modalSave').onclick = async () => {
-    const nombre = document.getElementById('pNombre').value.trim();
+    const nombre = normalizeText(document.getElementById('pNombre').value);
     if (!nombre) { toast('El nombre es obligatorio', 'error'); return; }
-    const rut   = document.getElementById('pRut').value.trim();
-    const email = document.getElementById('pEmail').value.trim();
-    if (rut && !validateRut(rut))       { toast('El RUT no es válido', 'error'); return; }
+    // Se guarda canónico venga como venga: RUT 12.345.678-9, teléfono +56912345678.
+    const rut   = formatRut(document.getElementById('pRut').value);
+    const email = normalizeEmail(document.getElementById('pEmail').value);
     if (email && !validateEmail(email)) { toast('El correo no es válido', 'error'); return; }
+    // El RUT NO bloquea: si el dígito verificador no calza se avisa al guardar.
+    const rutDudoso = !!rut && !validateRut(rut);
     const data = {
       nombre,
-      empresa:        document.getElementById('pEmpresa').value.trim(),
+      empresa:        normalizeText(document.getElementById('pEmpresa').value),
       rut,
       email,
-      telefono:       document.getElementById('pTelefono').value.trim(),
+      telefono:       formatPhoneCL(document.getElementById('pTelefono').value),
       // '' → null: borrar el campo borra el dato (y no deja cadenas vacías en la fila).
-      direccion:      document.getElementById('pDireccion').value.trim() || null,
-      comuna:         document.getElementById('pComuna').value.trim() || null,
+      direccion:      normalizeText(document.getElementById('pDireccion').value) || null,
+      comuna:         normalizeText(document.getElementById('pComuna').value) || null,
       rubro:          document.getElementById('pRubro').value,
       tamano:         document.getElementById('pTamano').value,
       estado:         document.getElementById('pEstado').value,
       origen:         document.getElementById('pOrigen').value,
       dolorPrincipal: document.getElementById('pDolor').value,
-      notas:          document.getElementById('pNotas').value.trim(),
+      notas:          normalizeText(document.getElementById('pNotas').value),
     };
+    const ok = (verbo) => rutDudoso
+      ? toast(`${verbo} ✓ — revisa el RUT: el dígito verificador no calza`, 'info', 5000)
+      : toast(verbo, 'success');
     try {
-      if (existing) { await prospectos.update({ ...existing, ...data }); toast('Prospecto actualizado', 'success'); }
-      else          { await prospectos.add(data); toast('Prospecto creado', 'success'); }
+      if (existing) { await prospectos.update({ ...existing, ...data }); ok('Prospecto actualizado'); }
+      else          { await prospectos.add(data); ok('Prospecto creado'); }
       closeModal();
       window._app?.refreshView?.();
     } catch (err) {

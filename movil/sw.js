@@ -5,7 +5,7 @@
    Solo se registra en producción (https, no localhost) — ver js/app.js. */
 // Subir el número al desplegar algo que el usuario DEBE ver sí o sí: cambia el
 // byte del sw.js → el navegador detecta versión nueva → la app ofrece "Actualizar".
-const CACHE = 'triada-movil-v6';
+const CACHE = 'triada-movil-v7';
 const SHELL = [
   './', './index.html',
   './css/tokens.css', './css/app.css',
