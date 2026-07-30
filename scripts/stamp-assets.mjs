@@ -53,6 +53,17 @@ const ENTRADAS = [
 // href/src que apunten a un .css o .js local, con o sin sello previo.
 const REF = /(\s(?:href|src)=")((?:\.{1,2}\/)[^"?]+\.(?:css|js))(\?v=[^"]*)?(")/g;
 
+// El hash se calcula sobre el contenido con finales de línea NORMALIZADOS a LF.
+// Sin esto el sello depende de la máquina: en Windows `core.autocrlf` deja CRLF en
+// la copia de trabajo mientras el repo (y por lo tanto lo que sirve GitHub Pages)
+// guarda LF, así que el mismo archivo daba dos hashes distintos y el guardián de CI
+// fallaba contra un sello sellado en Windows. Pasó con `app.js` el 29-jul-2026.
+// El ida y vuelta por 'latin1' es byte a byte (1 byte = 1 carácter), así que no
+// toca los acentos. Ojo: `toString('binary')` + `update(<string>)` NO sirve —
+// `update` reinterpreta la cadena como UTF-8 y cambia el hash de todo archivo con
+// tildes. Tiene que volver a ser Buffer antes de hashear.
+const normalizar = (buf) => Buffer.from(buf.toString('latin1').replace(/\r\n/g, '\n'), 'latin1');
+
 const soloVerificar = process.argv.includes('--check');
 let sellados = 0, sinCambios = 0;
 const desincronizados = [];
@@ -69,7 +80,7 @@ for (const entrada of ENTRADAS) {
     // Un href que no existe en disco se deja intacto: puede ser de otro origen
     // o un archivo generado. Sellar algo que no podemos leer sería inventar.
     if (!existsSync(asset)) { console.warn(`  AVISO  referenciado pero no está en disco: ${ruta} (${entrada})`); return todo; }
-    const hash = createHash('sha1').update(readFileSync(asset)).digest('hex').slice(0, 8);
+    const hash = createHash('sha1').update(normalizar(readFileSync(asset))).digest('hex').slice(0, 8);
     const sello = `?v=${hash}`;
     if (selloViejo === sello) sinCambios++;
     else { sellados++; desincronizados.push(`${entrada} → ${ruta}`); }
