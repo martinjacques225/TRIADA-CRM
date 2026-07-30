@@ -25,7 +25,8 @@ function tabDatos() {
     ${row('Origen', l.origen)}${l.origenDetalle ? row('Vino de', origenDetalleLabel(l.origenDetalle), 'var(--teal)') : ''}
     ${row('Dirección', l.direccion)}${row('Comuna', l.comuna)}${row('Región', l.region)}${row('RUT', l.rut)}
     ${row('Teléfono', l.telefono, 'var(--teal)')}${row('Email', l.email, 'var(--teal)')}
-    <div style="padding:13px 15px"><div style="font-size:13px;color:var(--text2);margin-bottom:5px">Notas</div><div style="font-size:13px;color:var(--text);line-height:1.5">${e(l.notas || 'Sin notas.')}</div></div>
+    <div style="padding:13px 15px;border-bottom:1px solid var(--border)"><div style="font-size:13px;color:var(--text2);margin-bottom:5px">Notas</div><div style="font-size:13px;color:var(--text);line-height:1.5">${e(l.notas || 'Sin notas.')}</div></div>
+    <button class="btn" data-act="editar" style="width:100%;height:46px;border:0;border-radius:0;background:transparent;color:var(--teal);font-size:13px">${ic('edit', { size: 16 })} Corregir estos datos</button>
   </div>`;
 }
 
@@ -200,7 +201,7 @@ export default {
     const host = document.getElementById('screen');
     host.querySelector('#fkBack')?.addEventListener('click', () => app.back());
     if (!_lead) return;
-    host.querySelector('#fkEdit')?.addEventListener('click', () => toast('Editar lead: próxima fase', 'info'));
+    host.querySelector('#fkEdit')?.addEventListener('click', () => app.navigate('editar', { leadId: _lead.id }));
     host.querySelector('#fkWa')?.addEventListener('click', () => openWhatsApp(_lead.telefono, `Hola ${(_lead.nombre || '').split(' ')[0]}, te escribo de Tríada Consultoría.`));
     host.querySelector('#fkTel')?.addEventListener('click', () => openTel(_lead.telefono));
     host.querySelector('#fkZoom')?.addEventListener('click', () => toast('Zoom: se conecta en una fase próxima', 'info'));
@@ -229,7 +230,8 @@ export default {
     host.addEventListener('click', (ev) => {
       const b = ev.target.closest('[data-act]'); if (!b) return;
       const act = b.getAttribute('data-act');
-      if (act === 'cita') app.navigate('cita', { leadId: _lead.id });
+      if (act === 'editar') app.navigate('editar', { leadId: _lead.id });
+      else if (act === 'cita') app.navigate('cita', { leadId: _lead.id });
       else if (act === 'prop') app.navigate('propuesta', { leadId: _lead.id });
       else if (act === 'diag') app.navigate('diagnostico', { leadId: _lead.id });
       else if (act === 'informe') openInformeByDiagId(b.getAttribute('data-diag'));

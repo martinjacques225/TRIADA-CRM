@@ -12,6 +12,7 @@ import hoy from './screens/hoy.js';
 import leads from './screens/leads.js';
 import captura from './screens/captura.js';
 import ficha from './screens/ficha.js';
+import editar from './screens/editar.js';
 import pipeline from './screens/pipeline.js';
 import diagnostico from './screens/diagnostico.js';
 import agenda from './screens/agenda.js';
@@ -52,7 +53,7 @@ function stub(title, sub, chrome = false) {
 
 const SCREENS = {
   splash: auth.splash, login: auth.login, crearpass: auth.crearpass,
-  hoy, leads, captura, ficha, pipeline, diagnostico,
+  hoy, leads, captura, ficha, editar, pipeline, diagnostico,
   agenda, cita, propuesta, perfil, demos, biblioteca, financiero,
   overview:    stub('Mapa de pantallas', '', true),
 };

@@ -134,6 +134,10 @@ export const prospectos = {
   },
   add:      async (data)   => {
     const payload = leadToSupa(data);
+    // Defaults de ALTA. Viven acá y no en leadToSupa a propósito: en el mapper se
+    // colaban en cada update parcial y pisaban la etapa y el origen del lead.
+    if (!payload.estado) payload.estado = 'Nuevo';
+    if (!payload.origen) payload.origen = 'manual';
     if (!payload.responsable && _uid) payload.responsable = _uid;
     const { data: row, error } = await supabase.from('leads').insert(payload).select('id').single();
     _throw(error); _invalidate('leads'); return row.id;

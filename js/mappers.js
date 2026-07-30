@@ -137,8 +137,13 @@ export function leadToSupa(data) {
     comuna:          _txt(data.comuna),
     facturacion_est: data.facturacionEst,
     dolor_principal: data.dolorPrincipal,
-    origen:          toOrigenSlug(data.origen),
-    estado:          data.estado || 'Nuevo',
+    // origen/estado NO llevan default acá: los pone `prospectos.add` (alta).
+    // Ponerlos en el mapper los colaba en TODO update parcial — guardar solo la
+    // dirección desde el móvil devolvía el lead a 'Nuevo' y su origen a 'manual',
+    // en silencio. La regla del mapper es la misma que el resto de los campos:
+    // undefined = no mandar la columna. Ver tests/db.mappers.test.js.
+    origen:          data.origen === undefined ? undefined : toOrigenSlug(data.origen),
+    estado:          data.estado,
     scoring:         data.scoring,
     responsable:     data.responsable,
     notas:           _txt(data.notas),

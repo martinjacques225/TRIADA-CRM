@@ -44,17 +44,33 @@ test('toFactEstado: desconocido/vacío cae a "pendiente"', () => {
 });
 
 // ─── leadToSupa / leadFromSupa ───────────────────────────────
-test('leadToSupa: renombra campos UI→DB y aplica defaults', () => {
+test('leadToSupa: renombra campos UI→DB', () => {
   const out = leadToSupa({ nombre: 'Ana', rubro: 'Servicios', facturacionEst: 1000, dolorPrincipal: 'X', origen: 'Landing Web' });
   assert.equal(out.giro, 'Servicios');             // rubro → giro
   assert.equal(out.facturacion_est, 1000);          // facturacionEst → facturacion_est
   assert.equal(out.dolor_principal, 'X');
   assert.equal(out.origen, 'landing');              // vía toOrigenSlug
-  assert.equal(out.estado, 'Nuevo');                // default
   assert.ok(!('rubro' in out));                     // no filtra el nombre UI
 });
 test('leadToSupa: respeta el estado provisto', () => {
   assert.equal(leadToSupa({ nombre: 'A', estado: 'Contactado' }).estado, 'Contactado');
+});
+
+// Regresión (2026-07-30): el mapper ponía estado:'Nuevo' y origen:'manual' por
+// default, así que TODO update parcial los mandaba y pisaba el dato real. Guardar
+// solo la dirección desde el móvil devolvía a 'Nuevo' un lead en 'Negociando'.
+// Los defaults de alta viven ahora en db.prospectos.add.
+test('leadToSupa: un update parcial NO manda estado ni origen', () => {
+  const out = leadToSupa({ direccion: 'Balmaceda 55', comuna: 'Molina' });
+  assert.ok(!('estado' in out), 'estado no debe viajar en un update parcial');
+  assert.ok(!('origen' in out), 'origen no debe viajar en un update parcial');
+  assert.deepEqual(out, { direccion: 'BALMACEDA 55', comuna: 'MOLINA' });
+});
+test('leadToSupa: sin origen no manda la columna (pero lo respeta si viene)', () => {
+  assert.ok(!('origen' in leadToSupa({ nombre: 'Ana' })));
+  assert.equal(leadToSupa({ nombre: 'Ana', origen: 'Referido' }).origen, 'referido');
+  // Valor fuera del enum lead_origen → 'manual' (nunca rompe el INSERT).
+  assert.equal(leadToSupa({ nombre: 'Ana', origen: 'Marciano' }).origen, 'manual');
 });
 test('leadFromSupa: codigo→correlativo, giro→rubro, origen DB→UI; null→null', () => {
   assert.equal(leadFromSupa(null), null);

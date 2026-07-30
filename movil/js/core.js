@@ -60,7 +60,7 @@ export { openFinReport } from '../../modules/financiero/presentation/informe-fin
 // Versión visible en Mi cuenta. Se sube A MANO al desplegar (junto con el CACHE
 // de sw.js): sirve para saber, sin adivinar, qué build está corriendo el teléfono
 // cuando alguien reporta "esto no me funciona".
-export const APP_VERSION = '2026-07-29.1';
+export const APP_VERSION = '2026-07-30.1';
 
 // ── Estado de la app (en memoria, una sola instancia) ──────────────────────
 export const store = {
