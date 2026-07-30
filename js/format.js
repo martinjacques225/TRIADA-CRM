@@ -53,7 +53,13 @@ export function validateRut(rut) {
 export function formatPhoneCL(v) {
   let d = String(v || '').replace(/\D/g, '').replace(/^0+/, '');
   // Quita el prefijo país que ya venía (o el que agregamos nosotros al tipear).
-  while (d.length > 2 && d.startsWith('56')) d = d.slice(2);
+  // SIN tope de largo: con `d.length > 2` el caso `d === '56'` no se limpiaba, se
+  // tomaba por número y se le volvía a anteponer el prefijo → '+56' se convertía
+  // en '+5656'. Borrando de a un carácter el campo quedaba atascado oscilando
+  // entre '+565' y '+5656' y NUNCA se podía vaciar (bug reportado 2026-07-30).
+  // Ahora, al borrar el último dígito del cuerpo, '+56' → '' y el campo queda
+  // limpio, que es lo que espera quien está borrando para retipear.
+  while (d.startsWith('56')) d = d.slice(2);
   d = d.slice(0, 9);
   return d ? '+56' + d : '';
 }

@@ -1,7 +1,7 @@
 # HANDOFF — Tríada CRM Móvil (PWA de terreno)
 
 > Documento vivo · fuente de verdad del proyecto.
-> Última actualización: **2026-07-27** · Estado: **✅ COMPLETO y DESPLEGADO** (incluye §3.bis: dirección + botón atrás, commit `4388a2c`)
+> Última actualización: **2026-07-30** · Estado: **✅ COMPLETO** · ⬜ **sin desplegar**: §3.sexies (editar lead + fix del default que pisaba etapa/origen)
 
 ---
 
@@ -33,7 +33,7 @@ movil/
   js/informe.js     · ⭐ Informe PDF (reutiliza computeInforme + buildReportDoc del CRM)
   js/tria.js        · asistente trIA (reglas sobre datos reales)
   js/campana.js     · panel de recordatorios
-  js/screens/       · auth · hoy · leads · captura · ficha · pipeline · diagnostico · agenda · cita · propuesta · perfil · demos
+  js/screens/       · auth · hoy · leads · captura · ficha · editar · pipeline · diagnostico · agenda · cita · propuesta · perfil · demos
 ```
 
 > **Vitrina de demos:** `demos/screens.js` lista plantillas (constante `DEMOS`) y abre cada una a
@@ -154,6 +154,60 @@ y en preview los mocks `/_preview/mock-{supabase,db}.js` (vía import-map de `pr
 - **Si tocas el informe:** sección nueva → `data-flow` en la `<section>` y `data-split` en el
   contenedor de su lista. Grilla nueva → `min-width: 0` en los hijos (sin eso, con 8 pilares
   el contenido se iba **126 mm fuera de la hoja**).
+
+## 3.sexies Editar un lead ya creado + el default que pisaba etapa y origen (2026-07-30)
+
+- **Lo que faltaba:** la ficha tenía el lápiz de "Editar" cableado a
+  `toast('Editar lead: próxima fase')` — un **botón muerto**. Salvo la dirección (que ya tenía su
+  hoja), corregir cualquier dato del lead desde el teléfono era imposible: había que volver al
+  computador. Ahora hay pantalla propia, `js/screens/editar.js`.
+- **Es la captura, precargada.** Mismos campos, mismos chips y el mismo `attachFormatting` de
+  `captura.js` (§3.quater) → el dato sigue entrando canónico. Dos entradas: el lápiz del encabezado
+  y **"Corregir estos datos"** al pie de la pestaña *Datos* (el lápiz solo es fácil de no ver).
+- **Vaciar un campo BORRA el dato** (`'' → null`), igual que la hoja de dirección. No deja cadenas
+  vacías en la fila.
+- **La etapa NO se toca desde acá** (se cambia con el botón del embudo, en la ficha): el guardado
+  simplemente **no manda `estado`**. Un aviso al pie del formulario lo dice.
+
+### ⚠️ El bug que había debajo: guardar la dirección devolvía el lead a "Nuevo"
+
+`leadToSupa()` traía `estado: data.estado || 'Nuevo'` y `origen: toOrigenSlug(data.origen)` como
+defaults **dentro del mapper**. Como `clean()` solo descarta `undefined`, esos dos valores se
+colaban en **todo update parcial**: guardar solo la dirección desde el móvil mandaba también
+`estado='Nuevo'` y `origen='manual'`. Un lead en *Negociando* que llegó por la landing volvía a
+*Nuevo* y perdía su atribución — **en silencio, sin error**.
+
+- **Fix:** los defaults de alta se mudaron a `db.prospectos.add()`. El mapper ahora respeta
+  `undefined` en `estado`/`origen` igual que en el resto de los campos. Los 4 caminos de alta
+  (modal del escritorio, carga masiva, `importLandingLeads`, captura móvil) ya pasaban ambos
+  explícitos → **el alta no cambia**. Regresión cubierta en `tests/db.mappers.test.js`.
+- **`origen` es un enum** (`lead_origen`) y admite valores fuera del catálogo de chips (p. ej.
+  `Red social`, de cargas viejas). Si el lead trae uno de esos, `editar.js` **no preselecciona
+  ningún chip y no agrega la clave** al guardar → el origen queda como estaba.
+- 🪤 **El preview NO puede reproducir este bug:** `_preview/mock-db.js` hace
+  `{...fila, ...cambios}` y **nunca pasa por `leadToSupa`**. Peor: ahí una clave presente con valor
+  `undefined` **sí borra** el dato (en Supabase, `clean()` la descartaría). Por eso `editar.js`
+  agrega `origen` con un `if` en vez de mandar `undefined` — así los dos caminos se portan igual.
+  **Moraleja:** lo que toca el mapper se verifica con `npm test` (node, puro), no con el preview.
+
+### El campo de teléfono no se dejaba borrar (mismo día, `js/format.js` — afecta también al escritorio)
+
+Borrando de a un carácter, al llegar a `+569` el siguiente backspace mostraba **`+5656`** (un "56"
+aparecido de la nada) y de ahí el campo **oscilaba entre `+565` y `+5656` para siempre**: era
+imposible vaciarlo para retipear.
+
+- **Causa:** `formatPhoneCL` limpiaba el prefijo país con `while (d.length > 2 && d.startsWith('56'))`.
+  Cuando los dígitos eran **exactamente `56`**, el guardia de largo impedía limpiarlos → se tomaban
+  por *cuerpo* del número y se les anteponía `'+56'` otra vez.
+- **Fix:** se quitó el tope de largo (`while (d.startsWith('56'))`). Ahora `'+56' → ''`: al borrar el
+  último dígito el campo queda limpio. Cubierto en `tests/format.test.js` con un test que borra
+  carácter por carácter y **falla si el valor se repite o se alarga**.
+- **Alcance:** `js/format.js` es el motor único (§3.quater), así que el arreglo vale para la captura
+  y la edición del móvil **y para los formularios del CRM de escritorio**.
+- 🪤 **Al verificar en el preview:** `format.js` es un módulo ES y el sellado de caché **no reescribe
+  los `import`** (límite a propósito, ver `scripts/stamp-assets.mjs`) → el navegador puede seguir
+  ejecutando el archivo viejo y hacerte creer que el fix no funciona. Se confirmó levantando el
+  server en **otro puerto** (`triada-crm-b`, :5183 = origen nuevo, caché limpia).
 
 ## 4. Lo que queda (opcional, no bloquea)
 

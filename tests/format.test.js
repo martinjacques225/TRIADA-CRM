@@ -86,6 +86,30 @@ test('formatPhoneCL es idempotente (el input reingiere su propio +56 al tipear)'
   assert.equal(formatPhoneCL(formatPhoneCL(v)), '+56912345678');
 });
 
+// Regresión (2026-07-30): con el guardia `d.length > 2`, unos dígitos que eran
+// EXACTAMENTE '56' no se limpiaban → se tomaban por número y se les anteponía el
+// prefijo otra vez ('+56' → '+5656'). Borrando de a un carácter el campo quedaba
+// atascado oscilando entre '+565' y '+5656', sin poder vaciarse nunca.
+test('formatPhoneCL: el prefijo solo NO es un número (+56 → vacío)', () => {
+  assert.equal(formatPhoneCL('+56'), '');
+  assert.equal(formatPhoneCL('56'), '');
+  assert.equal(formatPhoneCL('+5656'), '');   // el prefijo repetido tampoco
+  assert.equal(formatPhoneCL('0056'), '');
+});
+
+test('formatPhoneCL: borrar de a un carácter llega a vacío y no se atasca', () => {
+  let v = '+56912345678';
+  const vistos = new Set();
+  for (let i = 0; i < 20 && v !== ''; i++) {
+    assert.ok(!vistos.has(v), `se atascó repitiendo ${v}`);
+    vistos.add(v);
+    const siguiente = formatPhoneCL(v.slice(0, -1));       // lo que deja el backspace
+    assert.ok(siguiente.length < v.length, `borrar alargó el valor: ${v} → ${siguiente}`);
+    v = siguiente;
+  }
+  assert.equal(v, '', 'el campo debe poder quedar vacío');
+});
+
 test('formatPhoneCL corta en 9 dígitos y no inventa con vacío', () => {
   assert.equal(formatPhoneCL('9123456789999'), '+56912345678');
   assert.equal(formatPhoneCL(''), '');
