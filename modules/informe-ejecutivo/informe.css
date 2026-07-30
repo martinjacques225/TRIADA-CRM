@@ -72,8 +72,24 @@
   -webkit-print-color-adjust: exact; print-color-adjust: exact;
 }
 
+/* ── Regla anti-desborde (grid/flex blowout) ──────────────────────────────────
+   Un hijo de grid o flex NO puede encogerse por debajo de su contenido mínimo a
+   menos que se le diga `min-width: 0`. El informe nació para 3 pilares y hoy
+   lleva 8: la fila de mini-tarjetas del Resumen no podía encoger y empujaba su
+   columna **126 mm fuera de la hoja** (medido). Esto lo corta de raíz para todas
+   las grillas del documento — es la causa de "cosas fuera de margen". */
+.resumen-grid > *, .resultados-grid > *, .oport-panorama > *, .plan-grid > *,
+.hallazgo-card > *, .oport-card > *, .reco-card > *, .ma-row > *,
+.ad-cols > *, .ad-subdims > *, .rt-areas > * { min-width: 0; }
+.rt-title, .rt-body, .hz-title, .op-title, .pfi-title, .ml-item, .reco-area,
+.ad-name, .ma-name, .cmeta-v { overflow-wrap: anywhere; }
+
 /* ── Encabezado de sección (01 ───── ETIQUETA, patrón editorial del sitio) ── */
-.report-head { display: flex; align-items: center; gap: 14px; margin-bottom: 22px; }
+.report-head { display: flex; align-items: center; gap: 14px; margin-bottom: 18px; }
+/* Marca de continuación: la pone el paginador al repetir el encabezado cuando
+   una sección ocupa más de una hoja. */
+.rh-cont { font-size: 11px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase;
+  color: var(--rep-faint); border: 1px solid var(--rep-border-2); border-radius: 980px; padding: 3px 10px; white-space: nowrap; }
 .rh-num { font-family: var(--rep-serif); font-size: 15px; font-weight: 600; color: var(--rep-teal); letter-spacing: .04em; background: var(--rep-teal-l); padding: 6px 12px; border-radius: 8px; }
 .rh-title { font-family: var(--rep-serif); font-size: 28px; font-weight: 600; color: var(--rep-ink); letter-spacing: -.01em; }
 .rh-rule { flex: 1; height: 1px; background: linear-gradient(90deg, var(--rep-border-2), transparent); }
@@ -105,8 +121,8 @@
 .cover-brand { display: flex; align-items: center; gap: 12px; font-family: var(--rep-serif); font-size: 24px; font-weight: 600; letter-spacing: .06em; color: #fff; }
 .report-logo { width: 44px; height: 44px; color: #fff; }
 .cover-areas { display: flex; flex-direction: column; gap: 8px; font-size: 12.5px; color: rgba(234,229,216,.82); }
-.cover-areas span { display: flex; align-items: center; gap: 8px; justify-content: flex-end; }
-.cover-areas i { width: 9px; height: 9px; border-radius: 50%; }
+.cover-areas span { display: flex; align-items: center; gap: 8px; justify-content: flex-end; white-space: nowrap; }
+.cover-areas i { width: 9px; height: 9px; border-radius: 50%; flex: none; }
 
 .cover-center { position: relative; z-index: 2; margin: auto 0; }
 .cover-kicker { font-size: 13px; font-weight: 600; letter-spacing: .3em; text-transform: uppercase; color: var(--rep-teal-2); margin-bottom: 16px; }
@@ -137,30 +153,35 @@
 .rg-label { font-size: 12px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--rep-muted); margin-bottom: 12px; }
 .rg-tag { display: inline-block; margin-top: 16px; font-size: 13px; font-weight: 600; padding: 7px 16px; border-radius: 980px; }
 
-.resumen-clasif { display: flex; gap: 7px; margin-bottom: 22px; }
-.clasif-pill { font-size: 12px; font-weight: 600; padding: 6px 13px; border-radius: 980px; border: 1px solid var(--rep-border-2); color: var(--rep-faint); }
-.rt-title { font-family: var(--rep-serif); font-size: 20px; font-weight: 600; color: var(--rep-ink); margin-bottom: 12px; }
-.rt-body { font-size: 14.5px; line-height: 1.75; color: var(--rep-body); }
-.rt-areas { display: flex; gap: 12px; margin-top: 28px; }
-.rt-area-mini { flex: 1; background: var(--rep-cream-alt); border: 1px solid var(--rep-border); border-radius: 12px; padding: 14px; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+/* Las 4 píldoras de clasificación no entraban por 0,8mm en la columna de texto:
+   se permiten envolver y se aprietan un punto. */
+.resumen-clasif { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 16px; }
+.clasif-pill { font-size: 11.5px; font-weight: 600; padding: 5px 11px; border-radius: 980px; border: 1px solid var(--rep-border-2); color: var(--rep-faint); white-space: nowrap; }
+.rt-title { font-family: var(--rep-serif); font-size: 20px; font-weight: 600; color: var(--rep-ink); margin-bottom: 9px; }
+/* Interlineado y alturas ajustados para que el Resumen Ejecutivo entre COMPLETO
+   en una hoja con los 8 pilares (antes se partía y dejaba una hoja al 32%). */
+.rt-body { font-size: 14.5px; line-height: 1.6; color: var(--rep-body); }
+/* 8 pilares no caben en una fila dentro de la columna del Resumen: 4×2. */
+.rt-areas { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; margin-top: 14px; }
+.rt-area-mini { background: var(--rep-cream-alt); border: 1px solid var(--rep-border); border-radius: 10px; padding: 6px 5px; display: flex; flex-direction: column; align-items: center; gap: 1px; text-align: center; }
 .rt-area-dot { width: 10px; height: 10px; border-radius: 50%; }
-.rt-area-name { font-size: 12px; color: var(--rep-muted); font-weight: 550; }
-.rt-area-score { font-family: var(--rep-serif); font-size: 28px; font-weight: 600; }
-.rt-area-bench { font-size: 10px; font-weight: 600; margin-top: 3px; }
+.rt-area-name { font-size: 10.5px; color: var(--rep-muted); font-weight: 550; line-height: 1.2; }
+.rt-area-score { font-family: var(--rep-serif); font-size: 19px; font-weight: 600; line-height: 1.05; }
+.rt-area-bench { font-size: 9.5px; font-weight: 600; margin-top: 1px; }
 .rt-area-bench.pos { color: var(--rep-fin); }
 .rt-area-bench.neg { color: #B4524A; }
 .rt-bench-note { font-size: 10px; color: var(--rep-faint); margin-top: 8px; font-style: italic; }
 
 /* Valor en juego (cuantificación económica) */
-.resumen-valor { margin-top: 8px; border: 1px solid var(--rep-border); border-radius: 16px; padding: 18px 22px; background: linear-gradient(120deg, var(--rep-teal-l), var(--rep-cream-alt)); }
+.resumen-valor { margin-top: 6px; border: 1px solid var(--rep-border); border-radius: 16px; padding: 12px 18px; background: linear-gradient(120deg, var(--rep-teal-l), var(--rep-cream-alt)); }
 .rv-head { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
 .rv-label { font-size: 11px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--rep-muted); }
 .rv-amount { font-family: var(--rep-serif); font-size: 30px; font-weight: 600; color: var(--rep-ink); letter-spacing: -.01em; font-variant-numeric: tabular-nums; }
 .rv-amount small { font-size: 14px; font-weight: 500; color: var(--rep-muted); font-family: var(--rep-sans); }
-.rv-areas { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.rv-areas { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 10px; }
 .rv-chip { display: inline-flex; align-items: center; gap: 6px; font-size: 11.5px; font-weight: 600; color: var(--rep-ink); background: rgba(255,255,255,.55); border: 1px solid var(--rep-border); border-radius: 980px; padding: 4px 11px; }
 .rv-chip i { width: 8px; height: 8px; border-radius: 50%; }
-.rv-note { font-size: 10px; color: var(--rep-muted); line-height: 1.5; margin-top: 12px; }
+.rv-note { font-size: 10px; color: var(--rep-muted); line-height: 1.45; margin-top: 7px; }
 
 /* ══════════ RESULTADOS ══════════ */
 .resultados-grid { display: grid; grid-template-columns: 1fr 320px; gap: 30px; margin-bottom: 26px; }
@@ -220,7 +241,16 @@
 .hz-risk { font-size: 11.5px; font-weight: 600; padding: 4px 12px; border-radius: 980px; border: 1px solid; }
 
 /* ══════════ OPORTUNIDADES ══════════ */
-.oport-grid { display: grid; grid-template-columns: 1fr 380px; gap: 28px; }
+/* Antes era una grilla de 2 columnas (lista | matriz) que el paginador NO podía
+   partir: con títulos largos escritos por el consultor crecía a 3 hojas de alto
+   y se salía de la página. Ahora la matriz y su leyenda van juntas arriba —se
+   leen como un panorama— y la lista queda a ancho completo y SÍ se puede repartir
+   entre hojas. De paso las tarjetas ganan ancho y quedan mucho más bajas. */
+.oport-panorama {
+  display: grid; grid-template-columns: 320px 1fr; gap: 22px; align-items: center;
+  margin-bottom: 18px; padding-bottom: 16px; border-bottom: 1px solid var(--rep-border);
+}
+.oport-panorama > * { min-width: 0; }
 .oport-list { display: flex; flex-direction: column; gap: 12px; }
 .oport-card { display: flex; gap: 14px; border: 1px solid var(--rep-border); border-radius: 14px; padding: 15px 16px; background: var(--rep-cream); }
 .op-num { width: 30px; height: 30px; flex-shrink: 0; border-radius: 50%; color: #fff; display: flex; align-items: center; justify-content: center; font-family: var(--rep-serif); font-size: 15px; font-weight: 600; }
@@ -233,7 +263,7 @@
 
 .oport-matrix { text-align: center; }
 .matrix-title { font-family: var(--rep-serif); font-size: 14px; font-weight: 600; color: var(--rep-ink); margin-bottom: 8px; }
-.matrix-legend { margin-top: 12px; text-align: left; display: flex; flex-direction: column; gap: 5px; }
+.matrix-legend { text-align: left; display: flex; flex-direction: column; gap: 5px; }
 .ml-item { font-size: 11px; color: var(--rep-body); display: flex; align-items: center; gap: 7px; line-height: 1.3; }
 .ml-num { width: 17px; height: 17px; flex-shrink: 0; border-radius: 50%; color: #fff; display: inline-flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700; }
 
@@ -258,8 +288,11 @@
 .ma-vals { font-size: 13px; width: 90px; text-align: right; }
 
 /* ══════════ PLAN DE ACCIÓN ══════════ */
-.plan-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; flex: 1; }
-.plan-fase { display: flex; flex-direction: column; }
+/* Flex y no grid a propósito: el paginador puede mandar una fase a la hoja
+   siguiente, y con `repeat(3,1fr)` esa fase sola quedaría en un tercio de hoja
+   con dos huecos al lado. Con flex ocupa el ancho completo y se ve intencional. */
+.plan-grid { display: flex; gap: 16px; align-items: stretch; }
+.plan-fase { flex: 1; min-width: 0; display: flex; flex-direction: column; }
 .pf-head { display: flex; align-items: center; gap: 11px; padding-bottom: 12px; border-bottom: 2px solid; margin-bottom: 14px; }
 .pf-dot { width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0; }
 .pf-title { font-family: var(--rep-serif); font-size: 16px; font-weight: 600; color: var(--rep-ink); }
@@ -294,24 +327,41 @@
    por debajo de 880px. Sin acotar a `screen`, este breakpoint móvil se activaba
    AL IMPRIMIR y colapsaba las grillas a una columna → el contenido desbordaba la
    página de alto fijo (297mm) y se partía en hojas extra (8 págs → 16). */
+/* `:not(.report-doc--measure)`: mientras el paginador MIDE, la hoja debe tener su
+   geometría A4 real aunque el teléfono sea de 375px — si no, mediría una columna
+   fluida y cortaría las hojas donde no corresponde. Ver `.report-doc--measure`
+   más abajo y `informe.paginate.js`. */
 @media screen and (max-width: 880px) {
-  .report-page { width: 100%; min-height: auto; padding: 28px 22px; }
-  .resumen-grid, .resultados-grid, .oport-grid { grid-template-columns: 1fr; gap: 24px; }
-  .plan-grid { grid-template-columns: 1fr; }
-  .cover-title { font-size: 52px; }
-  .cover-meta { grid-template-columns: 1fr; }
-  .resultados-radar, .oport-matrix { max-width: 360px; margin: 0 auto; }
+  .report-doc:not(.report-doc--measure) .report-page { width: 100%; min-height: auto; padding: 28px 22px; }
+  .report-doc:not(.report-doc--measure) .resumen-grid,
+  .report-doc:not(.report-doc--measure) .resultados-grid,
+  .report-doc:not(.report-doc--measure) .oport-panorama { grid-template-columns: 1fr; gap: 18px; }
+  .report-doc:not(.report-doc--measure) .plan-grid { flex-direction: column; }
+  .report-doc:not(.report-doc--measure) .rt-areas { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .report-doc:not(.report-doc--measure) .cover-title { font-size: 52px; }
+  .report-doc:not(.report-doc--measure) .cover-meta { grid-template-columns: 1fr; }
+  .report-doc:not(.report-doc--measure) .resultados-radar,
+  .report-doc:not(.report-doc--measure) .oport-matrix { max-width: 360px; margin: 0 auto; }
 }
+
+/* Estado de medición: el documento se arma con la geometría A4 exacta y oculto,
+   se reparte en hojas, y recién ahí se muestra. Dura unos milisegundos. */
+.report-doc--measure { opacity: 0; }
 
 /* ══════════════════════════════════════════════════════════
    PILARES 360 — portada en grilla · semáforo · prioridad · recomendaciones
    ══════════════════════════════════════════════════════════ */
-/* Portada: 8 pilares en dos columnas en lugar de una lista vertical larga */
+/* Portada: 8 pilares en dos columnas en lugar de una lista vertical larga.
+   Columnas IGUALES (`1fr`, no `auto`) y contenido alineado a la IZQUIERDA. Con
+   `auto` + `flex-end` cada columna tomaba el ancho de su texto más largo y cada
+   punto se alineaba al borde derecho de SU celda: los 8 puntos caían en 6 x
+   distintas (hasta 45px de escalón) y la lista se leía desordenada. Así los
+   puntos forman dos columnas limpias y todas las etiquetas arrancan parejas. */
 .cover-areas--grid {
-  display: grid; grid-template-columns: repeat(2, auto); gap: 7px 16px;
+  display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 9px 20px;
   flex-direction: row;
 }
-.cover-areas--grid span { justify-content: flex-end; font-size: 12px; }
+.cover-areas--grid span { justify-content: flex-start; font-size: 12px; }
 
 /* Semáforo por pilar (Resultados) */
 .semaforo-row {
@@ -344,9 +394,13 @@
 .reco-chip { font-size: 12.5px; font-weight: 600; color: var(--rep-ink); background: var(--rep-paper); border: 1px solid var(--rep-border-2); border-radius: 980px; padding: 5px 13px; }
 .reco-note { margin-top: 18px; font-size: 11.5px; color: var(--rep-muted); line-height: 1.55; font-style: italic; }
 
-@media (max-width: 720px) {
-  .cover-areas--grid { grid-template-columns: 1fr; }
-  .semaforo-row { gap: 8px 14px; }
+/* `screen` + `:not(.report-doc--measure)` por el mismo motivo que el breakpoint
+   de arriba: al medir la hoja para el PDF la geometría debe ser A4, aunque el
+   teléfono tenga 375px. Sin esto, en el móvil la portada se medía con los 8
+   pilares en una sola columna. */
+@media screen and (max-width: 720px) {
+  .report-doc:not(.report-doc--measure) .cover-areas--grid { grid-template-columns: 1fr; }
+  .report-doc:not(.report-doc--measure) .semaforo-row { gap: 8px 14px; }
 }
 
 /* ══════════════════════════════════════════════════════════
@@ -359,17 +413,22 @@
   .report-toolbar { display: none !important; }
   .report-scroll { overflow: visible; padding: 0; }
   .report-doc { gap: 0; }
+  /* Una `.report-page` = UNA hoja física, garantizado.
+     · `width:100%` (no 210mm): con `@page{margin:0}` la caja de página YA mide
+       210mm; pedir 210mm exactos deja un sobrante de fracción de píxel que el
+       navegador manda a una hoja en blanco después de cada página.
+     · `height` fijo un pelo bajo A4 por el mismo motivo de redondeo.
+     Antes esto NO se podía hacer (una sección larga se habría recortado); ahora
+     `informe.paginate.js` mide y reparte el contenido ANTES de imprimir, así que
+     nada excede la hoja y el alto fijo es seguro. `overflow:hidden` es la red:
+     si algo se pasara por un pelo, no genera una hoja fantasma. */
   .report-page {
-    width: 210mm; min-height: 297mm;
+    width: 100%; height: 296.6mm; min-height: 0; overflow: hidden;
     box-shadow: none; margin: 0;
     page-break-after: always; break-after: page;
     -webkit-print-color-adjust: exact; print-color-adjust: exact;
   }
   .report-page:last-child { page-break-after: auto; break-after: auto; }
-  /* Sin `height` fijo: una página con mucho contenido (p. ej. Resultados con 3
-     fichas de área densas en una empresa de baja madurez) CRECE y fluye a una 2ª
-     hoja en vez de RECORTARSE. Las tarjetas no se parten a la mitad y el título
-     no queda huérfano al final de una hoja. */
   .resultados-grid, .area-detail, .hallazgo-card, .oport-card, .pf-item,
   .resumen-valor, .conclusion-highlight, .conclusion-cta, .mapa-delta,
   .reco-card, .semaforo-row, .cover-result, .cover-meta { break-inside: avoid; }

@@ -3,6 +3,7 @@
 // 9 páginas (portada + 8 secciones), 8 pilares de madurez.
 import { computeInforme } from './informe.engine.js';
 import { ringGauge, radarChart, areaBar, impactEffortMatrix, maturityMap } from './informe.charts.js';
+import { paginateReport } from './informe.paginate.js';
 
 function esc(s) { return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 
@@ -24,7 +25,10 @@ function evaluadas(rep) {
   return ev.length ? ev : rep.areas;
 }
 
-const TOTAL_PAGES = 9;
+// El número de hoja NO se escribe a mano: una sección larga (8 pilares) ocupa
+// varias hojas, así que `informe.paginate.js` reparte el contenido y recién ahí
+// rellena cada `.rf-page` con el "n / total" real. Ver el contrato data-flow /
+// data-split / data-repeat en ese archivo.
 
 const LOGO = `<svg viewBox="0 0 120 120" fill="none" class="report-logo">
   <path d="M26 90 L60 62 L94 90" stroke="currentColor" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/>
@@ -38,11 +42,11 @@ const LOGO_TRI = `<svg viewBox="0 0 120 120" fill="none" style="width:38px;heigh
   <path d="M26 56 L60 28 L94 56" stroke="#6BA083" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/>
 </svg>`;
 
-function footer(rep, n) {
+function footer(rep) {
   return `<div class="report-footer">
     <span class="rf-brand">TRÍADA · Diagnóstico Empresarial 360</span>
     <span class="rf-code">${esc(rep.codigo)}</span>
-    <span class="rf-page">${n} / ${TOTAL_PAGES}</span>
+    <span class="rf-page"></span>
   </div>`;
 }
 
@@ -79,8 +83,11 @@ function pageCover(rep) {
   </section>`;
 }
 
+// data-repeat: si la sección ocupa más de una hoja, el encabezado se vuelve a
+// dibujar arriba de cada una (con la marca "continúa"). Nadie recibe una hoja
+// suelta sin saber qué sección está leyendo.
 function pageHead(num, title) {
-  return `<div class="report-head">
+  return `<div class="report-head" data-repeat>
     <span class="rh-num">${num}</span>
     <h2 class="rh-title">${title}</h2>
     <span class="rh-rule"></span>
@@ -89,7 +96,7 @@ function pageHead(num, title) {
 
 function pageResumen(rep) {
   const A = evaluadas(rep);
-  return `<section class="report-page">
+  return `<section class="report-page" data-flow>
     ${pageHead('01', 'Resumen Ejecutivo')}
     <div class="resumen-grid">
       <div class="resumen-gauge">
@@ -127,13 +134,13 @@ function pageResumen(rep) {
       </div>
       <div class="rv-note">Estimación de referencia sobre la facturación anual informada y el potencial de mejora de cada pilar. Dimensiona la oportunidad; no es una promesa de resultado y debe validarse con el cliente.</div>
     </div>` : ''}
-    ${footer(rep, 2)}
+    ${footer(rep)}
   </section>`;
 }
 
 function pageResultados(rep) {
   const A = evaluadas(rep);
-  return `<section class="report-page">
+  return `<section class="report-page" data-flow>
     ${pageHead('02', 'Resultados por Pilar')}
     <div class="semaforo-row">
       ${A.map(a => `<div class="sem-item">
@@ -152,7 +159,7 @@ function pageResultados(rep) {
         <div class="radar-caption">Perfil de madurez vs. la referencia estimada de tu rubro</div>
       </div>
     </div>
-    <div class="area-detail-list">
+    <div class="area-detail-list" data-split>
       ${A.map(a => `<div class="area-detail">
         <div class="ad-head">
           <span class="ad-dot" style="background:${a.color}"></span>
@@ -178,7 +185,7 @@ function pageResultados(rep) {
         </div>
       </div>`).join('')}
     </div>
-    ${footer(rep, 3)}
+    ${footer(rep)}
   </section>`;
 }
 
@@ -189,10 +196,10 @@ const RIESGO_STYLE = {
 };
 
 function pageHallazgos(rep) {
-  return `<section class="report-page">
+  return `<section class="report-page" data-flow>
     ${pageHead('03', 'Hallazgos y Riesgos Críticos')}
     <p class="page-intro">Los siguientes hallazgos representan los puntos de mayor atención detectados en el diagnóstico, ordenados por nivel de riesgo para el negocio.</p>
-    <div class="hallazgos-list">
+    <div class="hallazgos-list" data-split>
       ${rep.hallazgos.length ? rep.hallazgos.map((h, i) => {
         const rs = RIESGO_STYLE[h.riesgo] || RIESGO_STYLE.Medio;
         return `<div class="hallazgo-card">
@@ -210,7 +217,7 @@ function pageHallazgos(rep) {
         </div>`;
       }).join('') : `<div class="report-empty">La empresa no presenta hallazgos críticos. Su base operativa es sólida en los pilares evaluados.</div>`}
     </div>
-    ${footer(rep, 4)}
+    ${footer(rep)}
   </section>`;
 }
 
@@ -231,11 +238,17 @@ const PRIO_STYLE = {
 };
 
 function pageOportunidades(rep) {
-  return `<section class="report-page">
+  return `<section class="report-page" data-flow>
     ${pageHead('04', 'Oportunidades de Mejora')}
     <p class="page-intro">Cada oportunidad responde a un hallazgo y se clasifica por prioridad —según su impacto y el esfuerzo de implementación— para enfocar primero lo que más rinde.</p>
-    <div class="oport-grid">
-      <div class="oport-list">
+    <div class="oport-panorama">
+      <div class="oport-matrix">
+        <div class="matrix-title">Matriz Impacto vs Esfuerzo</div>
+        ${impactEffortMatrix(rep.oportunidades, { size: 300 })}
+      </div>
+      <div class="matrix-legend">${rep.oportunidades.map((o, i) => `<div class="ml-item"><span class="ml-num" style="background:${o.areaColor}">${i + 1}</span>${esc(o.titulo)}</div>`).join('')}</div>
+    </div>
+    <div class="oport-list" data-split>
         ${rep.oportunidades.length ? rep.oportunidades.map((o, i) => {
           const d = DIF_STYLE[o.esfuerzo] || DIF_STYLE.Medio;
           const m = IMP_STYLE[o.impacto] || IMP_STYLE.Medio;
@@ -256,22 +269,16 @@ function pageOportunidades(rep) {
             </div>
           </div>`;
         }).join('') : `<div class="report-empty">Sin oportunidades pendientes relevantes. Recomendamos enfocarse en sostener las buenas prácticas actuales.</div>`}
-      </div>
-      <div class="oport-matrix">
-        <div class="matrix-title">Matriz Impacto vs Esfuerzo</div>
-        ${impactEffortMatrix(rep.oportunidades, { size: 360 })}
-        <div class="matrix-legend">${rep.oportunidades.map((o, i) => `<div class="ml-item"><span class="ml-num" style="background:${o.areaColor}">${i + 1}</span>${esc(o.titulo)}</div>`).join('')}</div>
-      </div>
     </div>
-    ${footer(rep, 5)}
+    ${footer(rep)}
   </section>`;
 }
 
 function pageRecomendaciones(rep) {
-  return `<section class="report-page">
+  return `<section class="report-page" data-flow>
     ${pageHead('05', 'Recomendaciones Tríada')}
     <p class="page-intro">A partir de los pilares con mayor brecha, estas son las soluciones Tríada de mayor impacto. Cada una responde directamente a una debilidad detectada en el diagnóstico.</p>
-    ${rep.recomendaciones.length ? `<div class="reco-list">
+    ${rep.recomendaciones.length ? `<div class="reco-list" data-split>
       ${rep.recomendaciones.map((r, i) => `<div class="reco-card" style="border-left-color:${r.color}">
         <div class="reco-head">
           <span class="reco-rank" style="background:${r.color}">${i + 1}</span>
@@ -285,13 +292,13 @@ function pageRecomendaciones(rep) {
       </div>`).join('')}
     </div>` : `<div class="report-empty">La empresa no presenta pilares bajo el umbral de atención prioritaria. Recomendamos sostener y optimizar las buenas prácticas actuales.</div>`}
     <div class="reco-note">Las soluciones se priorizan según la brecha detectada en cada pilar. El alcance, la secuencia y la inversión se afinan en una sesión de trabajo con el equipo Tríada.</div>
-    ${footer(rep, 6)}
+    ${footer(rep)}
   </section>`;
 }
 
 function pageMapa(rep) {
   const A = evaluadas(rep);
-  return `<section class="report-page">
+  return `<section class="report-page" data-flow>
     ${pageHead('06', 'Mapa de Madurez Empresarial')}
     <p class="page-intro">Posición actual de la empresa en la escala de madurez y el nivel objetivo alcanzable con la implementación del plan recomendado.</p>
     <div class="mapa-wrap">
@@ -314,7 +321,7 @@ function pageMapa(rep) {
         <div class="md-nivel" style="color:${rep.nivel.color}">proyectado</div>
       </div>
     </div>
-    <div class="mapa-areas">
+    <div class="mapa-areas" data-split>
       ${A.map(a => `<div class="ma-row">
         <span class="ma-name"><i style="background:${a.color}"></i>${a.short}</span>
         <div class="ma-track">
@@ -324,7 +331,7 @@ function pageMapa(rep) {
         <span class="ma-vals"><b style="color:${a.color}">${a.score}</b> → <b style="color:#2E9B73">${a.targetScore}</b></span>
       </div>`).join('')}
     </div>
-    ${footer(rep, 7)}
+    ${footer(rep)}
   </section>`;
 }
 
@@ -343,20 +350,20 @@ function pagePlan(rep) {
     </div>
   </div>`;
 
-  return `<section class="report-page">
+  return `<section class="report-page" data-flow>
     ${pageHead('07', 'Plan de Acción Recomendado')}
     <p class="page-intro">Hoja de ruta priorizada. Cada acción responde directamente a los hallazgos detectados y avanza de las victorias rápidas hacia los cambios de mayor alcance.</p>
-    <div class="plan-grid">
+    <div class="plan-grid" data-split>
       ${fase('Corto Plazo', '0 – 30 días', rep.plan.corto, '#5E9E7E')}
       ${fase('Mediano Plazo', '30 – 90 días', rep.plan.mediano, '#2F8C93')}
       ${fase('Largo Plazo', '90 – 180 días', rep.plan.largo, '#3D6E92')}
     </div>
-    ${footer(rep, 8)}
+    ${footer(rep)}
   </section>`;
 }
 
 function pageConclusion(rep) {
-  return `<section class="report-page">
+  return `<section class="report-page" data-flow>
     ${pageHead('08', 'Conclusión Ejecutiva')}
     <div class="conclusion-body">
       ${rep.conclusion.map(p => `<p>${esc(p)}</p>`).join('')}
@@ -383,7 +390,7 @@ function pageConclusion(rep) {
     <div class="conclusion-cta">
       <strong>Próximo paso sugerido:</strong> revisar en conjunto este diagnóstico y priorizar las acciones de mayor impacto para tu empresa.
     </div>
-    ${footer(rep, 9)}
+    ${footer(rep)}
   </section>`;
 }
 
@@ -418,14 +425,26 @@ export function openInformeViewer(diag, prospecto, evaluador) {
       </div>
     </div>
     <div class="report-scroll" id="reportScroll">
-      <div class="report-doc">${buildReportDoc(rep)}</div>
+      <div class="report-doc report-doc--measure">${buildReportDoc(rep)}</div>
     </div>`;
   document.body.appendChild(viewer);
   document.body.classList.add('has-report-open');
+
+  // Se arma oculto con geometría A4 exacta, se reparte en hojas reales y recién
+  // ahí se muestra. `viewer._paginado` deja que Imprimir/Compartir esperen a que
+  // el reparto haya terminado (si no, se llevarían el documento a medio armar).
+  const doc = viewer.querySelector('.report-doc');
+  viewer._paginado = paginateReport(doc)
+    .catch(err => { console.error('paginar informe', err); return 0; })
+    .finally(() => doc.classList.remove('report-doc--measure'));
 
   document.getElementById('rtClose').onclick = () => {
     viewer.remove();
     document.body.classList.remove('has-report-open');
   };
-  document.getElementById('rtPrint').onclick = () => window.print();
+  document.getElementById('rtPrint').onclick = async () => {
+    await viewer._paginado;
+    window.print();
+  };
+  return viewer._paginado;
 }

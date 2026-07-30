@@ -7,6 +7,7 @@
 // ============================================================================
 import { computeInforme } from '../../modules/informe-ejecutivo/informe.engine.js';
 import { buildReportDoc } from '../../modules/informe-ejecutivo/informe.view.js';
+import { paginateReport } from '../../modules/informe-ejecutivo/informe.paginate.js';
 import { store, db } from './core.js';
 import { toast } from './ui.js';
 import { nodeToA4Pdf, shareFile } from './pdfshare.js';
@@ -42,12 +43,21 @@ export function openInforme(diag, prospecto, evaluador) {
         <button id="rtPrint" style="${BTN_PRIMARY}">Descargar PDF</button>
       </div>
     </div>
-    <div class="report-scroll"><div class="report-doc">${buildReportDoc(rep)}</div></div>`;
+    <div class="report-scroll"><div class="report-doc report-doc--measure">${buildReportDoc(rep)}</div></div>`;
   document.body.appendChild(v);
   document.body.classList.add('has-report-open');
 
+  // Mismo reparto en hojas A4 que en el escritorio. En el teléfono es CRÍTICO:
+  // "Compartir" captura UNA imagen por `.report-page`, así que una sección que no
+  // cupiera saldría aplastada en la hoja. Se mide con geometría A4 aunque la
+  // pantalla sea de 375px (ver `.report-doc--measure` en informe.css).
+  const doc = v.querySelector('.report-doc');
+  v._paginado = paginateReport(doc)
+    .catch(err => { console.error('paginar informe', err); return 0; })
+    .finally(() => doc.classList.remove('report-doc--measure'));
+
   v.querySelector('#rtClose').onclick = () => { v.remove(); document.body.classList.remove('has-report-open'); };
-  v.querySelector('#rtPrint').onclick = () => window.print();
+  v.querySelector('#rtPrint').onclick = async () => { await v._paginado; window.print(); };
   v.querySelector('#rtShare').onclick = () => shareInforme(rep, prospecto);
   const sc = v.querySelector('.report-scroll'); if (sc) sc.scrollTop = 0;
   return rep;
@@ -69,6 +79,7 @@ async function shareInforme(rep, prospecto) {
   toast('Preparando el informe… puede tardar unos segundos', 'info');
   let blob;
   try {
+    await v._paginado;                       // nunca capturar el documento a medio repartir
     blob = await nodeToA4Pdf(doc, { perPage: true, windowWidth: 1120 });
   } catch (err) {
     console.error('informe pdf', err);

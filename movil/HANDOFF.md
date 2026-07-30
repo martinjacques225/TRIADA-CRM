@@ -118,6 +118,43 @@ y en preview los mocks `/_preview/mock-{supabase,db}.js` (vía import-map de `pr
   tamaño real de cada objetivo táctil). ⚠️ El navegador embebido **sirve JS y CSS viejos desde
   caché**: para verificar de verdad, cambiar el puerto del server en `.claude/launch.json`.
 
+## 3.quater Datos canónicos al capturar un lead (2026-07-29)
+
+- **La regla:** el dato se guarda igual venga como venga → texto en **MAYÚSCULAS**, RUT
+  **`12.345.678-9`**, teléfono **`+56912345678`**, email en **minúsculas** (único campo que no va
+  en mayúsculas: hay buzones sensibles). Vale para el móvil y el escritorio: el motor es uno solo,
+  `js/format.js`, y llega acá por la costura única (`core.js`) — **no volver a copiarlo**.
+  `captura.js` tenía su propio módulo 11 duplicado; se eliminó.
+- **El RUT NO bloquea.** Antes, un dígito verificador que no calzaba impedía guardar y el lead se
+  perdía en terreno. Ahora se guarda igual y el toast avisa *"revisa el RUT: el DV no calza"*.
+  ⚠️ Los placeholders viejos (`76.543.210-K`, `76.123.456-7`) eran **RUT inválidos** — quien
+  copiaba el ejemplo era rechazado. Si pones un RUT de ejemplo, verifícalo antes.
+- **Cómo cablearlo en una pantalla nueva:** `data-fmt="upper|rut|phone|email|clp"` en el input y
+  `attachFormatting(host)` en el `mount()`. Formatea **mientras se escribe** (el cursor se queda
+  donde estaba) y pone `inputmode="tel"` solo → **teclado numérico** al tocar el teléfono.
+- **Red de seguridad:** aunque olvides el cableado, `leadToSupa()` normaliza al escribir en
+  Supabase. Los catálogos (chips de rubro/tamaño/dolor/origen) **no se tocan**: son enums.
+
+## 3.quinquies El PDF del Informe 360 se pagina solo (2026-07-29)
+
+- **Qué cambió:** el informe ya no son 9 bloques de alto fijo con el número de hoja escrito
+  a mano. `modules/informe-ejecutivo/informe.paginate.js` mide el documento y lo reparte en
+  tantas hojas A4 como haga falta, repite el encabezado de sección con la marca "continúa" y
+  numera al final. **1 `.report-page` = 1 hoja física, garantizado.**
+- **Por qué al móvil le importa MÁS que al escritorio:** "Compartir" arma el PDF capturando
+  **una imagen por `.report-page`** (`nodeToA4Pdf`, `perPage:true`). Antes, "Resultados por
+  Pilar" medía 4 hojas de alto y salía aplastada en una. Ahora cada nodo cabe en su hoja.
+  `shareInforme` espera `v._paginado` antes de capturar — **no captures nunca el documento a
+  medio repartir**.
+- **La medición se hace en A4, no en la pantalla del teléfono.** El visor reflowea la hoja a
+  una columna fluida para leer (eso sigue igual); si el paginador midiera ESO, cortaría donde
+  no corresponde. Durante unos milisegundos se fuerza 210×297 mm con el documento oculto
+  (`.report-doc--measure`) y después se muestra reflowado. Verificado: **13 hojas a 1440px y
+  13 a 390px**. Ojo: por eso el breakpoint de `informe.css` lleva `:not(.report-doc--measure)`.
+- **Si tocas el informe:** sección nueva → `data-flow` en la `<section>` y `data-split` en el
+  contenedor de su lista. Grilla nueva → `min-width: 0` en los hijos (sin eso, con 8 pilares
+  el contenido se iba **126 mm fuera de la hoja**).
+
 ## 4. Lo que queda (opcional, no bloquea)
 
 - **Notificaciones push reales** (que suene el teléfono con los recordatorios de `citas.recordatorios`).

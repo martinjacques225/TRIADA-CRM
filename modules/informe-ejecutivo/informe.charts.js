@@ -171,7 +171,12 @@ export function maturityMap(overall, target, opts = {}) {
     <line x1="${px(overall)}" y1="${barY + barH/2}" x2="${px(target)}" y2="${barY + barH/2}" stroke="#14222E" stroke-width="2" stroke-dasharray="5 4"/>
     ` : '';
 
-  return `<svg width="100%" viewBox="0 0 ${w} ${h}" class="chart-maturity" role="img" aria-label="Mapa de madurez empresarial">
+  // El viewBox se ensancha 44px por lado: los marcadores (círculo r=16 + rótulo
+  // "OBJETIVO") se dibujan CENTRADOS en el valor, así que un puntaje de 100 caía
+  // fuera del lienzo y se salía del margen de la hoja. Con el colchón, el dibujo
+  // entero vive dentro del viewBox y nunca sobresale.
+  const pad = 44;
+  return `<svg width="100%" viewBox="${-pad} -6 ${w + pad * 2} ${h + 12}" class="chart-maturity" role="img" aria-label="Mapa de madurez empresarial">
     ${segs}
     ${arrow}
     ${marker(overall, '#14222E', 'Hoy', true)}
