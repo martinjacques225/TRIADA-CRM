@@ -23,7 +23,26 @@
 //   data-repeat  en el encabezado: se vuelve a dibujar en cada hoja de la sección.
 // Un bloque sin `data-split` es indivisible: viaja entero a la hoja siguiente.
 
-const A4_MM = 297;
+// Presupuesto de alto por hoja, en mm. NO son los 297 del A4, y es a propósito.
+//
+// Quien decide el margen de página es el DIÁLOGO de impresión, no el CSS:
+// `@page { margin: 0 }` sólo se respeta si el usuario deja "Márgenes: Ninguno".
+// Con "Predeterminado" (10 mm por lado en Chrome) el área imprimible baja de 297 a
+// 277 mm. Si el reparto se calcula contra 297, en cuanto el margen no es cero el
+// contenido no cabe y el navegador parte cada hoja en dos: la segunda sale con lo
+// único que quedaba abajo, el pie. Ese era el bug de "cada página crea una segunda"
+// —15 hojas lógicas → 30 físicas— reproducido y medido el 29-jul-2026.
+//
+// 277 = 297 − 2×10 es el peor caso realista (el "Predeterminado" de Chrome), así que
+// repartiendo contra él el contenido cabe tanto con margen 0 como con el por defecto.
+//
+// La otra mitad del arreglo vive en el `@media print` de `informe.css`: la hoja se
+// dibuja con `height: 100vh`, que en medios paginados Chrome resuelve contra la caja
+// de página REAL. Con eso el número de hojas es correcto para CUALQUIER margen; este
+// presupuesto sólo decide cuánto contenido entra en cada una. Si alguien pusiera un
+// margen personalizado de más de 10 mm, el sobrante se recorta por abajo en vez de
+// duplicar el documento. Verificado a 0 / 10 / 15 / 20 mm: siempre 15 hojas.
+const HOJA_UTIL_MM = 277;
 
 /** Alto de 1 mm en px MEDIDO en el documento real (no asume 96 dpi). */
 function pxPorMm(host) {
@@ -151,7 +170,7 @@ export async function paginateReport(doc) {
   // Sin esperar las tipografías se mide con la fuente de reserva y los cortes
   // caen donde no corresponde (Spectral y Libre Franklin llegan por CDN).
   if (document.fonts && document.fonts.ready) { try { await document.fonts.ready; } catch (_) {} }
-  const altoHoja = A4_MM * pxPorMm(doc);
+  const altoHoja = HOJA_UTIL_MM * pxPorMm(doc);
   for (const p of [...doc.querySelectorAll('.report-page[data-flow]')]) {
     try { repaginarSeccion(p, altoHoja); }
     catch (err) { console.error('paginar sección', err); }   // una sección rota no tumba el informe

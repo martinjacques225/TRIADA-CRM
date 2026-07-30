@@ -414,18 +414,35 @@
   .report-scroll { overflow: visible; padding: 0; }
   .report-doc { gap: 0; }
   /* Una `.report-page` = UNA hoja física, garantizado.
-     · `width:100%` (no 210mm): con `@page{margin:0}` la caja de página YA mide
-       210mm; pedir 210mm exactos deja un sobrante de fracción de píxel que el
-       navegador manda a una hoja en blanco después de cada página.
-     · `height` fijo un pelo bajo A4 por el mismo motivo de redondeo.
-     Antes esto NO se podía hacer (una sección larga se habría recortado); ahora
-     `informe.paginate.js` mide y reparte el contenido ANTES de imprimir, así que
-     nada excede la hoja y el alto fijo es seguro. `overflow:hidden` es la red:
-     si algo se pasara por un pelo, no genera una hoja fantasma. */
+
+     · `width:100%` (no 210mm): con `@page{margin:0}` la caja de página YA mide el
+       ancho útil; pedir 210mm exactos deja un sobrante de fracción de píxel.
+
+     · `height: 100vh` — NO 297mm, y aquí estuvo el bug de "cada página crea una
+       segunda con el final de la anterior" (15 hojas → 30, medido el 29-jul-2026).
+       El margen de página lo decide el DIÁLOGO de impresión, no este CSS:
+       `@page{margin:0}` sólo manda si el usuario elige "Márgenes: Ninguno". Con
+       "Predeterminado" (10mm/lado en Chrome) el área imprimible cae a 277mm, una
+       hoja de 296,6mm ya no cabe, y el navegador la parte en dos: la segunda se
+       lleva lo único que quedaba abajo, el pie.
+       En medios paginados Chrome resuelve `vh` contra la CAJA DE PÁGINA REAL, así
+       que `100vh` es "exactamente una hoja" sea cual sea el margen elegido. Con
+       márgenes 0 / 10 / 15 / 20mm el PDF sale siempre con el mismo número de hojas.
+
+     · `overflow:hidden` NO es red de seguridad para el alto — recorta a los HIJOS,
+       pero un elemento más alto que la página se fragmenta igual (verificado: con
+       `overflow:hidden` y 296,6mm salían las 30 hojas). Con `100vh` sí cumple ese
+       papel: si el margen fuera tan grande que el contenido no cupiera, se recorta
+       un poco por abajo en vez de duplicar el documento — mal menor, y sólo pasa
+       con márgenes personalizados sobre 10mm (el reparto se calcula para 277mm,
+       ver `HOJA_UTIL_MM` en informe.paginate.js).
+
+     · El padding NO se toca en impresión: el paginador lee el que hay y reparte
+       contra él. Si aquí se cambiara, habría que cambiarlo también allá. */
   .report-page {
-    width: 100%; height: 296.6mm; min-height: 0; overflow: hidden;
+    width: 100%; height: 100vh; min-height: 0; overflow: hidden;
     box-shadow: none; margin: 0;
-    page-break-after: always; break-after: page;
+    page-break-after: always; break-after: page; break-inside: avoid;
     -webkit-print-color-adjust: exact; print-color-adjust: exact;
   }
   .report-page:last-child { page-break-after: auto; break-after: auto; }
