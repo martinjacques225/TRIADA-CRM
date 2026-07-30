@@ -83,6 +83,16 @@ Un cambio **no está terminado** hasta cumplir todo lo aplicable:
 - [ ] Sin código muerto añadido; imports sin usar eliminados.
 - [ ] Errores no tragados silenciosamente.
 - [ ] Verificación descrita con honestidad (qué se probó y qué no).
+- [ ] **Si tocaste un `.css` o un `.js` enlazado desde un HTML: `npm run stamp`.**
+      GitHub Pages sirve con `Cache-Control: max-age=600` y no deja tocar cabeceras.
+      Sin el sello `?v=<hash>`, un archivo que **ya existía** se sigue leyendo de la
+      caché del navegador mientras uno **nuevo** del mismo deploy llega fresco: el CRM
+      queda mitad nuevo, mitad viejo, **sin ningún error visible**. El 29-jul-2026 eso
+      sacó el PDF del Diagnóstico 360 en **34 hojas en vez de 17** (en incógnito salían
+      bien, que es la pista de que es caché y no código). El sello es el hash del
+      contenido, así que correrlo de más no ensucia el diff. Lo vigila `npm run stamp:check`
+      en CI. **Verificar siempre en incógnito o con Ctrl+Shift+R** antes de dar por bueno
+      un deploy — ver anti-patrón 5.7.
 
 ---
 

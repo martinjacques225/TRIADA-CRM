@@ -23,3 +23,12 @@ jobs:
 
       - name: Unit tests
         run: npm test
+
+      # GitHub Pages sirve con `Cache-Control: max-age=600` y no deja tocar
+      # cabeceras: si un CSS/JS que YA existía cambia sin cambiar su `?v=`, el
+      # navegador se queda con la copia vieja y el CRM sale mitad nuevo, mitad
+      # viejo — en silencio. Pasó el 29-jul-2026 y sacó el PDF del Diagnóstico
+      # 360 en 34 hojas en vez de 17. El sello es el hash del contenido, así que
+      # esto sólo falla si de verdad alguien olvidó correr `npm run stamp`.
+      - name: Sello de caché al día (npm run stamp)
+        run: npm run stamp:check
