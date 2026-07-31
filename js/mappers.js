@@ -803,3 +803,388 @@ export function remuneracionToRpc(data) {
     p_notas:         data.notas || null,
   };
 }
+
+// ═════════════════════════════════════════════════════════════
+// OPORTUNIDADES PÚBLICAS (Mercado Público / Compra Ágil)
+// Requiere supabase/oportunidades_f1.sql. Snake_case en la DB, camelCase en el
+// dominio: las funciones puras de modules/oportunidades/domain/* NUNCA ven una
+// columna de Postgres, y por eso se pueden testear en node sin Supabase.
+// ═════════════════════════════════════════════════════════════
+
+const _arr = (v) => (Array.isArray(v) ? v : []);
+const _n   = (v) => (v === null || v === undefined || v === '' ? null : Number(v));
+
+export function opFromSupa(row) {
+  if (!row) return null;
+  return {
+    id:                row.id,
+    fuente:            row.fuente || 'manual',
+    codigoExterno:     row.codigo_externo || '',
+    titulo:            row.titulo || '',
+    institucion:       row.institucion || '',
+    tipoProcedimiento: row.tipo_procedimiento || '',
+    descripcion:       row.descripcion || '',
+    fechaPublicacion:  row.fecha_publicacion,
+    fechaCierre:       row.fecha_cierre,
+    region:            row.region || '',
+    modalidad:         row.modalidad || '',
+    presupuestoMonto:  _n(row.presupuesto_monto),
+    presupuestoIva:    row.presupuesto_iva || 'desconocido',
+    unspsc:            _arr(row.unspsc),
+    enlace:            row.enlace || '',
+    estado:            row.estado || 'detectada',
+    puntaje:           _n(row.puntaje),
+    recomendacion:     row.recomendacion || null,
+    servicioSlug:      row.servicio_slug || '',
+    responsable:       row.responsable || null,
+    tiempoInvertidoMin: Number(row.tiempo_invertido_min) || 0,
+    motivoDescarte:    row.motivo_descarte || '',
+    motivoReapertura:  row.motivo_reapertura || '',
+    notas:             row.notas || '',
+    datosApi:          row.datos_api || null,
+    sincronizadoAt:    row.sincronizado_at,
+    creadoPor:         row.creado_por,
+    createdAt:         row.created_at,
+    updatedAt:         row.updated_at,
+  };
+}
+
+export function opToSupa(d) {
+  return clean({
+    fuente:             d.fuente,
+    codigo_externo:     d.codigoExterno === '' ? null : d.codigoExterno,
+    titulo:             typeof d.titulo === 'string' ? d.titulo.trim() : d.titulo,
+    institucion:        d.institucion,
+    tipo_procedimiento: d.tipoProcedimiento === '' ? null : d.tipoProcedimiento,
+    descripcion:        d.descripcion,
+    fecha_publicacion:  d.fechaPublicacion === '' ? null : d.fechaPublicacion,
+    fecha_cierre:       d.fechaCierre === '' ? null : d.fechaCierre,
+    region:             d.region,
+    modalidad:          d.modalidad === '' ? null : d.modalidad,
+    presupuesto_monto:  d.presupuestoMonto === '' ? null : d.presupuestoMonto,
+    presupuesto_iva:    d.presupuestoIva,
+    unspsc:             d.unspsc,
+    enlace:             d.enlace,
+    estado:             d.estado,
+    puntaje:            d.puntaje === '' ? null : d.puntaje,
+    recomendacion:      d.recomendacion,
+    servicio_slug:      d.servicioSlug,
+    responsable:        d.responsable === '' ? null : d.responsable,
+    tiempo_invertido_min: d.tiempoInvertidoMin,
+    motivo_descarte:    d.motivoDescarte,
+    motivo_reapertura:  d.motivoReapertura,
+    notas:              d.notas,
+    datos_api:          d.datosApi,
+    sincronizado_at:    d.sincronizadoAt,
+  });
+}
+
+export function opDocFromSupa(row) {
+  if (!row) return null;
+  return {
+    id: row.id, oportunidadId: row.oportunidad_id, nombre: row.nombre,
+    categoria: row.categoria || 'bases', storagePath: row.storage_path,
+    mime: row.mime, bytes: Number(row.bytes) || 0, origen: row.origen || 'adjunto',
+    enlace: row.enlace || '', analizadoAt: row.analizado_at, extraccion: row.extraccion || null,
+    subidoPor: row.subido_por, createdAt: row.created_at,
+  };
+}
+export function opDocToSupa(d) {
+  return clean({
+    oportunidad_id: d.oportunidadId, nombre: d.nombre, categoria: d.categoria,
+    storage_path: d.storagePath, mime: d.mime, bytes: d.bytes, origen: d.origen,
+    enlace: d.enlace, analizado_at: d.analizadoAt, extraccion: d.extraccion,
+  });
+}
+
+export function opReqFromSupa(row) {
+  if (!row) return null;
+  return {
+    id: row.id, oportunidadId: row.oportunidad_id, tipo: row.tipo || 'otro',
+    texto: row.texto || '', obligatorio: !!row.obligatorio, documentoId: row.documento_id,
+    fuenteSeccion: row.fuente_seccion || '', confianza: _n(row.confianza),
+    origen: row.origen || 'manual', cumple: row.cumple || 'no_evaluado',
+    evidencia: row.evidencia || '', confirmadoPor: row.confirmado_por,
+    confirmadoAt: row.confirmado_at, createdAt: row.created_at,
+  };
+}
+export function opReqToSupa(d) {
+  return clean({
+    oportunidad_id: d.oportunidadId, tipo: d.tipo, texto: d.texto,
+    obligatorio: d.obligatorio, documento_id: d.documentoId === '' ? null : d.documentoId,
+    fuente_seccion: d.fuenteSeccion, confianza: d.confianza, origen: d.origen,
+    cumple: d.cumple, evidencia: d.evidencia,
+    confirmado_por: d.confirmadoPor, confirmado_at: d.confirmadoAt,
+  });
+}
+
+export function opPuntajeFromSupa(row) {
+  if (!row) return null;
+  return {
+    id: row.id, oportunidadId: row.oportunidad_id, criterio: row.criterio,
+    puntos: Number(row.puntos) || 0, puntosMax: Number(row.puntos_max) || 0,
+    sugerido: _n(row.sugerido), justificacion: row.justificacion || '',
+    datos: row.datos || null, manual: !!row.manual, motivoManual: row.motivo_manual || '',
+    confirmadoPor: row.confirmado_por, confirmadoAt: row.confirmado_at,
+  };
+}
+export function opPuntajeToSupa(d) {
+  return clean({
+    oportunidad_id: d.oportunidadId, criterio: d.criterio, puntos: d.puntos,
+    puntos_max: d.puntosMax, sugerido: d.sugerido, justificacion: d.justificacion,
+    datos: d.datos, manual: d.manual, motivo_manual: d.motivoManual,
+    confirmado_por: d.confirmadoPor, confirmado_at: d.confirmadoAt,
+  });
+}
+
+export function opRiesgoFromSupa(row) {
+  if (!row) return null;
+  return {
+    id: row.id, oportunidadId: row.oportunidad_id, causal: row.causal || '',
+    descripcion: row.descripcion || '', nivel: row.nivel || 'medio',
+    esCausal: !!row.es_causal, origen: row.origen || 'manual',
+    mitigacion: row.mitigacion || '', createdAt: row.created_at,
+  };
+}
+export function opRiesgoToSupa(d) {
+  return clean({
+    oportunidad_id: d.oportunidadId, causal: d.causal === '' ? null : d.causal,
+    descripcion: d.descripcion, nivel: d.nivel, es_causal: d.esCausal,
+    origen: d.origen, mitigacion: d.mitigacion,
+  });
+}
+
+export function opCostoFromSupa(row) {
+  if (!row) return null;
+  return {
+    id: row.id, oportunidadId: row.oportunidad_id,
+    margenObjetivo: Number(row.margen_objetivo) || 0,
+    contingenciaPct: Number(row.contingencia_pct) || 0,
+    costosAdminPct: Number(row.costos_admin_pct) || 0,
+    presupuestoComprador: _n(row.presupuesto_comprador),
+    ivaTasa: Number(row.iva_tasa) || 0.19,
+    diasPagoEstimados: Number(row.dias_pago_estimados) || 30,
+    precioOfertado: _n(row.precio_ofertado),
+    notas: row.notas || '', updatedAt: row.updated_at,
+  };
+}
+export function opCostoToSupa(d) {
+  return clean({
+    oportunidad_id: d.oportunidadId, margen_objetivo: d.margenObjetivo,
+    contingencia_pct: d.contingenciaPct, costos_admin_pct: d.costosAdminPct,
+    presupuesto_comprador: d.presupuestoComprador === '' ? null : d.presupuestoComprador,
+    iva_tasa: d.ivaTasa, dias_pago_estimados: d.diasPagoEstimados,
+    precio_ofertado: d.precioOfertado === '' ? null : d.precioOfertado, notas: d.notas,
+  });
+}
+
+export function opItemFromSupa(row) {
+  if (!row) return null;
+  return {
+    id: row.id, costoId: row.costo_id, tipo: row.tipo || 'hora',
+    descripcion: row.descripcion || '', profileId: row.profile_id, rol: row.rol || '',
+    horas: _n(row.horas), valorHora: _n(row.valor_hora), monto: _n(row.monto),
+    diasAntesPago: Number(row.dias_antes_pago) || 0, orden: Number(row.orden) || 0,
+  };
+}
+export function opItemToSupa(d) {
+  return clean({
+    costo_id: d.costoId, tipo: d.tipo, descripcion: d.descripcion,
+    profile_id: d.profileId === '' ? null : d.profileId, rol: d.rol,
+    horas: d.horas === '' ? null : d.horas, valor_hora: d.valorHora === '' ? null : d.valorHora,
+    monto: d.monto === '' ? null : d.monto, dias_antes_pago: d.diasAntesPago, orden: d.orden,
+  });
+}
+
+export function opAprobFromSupa(row) {
+  if (!row) return null;
+  return {
+    id: row.id, oportunidadId: row.oportunidad_id, area: row.area, decision: row.decision,
+    comentario: row.comentario || '', condiciones: row.condiciones || '',
+    checklist: row.checklist || {}, aprobadoPor: row.aprobado_por, createdAt: row.created_at,
+  };
+}
+export function opAprobToSupa(d) {
+  return clean({
+    oportunidad_id: d.oportunidadId, area: d.area, decision: d.decision,
+    comentario: d.comentario, condiciones: d.condiciones, checklist: d.checklist,
+  });
+}
+
+export function opPlantillaFromSupa(row) {
+  if (!row) return null;
+  return {
+    id: row.id, slug: row.slug, nombre: row.nombre, descripcion: row.descripcion || '',
+    alcance: row.alcance || '', exclusiones: row.exclusiones || '', metodologia: row.metodologia || '',
+    entregables: _arr(row.entregables), duracionSemanasMin: _n(row.duracion_semanas_min),
+    duracionSemanasMax: _n(row.duracion_semanas_max), hitos: _arr(row.hitos),
+    horasPorRol: _arr(row.horas_por_rol), costosHabituales: _arr(row.costos_habituales),
+    precioMinimo: _n(row.precio_minimo), margenEsperado: _n(row.margen_esperado),
+    riesgos: _arr(row.riesgos), equipo: _arr(row.equipo), documentos: _arr(row.documentos),
+    experiencias: _arr(row.experiencias), gantt: _arr(row.gantt), textoOferta: row.texto_oferta || '',
+    unspsc: _arr(row.unspsc), activo: row.activo !== false, esDemo: !!row.es_demo,
+  };
+}
+export function opPlantillaToSupa(d) {
+  return clean({
+    slug: d.slug, nombre: d.nombre, descripcion: d.descripcion, alcance: d.alcance,
+    exclusiones: d.exclusiones, metodologia: d.metodologia, entregables: d.entregables,
+    duracion_semanas_min: d.duracionSemanasMin, duracion_semanas_max: d.duracionSemanasMax,
+    hitos: d.hitos, horas_por_rol: d.horasPorRol, costos_habituales: d.costosHabituales,
+    precio_minimo: d.precioMinimo, margen_esperado: d.margenEsperado, riesgos: d.riesgos,
+    equipo: d.equipo, documentos: d.documentos, experiencias: d.experiencias, gantt: d.gantt,
+    texto_oferta: d.textoOferta, unspsc: d.unspsc, activo: d.activo, es_demo: d.esDemo,
+  });
+}
+
+export function opOfertaFromSupa(row) {
+  if (!row) return null;
+  return {
+    id: row.id, oportunidadId: row.oportunidad_id, version: Number(row.version) || 1,
+    estado: row.estado || 'preparacion', plantillaSlug: row.plantilla_slug || '',
+    resumen: row.resumen || '', precioNeto: _n(row.precio_neto), iva: _n(row.iva),
+    precioTotal: _n(row.precio_total), notas: row.notas || '', presentadaAt: row.presentada_at,
+    creadoPor: row.creado_por, createdAt: row.created_at,
+  };
+}
+export function opOfertaToSupa(d) {
+  return clean({
+    oportunidad_id: d.oportunidadId, version: d.version, estado: d.estado,
+    plantilla_slug: d.plantillaSlug, resumen: d.resumen, precio_neto: d.precioNeto,
+    iva: d.iva, precio_total: d.precioTotal, notas: d.notas, presentada_at: d.presentadaAt,
+  });
+}
+
+export function opOfertaDocFromSupa(row) {
+  if (!row) return null;
+  return {
+    id: row.id, ofertaId: row.oferta_id, tipo: row.tipo, nombre: row.nombre,
+    obligatorio: !!row.obligatorio, estado: row.estado || 'pendiente',
+    proveedorDocId: row.proveedor_doc_id, storagePath: row.storage_path,
+    orden: Number(row.orden) || 0,
+  };
+}
+export function opOfertaDocToSupa(d) {
+  return clean({
+    oferta_id: d.ofertaId, tipo: d.tipo, nombre: d.nombre, obligatorio: d.obligatorio,
+    estado: d.estado, proveedor_doc_id: d.proveedorDocId === '' ? null : d.proveedorDocId,
+    storage_path: d.storagePath, orden: d.orden,
+  });
+}
+
+export function opActFromSupa(row) {
+  if (!row) return null;
+  return {
+    id: row.id, oportunidadId: row.oportunidad_id, accion: row.accion,
+    estadoAnterior: row.estado_anterior, estadoNuevo: row.estado_nuevo,
+    comentario: row.comentario || '', usuario: row.usuario, createdAt: row.created_at,
+  };
+}
+export function opActToSupa(d) {
+  return clean({
+    oportunidad_id: d.oportunidadId, accion: d.accion, estado_anterior: d.estadoAnterior,
+    estado_nuevo: d.estadoNuevo, comentario: d.comentario,
+  });
+}
+
+export function opResultadoFromSupa(row) {
+  if (!row) return null;
+  return {
+    id: row.id, oportunidadId: row.oportunidad_id,
+    adjudicada: row.adjudicada, fechaResultado: row.fecha_resultado,
+    montoAdjudicado: _n(row.monto_adjudicado), proveedorGanador: row.proveedor_ganador || '',
+    precioGanador: _n(row.precio_ganador), motivoPerdida: row.motivo_perdida || '',
+    ocNumero: row.oc_numero || '', ocFecha: row.oc_fecha, ocMonto: _n(row.oc_monto),
+    ocCoincide: row.oc_coincide, ocObservacion: row.oc_observacion || '', ocAceptada: !!row.oc_aceptada,
+    proyectoId: row.proyecto_id, actaInicioAt: row.acta_inicio_at,
+    recepcionConformeAt: row.recepcion_conforme_at,
+    facturaNumero: row.factura_numero || '', facturaMonto: _n(row.factura_monto),
+    facturaFecha: row.factura_fecha, pagoEsperado: row.pago_esperado, pagoReal: row.pago_real,
+    certificadoEstado: row.certificado_estado || 'no_solicitado',
+    certificadoSolicitadoAt: row.certificado_solicitado_at,
+    certificadoObtenidoAt: row.certificado_obtenido_at, certificadoPath: row.certificado_path,
+    utilidadReal: _n(row.utilidad_real), horasReales: _n(row.horas_reales),
+    aprendizaje: row.aprendizaje || '',
+  };
+}
+export function opResultadoToSupa(d) {
+  return clean({
+    oportunidad_id: d.oportunidadId, adjudicada: d.adjudicada,
+    fecha_resultado: d.fechaResultado === '' ? null : d.fechaResultado,
+    monto_adjudicado: d.montoAdjudicado === '' ? null : d.montoAdjudicado,
+    proveedor_ganador: d.proveedorGanador, precio_ganador: d.precioGanador === '' ? null : d.precioGanador,
+    motivo_perdida: d.motivoPerdida, oc_numero: d.ocNumero, oc_fecha: d.ocFecha === '' ? null : d.ocFecha,
+    oc_monto: d.ocMonto === '' ? null : d.ocMonto, oc_coincide: d.ocCoincide,
+    oc_observacion: d.ocObservacion, oc_aceptada: d.ocAceptada,
+    proyecto_id: d.proyectoId === '' ? null : d.proyectoId,
+    acta_inicio_at: d.actaInicioAt === '' ? null : d.actaInicioAt,
+    recepcion_conforme_at: d.recepcionConformeAt === '' ? null : d.recepcionConformeAt,
+    factura_numero: d.facturaNumero, factura_monto: d.facturaMonto === '' ? null : d.facturaMonto,
+    factura_fecha: d.facturaFecha === '' ? null : d.facturaFecha,
+    pago_esperado: d.pagoEsperado === '' ? null : d.pagoEsperado,
+    pago_real: d.pagoReal === '' ? null : d.pagoReal, certificado_estado: d.certificadoEstado,
+    certificado_solicitado_at: d.certificadoSolicitadoAt === '' ? null : d.certificadoSolicitadoAt,
+    certificado_obtenido_at: d.certificadoObtenidoAt === '' ? null : d.certificadoObtenidoAt,
+    certificado_path: d.certificadoPath,
+    utilidad_real: d.utilidadReal === '' ? null : d.utilidadReal,
+    horas_reales: d.horasReales === '' ? null : d.horasReales, aprendizaje: d.aprendizaje,
+  });
+}
+
+export function opProvDocFromSupa(row) {
+  if (!row) return null;
+  return {
+    id: row.id, nombre: row.nombre, categoria: row.categoria, descripcion: row.descripcion || '',
+    fechaEmision: row.fecha_emision, fechaVencimiento: row.fecha_vencimiento,
+    responsable: row.responsable, estado: row.estado || 'vigente', version: row.version || '',
+    storagePath: row.storage_path, mime: row.mime, bytes: Number(row.bytes) || 0,
+    createdAt: row.created_at,
+  };
+}
+export function opProvDocToSupa(d) {
+  return clean({
+    nombre: d.nombre, categoria: d.categoria, descripcion: d.descripcion,
+    fecha_emision: d.fechaEmision === '' ? null : d.fechaEmision,
+    fecha_vencimiento: d.fechaVencimiento === '' ? null : d.fechaVencimiento,
+    responsable: d.responsable === '' ? null : d.responsable, estado: d.estado, version: d.version,
+    storage_path: d.storagePath, mime: d.mime, bytes: d.bytes,
+  });
+}
+
+export function opConfigFromSupa(row) {
+  if (!row) return null;
+  return {
+    orgId: row.org_id,
+    puntajeParticipar: Number(row.puntaje_participar) || 70,
+    puntajeRevisar: Number(row.puntaje_revisar) || 55,
+    margenObjetivo: Number(row.margen_objetivo) || 0.30,
+    margenDescarte: Number(row.margen_descarte) || 0.25,
+    topeAprobacionNeto: Number(row.tope_aprobacion_neto) || 2500000,
+    contingenciaPct: Number(row.contingencia_pct) || 0.10,
+    ivaTasa: Number(row.iva_tasa) || 0.19,
+    horasMaxCotizacion: Number(row.horas_max_cotizacion) || 2,
+    unspsc: _arr(row.unspsc), regiones: _arr(row.regiones),
+    palabrasClave: _arr(row.palabras_clave), servicios: _arr(row.servicios),
+    apiHabilitada: !!row.api_habilitada,
+  };
+}
+export function opConfigToSupa(d) {
+  return clean({
+    puntaje_participar: d.puntajeParticipar, puntaje_revisar: d.puntajeRevisar,
+    margen_objetivo: d.margenObjetivo, margen_descarte: d.margenDescarte,
+    tope_aprobacion_neto: d.topeAprobacionNeto, contingencia_pct: d.contingenciaPct,
+    iva_tasa: d.ivaTasa, horas_max_cotizacion: d.horasMaxCotizacion,
+    unspsc: d.unspsc, regiones: d.regiones, palabras_clave: d.palabrasClave,
+    servicios: d.servicios, api_habilitada: d.apiHabilitada,
+  });
+}
+
+export function opSyncFromSupa(row) {
+  if (!row) return null;
+  return {
+    id: row.id, fuente: row.fuente, inicio: row.inicio, fin: row.fin, ok: row.ok,
+    encontradas: Number(row.encontradas) || 0, nuevas: Number(row.nuevas) || 0,
+    actualizadas: Number(row.actualizadas) || 0, errores: Number(row.errores) || 0,
+    mensaje: row.mensaje || '', parametros: row.parametros || {},
+  };
+}

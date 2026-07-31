@@ -1,6 +1,6 @@
 # HANDOFF — TRIADA CRM
 > **Documento vivo. Fuente de verdad del estado del proyecto.**
-> Última actualización: **2026-07-27**
+> Última actualización: **2026-07-30**
 
 ---
 
@@ -44,6 +44,19 @@
 ---
 
 ## 1. Estado actual (al 2026-07-07)
+
+### 🆕 Oportunidades Públicas — Fase 1 (MVP manual) CONSTRUIDA (2026-07-30) · 🟡 falta aplicar el SQL
+> Módulo para **Mercado Público y Compra Ágil**: detectar, descartar rápido, analizar, puntuar, costear, aprobar entre los tres socios, preparar la oferta y seguir hasta el certificado de experiencia. Reglas de negocio tomadas del documento de decisión *Proyecto Mercado Público* (30-jul-2026), no inventadas.
+> 📄 **Doc del módulo: [`docs/OPORTUNIDADES_PUBLICAS.md`](OPORTUNIDADES_PUBLICAS.md)** — instalación, tablas, permisos y qué falta por fase.
+>
+> - **Nav:** sección *Gestión → Oportunidades Públicas*. Diez secciones internas + ficha de nueve pestañas.
+> - **Backend:** `supabase/oportunidades_f1.sql` (17 tablas `op_*`, RLS multitenant, bucket privado `oportunidades`, semilla de 8 plantillas + config con los 14 UNSPSC del documento). Rollback: `oportunidades_f1_rollback.sql`.
+> - **Cuatro reglas en la BASE, no solo en la UI:** motivo obligatorio al pisar un puntaje sugerido · no se acepta una OC que no coincide sin observación escrita · nadie firma por otro ni un área ajena (`op_puede_aprobar`) · `op_actividad` solo INSERT (historial infalsificable).
+> - **Dominio PURO y testeado** en `modules/oportunidades/domain/` (estados, puntaje, descarte, finanzas, aprobaciones, alertas, permisos, analítica, sincronización): **111 tests nuevos, 284/284 en verde**.
+> - **Verificado en el preview con mocks (E2E por DOM):** crear a mano pegando el enlace (el ID `4321-77-LE26` se extrae solo) → puntuar (41 → 71, "Recomendada para participar") → cotizar (50 h + $80.000 → neto $1.257.143, IVA $238.857, utilidad 30%) → firmar las tres áreas → checklist de 12 documentos (bloquea "lista" con 8 obligatorios pendientes) → presentada → adjudicada → **la OC que no coincide se rechaza hasta escribir la observación** → factura → pago → certificado → proyecto del ERP → cerrada. Sin errores de consola; los 3 temas y las 2 densidades OK, sin scroll horizontal.
+> - **🔴 PENDIENTE BLOQUEANTE:** *nadie ha corrido `supabase/oportunidades_f1.sql`*. Hasta que se aplique, el módulo muestra un aviso explicando qué ejecutar y **no rompe nada** del CRM. Sin eso, no hay verificación con datos reales ni con sesión autenticada.
+> - **⬜ Falta:** aplicar el SQL y verificar RLS logueado (aislamiento cross-org + firma de área ajena rechazada) · `get_advisors` tras la migración · paridad móvil (`movil/`) · Fase 2 (API oficial), Fase 3 (IA) y Fase 4 (generador de documentos DOCX/PDF).
+> - **⚠️ Hallazgo de paso:** el documento de decisión (pág. 12) titula el ejemplo del marcador como **"83 / 100"**, pero sus seis parciales suman **93**. El sistema hace la suma real; el titular del PDF está equivocado y conviene corregirlo antes de mostrarlo a un socio.
 
 ### 🏗️ ERP Tríada — F0·F1·F2·F3·F4·F5 EN VIVO (2026-07-08) · la capa de OPERACIÓN del CRM
 > **INT-1 del Plan Maestro.** El ERP **no es un sistema nuevo**: es un grupo de módulos ("Operación") dentro de ESTE repo y el MISMO proyecto Supabase, detrás del flag `FEATURES.erp` (`js/features.js`).
@@ -434,6 +447,15 @@ index.html
 
 ## 4. Próximos pasos (por prioridad)
 
+### 4.0 · 🆕 Oportunidades Públicas — cerrar la Fase 1 en vivo
+- [ ] **Correr `supabase/oportunidades_f1.sql`** en el SQL Editor de Supabase (idempotente). Verificar: `select count(*) from op_plantillas;` → 8 y `select * from op_config;` → 1 fila.
+- [ ] **Verificar la RLS logueado** (no solo por REST anon): desde otra org no se ven las oportunidades; firmar un área que no corresponde debe fallar; `op_actividad` no acepta UPDATE ni DELETE.
+- [ ] **`get_advisors`** después de aplicar la migración (que no aparezca ningún `rls_enabled_no_policy` nuevo).
+- [ ] **Revisar las 8 plantillas semilla** (horas, valores hora y precios mínimos) — hoy están marcadas `es_demo = true` y rotuladas "estimación interna": son referencias sin validar.
+- [ ] **Corregir el "83 / 100"** de la página 12 del PDF *Proyecto Mercado Público*: los parciales suman 93.
+- [ ] Paridad móvil del módulo (`movil/js/screens/`), si se decide que Martín lo use en terreno.
+- [ ] Fase 2 (API oficial de Mercado Público, ticket en secrets de Edge Function) → Fase 3 (IA sobre las bases) → Fase 4 (generador DOCX/PDF).
+
 ### 4.1 · Módulo Financiero trIA (Ola 1) — pendientes
 > El módulo está **EN VIVO en PC** (automático con Gemini + manual de respaldo; informe con la piel del Informe 360). Lo que falta:
 - [x] ~~**Paridad móvil**~~ ✅ **(2026-06-30)** — `movil/js/screens/financiero.js` (lista + flujo automático/manual + informe), registrada en `movil/js/app.js` (import + SCREENS + row "Análisis Financiero" en "Más") + `financiero.css` en `movil/index.html` y `movil/preview.html`. Reusa `db.analisisFinancieros` + dominio + `openFinReport` vía `core.js`. Gancho móvil: adjuntar F29/foto con la cámara. Verificado: `node --check` + import+render de la screen en el preview móvil real. **⬜ Falta la prueba logueada en teléfono (protocolo móvil).**
@@ -620,6 +642,15 @@ Columnas del calendario agregadas a `citas` y verificadas en vivo. Persistencia 
 ---
 
 ## 7. Bitácora de sesiones (más reciente arriba)
+
+### 2026-07-30 — 🆕 Módulo Oportunidades Públicas (Fase 1, MVP manual)
+- **Qué se pidió:** un módulo para Mercado Público / Compra Ágil integrado de verdad al CRM (no una maqueta), con Fase 1 completa antes que cuatro fases a medias.
+- **Qué se hizo:** 17 tablas `op_*` con el patrón multitenant de la casa · dominio puro en `modules/oportunidades/domain/` (10 archivos, sin DOM ni Supabase) · presentación separada en `presentation/` con delegación de eventos (cero `onclick` con datos) · repos en `js/db.js` (bandeja paginada en servidor) y mappers en `js/mappers.js` · nav + CSS + sello de caché.
+- **Dos bugs propios encontrados por los tests y corregidos:**
+  1. `"16.000"` (formato chileno) entraba como **16** en la calculadora → una cotización mil veces más barata, en silencio. Ahora el punto se resuelve por forma (miles vs decimal) y hay tests de los dos casos.
+  2. El embudo miraba **solo el estado actual**: una oportunidad ganada, cobrada y certificada terminaba en `cerrada` y **desaparecía de todas las etapas anteriores** (tasa de éxito 0%). Ahora el camino se reconstruye desde `op_resultados`.
+- **Verificación:** `node --check` en todo lo tocado · **284/284 tests** (111 nuevos) · `npm run stamp:check` OK · recorrido E2E completo en el preview con mocks (ver §1).
+- **Honestidad:** **NO se aplicó la migración** ni se probó con Supabase real ni con sesión autenticada. Lo verificado es dominio + interfaz contra mocks. El `_preview/mock-db.js` se extendió localmente (gitignored, no entra al repo).
 
 ### 2026-07-29 (cont.) — 🩹 El PDF duplicaba cada hoja: el margen NO lo decide el CSS
 

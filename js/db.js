@@ -23,6 +23,22 @@ import {
   activoFromSupa, activoToSupa,
   empleadoFromSupa, empleadoToRpc,
   remuneracionFromSupa, remuneracionToRpc,
+  opFromSupa, opToSupa,
+  opDocFromSupa, opDocToSupa,
+  opReqFromSupa, opReqToSupa,
+  opPuntajeFromSupa, opPuntajeToSupa,
+  opRiesgoFromSupa, opRiesgoToSupa,
+  opCostoFromSupa, opCostoToSupa,
+  opItemFromSupa, opItemToSupa,
+  opAprobFromSupa, opAprobToSupa,
+  opPlantillaFromSupa, opPlantillaToSupa,
+  opOfertaFromSupa, opOfertaToSupa,
+  opOfertaDocFromSupa, opOfertaDocToSupa,
+  opActFromSupa, opActToSupa,
+  opResultadoFromSupa, opResultadoToSupa,
+  opProvDocFromSupa, opProvDocToSupa,
+  opConfigFromSupa, opConfigToSupa,
+  opSyncFromSupa,
 } from './mappers.js';
 
 // Reexport para no romper a quien importe isMissingTable desde db.js (módulos
@@ -973,3 +989,389 @@ export async function importLandingLeads() {
     return count;
   } catch (err) { console.error('importLandingLeads falló (leads del landing no importados):', err); return 0; }
 }
+
+// ═════════════════════════════════════════════════════════════
+// OPORTUNIDADES PÚBLICAS (Mercado Público / Compra Ágil) · Fase 1
+// Requiere supabase/oportunidades_f1.sql. Si no se corrió, las lecturas fallan
+// con 42P01/PGRST205 y el módulo lo detecta con isMissingTable() para mostrar
+// "corre el SQL" en vez de una pantalla rota (patrón contratos/financiero).
+//
+// La bandeja NO usa getAll(): pagina en el servidor (AGENTS.md §5.9). Los hijos
+// se piden por oportunidad_id (índice), nunca de a tabla completa.
+// ═════════════════════════════════════════════════════════════
+
+/** Fábrica de repos hijos: siempre se leen filtrados por su oportunidad. */
+function _opChildRepo(table, fromRow, toRow, { fk = 'oportunidad_id', order = 'created_at', asc = true } = {}) {
+  return {
+    byOportunidad: async (opId) => {
+      const { data, error } = await supabase.from(table).select('*').eq(fk, opId).order(order, { ascending: asc });
+      _throw(error); return (data || []).map(fromRow);
+    },
+    byOportunidades: async (ids = []) => {
+      if (!ids.length) return [];
+      const { data, error } = await supabase.from(table).select('*').in(fk, ids);
+      _throw(error); return (data || []).map(fromRow);
+    },
+    add: async (d) => {
+      const { data, error } = await supabase.from(table).insert(toRow(d)).select('id').single();
+      _throw(error); return data.id;
+    },
+    update: async (d) => {
+      const { id, ...rest } = d;
+      const { error } = await supabase.from(table).update(toRow(rest)).eq('id', id);
+      _throw(error);
+    },
+    upsert: async (d, onConflict) => {
+      const { data, error } = await supabase.from(table).upsert(toRow(d), { onConflict }).select('id').single();
+      _throw(error); return data.id;
+    },
+    delete: async (id) => {
+      const { error } = await supabase.from(table).delete().eq('id', id);
+      _throw(error);
+    },
+  };
+}
+
+export const oportunidades = {
+  /**
+   * Bandeja paginada. Los filtros se resuelven en Postgres, no en el browser:
+   * traer la tabla entera para filtrar en JS es exactamente lo que prohíbe el
+   * estándar del repo (y lo que se cae el día que haya 2.000 procesos).
+   */
+  page: async ({ limit = 50, offset = 0, estados = null, q = '', region = '', servicio = '',
+                 responsable = '', unspsc = '', desde = '', hasta = '', orden = 'cierre' } = {}) => {
+    let sel = supabase.from('op_oportunidades').select('*', { count: 'exact' });
+    if (estados && estados.length) sel = sel.in('estado', estados);
+    if (region)      sel = sel.eq('region', region);
+    if (servicio)    sel = sel.eq('servicio_slug', servicio);
+    if (responsable) sel = sel.eq('responsable', responsable);
+    if (unspsc)      sel = sel.contains('unspsc', [String(unspsc)]);
+    if (desde)       sel = sel.gte('fecha_cierre', desde);
+    if (hasta)       sel = sel.lte('fecha_cierre', hasta);
+    if (q) {
+      // El texto va escapado: una coma o un paréntesis sin escapar rompe el
+      // filtro `or` de PostgREST (y con él, el buscador entero).
+      const safe = String(q).replace(/[(),*]/g, ' ').trim();
+      if (safe) sel = sel.or(`titulo.ilike.%${safe}%,institucion.ilike.%${safe}%,codigo_externo.ilike.%${safe}%,descripcion.ilike.%${safe}%`);
+    }
+    if (orden === 'puntaje')      sel = sel.order('puntaje', { ascending: false, nullsFirst: false });
+    else if (orden === 'monto')   sel = sel.order('presupuesto_monto', { ascending: false, nullsFirst: false });
+    else if (orden === 'reciente') sel = sel.order('created_at', { ascending: false });
+    else                          sel = sel.order('fecha_cierre', { ascending: true, nullsFirst: false });
+
+    const { data, error, count } = await sel.range(offset, offset + limit - 1);
+    _throw(error);
+    return { rows: (data || []).map(opFromSupa), total: count || 0 };
+  },
+
+  /** Solo para analítica y alertas (volumen acotado por el filtro de estado). */
+  getAll: async () => _cachedAll('op_oportunidades', async () => {
+    const { data, error } = await supabase.from('op_oportunidades').select('*').order('created_at', { ascending: false });
+    _throw(error); return (data || []).map(opFromSupa);
+  }),
+
+  get: async (id) => {
+    const { data, error } = await supabase.from('op_oportunidades').select('*').eq('id', id).single();
+    _throw(error); return opFromSupa(data);
+  },
+
+  countByEstados: async (estados = []) => {
+    const { count, error } = await supabase.from('op_oportunidades')
+      .select('id', { count: 'exact', head: true }).in('estado', estados);
+    _throw(error); return count || 0;
+  },
+
+  add: async (d) => {
+    const payload = opToSupa(d);
+    if (!payload.responsable && _uid) payload.responsable = _uid;
+    const { data, error } = await supabase.from('op_oportunidades').insert(payload).select('id').single();
+    _throw(error); _invalidate('op_oportunidades'); return data.id;
+  },
+
+  update: async (d) => {
+    const { id, ...rest } = d;
+    const { error } = await supabase.from('op_oportunidades').update(opToSupa(rest)).eq('id', id);
+    _throw(error); _invalidate('op_oportunidades');
+  },
+
+  delete: async (id) => {
+    const { error } = await supabase.from('op_oportunidades').delete().eq('id', id);
+    _throw(error); _invalidate('op_oportunidades');
+  },
+
+  /** Lista de instituciones ya cargadas (para el filtro y para "institución nueva"). */
+  instituciones: async () => {
+    const { data, error } = await supabase.from('op_oportunidades').select('institucion').not('institucion', 'is', null);
+    _throw(error);
+    return [...new Set((data || []).map(r => r.institucion).filter(Boolean))].sort();
+  },
+};
+
+// Historial visible. Sin update ni delete: la RLS tampoco los permite.
+export const opActividad = {
+  byOportunidad: async (opId) => {
+    const { data, error } = await supabase.from('op_actividad').select('*')
+      .eq('oportunidad_id', opId).order('created_at', { ascending: false });
+    _throw(error); return (data || []).map(opActFromSupa);
+  },
+  add: async (d) => {
+    const payload = opActToSupa(d);
+    if (_uid) payload.usuario = _uid;      // la RLS exige usuario = auth.uid()
+    const { error } = await supabase.from('op_actividad').insert(payload);
+    _throw(error);
+  },
+};
+
+export const opRequisitos = _opChildRepo('op_requisitos', opReqFromSupa, opReqToSupa);
+export const opRiesgos    = _opChildRepo('op_riesgos', opRiesgoFromSupa, opRiesgoToSupa);
+export const opAprobaciones = _opChildRepo('op_aprobaciones', opAprobFromSupa, opAprobToSupa);
+export const opOfertas    = _opChildRepo('op_ofertas', opOfertaFromSupa, opOfertaToSupa, { order: 'version', asc: false });
+
+// Puntajes: una fila por criterio, se pisan con upsert (unique oportunidad+criterio).
+export const opPuntajes = {
+  ..._opChildRepo('op_puntajes', opPuntajeFromSupa, opPuntajeToSupa, { order: 'criterio' }),
+  guardar: async (d) => {
+    const payload = opPuntajeToSupa(d);
+    if (_uid && d.confirmadoPor === undefined) { payload.confirmado_por = _uid; payload.confirmado_at = new Date().toISOString(); }
+    const { data, error } = await supabase.from('op_puntajes')
+      .upsert(payload, { onConflict: 'oportunidad_id,criterio' }).select('id').single();
+    _throw(error); return data.id;
+  },
+};
+
+// Aprobación: la firma va SIEMPRE a nombre del usuario de la sesión.
+opAprobaciones.firmar = async (d) => {
+  const payload = opAprobToSupa(d);
+  if (_uid) payload.aprobado_por = _uid;
+  const { data, error } = await supabase.from('op_aprobaciones')
+    .upsert(payload, { onConflict: 'oportunidad_id,area' }).select('id').single();
+  _throw(error); return data.id;
+};
+
+// Costos: cabecera 1:1 + ítems. La cabecera se crea sola la primera vez que se
+// abre la pestaña financiera (así el resto del módulo nunca ve un null).
+export const opCostos = {
+  byOportunidad: async (opId) => {
+    const { data, error } = await supabase.from('op_costos').select('*').eq('oportunidad_id', opId).maybeSingle();
+    _throw(error); return opCostoFromSupa(data);
+  },
+  byOportunidades: async (ids = []) => {
+    if (!ids.length) return [];
+    const { data, error } = await supabase.from('op_costos').select('*').in('oportunidad_id', ids);
+    _throw(error); return (data || []).map(opCostoFromSupa);
+  },
+  crearSiFalta: async (opId, defaults = {}) => {
+    const existente = await opCostos.byOportunidad(opId);
+    if (existente) return existente;
+    const { data, error } = await supabase.from('op_costos')
+      .insert(opCostoToSupa({ oportunidadId: opId, ...defaults })).select('*').single();
+    _throw(error); return opCostoFromSupa(data);
+  },
+  update: async (d) => {
+    const { id, ...rest } = d;
+    const { error } = await supabase.from('op_costos').update(opCostoToSupa(rest)).eq('id', id);
+    _throw(error);
+  },
+};
+
+export const opCostoItems = {
+  byCosto: async (costoId) => {
+    const { data, error } = await supabase.from('op_costo_items').select('*')
+      .eq('costo_id', costoId).order('orden', { ascending: true }).order('created_at', { ascending: true });
+    _throw(error); return (data || []).map(opItemFromSupa);
+  },
+  byCostos: async (ids = []) => {
+    if (!ids.length) return [];
+    const { data, error } = await supabase.from('op_costo_items').select('*').in('costo_id', ids);
+    _throw(error); return (data || []).map(opItemFromSupa);
+  },
+  add: async (d) => {
+    const { data, error } = await supabase.from('op_costo_items').insert(opItemToSupa(d)).select('id').single();
+    _throw(error); return data.id;
+  },
+  update: async (d) => {
+    const { id, ...rest } = d;
+    const { error } = await supabase.from('op_costo_items').update(opItemToSupa(rest)).eq('id', id);
+    _throw(error);
+  },
+  delete: async (id) => {
+    const { error } = await supabase.from('op_costo_items').delete().eq('id', id);
+    _throw(error);
+  },
+};
+
+// Documentos del paquete de oferta (checklist).
+export const opOfertaDocs = {
+  byOferta: async (ofertaId) => {
+    const { data, error } = await supabase.from('op_oferta_docs').select('*')
+      .eq('oferta_id', ofertaId).order('orden', { ascending: true });
+    _throw(error); return (data || []).map(opOfertaDocFromSupa);
+  },
+  addMany: async (rows = []) => {
+    if (!rows.length) return 0;
+    const { error } = await supabase.from('op_oferta_docs').insert(rows.map(opOfertaDocToSupa));
+    _throw(error); return rows.length;
+  },
+  update: async (d) => {
+    const { id, ...rest } = d;
+    const { error } = await supabase.from('op_oferta_docs').update(opOfertaDocToSupa(rest)).eq('id', id);
+    _throw(error);
+  },
+};
+
+// Resultado / ejecución: una fila por oportunidad.
+export const opResultados = {
+  byOportunidad: async (opId) => {
+    const { data, error } = await supabase.from('op_resultados').select('*').eq('oportunidad_id', opId).maybeSingle();
+    _throw(error); return opResultadoFromSupa(data);
+  },
+  getAll: async () => _cachedAll('op_resultados', async () => {
+    const { data, error } = await supabase.from('op_resultados').select('*');
+    _throw(error); return (data || []).map(opResultadoFromSupa);
+  }),
+  guardar: async (d) => {
+    const { data, error } = await supabase.from('op_resultados')
+      .upsert(opResultadoToSupa(d), { onConflict: 'oportunidad_id' }).select('*').single();
+    _throw(error); _invalidate('op_resultados'); return opResultadoFromSupa(data);
+  },
+};
+
+// Plantillas de servicio.
+export const opPlantillas = {
+  getAll: async () => _cachedAll('op_plantillas', async () => {
+    const { data, error } = await supabase.from('op_plantillas').select('*').order('nombre');
+    _throw(error); return (data || []).map(opPlantillaFromSupa);
+  }),
+  get: async (id) => {
+    const { data, error } = await supabase.from('op_plantillas').select('*').eq('id', id).single();
+    _throw(error); return opPlantillaFromSupa(data);
+  },
+  add: async (d) => {
+    const { data, error } = await supabase.from('op_plantillas').insert(opPlantillaToSupa(d)).select('id').single();
+    _throw(error); _invalidate('op_plantillas'); return data.id;
+  },
+  update: async (d) => {
+    const { id, ...rest } = d;
+    const { error } = await supabase.from('op_plantillas').update(opPlantillaToSupa(rest)).eq('id', id);
+    _throw(error); _invalidate('op_plantillas');
+  },
+  delete: async (id) => {
+    const { error } = await supabase.from('op_plantillas').delete().eq('id', id);
+    _throw(error); _invalidate('op_plantillas');
+  },
+};
+
+// Documentos del proceso (bases y anexos) → bucket privado 'oportunidades'.
+export const opDocumentos = {
+  byOportunidad: async (opId) => {
+    const { data, error } = await supabase.from('op_documentos').select('*')
+      .eq('oportunidad_id', opId).order('created_at', { ascending: false });
+    _throw(error); return (data || []).map(opDocFromSupa);
+  },
+  /** Sube el archivo y luego crea la fila; si la fila falla, borra el archivo. */
+  upload: async (opId, file, { categoria = 'bases' } = {}) => {
+    const orgId = await _getOrgId();
+    const ext = (file.name.split('.').pop() || 'bin').toLowerCase();
+    const path = `${orgId}/procesos/${opId}/${crypto.randomUUID()}.${ext}`;
+    const { error: upErr } = await supabase.storage.from('oportunidades')
+      .upload(path, file, { contentType: file.type || 'application/octet-stream', upsert: false });
+    _throw(upErr);
+    const { data, error } = await supabase.from('op_documentos').insert(opDocToSupa({
+      oportunidadId: opId, nombre: file.name, categoria, storagePath: path,
+      mime: file.type || null, bytes: file.size || 0, origen: 'adjunto',
+    })).select('id').single();
+    if (error) {
+      try { await supabase.storage.from('oportunidades').remove([path]); }
+      catch (err) { console.warn('No se pudo borrar el archivo huérfano:', err?.message || err); }
+      _throw(error);
+    }
+    return data.id;
+  },
+  addEnlace: async (opId, { nombre, enlace }) => {
+    const { data, error } = await supabase.from('op_documentos')
+      .insert(opDocToSupa({ oportunidadId: opId, nombre, enlace, origen: 'enlace' })).select('id').single();
+    _throw(error); return data.id;
+  },
+  signedUrl: async (path, expiresIn = 300) => {
+    const { data, error } = await supabase.storage.from('oportunidades').createSignedUrl(path, expiresIn);
+    _throw(error); return data.signedUrl;
+  },
+  delete: async (id, storagePath) => {
+    const { error } = await supabase.from('op_documentos').delete().eq('id', id);
+    _throw(error);
+    if (storagePath) {
+      try { await supabase.storage.from('oportunidades').remove([storagePath]); }
+      catch (err) { console.warn('Fila borrada pero el archivo quedó en Storage:', err?.message || err); }
+    }
+  },
+};
+
+// Carpeta maestra del proveedor (7 categorías).
+export const opProveedorDocs = {
+  getAll: async () => _cachedAll('op_proveedor_docs', async () => {
+    const { data, error } = await supabase.from('op_proveedor_docs').select('*')
+      .order('categoria').order('nombre');
+    _throw(error); return (data || []).map(opProvDocFromSupa);
+  }),
+  add: async (d) => {
+    const { data, error } = await supabase.from('op_proveedor_docs').insert(opProvDocToSupa(d)).select('id').single();
+    _throw(error); _invalidate('op_proveedor_docs'); return data.id;
+  },
+  update: async (d) => {
+    const { id, ...rest } = d;
+    const { error } = await supabase.from('op_proveedor_docs').update(opProvDocToSupa(rest)).eq('id', id);
+    _throw(error); _invalidate('op_proveedor_docs');
+  },
+  delete: async (id, storagePath) => {
+    const { error } = await supabase.from('op_proveedor_docs').delete().eq('id', id);
+    _throw(error); _invalidate('op_proveedor_docs');
+    if (storagePath) {
+      try { await supabase.storage.from('oportunidades').remove([storagePath]); }
+      catch (err) { console.warn('Fila borrada pero el archivo quedó en Storage:', err?.message || err); }
+    }
+  },
+  upload: async (docId, file) => {
+    const orgId = await _getOrgId();
+    const ext = (file.name.split('.').pop() || 'bin').toLowerCase();
+    const path = `${orgId}/proveedor/${crypto.randomUUID()}.${ext}`;
+    const { error: upErr } = await supabase.storage.from('oportunidades')
+      .upload(path, file, { contentType: file.type || 'application/octet-stream', upsert: false });
+    _throw(upErr);
+    const { error } = await supabase.from('op_proveedor_docs')
+      .update({ storage_path: path, mime: file.type || null, bytes: file.size || 0 }).eq('id', docId);
+    if (error) {
+      try { await supabase.storage.from('oportunidades').remove([path]); }
+      catch (err) { console.warn('No se pudo borrar el archivo huérfano:', err?.message || err); }
+      _throw(error);
+    }
+    _invalidate('op_proveedor_docs');
+    return path;
+  },
+  signedUrl: async (path, expiresIn = 300) => {
+    const { data, error } = await supabase.storage.from('oportunidades').createSignedUrl(path, expiresIn);
+    _throw(error); return data.signedUrl;
+  },
+};
+
+// Configuración del módulo (1 fila por organización).
+export const opConfig = {
+  get: async () => {
+    const { data, error } = await supabase.from('op_config').select('*').limit(1).maybeSingle();
+    _throw(error); return opConfigFromSupa(data);
+  },
+  save: async (d) => {
+    const orgId = await _getOrgId();
+    const { error } = await supabase.from('op_config')
+      .upsert({ org_id: orgId, ...opConfigToSupa(d) }, { onConflict: 'org_id' });
+    _throw(error);
+  },
+};
+
+// Bitácora de sincronizaciones con la API oficial (la escribe la Fase 2).
+export const opSyncLogs = {
+  ultimos: async (limit = 20) => {
+    const { data, error } = await supabase.from('op_sync_logs').select('*')
+      .order('inicio', { ascending: false }).limit(limit);
+    _throw(error); return (data || []).map(opSyncFromSupa);
+  },
+};

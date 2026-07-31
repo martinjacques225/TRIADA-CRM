@@ -44,6 +44,7 @@ Estas acciones **no las puede cerrar el código solo**. Verificar en cada deploy
 | Supabase anon / publishable key | `js/supabase.js` (pública por diseño en GitHub Pages) | — |
 | Supabase service role | Supabase dashboard / Edge Functions secrets | Nunca en front, nunca en git |
 | API keys LLM (OpenAI, Anthropic) | Edge Function env | Nunca en front |
+| `MERCADO_PUBLICO_TICKET` (Fase 2 de Oportunidades Públicas) | Secrets de la Edge Function | Nunca en front, nunca en la DB, nunca en `op_sync_logs.parametros` |
 | `.env` / `config.local.js` | Máquina local, gitignored | Nunca commitear |
 
 Pre-commit recomendado: escaneo de secretos (Gitleaks o equivalente) cuando se añada CI completo.
@@ -76,6 +77,26 @@ Pre-commit recomendado: escaneo de secretos (Gitleaks o equivalente) cuando se a
 - **Roles:** cambios de `role`, `org_id`, `activo` en `profiles` bloqueados por trigger (solo admin).
 - **Delete sensible:** facturas — solo admin (ver multitenancy.sql).
 - **Form público:** insert anónimo solo en tablas/policies explícitas; nunca lectura anónima de CRM.
+
+### Oportunidades Públicas (`supabase/oportunidades_f1.sql`)
+
+17 tablas `op_*` con `org_id NOT NULL`, `set_org_id()` y RLS por `(select auth_org_id())`.
+Estas reglas viven en la BASE, no solo en la interfaz — la UI se puede saltar, la base no:
+
+- **Firmas de aprobación:** `op_aprobaciones` exige `aprobado_por = auth.uid()` **y**
+  `public.op_puede_aprobar(area)`. Nadie firma por otro ni firma un área que no le toca.
+  `op_puede_aprobar` es SECURITY **INVOKER** (lee el propio perfil; no levanta advisors).
+- **Historial infalsificable:** `op_actividad` solo acepta INSERT (`usuario = auth.uid()`).
+  Sin políticas de UPDATE ni DELETE: el registro de decisiones no se reescribe.
+- **Puntaje ajustado a mano:** `op_puntajes_motivo_ck` exige motivo escrito.
+- **Orden de compra:** `op_guard_oc()` impide aceptar una OC que no coincide con la oferta
+  sin registrar la observación.
+- **Rol aditivo `lector`:** `public.op_es_lector()` corta INSERT/UPDATE/DELETE y la subida de
+  archivos. Hoy nadie lo tiene asignado, así que no cambia nada del comportamiento actual.
+- **Storage:** bucket privado `oportunidades`, RLS por `{org_id}/…`, descarga por URL firmada
+  temporal. El front valida tipo y tamaño (≤ 20 MB) antes de subir.
+- **Datos tributarios:** la carpeta del proveedor NO guarda Clave Única, Clave Tributaria ni
+  contraseñas personales (advertencia visible en la propia vista).
 
 ---
 
@@ -126,4 +147,4 @@ Pre-commit recomendado: escaneo de secretos (Gitleaks o equivalente) cuando se a
 
 ---
 
-*Última actualización: 2026-06-16. Actualizar cuando cambie auth, RLS o superficie pública.*
+*Última actualización: 2026-07-30 (módulo Oportunidades Públicas). Actualizar cuando cambie auth, RLS o superficie pública.*

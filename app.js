@@ -43,6 +43,7 @@ import * as ModContratos     from './modules/contratos/contratos.js';
 import * as ModFinanciero    from './modules/financiero/financiero.js';
 import * as ModErp           from './modules/erp/erp.js';
 import * as ModAcademia      from './modules/academia/academia.js';
+import * as ModOportunidades from './modules/oportunidades/oportunidades.js';
 
 import {
   closeModal,
@@ -71,6 +72,7 @@ const NAV_SECTIONS = [
     { id: 'agenda',       icon: _icoAgenda(),     label: 'Agenda' },
   ]},
   { label: 'Gestión', items: [
+    { id: 'oportunidades', icon: _icoOportunidades(), label: 'Oportunidades Públicas' },
     { id: 'prospectos',   icon: _icoProspectos(), label: 'Prospectos' },
     { id: 'diagnosticos', icon: _icoDiag(),       label: 'Diagnóstico' },
     { id: 'propuestas',   icon: _icoProp(),       label: 'Propuesta' },
@@ -123,6 +125,7 @@ async function refreshCenter() {
     'ai-commander': ModAiCommander.render,
     erp:          ModErp.render,
     academia:     ModAcademia.render,
+    oportunidades: ModOportunidades.render,
     informes:     ModInformes.render,
     config:       ModConfig.render,
   };
@@ -497,5 +500,7 @@ function _icoPresup() { return _ln('<rect x="4" y="3" width="16" height="18" rx=
 function _icoBiblioteca(){ return _ln('<path d="M4 4.8A2.8 2.8 0 0 1 6.8 2H20v15H6.8A2.8 2.8 0 0 0 4 19.8z"/><path d="M20 17v5H6.8A2.8 2.8 0 0 1 4 19.2"/><path d="M8 6.5h7M8 9.5h5"/>'); }
 function _icoFinanciero(){ return _ln('<path d="M4 4v16h16"/><path d="M8 14l3-3 3 2 4.5-5.5"/><path d="M18.5 7.5H15M18.5 7.5V11"/>'); }
 function _icoErp()     { return _ln('<rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/>'); }
+// Oportunidades Públicas: edificio institucional + lupa (buscar en el Estado)
+function _icoOportunidades() { return _ln('<path d="M3 21h13M4.5 21V9.5L10.5 6l6 3.5V12"/><path d="M7.5 12.5v3M13 12.5v1"/><circle cx="17.5" cy="17" r="3"/><path d="m20 19.5 1.5 1.5"/>'); }
 
 document.addEventListener('DOMContentLoaded', init);

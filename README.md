@@ -11,12 +11,13 @@ producir el **Informe Ejecutivo 360**.
 
 ## Stack
 
-- **Frontend:** Vanilla JS (ES Modules), sin frameworks.
-- **Datos (hoy):** IndexedDB (`TriadaDiagnosticoDB`) — capa aislada en `js/db.js`.
-- **Datos (próximo):** migración a **Supabase** (Postgres + Auth + RLS) para
-  multi-usuario, login y agendas por persona. La capa de datos ya está aislada
-  para que la migración sea acotada.
-- **PWA:** `manifest.json` (íconos y service worker pendientes de pulir).
+- **Frontend:** Vanilla JS (ES Modules), sin frameworks ni build step.
+- **Datos:** **Supabase** (Postgres + Auth + RLS multitenant). Capa aislada en
+  `js/db.js` (repositorios) y `js/mappers.js` (snake_case ↔ camelCase).
+  Migraciones espejadas en `supabase/*.sql`.
+- **Deploy:** GitHub Pages desde `main`. Los assets enlazados llevan sello de
+  caché (`npm run stamp`); sin él, un `.css`/`.js` modificado se sirve viejo.
+- **PWA:** `manifest.json` + app móvil en `movil/`.
 
 ## Estructura
 
@@ -26,19 +27,27 @@ index.html             Shell de la app
 manifest.json          PWA
 styles.css             Design system (paleta Tríada)
 js/
-  db.js                Capa de datos (repositorio IndexedDB) ← costura clave para Supabase
+  db.js                Capa de datos (repositorios Supabase)
+  mappers.js           Transformaciones puras fila ↔ dominio
   state.js             Estado de UI (no persistido)
   utils.js             Helpers + constantes de dominio (etapas, áreas, preguntas)
+  format.js            Normalización de RUT, teléfono, email y montos
 modules/
   home/                Panel principal (KPIs, citas, mini-funnel)
   pipeline/            Embudo de prospectos (kanban + lista, 8 etapas)
   diagnosticos/        Diagnóstico 360 por área (Tecnología, Ventas, Finanzas)
   agenda/              Citas
   propuestas/          Propuestas y valores
+  contratos/           Generación de contratos desde plantillas de marca
+  oportunidades/       Oportunidades Públicas (Mercado Público / Compra Ágil)
+  erp/                 Operación: proyectos, horas, gastos, caja, nómina
+  financiero/          Análisis financiero asistido
   informes/            Analítica de conversión
   informe-ejecutivo/   Motor del Informe Ejecutivo 360 (engine + charts + viewer)
   configuracion/       Perfil, tema, import/export
   modals/              Modales compartidos
+supabase/              Migraciones SQL espejadas (+ rollback por fase)
+movil/                 PWA móvil
 tools/                 Utilidades de build del informe (standalone)
 ```
 
@@ -59,6 +68,7 @@ Sin build step. Backend: Supabase (Postgres + Auth + RLS). Ver `docs/HANDOFF.md`
 | [`AGENTS.md`](AGENTS.md) | Estándar de ingeniería: DoD, anti-patrones, CI, remediación TRIADA |
 | [`SECURITY.md`](SECURITY.md) | Threat model, RLS, XSS, secretos, checklist pre-deploy |
 | [`docs/HANDOFF.md`](docs/HANDOFF.md) | Estado vivo del proyecto |
+| [`docs/OPORTUNIDADES_PUBLICAS.md`](docs/OPORTUNIDADES_PUBLICAS.md) | Módulo de Mercado Público: instalación, tablas, permisos y fases |
 
 ## Áreas de diagnóstico
 
