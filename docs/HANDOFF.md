@@ -45,7 +45,7 @@
 
 ## 1. Estado actual (al 2026-07-07)
 
-### 🆕 Oportunidades Públicas — Fase 1 (MVP manual) CONSTRUIDA (2026-07-30) · 🟡 falta aplicar el SQL
+### 🆕 Oportunidades Públicas — Fase 1 (MVP manual) EN VIVO en el sitio (2026-07-30, commit `e3ae2c1`) · 🔴 falta aplicar el SQL
 > Módulo para **Mercado Público y Compra Ágil**: detectar, descartar rápido, analizar, puntuar, costear, aprobar entre los tres socios, preparar la oferta y seguir hasta el certificado de experiencia. Reglas de negocio tomadas del documento de decisión *Proyecto Mercado Público* (30-jul-2026), no inventadas.
 > 📄 **Doc del módulo: [`docs/OPORTUNIDADES_PUBLICAS.md`](OPORTUNIDADES_PUBLICAS.md)** — instalación, tablas, permisos y qué falta por fase.
 >
@@ -54,6 +54,7 @@
 > - **Cuatro reglas en la BASE, no solo en la UI:** motivo obligatorio al pisar un puntaje sugerido · no se acepta una OC que no coincide sin observación escrita · nadie firma por otro ni un área ajena (`op_puede_aprobar`) · `op_actividad` solo INSERT (historial infalsificable).
 > - **Dominio PURO y testeado** en `modules/oportunidades/domain/` (estados, puntaje, descarte, finanzas, aprobaciones, alertas, permisos, analítica, sincronización): **111 tests nuevos, 284/284 en verde**.
 > - **Verificado en el preview con mocks (E2E por DOM):** crear a mano pegando el enlace (el ID `4321-77-LE26` se extrae solo) → puntuar (41 → 71, "Recomendada para participar") → cotizar (50 h + $80.000 → neto $1.257.143, IVA $238.857, utilidad 30%) → firmar las tres áreas → checklist de 12 documentos (bloquea "lista" con 8 obligatorios pendientes) → presentada → adjudicada → **la OC que no coincide se rechaza hasta escribir la observación** → factura → pago → certificado → proyecto del ERP → cerrada. Sin errores de consola; los 3 temas y las 2 densidades OK, sin scroll horizontal.
+> - **Deploy verificado en vivo (31-jul 02:21 GMT):** el `Last-Modified` de github.io avanzó y los archivos del módulo responden 200; el `index.html` servido enlaza `oportunidades.css?v=461c08a6` y el `app.js` servido importa `modules/oportunidades/oportunidades.js` (se comprobó el gotcha de `deploy-pages`, no solo que el push llegó).
 > - **🔴 PENDIENTE BLOQUEANTE:** *nadie ha corrido `supabase/oportunidades_f1.sql`*. Hasta que se aplique, el módulo muestra un aviso explicando qué ejecutar y **no rompe nada** del CRM. Sin eso, no hay verificación con datos reales ni con sesión autenticada.
 > - **⬜ Falta:** aplicar el SQL y verificar RLS logueado (aislamiento cross-org + firma de área ajena rechazada) · `get_advisors` tras la migración · paridad móvil (`movil/`) · Fase 2 (API oficial), Fase 3 (IA) y Fase 4 (generador de documentos DOCX/PDF).
 > - **⚠️ Hallazgo de paso:** el documento de decisión (pág. 12) titula el ejemplo del marcador como **"83 / 100"**, pero sus seis parciales suman **93**. El sistema hace la suma real; el titular del PDF está equivocado y conviene corregirlo antes de mostrarlo a un socio.
@@ -650,6 +651,7 @@ Columnas del calendario agregadas a `citas` y verificadas en vivo. Persistencia 
   1. `"16.000"` (formato chileno) entraba como **16** en la calculadora → una cotización mil veces más barata, en silencio. Ahora el punto se resuelve por forma (miles vs decimal) y hay tests de los dos casos.
   2. El embudo miraba **solo el estado actual**: una oportunidad ganada, cobrada y certificada terminaba en `cerrada` y **desaparecía de todas las etapas anteriores** (tasa de éxito 0%). Ahora el camino se reconstruye desde `op_resultados`.
 - **Verificación:** `node --check` en todo lo tocado · **284/284 tests** (111 nuevos) · `npm run stamp:check` OK · recorrido E2E completo en el preview con mocks (ver §1).
+- **Commit y deploy:** `e3ae2c1` en `main`, pusheado y **publicado** (verificado por `Last-Modified` + marcadores en los archivos servidos, no solo por el push).
 - **Honestidad:** **NO se aplicó la migración** ni se probó con Supabase real ni con sesión autenticada. Lo verificado es dominio + interfaz contra mocks. El `_preview/mock-db.js` se extendió localmente (gitignored, no entra al repo).
 
 ### 2026-07-29 (cont.) — 🩹 El PDF duplicaba cada hoja: el margen NO lo decide el CSS
