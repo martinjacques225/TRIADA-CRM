@@ -644,6 +644,16 @@ Columnas del calendario agregadas a `citas` y verificadas en vivo. Persistencia 
 
 ## 7. Bitácora de sesiones (más reciente arriba)
 
+### 2026-07-31 — 🩹 Contratos: el final de la hoja y las dos firmas desalineadas
+
+- **Lo que reportó el dueño:** *"estoy haciendo un contrato de Impulsa, está en borrador, y al verlo el final está raro"*, con una captura de franjas grises bajo la zona de firmas.
+- **Eran DOS problemas distintos, y el que se veía NO era el grave.**
+  1. **Lo que se veía (solo vista previa, el PDF nunca estuvo afectado).** El iframe de `.ct-preview__frame` mide 794px = 210mm exactos, pero la plantilla aplicaba **a la vez** el `padding` de `.pgpad` (14mm 13mm 19mm, que existe solo para la hoja *impresa*) y el de `.sheet` (18mm 16mm 24mm). Medido: la hoja iba de x=49 a x=843 dentro de un cuerpo de 779 → **49px de desbordamiento** (la barra horizontal de la captura). Y el `.doc-footer` es **hermano de `.pgpad`, no hijo de `.sheet`**: al pasar a `position:static` en pantalla caía **104px por debajo** de la hoja, sobre el gris del escritorio (`#d9d6cd`) y alineado a x=0 en vez de x=49. Esas eran las dos franjas grises.
+  2. **Lo que SÍ salía en el PDF firmado y nadie había visto.** `.sign .firma-martin` iba en el flujo (`max-height:19mm` + `margin:0 auto -8mm`) → **+11mm de alto solo en la columna de Martín**. Resultado: líneas, nombres y RUT **desalineados 10,8–11,1mm** entre las dos partes, y el garabato (`z-index:1`) **tapando por completo «Martín Jacques»**. Afectaba a **10 documentos**.
+- **Dónde se arregló:** en el canónico `PROYECTOS\05-VENTAS\_fuente\css\triada-doc.css` (§4.6 y §4.7 de *su* handoff), **no** en las plantillas del CRM — son copias que `_herramientas/vendor-contratos.py` regenera y habrían perdido el cambio. Después se re-vendorizaron las **10/10**.
+- **Verificación (medida, no supuesta):** con `fitz` sobre los 26 PDF de la fábrica, desfase de firmas **10,8–11,1mm → 0,0mm** en los 10 afectados y **paginación idéntica** en todos (el `.signs{margin-top}` bajó 18→10mm para compensar la banda de 18mm). En pantalla, a 794px: `scrollWidth == 794` (sin barra horizontal), hueco hoja↔pie **104px → 0**, y las dos líneas de firma en el mismo `y`.
+- **Ojo:** el módulo Contratos **no se tocó** (`contratos.js` / `contratos.css` intactos). El cambio son las 10 plantillas de `modules/contratos/plantillas/`. ⬜ **Sin commitear ni desplegar todavía.**
+
 ### 2026-07-30 — 🆕 Módulo Oportunidades Públicas (Fase 1, MVP manual)
 - **Qué se pidió:** un módulo para Mercado Público / Compra Ágil integrado de verdad al CRM (no una maqueta), con Fase 1 completa antes que cuatro fases a medias.
 - **Qué se hizo:** 17 tablas `op_*` con el patrón multitenant de la casa · dominio puro en `modules/oportunidades/domain/` (10 archivos, sin DOM ni Supabase) · presentación separada en `presentation/` con delegación de eventos (cero `onclick` con datos) · repos en `js/db.js` (bandeja paginada en servidor) y mappers en `js/mappers.js` · nav + CSS + sello de caché.

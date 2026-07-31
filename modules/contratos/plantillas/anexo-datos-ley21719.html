@@ -224,10 +224,18 @@ table.data .total td .lbl{ font-family:var(--serif); }
 .fill.xl{ display:block; min-width:100%; height:1.4em; }
 
 /* ===== Firmas ===== */
-.signs{ display:grid; grid-template-columns:1fr 1fr; gap:16mm; margin-top:18mm; break-inside:avoid; }
+.signs{ display:grid; grid-template-columns:1fr 1fr; gap:16mm; margin-top:10mm; break-inside:avoid; }
 .sign{ text-align:center; position:relative; }
-/* Firma manuscrita precargada (Martín): se apoya sobre la línea de firma. */
-.sign .firma-martin{ display:block; max-height:19mm; max-width:74%; width:auto; margin:0 auto -8mm; position:relative; z-index:1; pointer-events:none; }
+/* Banda de firma: 18mm reservados en LAS DOS columnas, lleven imagen o no.
+   Sin ella, la columna con la firma precargada crecía 11mm (19mm de imagen − 8mm de margen
+   negativo) y el PDF salía con las líneas, los nombres y los RUT desalineados entre sí;
+   y con el interruptor de firma apagado no quedaba hueco para firmar a mano.
+   El margin-top de .signs bajó 18mm → 10mm para compensar: el bloque ocupa lo mismo que antes. */
+.sign::before{ content:""; display:block; height:18mm; }
+/* Firma manuscrita precargada (Martín): se apoya sobre la línea de firma.
+   Los márgenes suman altura NETA 0 (−18 + 19 − 1) para no mover la columna, y la dejan
+   cruzando 1mm la línea — apoyada sobre ella, sin taparle el nombre de abajo. */
+.sign .firma-martin{ display:block; max-height:19mm; max-width:74%; width:auto; margin:-18mm auto -1mm; position:relative; z-index:1; pointer-events:none; }
 .sign .line{ border-top:1.4px solid var(--ink); margin:0 0 6px; height:0; }
 .sign .nm{ font-weight:700; color:var(--ink); font-size:10pt; }
 .sign .rl{ font-size:8.8pt; color:var(--muted); margin-top:1px; }
@@ -316,11 +324,24 @@ table.qa tr:nth-child(even) td{ background:var(--cream); }
 /* ====== Vista en PANTALLA (preview en navegador): emula hoja A4 ====== */
 @media screen{
   body{ background:#d9d6cd; padding:24px 0; }
+  /* .pgpad existe solo para el margen de la hoja IMPRESA. En pantalla lo pone .sheet:
+     si se dejaban los dos, los padding se sumaban y la hoja (210mm) se salía del ancho
+     del cuerpo → barra horizontal y hoja corrida a la derecha. */
+  .pgpad{ padding:0; }
   .sheet{
     width:210mm; min-height:297mm; margin:0 auto 18px; background:var(--cream-card);
     padding:18mm 16mm 24mm; box-shadow:0 18px 50px rgba(20,34,46,.22); position:relative;
   }
-  .doc-footer{ position:static; margin-top:14px; }
+  /* El pie es hermano de .pgpad, no hijo de .sheet: al pasar a static caía sobre el fondo
+     gris del escritorio, separado de la hoja y desalineado con ella. Aquí se le da el ancho
+     de la hoja y se pega a la última (el -18px anula su margin-bottom) para que se lea como
+     parte del documento, igual que en el PDF. */
+  /* Sin sombra propia: la hoja ya proyecta la suya y el pie la tapa en su tramo alto;
+     si el pie sumaba otra, se veían dos sombras apiladas al final del documento. */
+  .doc-footer{
+    position:static; width:210mm; margin:-18px auto 0; padding:0 16mm 14mm;
+    background:var(--cream-card); box-shadow:none;
+  }
   .cover{ min-height:auto; }
 }
 /* En impresión el .sheet no añade caja extra: el flujo natural pagina */
