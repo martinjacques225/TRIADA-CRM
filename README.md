@@ -35,7 +35,10 @@ js/
 modules/
   home/                Panel principal (KPIs, citas, mini-funnel)
   pipeline/            Embudo de prospectos (kanban + lista, 8 etapas)
-  diagnosticos/        Diagnóstico 360 por área (Tecnología, Ventas, Finanzas)
+  diagnosticos/        Diagnóstico 360 (8 pilares, escala de madurez 1-5)
+  diagnostico-contable/  Diagnóstico Contable y Tributario (prediagnóstico comercial
+                       para empresas de mayor complejidad) — independiente del 360:
+                       tablas dct_*, cuestionario, puntaje e historial propios
   agenda/              Citas
   propuestas/          Propuestas y valores
   contratos/           Generación de contratos desde plantillas de marca
@@ -69,14 +72,26 @@ Sin build step. Backend: Supabase (Postgres + Auth + RLS). Ver `docs/HANDOFF.md`
 | [`SECURITY.md`](SECURITY.md) | Threat model, RLS, XSS, secretos, checklist pre-deploy |
 | [`docs/HANDOFF.md`](docs/HANDOFF.md) | Estado vivo del proyecto |
 | [`docs/OPORTUNIDADES_PUBLICAS.md`](docs/OPORTUNIDADES_PUBLICAS.md) | Módulo de Mercado Público: instalación, tablas, permisos y fases |
+| [`docs/DIAGNOSTICO_CONTABLE.md`](docs/DIAGNOSTICO_CONTABLE.md) | Módulo Contable y Tributario: instalación, metodología de puntaje, permisos y pruebas |
 
-## Áreas de diagnóstico
+## Los dos diagnósticos
 
-| Área | Foco |
-|---|---|
-| 🖥️ Tecnología | Integración de sistemas, automatización, datos centralizados |
-| 📈 Ventas | Proceso comercial, seguimiento, conversión, CRM |
-| 💰 Finanzas | Márgenes, flujo de caja, costos, rentabilidad |
+Son instrumentos distintos y no comparten datos. Cada uno tiene su tabla, su
+cuestionario, su puntaje, su historial y sus estados.
+
+| | Diagnóstico 360 | Diagnóstico Contable y Tributario |
+|---|---|---|
+| **Para quién** | Pyme que quiere ordenarse | Empresas e industrias de mayor complejidad |
+| **Qué mide** | Madurez en 8 pilares (dirección, operación, tecnología, ventas, marketing, finanzas, seguridad, oportunidades) | Salud contable y tributaria declarada |
+| **Escala** | Madurez 1 a 5 | 0 a 3 por respuesta, con pesos 3/2/1 |
+| **Salida** | Informe Ejecutivo 360 | Informe preliminar + precio inicial en UF |
+| **Tabla** | `diagnosticos` | `dct_evaluaciones` |
+| **Catálogo** | `js/utils.js` (`DIAG_AREAS`, `DIAG_PREGUNTAS`) | `modules/diagnostico-contable/domain/cuestionario.js` |
+
+El Contable y Tributario es un **prediagnóstico comercial** basado en respuestas
+declaradas por el cliente: no es auditoría, certificación ni dictamen, y el
+módulo lo dice en pantalla y en el informe. Sus preguntas y ponderaciones viven
+en `domain/` para poder ajustarlas sin tocar la interfaz.
 
 ## Roadmap
 
