@@ -395,6 +395,7 @@
 
 ### Nuevo: Calendario de reuniones (2026-06-12) — handoff Claude Design implementado
 - **Agenda → calendario completo** 🟡 — `modules/agenda/agenda.js` reescrito: vistas **Mes / Semana / Lista** (conmutador persiste en localStorage), navegación mes/semana + botón Hoy, leyenda-filtro por tipo (clic oculta/muestra), clic en día/celda crea reunión, clic en evento abre detalle. Verificado en preview (3 vistas, claro/oscuro, 0 errores de consola); **falta verificar en producción con datos reales**.
+  - **Reparada el 2026-08-01** (ver bitácora §7): los títulos largos reventaban las columnas del mes y recortaban sábado y domingo fuera del recuadro; la semana estaba desalineada por la barra de scroll y perdía las reuniones fuera de 08:00–20:00. Los cálculos puros viven ahora en `modules/agenda/domain/calendario.js` con **20 tests**. Sigue 🟡: verificado por medición en preview, **no logueado ni en Pages**.
 - **Modelo de reunión** 🟡 — 7 tipos slug en `citas.tipo` (`emergencia/rutina/negocio/diagnostico/seguimiento/propuesta/interna`, constantes en `utils.js` con mapeo de labels legacy), participantes (UUIDs de `profiles`), recordatorios (minutos), recurrencia (daily/weekly/monthly expandida client-side), duración, vínculo a prospecto, estado (se mantiene Pendiente/Confirmada/Realizada/Cancelada; Cancelada no se pinta).
 - **Recordatorios + alertas** 🟡 — `modules/agenda/reminders.js`: dock flotante en todos los módulos (avisos activos + próximas con cuenta regresiva), campana del topbar con badge de no-leídos (inyectada en `#topbarActions`), notificaciones push in-app que se disparan solas (timers re-programados cada 60 s). Leídos persisten en localStorage.
 - ✅ **`supabase/calendar.sql` ejecutado y verificado (2026-06-12)**: probe en vivo confirma que `citas` ya tiene `duracion_min, participantes, recordatorios, recurrencia` (las 4 devuelven `200 []` en vez de `42703`). Persistencia completa del calendario habilitada. El fallback 42703 de `db.js` queda como red de seguridad pero ya no se dispara.
@@ -668,6 +669,31 @@ Columnas del calendario agregadas a `citas` y verificadas en vivo. Persistencia 
 ---
 
 ## 7. Bitácora de sesiones (más reciente arriba)
+
+### 2026-08-01 — 🩹 Agenda: los días se pisaban entre sí (y cuatro cosas más que estaban mal)
+
+- **Lo que reportó el dueño:** una captura de la vista Mes donde *"se cortan y traslapan los días por ingresar un título muy largo"*. Pidió, además, arreglar lo que apareciera de estética, funcionalidad o ergonomía.
+- **La causa, que era una sola línea de CSS:** `.cal-grid` usaba `repeat(7, 1fr)`, y **`1fr` es `minmax(auto, 1fr)`**: la columna nunca baja del *min-content* de su contenido. Como los eventos van en `white-space: nowrap`, un título largo fijaba un mínimo enorme y arrastraba a toda la fila. La otra mitad del problema es que `.cal-ev` es un flex item con `min-width: auto`, así que tampoco podía encogerse. Arreglo: `minmax(0, 1fr)` en las dos grillas (`.cal-grid` y `.cal-wdrow`) + `min-width: 0` en la celda, en el evento y en `.evname`.
+- **Medido en el preview, antes → después** (con un título real de 60 caracteres):
+  - Anchos de columna: `224 · 277 · 199 · 199 · 199 · 278 · 269 px` → **135 px las siete**.
+  - Fila de días (LUN…DOM) contra la grilla: desviada hasta **571 px** → **0 px**.
+  - Sábado sobresalía **432 px** del recuadro y **domingo entero (701 px) quedaba recortado** por el `overflow:hidden` de `.cal-month`: era invisible e inalcanzable, sin scroll ni error. Ahora nada sale del recuadro (máx. −1 px).
+- **🐛 Cuatro bugs más que aparecieron al medir, no en la captura:**
+  1. **Vista Semana desalineada por la barra de scroll.** `.wk-head` y `.wk-body` eran dos grillas hermanas y solo el cuerpo tenía `overflow-y:auto`: esos ~10 px corrían la cabecera y el número del día quedaba a caballo entre dos columnas (8 px al llegar al domingo). Ahora comparten un único contenedor con scroll (`.wk-scroll`) y la misma plantilla de columnas → **0 px**; de paso la cabecera se queda pegada arriba (`position: sticky`) al bajar por las horas.
+  2. **Las reuniones fuera de 08:00–20:00 se dibujaban mal.** La rejilla era fija: un desayuno a las 07:00 se pintaba pegado a la línea de las 08:00 (**mentía la hora**) y un cierre a las 21:30 caía **128 px fuera de su columna**. Ahora `hourWindow()` estira la franja según lo que haya esa semana (07:00–22:00 en la prueba), y la altura del bloque se recorta para que nunca se salga del día.
+  3. **Una cita diaria de hace más de 500 días desaparecía del calendario, sin error.** `expandMeetings` iteraba día a día desde el origen y se topaba con el guardia de 500 vueltas antes de llegar al rango visible. Ahora salta de una vez hasta el inicio del rango conservando la cadencia (`_fastForward`). Cubierto por tests.
+  4. **El "+N más" contaba una cosa y abría otra.** La celda contaba con el filtro de tipos aplicado y el modal del día lo ignoraba: con un tipo apagado, "+5 más" podía abrir 8 reuniones. Ahora ambos usan el mismo filtro (verificado: 3 visibles + 5 = 8 filas).
+- **Estética y ergonomía:**
+  - `text-transform: capitalize` sobre un texto que el JS ya capitaliza daba **"Agosto De 2026"** y **"Lunes, 3 De Agosto"**. Quitado de `.cal-period` y de la cabecera de la vista Lista. También se le saca el punto a los meses abreviados de es-CL (`27 jul. – 2 ago` → `27 jul – 2 ago`).
+  - **Tooltip en cada evento** con hora, título completo, tipo y empresa: el título se recorta con ellipsis y hasta ahora no había forma de leerlo sin abrir el detalle.
+  - **Línea de la hora actual** en la columna de hoy (vista Semana).
+  - El mes pinta **solo las filas que necesita** (4, 5 o 6) en vez de 42 celdas siempre: febrero 2027 ya no arrastra una fila vacía.
+  - Clic en una columna de la semana propone la **media hora** más cercana al punto pulsado (antes redondeaba a la hora en punto, y usaba `offsetY`, que es relativo al elemento que recibe el evento y no siempre a la columna).
+  - **Móvil:** la celda pasa de 78 a 104 px — con 78 px no cabían los 3 eventos que el "+N más" daba por visibles.
+- **Accesibilidad y teclado:** los chips de la leyenda y los eventos del mes/semana pasan de `<span>`/`<div>` a `<button>` (alcanzables con Tab, `aria-pressed` en el filtro); las filas de la vista Lista responden a Enter/Espacio; **← y →** cambian de mes o semana y **T** vuelve a hoy (se ignoran si el foco está en un campo o hay un modal abierto); foco visible en todo lo nuevo.
+- **Refactor mínimo, no rediseño:** los cálculos puros salieron a `modules/agenda/domain/calendario.js` (fechas, `weeksInMonth`, `expandMeetings`, `hourWindow`) para poder testearlos en node. `reminders.js` ahora importa `expandMeetings` desde ahí. **20 tests nuevos** en `tests/agenda.calendario.test.js`; suite completa **384/384 en verde**.
+- **Honestidad — cómo se verificó:** todo medido en el preview local con `getBoundingClientRect`/`getComputedStyle` (anchos, desalineación, desbordes, franja horaria, snapping, teclado, filtro), en claro y oscuro, escritorio (1280) y móvil (375), 0 errores de consola. **No hay capturas**: el panel del navegador no compone frames en esta sesión, así que la comprobación es numérica, no visual. **No se probó logueado contra Supabase ni se desplegó a Pages** — falta abrir la Agenda con datos reales y confirmar en incógnito.
+- **🩹 De paso:** `_preview/mock-db.js` (gitignorado) no tenía `dctEvaluaciones` ni `dctActividad` y **el preview entero no arrancaba** desde que se sumó el Diagnóstico Contable — fallaba en silencio, con el `#center` vacío y sin nada en consola. Se le agregaron los stubs. Es la trampa conocida: el mock queda atrás de `js/db.js` y no lo vigila nadie.
 
 ### 2026-07-31 — 🆕 Diagnóstico Contable y Tributario: módulo nuevo, separado del 360
 

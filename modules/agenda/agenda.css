@@ -8,27 +8,37 @@
 .cal-navbtn { width: 34px; height: 34px; display: inline-flex; align-items: center; justify-content: center; border-radius: var(--radius-sm); background: var(--surface); border: 1px solid var(--border); color: var(--text2); cursor: pointer; transition: var(--tr); }
 .cal-navbtn:hover { background: var(--surface2); color: var(--ink); border-color: var(--border2); }
 .cal-navbtn svg { width: 18px; height: 18px; }
-.cal-period { font-family: var(--serif); font-size: 21px; font-weight: 500; color: var(--ink); text-transform: capitalize; min-width: 180px; letter-spacing: .01em; }
+/* Sin text-transform: capitalize — el JS ya capitaliza sólo la primera palabra.
+   Con la regla CSS encima salía "Agosto De 2026" y "27 Jul – 2 Ago". */
+.cal-period { font-family: var(--serif); font-size: 21px; font-weight: 500; color: var(--ink); min-width: 180px; letter-spacing: .01em; }
 .seg { display: inline-flex; background: var(--surface2); border: 1px solid var(--border); border-radius: 980px; padding: 3px; gap: 2px; }
 .seg button { display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px; border: none; background: transparent; border-radius: 980px; font-family: var(--font); font-size: 12.5px; font-weight: 600; color: var(--text2); cursor: pointer; transition: var(--tr); }
 .seg button svg { width: 15px; height: 15px; }
 .seg button:hover { color: var(--ink); }
 .seg button.on { background: var(--surface); color: var(--teal); box-shadow: var(--shadow-sm); }
 
-/* Leyenda / filtro de tipos */
+/* Leyenda / filtro de tipos (son <button>: alcanzables con Tab) */
 .legend { display: flex; flex-wrap: wrap; gap: 7px; margin-bottom: 18px; }
-.leg-chip { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; padding: 5px 11px; border-radius: 980px; border: 1px solid var(--border2); background: var(--surface); color: var(--text2); cursor: pointer; transition: var(--tr); user-select: none; }
+.leg-chip { display: inline-flex; align-items: center; gap: 6px; font-family: var(--font); font-size: 12px; font-weight: 600; padding: 5px 11px; border-radius: 980px; border: 1px solid var(--border2); background: var(--surface); color: var(--text2); cursor: pointer; transition: var(--tr); user-select: none; }
 .leg-chip:hover { border-color: var(--text3); }
 .leg-chip .dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
 .leg-chip.off { opacity: .45; background: var(--surface2); }
 .leg-chip.off .dot { background: var(--text3) !important; }
 
-/* Vista MES */
+/* Vista MES
+   ── minmax(0, 1fr) NO es decorativo ──
+   `1fr` equivale a `minmax(auto, 1fr)`: la columna nunca baja del min-content de
+   su contenido. Como los eventos van en `white-space: nowrap`, un título largo
+   ("VISITA Y PROPUESTA PARA REPUESTOS MERCHE…") fijaba un mínimo enorme, las
+   siete columnas quedaban de anchos distintos, la fila de días se desalineaba
+   de la grilla y sábado y domingo terminaban recortados fuera del recuadro.
+   El `min-width: 0` de la celda y del evento es la otra mitad del arreglo:
+   sin él, el flex item tampoco puede encogerse por debajo de su contenido. */
 .cal-month { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow-sm); }
-.cal-wdrow { display: grid; grid-template-columns: repeat(7, 1fr); background: var(--surface2); border-bottom: 1px solid var(--border); }
+.cal-wdrow { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); background: var(--surface2); border-bottom: 1px solid var(--border); }
 .cal-wd { padding: 10px 12px; font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--text3); text-align: left; }
-.cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); }
-.cal-cell { min-height: 116px; border-right: 1px solid var(--border); border-bottom: 1px solid var(--border); padding: 7px 7px 9px; cursor: pointer; transition: background var(--tr); display: flex; flex-direction: column; gap: 4px; position: relative; }
+.cal-grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); }
+.cal-cell { min-height: 116px; min-width: 0; overflow: hidden; border-right: 1px solid var(--border); border-bottom: 1px solid var(--border); padding: 7px 7px 9px; cursor: pointer; transition: background var(--tr); display: flex; flex-direction: column; gap: 4px; position: relative; }
 .cal-cell:nth-child(7n) { border-right: none; }
 .cal-cell:hover { background: var(--surface2); }
 .cal-cell.other { background: color-mix(in srgb, var(--surface2) 55%, var(--surface)); }
@@ -37,29 +47,35 @@
 .cal-cell.today .cal-daynum { background: var(--teal); color: #fff; }
 .cal-add { position: absolute; top: 8px; right: 8px; width: 20px; height: 20px; border-radius: 50%; border: none; background: var(--surface3); color: var(--text2); cursor: pointer; display: none; align-items: center; justify-content: center; }
 .cal-add svg { width: 13px; height: 13px; }
-.cal-cell:hover .cal-add { display: inline-flex; }
+.cal-cell:hover .cal-add, .cal-cell:focus-within .cal-add { display: inline-flex; }
 .cal-add:hover { background: var(--teal); color: #fff; }
-.cal-ev { display: flex; align-items: center; gap: 6px; padding: 3px 7px; border-radius: 6px; font-size: 11.5px; font-weight: 600; color: var(--evc); background: color-mix(in srgb, var(--evc) 13%, var(--surface)); cursor: pointer; transition: var(--tr); white-space: nowrap; overflow: hidden; line-height: 1.3; border-left: 2.5px solid var(--evc); }
+.cal-ev { display: flex; align-items: center; gap: 6px; width: 100%; min-width: 0; padding: 3px 7px; border-radius: 6px; font-family: var(--font); font-size: 11.5px; font-weight: 600; text-align: left; color: var(--evc); background: color-mix(in srgb, var(--evc) 13%, var(--surface)); cursor: pointer; transition: var(--tr); white-space: nowrap; overflow: hidden; line-height: 1.3; border: none; border-left: 2.5px solid var(--evc); flex-shrink: 0; }
 .cal-ev:hover { background: color-mix(in srgb, var(--evc) 22%, var(--surface)); }
 .cal-ev .evt { opacity: .85; flex-shrink: 0; }
-.cal-ev .evname { overflow: hidden; text-overflow: ellipsis; }
-.cal-more { font-size: 11px; font-weight: 600; color: var(--text3); padding: 1px 6px; cursor: pointer; }
+.cal-ev .evname { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.cal-more { align-self: flex-start; font-family: var(--font); font-size: 11px; font-weight: 600; color: var(--text3); padding: 1px 6px; border: none; background: none; cursor: pointer; }
 .cal-more:hover { color: var(--teal); }
 
-/* Vista SEMANA */
+/* Vista SEMANA
+   Cabecera y cuerpo comparten un mismo contenedor con scroll (.wk-scroll) y la
+   misma plantilla de columnas. Antes eran dos grillas hermanas y sólo el cuerpo
+   tenía barra de scroll: esos ~10 px de diferencia corrían la cabecera y el
+   número del día quedaba a caballo entre dos columnas. De paso, la cabecera se
+   queda pegada arriba al bajar por las horas. */
 .cal-week { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow-sm); }
-.wk-head { display: grid; grid-template-columns: 58px repeat(7, 1fr); border-bottom: 1px solid var(--border); background: var(--surface2); }
+.wk-scroll { max-height: calc(100vh - 280px); overflow-y: auto; }
+.wk-head { display: grid; grid-template-columns: 58px repeat(7, minmax(0, 1fr)); border-bottom: 1px solid var(--border); background: var(--surface2); position: sticky; top: 0; z-index: 4; }
 .wk-head-cell { padding: 9px 6px; text-align: center; border-left: 1px solid var(--border); }
 .wk-head-cell:first-child { border-left: none; }
 .wk-wd { font-size: 10.5px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--text3); }
 .wk-dn { font-size: 17px; font-weight: 700; color: var(--ink); margin-top: 2px; width: 30px; height: 30px; line-height: 30px; border-radius: 50%; display: inline-block; }
 .wk-head-cell.today .wk-dn { background: var(--teal); color: #fff; }
-.wk-body { display: grid; grid-template-columns: 58px repeat(7, 1fr); max-height: calc(100vh - 280px); overflow-y: auto; }
+.wk-body { display: grid; grid-template-columns: 58px repeat(7, minmax(0, 1fr)); }
 .wk-gutter { display: flex; flex-direction: column; }
 .wk-hourlabel { height: 52px; font-size: 10.5px; color: var(--text3); text-align: right; padding: 0 8px; transform: translateY(-7px); font-variant-numeric: tabular-nums; }
-.wk-col { position: relative; border-left: 1px solid var(--border); background-image: repeating-linear-gradient(var(--surface) 0 51px, var(--border) 51px 52px); }
+.wk-col { position: relative; min-width: 0; border-left: 1px solid var(--border); background-image: repeating-linear-gradient(var(--surface) 0 51px, var(--border) 51px 52px); }
 .wk-col.today { background-color: color-mix(in srgb, var(--teal) 5%, var(--surface)); }
-.wk-ev { position: absolute; left: 3px; right: 3px; border-radius: 7px; padding: 5px 7px; font-size: 11px; color: #fff; cursor: pointer; overflow: hidden; box-shadow: var(--shadow-sm); transition: var(--tr); z-index: 2; }
+.wk-ev { position: absolute; left: 3px; right: 3px; border-radius: 7px; padding: 5px 7px; border: none; font-family: var(--font); font-size: 11px; text-align: left; color: #fff; cursor: pointer; overflow: hidden; box-shadow: var(--shadow-sm); transition: var(--tr); z-index: 2; }
 .wk-ev:hover { filter: brightness(1.06); transform: translateY(-1px); z-index: 3; }
 .wk-ev .wk-ev-t { font-weight: 700; opacity: .92; }
 .wk-ev .wk-ev-n { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -67,6 +83,15 @@
 .wk-ev.split { padding: 4px 5px; }
 .wk-ev.split .wk-ev-t { font-size: 10px; }
 .wk-ev.split .wk-ev-n { font-size: 10px; }
+/* Línea de la hora actual, sólo en la columna de hoy */
+.wk-now { position: absolute; left: 0; right: 0; height: 0; border-top: 2px solid var(--danger); z-index: 3; pointer-events: none; }
+.wk-now::before { content: ''; position: absolute; left: -1px; top: -4px; width: 7px; height: 7px; border-radius: 50%; background: var(--danger); }
+
+/* Foco visible en todo lo que ahora se alcanza con Tab */
+.cal-ev:focus-visible, .wk-ev:focus-visible, .cal-more:focus-visible,
+.cal-add:focus-visible, .leg-chip:focus-visible, .cal-row:focus-visible {
+  outline: 2px solid var(--teal); outline-offset: 2px; border-radius: 6px;
+}
 
 /* Vista LISTA (filas) */
 .cal-row { display: flex; align-items: center; gap: 11px; padding: 11px 16px; border-bottom: 1px solid var(--border); cursor: pointer; transition: var(--tr); }
@@ -183,8 +208,12 @@
 .push-x svg { width: 16px; height: 16px; }
 
 @media (max-width: 700px) {
-  .cal-cell { min-height: 78px; }
+  /* 3 eventos + el número del día no caben en 78 px: el "+N más" mentía y la
+     celda recortaba el tercero. La altura sale de lo que realmente se pinta. */
+  .cal-cell { min-height: 104px; padding: 5px 4px 7px; }
+  .cal-ev { padding: 3px 5px; gap: 4px; }
   .cal-ev .evname { display: none; }
+  .cal-wd { padding: 9px 5px; }
   .mt-meta-grid { grid-template-columns: 1fr; }
   .rdock { right: 12px; left: auto; bottom: 12px; }
 }

@@ -7,27 +7,24 @@ import {
   MEETING_TYPES, meetingType, toMeetingTipo,
   REMINDER_OPTS, RECUR_OPTS, DUR_OPTS, ESTADOS_CITA, memberColor, packOverlaps, areaLabel,
 } from '../../js/utils.js';
+import {
+  startOfDay, startOfMonth, startOfWeek, addDays, addMonths, ymd, sameDay,
+  horaOf, dateOf, parseHora, weeksInMonth, expandMeetings, hourWindow,
+} from './domain/calendario.js';
 
 const _i = (n, s) => (window.icon ? window.icon(n, '', s) : '');
 const $  = (s, r = document) => r.querySelector(s);
 const center = () => document.getElementById('center');
 const LSV = 'triada.calview';
 
-/* ── fechas ── */
-const startOfDay   = (d) => { const x = new Date(d); x.setHours(0,0,0,0); return x; };
-const startOfMonth = (d) => new Date(d.getFullYear(), d.getMonth(), 1);
-const startOfWeek  = (d) => { const x = startOfDay(d); const w = (x.getDay() + 6) % 7; x.setDate(x.getDate() - w); return x; };
-const addDays      = (d, n) => { const x = new Date(d); x.setDate(x.getDate() + n); return x; };
-const addMonths    = (d, n) => new Date(d.getFullYear(), d.getMonth() + n, 1);
-const ymd          = (d) => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
-const sameDay      = (a, b) => a.getFullYear()===b.getFullYear() && a.getMonth()===b.getMonth() && a.getDate()===b.getDate();
-const cap          = (s) => s.charAt(0).toUpperCase() + s.slice(1);
-const horaOf       = (m) => (m.hora || '').slice(0, 5);
-const dateOf       = (m) => new Date(`${(m.fecha||todayStr()).slice(0,10)}T${horaOf(m) || '09:00'}`);
-const parseHora    = (h) => { const [H,M] = (h||'0:0').split(':').map(Number); return (H||0) + (M||0)/60; };
+const cap = (s) => s.charAt(0).toUpperCase() + s.slice(1);
 
 const WD = ['Lun','Mar','Mié','Jue','Vie','Sáb','Dom'];
 const START_H = 8, END_H = 20, HOUR_PX = 52;
+// Franja horaria que está pintando la vista Semana ahora mismo. La calcula
+// _week() a partir de las citas de esa semana; _bind() la necesita para saber
+// qué hora eligió el usuario al hacer clic en una columna.
+let _win = { startH: START_H, endH: END_H };
 
 const cal = {
   view:   localStorage.getItem(LSV) || 'mes',
@@ -82,29 +79,16 @@ function ownerMini(m, size = 15) {
   return `<span class="ev-owner" title="Creada por ${escHtml(o.nombre)}">${avatarOf(o.nombre, o.color, size)}</span>`;
 }
 
-/* ── expandir recurrencias en un rango [start, end) ── */
-export function expandMeetings(list, start, end, typeFilter = null) {
-  const out = [];
-  list.forEach(m => {
-    if (m.estado === 'Cancelada' || !m.fecha) return;
-    const tipo = toMeetingTipo(m.tipo);
-    if (typeFilter && MEETING_TYPES.some(t => t.id === tipo) && !typeFilter.has(tipo)) return;
-    const base = dateOf(m);
-    const rec = m.recurrencia || 'none';
-    if (rec === 'none') { if (base >= start && base < end) out.push({ m, date: base }); return; }
-    let cur = new Date(base), guard = 0;
-    while (cur < end && guard < 500) {
-      if (cur >= start) out.push({ m, date: new Date(cur), recurs: true });
-      if (rec === 'daily') cur.setDate(cur.getDate()+1);
-      else if (rec === 'weekly') cur.setDate(cur.getDate()+7);
-      else if (rec === 'monthly') cur.setMonth(cur.getMonth()+1);
-      else break;
-      guard++;
-    }
-  });
-  return out;
-}
 const expand = (start, end) => expandMeetings(_citas, start, end, cal.filter);
+
+/* ── texto de apoyo de un evento (tooltip y lectores de pantalla) ──
+   El título se recorta con ellipsis en la celda; sin esto no hay forma de leerlo
+   entero sin abrir el detalle. */
+function evLabel(m) {
+  const t = meetingType(m.tipo);
+  const partes = [horaOf(m), m.titulo || t.label, `· ${t.label}`, `· ${empresaDe(m)}`];
+  return escHtml(partes.filter(Boolean).join(' '));
+}
 
 /* ════════════ RENDER PRINCIPAL ════════════ */
 export async function render() {
@@ -126,31 +110,38 @@ function _paint() {
 
     <div class="cal-bar">
       ${showNav ? `<div class="cal-nav">
-        <button class="cal-navbtn" id="calPrev" title="Anterior">${_i('chevL',18)}</button>
-        <button class="cal-navbtn" id="calNext" title="Siguiente">${_i('chevR',18)}</button>
+        <button class="cal-navbtn" id="calPrev" title="${_stepLabel(-1)} (←)" aria-label="${_stepLabel(-1)}">${_i('chevL',18)}</button>
+        <button class="cal-navbtn" id="calNext" title="${_stepLabel(1)} (→)" aria-label="${_stepLabel(1)}">${_i('chevR',18)}</button>
       </div>` : ''}
-      <div class="cal-period">${_periodLabel()}</div>
+      <div class="cal-period" aria-live="polite">${_periodLabel()}</div>
       <div style="margin-left:auto">
-        <div class="seg">
-          <button data-v="mes"    class="${cal.view==='mes'?'on':''}">${_i('grid',15)} Mes</button>
-          <button data-v="semana" class="${cal.view==='semana'?'on':''}">${_i('columns',15)} Semana</button>
-          <button data-v="lista"  class="${cal.view==='lista'?'on':''}">${_i('list',15)} Lista</button>
+        <div class="seg" role="tablist" aria-label="Vista del calendario">
+          <button type="button" role="tab" aria-selected="${cal.view==='mes'}"    data-v="mes"    class="${cal.view==='mes'?'on':''}">${_i('grid',15)} Mes</button>
+          <button type="button" role="tab" aria-selected="${cal.view==='semana'}" data-v="semana" class="${cal.view==='semana'?'on':''}">${_i('columns',15)} Semana</button>
+          <button type="button" role="tab" aria-selected="${cal.view==='lista'}"  data-v="lista"  class="${cal.view==='lista'?'on':''}">${_i('list',15)} Lista</button>
         </div>
       </div>
     </div>
 
-    <div class="legend">${_legend()}</div>
+    <div class="legend" role="group" aria-label="Filtrar por tipo de reunión">${_legend()}</div>
 
     <div id="calView">${_viewHTML()}</div>
   </div>`;
   _bind();
 }
 
+const _stepLabel = (n) => (cal.view === 'semana')
+  ? (n < 0 ? 'Semana anterior' : 'Semana siguiente')
+  : (n < 0 ? 'Mes anterior' : 'Mes siguiente');
+
+// es-CL abrevia los meses con punto ("jul.") — sobra dentro del rango.
+const _mesCorto = (d) => d.toLocaleDateString('es-CL',{month:'short'}).replace('.','');
+
 function _periodLabel() {
   if (cal.view === 'lista') return 'Próximas reuniones';
   if (cal.view === 'semana') {
     const s = startOfWeek(cal.cursor), e = addDays(s, 6);
-    const sm = s.toLocaleDateString('es-CL',{month:'short'}), em = e.toLocaleDateString('es-CL',{month:'short'});
+    const sm = _mesCorto(s), em = _mesCorto(e);
     return sm===em ? `${s.getDate()} – ${e.getDate()} ${em}` : `${s.getDate()} ${sm} – ${e.getDate()} ${em}`;
   }
   return cap(cal.cursor.toLocaleDateString('es-CL',{month:'long',year:'numeric'}));
@@ -159,7 +150,7 @@ function _periodLabel() {
 function _legend() {
   return MEETING_TYPES.map(t => {
     const on = cal.filter.has(t.id);
-    return `<span class="leg-chip ${on?'':'off'}" data-t="${t.id}"><span class="dot" style="background:${t.color}"></span>${t.label}</span>`;
+    return `<button type="button" class="leg-chip ${on?'':'off'}" data-t="${t.id}" aria-pressed="${on}"><span class="dot" style="background:${t.color}"></span>${t.label}</button>`;
   }).join('');
 }
 
@@ -170,28 +161,32 @@ function _viewHTML() {
 }
 
 /* ── MES ── */
+const MES_MAX_EV = 3;   // eventos visibles por celda antes del "+N más"
+
 function _month() {
   const mStart = startOfMonth(cal.cursor);
   const gStart = startOfWeek(mStart);
-  const occ = expand(gStart, addDays(gStart, 42));
+  const dias   = weeksInMonth(cal.cursor) * 7;   // 28, 35 o 42: sin filas vacías al final
+  const occ = expand(gStart, addDays(gStart, dias));
   const byDay = {};
   occ.forEach(o => { (byDay[ymd(o.date)] = byDay[ymd(o.date)] || []).push(o); });
   const now = new Date();
 
   let cells = '';
-  for (let i = 0; i < 42; i++) {
+  for (let i = 0; i < dias; i++) {
     const dte = addDays(gStart, i);
     const key = ymd(dte);
     const evs = (byDay[key] || []).sort((a,b) => a.date - b.date);
     const other = dte.getMonth() !== mStart.getMonth();
     const isToday = sameDay(dte, now);
-    const shown = evs.slice(0, 3);
+    const shown = evs.slice(0, MES_MAX_EV);
     const rest = evs.length - shown.length;
+    const dLarga = dte.toLocaleDateString('es-CL',{weekday:'long',day:'numeric',month:'long'});
     cells += `<div class="cal-cell${other?' other':''}${isToday?' today':''}" data-day="${key}">
       <div style="display:flex;align-items:center"><span class="cal-daynum">${dte.getDate()}</span></div>
-      <button class="cal-add" data-add="${key}" title="Nueva reunión">${_i('plus',13)}</button>
-      ${shown.map(o => { const t = meetingType(o.m.tipo); return `<div class="cal-ev" data-mid="${o.m.id}" style="--evc:${t.color}">${ownerMini(o.m,15)}<span class="evt tnum">${horaOf(o.m)}</span><span class="evname">${escHtml(o.m.titulo || t.label)}</span></div>`; }).join('')}
-      ${rest > 0 ? `<span class="cal-more" data-more="${key}">+${rest} más</span>` : ''}
+      <button type="button" class="cal-add" data-add="${key}" title="Nueva reunión · ${escHtml(dLarga)}" aria-label="Nueva reunión el ${escHtml(dLarga)}">${_i('plus',13)}</button>
+      ${shown.map(o => { const t = meetingType(o.m.tipo); return `<button type="button" class="cal-ev" data-mid="${o.m.id}" style="--evc:${t.color}" title="${evLabel(o.m)}">${ownerMini(o.m,15)}<span class="evt tnum">${horaOf(o.m)}</span><span class="evname">${escHtml(o.m.titulo || t.label)}</span></button>`; }).join('')}
+      ${rest > 0 ? `<button type="button" class="cal-more" data-more="${key}">+${rest} más</button>` : ''}
     </div>`;
   }
   return `<div class="cal-month">
@@ -207,6 +202,12 @@ function _week() {
   const now = new Date();
   const days = Array.from({length:7}, (_,i) => addDays(wStart, i));
 
+  // La franja se estira si la semana tiene algo antes de las 08:00 o después de
+  // las 20:00; con la rejilla fija esas citas quedaban mal ubicadas o fuera.
+  _win = hourWindow(occ, { min: START_H, max: END_H });
+  const { startH, endH } = _win;
+  const altura = (endH - startH) * HOUR_PX;
+
   const head = `<div class="wk-head">
     <div class="wk-head-cell"></div>
     ${days.map((dte,i) => `<div class="wk-head-cell${sameDay(dte,now)?' today':''}">
@@ -214,7 +215,12 @@ function _week() {
     </div>`).join('')}
   </div>`;
 
-  const gutter = `<div class="wk-gutter">${Array.from({length:END_H-START_H},(_,i)=>`<div class="wk-hourlabel" style="height:${HOUR_PX}px">${String(START_H+i).padStart(2,'0')}:00</div>`).join('')}</div>`;
+  const gutter = `<div class="wk-gutter">${Array.from({length:endH-startH},(_,i)=>`<div class="wk-hourlabel" style="height:${HOUR_PX}px">${String(startH+i).padStart(2,'0')}:00</div>`).join('')}</div>`;
+
+  // Línea de la hora actual: sólo si hoy cae en la semana visible y dentro de la franja.
+  const nowH = now.getHours() + now.getMinutes()/60;
+  const verAhora = days.some(d => sameDay(d, now)) && nowH >= startH && nowH <= endH;
+  const nowTop = Math.round((nowH - startH) * HOUR_PX);
 
   const cols = days.map(dte => {
     const evs = occ.filter(o => sameDay(o.date, dte));
@@ -226,19 +232,22 @@ function _week() {
     });
     const blocks = packOverlaps(items).map(it => {
       const o = it.o, t = meetingType(o.m.tipo);
-      const top = Math.max(0, (it.start - START_H) * HOUR_PX);
-      const h = Math.max(22, ((o.m.durMin||60)/60) * HOUR_PX - 2);
+      const top = Math.max(0, (it.start - startH) * HOUR_PX);
+      // Nunca más alto que lo que queda de columna: un bloque no puede salirse de su día.
+      const h = Math.max(22, Math.min(((o.m.durMin||60)/60) * HOUR_PX - 2, altura - top - 2));
       const wPct = 100 / it.cols;
       const left = `calc(${it.col * wPct}% + 3px)`;
       const width = `calc(${wPct}% - ${it.cols > 1 ? 5 : 6}px)`;
-      return `<div class="wk-ev${it.cols>1?' split':''}" data-mid="${o.m.id}" style="top:${top}px;height:${h}px;left:${left};width:${width};right:auto;background:${t.color}">
+      return `<button type="button" class="wk-ev${it.cols>1?' split':''}" data-mid="${o.m.id}" title="${evLabel(o.m)}" style="top:${top}px;height:${h}px;left:${left};width:${width};right:auto;background:${t.color}">
         <div class="wk-ev-head"><span class="wk-ev-t tnum">${horaOf(o.m)}</span>${ownerMini(o.m,15)}</div><div class="wk-ev-n">${escHtml(o.m.titulo || t.label)}</div>
-      </div>`;
+      </button>`;
     }).join('');
-    return `<div class="wk-col${sameDay(dte,now)?' today':''}" data-day="${ymd(dte)}" style="height:${(END_H-START_H)*HOUR_PX}px">${blocks}</div>`;
+    const esHoy = sameDay(dte, now);
+    const linea = (esHoy && verAhora) ? `<div class="wk-now" style="top:${nowTop}px" aria-hidden="true"></div>` : '';
+    return `<div class="wk-col${esHoy?' today':''}" data-day="${ymd(dte)}" style="height:${altura}px">${blocks}${linea}</div>`;
   }).join('');
 
-  return `<div class="cal-week">${head}<div class="wk-body">${gutter}${cols}</div></div>`;
+  return `<div class="cal-week"><div class="wk-scroll">${head}<div class="wk-body">${gutter}${cols}</div></div></div>`;
 }
 
 /* ── LISTA ── */
@@ -258,13 +267,13 @@ function _list() {
   const label = (k) => { const d = new Date(k+'T00:00'); if (sameDay(d, start)) return 'Hoy'; if (sameDay(d, tomorrow)) return 'Mañana'; return cap(d.toLocaleDateString('es-CL',{weekday:'long',day:'numeric',month:'long'})); };
 
   return Object.keys(byDay).map(k => `
-    <div class="section-head" style="margin:22px 0 12px"><h2 style="text-transform:capitalize">${label(k)}</h2><span style="color:var(--text3);font-size:12.5px">${formatDateShort(k+'T00:00')}</span></div>
+    <div class="section-head" style="margin:22px 0 12px"><h2>${label(k)}</h2><span style="color:var(--text3);font-size:12.5px">${formatDateShort(k+'T00:00')}</span></div>
     <div class="card" style="overflow:hidden">
       ${byDay[k].map(o => {
         const m = o.m, t = meetingType(m.tipo);
         const rem = (m.recordatorios||[]).length;
         const own = ownerOf(m);
-        return `<div class="cal-row" data-mid="${m.id}">
+        return `<div class="cal-row" data-mid="${m.id}" tabindex="0" role="button" title="${evLabel(m)}">
           <div class="tnum" style="font-size:14px;font-weight:700;color:var(--ink);width:52px;text-align:center;flex-shrink:0">${horaOf(m) || '—'}</div>
           <div style="width:3px;align-self:stretch;border-radius:3px;background:${t.color}"></div>
           <div style="width:40px;height:40px;border-radius:11px;background:color-mix(in srgb, ${t.color} 14%, var(--surface));color:${t.color};display:flex;align-items:center;justify-content:center;flex-shrink:0">${_i(t.icon,19)}</div>
@@ -281,14 +290,18 @@ function _list() {
 }
 
 /* ── eventos ── */
+const _step = (n) => {
+  cal.cursor = (cal.view === 'semana') ? addDays(startOfWeek(cal.cursor), 7*n) : addMonths(cal.cursor, n);
+  _paint();
+};
+
 function _bind() {
   const t = $('#calToday'); if (t) t.onclick = () => { cal.cursor = new Date(); _paint(); };
   const nw = $('#calNew'); if (nw) nw.onclick = () => openMeetingModal();
   const en = $('#calEmptyNew'); if (en) en.onclick = () => openMeetingModal();
   const p = $('#calPrev'), n = $('#calNext');
-  const stepW = cal.view === 'semana';
-  if (p) p.onclick = () => { cal.cursor = stepW ? addDays(startOfWeek(cal.cursor),-7) : addMonths(cal.cursor,-1); _paint(); };
-  if (n) n.onclick = () => { cal.cursor = stepW ? addDays(startOfWeek(cal.cursor), 7) : addMonths(cal.cursor, 1); _paint(); };
+  if (p) p.onclick = () => _step(-1);
+  if (n) n.onclick = () => _step(1);
   document.querySelectorAll('.seg [data-v]').forEach(b => b.onclick = () => { cal.view = b.dataset.v; localStorage.setItem(LSV, cal.view); _paint(); });
   document.querySelectorAll('.leg-chip').forEach(c => c.onclick = () => {
     const id = c.dataset.t;
@@ -297,13 +310,51 @@ function _bind() {
   });
 
   const view = $('#calView');
-  if (view) view.addEventListener('click', (e) => {
-    const ev = e.target.closest('[data-mid]'); if (ev) return openMeetingDetail(ev.dataset.mid);
-    const add = e.target.closest('[data-add]'); if (add) { e.stopPropagation(); return openMeetingModal({ date: add.dataset.add }); }
-    const more = e.target.closest('[data-more]'); if (more) return _dayModal(more.dataset.more);
-    const col = e.target.closest('.wk-col');
-    if (col) { const h = Math.min(END_H-1, START_H + Math.floor(e.offsetY / HOUR_PX)); return openMeetingModal({ date: col.dataset.day, hora: String(h).padStart(2,'0')+':00' }); }
-    const cell = e.target.closest('.cal-cell'); if (cell) return openMeetingModal({ date: cell.dataset.day });
+  if (view) {
+    view.addEventListener('click', (e) => {
+      const ev = e.target.closest('[data-mid]'); if (ev) return openMeetingDetail(ev.dataset.mid);
+      const add = e.target.closest('[data-add]'); if (add) { e.stopPropagation(); return openMeetingModal({ date: add.dataset.add }); }
+      const more = e.target.closest('[data-more]'); if (more) return _dayModal(more.dataset.more);
+      const col = e.target.closest('.wk-col');
+      if (col) return openMeetingModal({ date: col.dataset.day, hora: _horaEnColumna(col, e.clientY) });
+      const cell = e.target.closest('.cal-cell'); if (cell) return openMeetingModal({ date: cell.dataset.day });
+    });
+    // Las filas de la vista Lista son div[role=button]: Enter y Espacio a mano.
+    view.addEventListener('keydown', (e) => {
+      if (e.key !== 'Enter' && e.key !== ' ') return;
+      const row = e.target.closest('.cal-row[data-mid]');
+      if (row) { e.preventDefault(); openMeetingDetail(row.dataset.mid); }
+    });
+  }
+  _bindKeys();
+}
+
+// Media hora más cercana al punto donde se hizo clic dentro de una columna.
+// clientY + getBoundingClientRect en vez de offsetY: offsetY es relativo al
+// elemento que recibió el evento, no siempre a la columna.
+function _horaEnColumna(col, clientY) {
+  const rel = clientY - col.getBoundingClientRect().top;
+  const slots = (_win.endH - _win.startH) * 2;
+  const slot = Math.max(0, Math.min(slots - 1, Math.floor(rel / (HOUR_PX / 2))));
+  return `${String(_win.startH + Math.floor(slot/2)).padStart(2,'0')}:${slot % 2 ? '30' : '00'}`;
+}
+
+/* ── teclado: ← → cambian de período, T vuelve a hoy ──
+   Se registra una sola vez; el guardia de #calView evita que siga actuando
+   cuando el usuario ya se fue a otra vista del CRM. */
+let _keysBound = false;
+function _bindKeys() {
+  if (_keysBound) return;
+  _keysBound = true;
+  document.addEventListener('keydown', (e) => {
+    if (e.ctrlKey || e.metaKey || e.altKey || e.shiftKey) return;
+    if (!document.getElementById('calView')) return;
+    if (document.getElementById('modalOverlay')?.classList.contains('open')) return;
+    const t = e.target;
+    if (t && (t.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName))) return;
+    if (e.key === 'ArrowLeft'  && cal.view !== 'lista') { e.preventDefault(); _step(-1); }
+    else if (e.key === 'ArrowRight' && cal.view !== 'lista') { e.preventDefault(); _step(1); }
+    else if (e.key === 't' || e.key === 'T') { e.preventDefault(); cal.cursor = new Date(); _paint(); }
   });
 }
 
@@ -335,7 +386,8 @@ async function _afterChange() {
 /* ── modal "+N más" del día ── */
 function _dayModal(key) {
   const d = new Date(key+'T00:00');
-  const occ = expandMeetings(_citas, startOfDay(d), addDays(startOfDay(d),1)).sort((a,b)=>a.date-b.date);
+  // Con el mismo filtro de tipos que la grilla: si no, el "+3 más" abre 6.
+  const occ = expand(startOfDay(d), addDays(startOfDay(d),1)).sort((a,b)=>a.date-b.date);
   _modal({
     title: cap(d.toLocaleDateString('es-CL',{weekday:'long',day:'numeric',month:'long'})),
     showSave: true, saveLabel: 'Nueva reunión', cancelLabel: 'Cerrar',

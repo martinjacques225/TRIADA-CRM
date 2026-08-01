@@ -2,7 +2,8 @@
 // alertas (push in-app + campana del topbar). Vive en todos los módulos.
 import { citas, prospectos } from '../../js/db.js';
 import { escHtml, meetingType, REMINDER_OPTS } from '../../js/utils.js';
-import { expandMeetings, openMeetingDetail, openMeetingModal } from './agenda.js';
+import { openMeetingDetail, openMeetingModal } from './agenda.js';
+import { expandMeetings } from './domain/calendario.js';
 
 const _i = (n, s) => (window.icon ? window.icon(n, '', s) : '');
 const $  = (s, r = document) => r.querySelector(s);
