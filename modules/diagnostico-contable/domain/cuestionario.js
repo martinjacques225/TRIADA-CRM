@@ -185,6 +185,7 @@ export const PREGUNTAS = [
   {
     id: 'F3B', etapa: 'financiera', bloque: 'Moneda de las operaciones', tipo: 'unica', peso: 1,
     texto: '¿Esta moneda se encuentra formalmente definida y se aplica consistentemente?',
+    condicion: 'Solo si ya se respondió la moneda base (F3).',
     cuando: (r) => !!r?.F3,
     opciones: [
       { v: 'definida_doc',   label: 'Sí, está definida y documentada',                    puntos: 3 },
@@ -198,6 +199,7 @@ export const PREGUNTAS = [
   {
     id: 'F4', etapa: 'financiera', bloque: 'Auditoría externa', tipo: 'unica', peso: 3, requerido: true,
     texto: '¿Los estados financieros preparados bajo IFRS cuentan con auditoría externa?',
+    condicion: 'Solo si la empresa prepara bajo IFRS o usa ambos criterios.',
     cuando: esIfrs,
     opciones: [
       { v: 'si',         label: 'Sí',                       puntos: 3 },
@@ -210,12 +212,14 @@ export const PREGUNTAS = [
     id: 'F5', etapa: 'financiera', bloque: 'Auditoría externa', tipo: 'texto', peso: 0,
     texto: '¿Qué empresa o profesional realiza actualmente la auditoría externa?',
     ayuda: 'Antecedente para la revisión de Sebastián. No afecta el puntaje.',
+    condicion: 'Solo bajo IFRS y con auditoría contratada o en proceso.',
     cuando: (r) => esIfrs(r) && hayAuditoria(r),
   },
   {
     id: 'F6', etapa: 'financiera', bloque: 'Auditoría externa', tipo: 'unica', peso: 3,
     texto: '¿La empresa que realiza la auditoría está inscrita en la Comisión para el Mercado Financiero (CMF)?',
     ayuda: 'Si la respuesta es "No" o "No lo sé", queda como antecedente a validar; no es una conclusión sobre la validez del trabajo.',
+    condicion: 'Solo bajo IFRS y con auditoría contratada o en proceso.',
     cuando: (r) => esIfrs(r) && hayAuditoria(r),
     opciones: [
       { v: 'si',          label: 'Sí',                            puntos: 3 },
@@ -227,6 +231,7 @@ export const PREGUNTAS = [
   {
     id: 'F7', etapa: 'financiera', bloque: 'Auditoría externa', tipo: 'unica', peso: 3,
     texto: '¿Cuál fue la última opinión emitida por el auditor externo?',
+    condicion: 'Solo bajo IFRS y con auditoría contratada o en proceso.',
     cuando: (r) => esIfrs(r) && hayAuditoria(r),
     opciones: [
       { v: 'sin_salvedades', label: 'Opinión sin salvedades', puntos: 3,
@@ -245,6 +250,7 @@ export const PREGUNTAS = [
   {
     id: 'F8', etapa: 'financiera', bloque: 'Auditoría externa', tipo: 'unica', peso: 2,
     texto: '¿Existen observaciones o hallazgos pendientes de auditorías anteriores?',
+    condicion: 'Solo si la empresa prepara bajo IFRS o usa ambos criterios.',
     cuando: esIfrs,
     opciones: [
       { v: 'no_existen',   label: 'No existen',                              puntos: 3 },
@@ -343,6 +349,7 @@ export const PREGUNTAS = [
   {
     id: 'T4_detalle', etapa: 'tributaria', bloque: 'Inversiones en activos fijos', tipo: 'activos', peso: 0,
     texto: 'Detalle de las inversiones',
+    condicion: 'Solo si hubo inversiones importantes en activos fijos (T4 = Sí).',
     cuando: (r) => r?.T4 === 'si',
     columnas: [
       { id: 'tipo',       label: 'Tipo de activo',   tipo: 'texto' },
@@ -359,6 +366,7 @@ export const PREGUNTAS = [
     id: 'T5', etapa: 'tributaria', bloque: 'Inversiones en activos fijos', tipo: 'unica', peso: 2,
     texto: '¿La empresa evaluó o utilizó el crédito tributario por inversiones en activos fijos del artículo 33 bis?',
     ayuda: 'El artículo 33 bis de la Ley de la Renta permite un crédito contra el impuesto de primera categoría por ciertas inversiones en activo fijo. Si aplica, y en qué porcentaje, debe evaluarlo un especialista.',
+    condicion: 'Solo si hubo inversiones importantes en activos fijos (T4 = Sí).',
     cuando: (r) => r?.T4 === 'si',
     opciones: [
       { v: 'usado_respaldo', label: 'Fue utilizado y cuenta con respaldo',                 puntos: 3 },

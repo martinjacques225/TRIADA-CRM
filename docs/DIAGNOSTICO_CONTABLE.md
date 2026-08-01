@@ -246,10 +246,34 @@ escritorio ni tablet, y el informe filtrando las notas internas del ejecutivo.
 
 ---
 
-## 10. Pendiente de negocio
+## 10. Pendiente de negocio: la revisión del especialista
 
 Las ponderaciones, los umbrales (85/70/50) y los precios (10 y 20 UF) salen del
 encargo, **no de una validación de Sebastián**. Antes de usar el módulo con un
-cliente conviene que él revise `domain/cuestionario.js` y `domain/puntaje.js`:
-están escritos como configuración editable, con las razones de cada decisión en
-comentarios, para que se ajusten sin tocar la interfaz.
+cliente tiene que revisarlos.
+
+Para eso no hay que mandarle código. Se genera un documento con todo el
+cuestionario —preguntas, alternativas, puntos, pesos, condiciones, alertas,
+umbrales y precios— donde puede marcar su veredicto punto por punto y descargar
+sus observaciones en un archivo:
+
+```bash
+npm run exportar:cuestionario
+```
+
+Sale en `Desktop/PROYECTOS/PRESENTACIONES/ALIANZA-SEBASTIAN/`, junto al resto del
+material de la alianza. Para dejarlo en otro lado:
+
+```bash
+npm run exportar:cuestionario -- "C:\ruta\destino.html"
+```
+
+El documento **se genera desde el catálogo real** (`domain/`), no de una copia:
+si alguien cambia una pregunta o un puntaje, se vuelve a correr el comando y el
+documento queda al día. Es un HTML autocontenido —sin CDN, sin fuentes externas
+y sin red— así que se abre con doble clic en cualquier computador, funciona sin
+internet, guarda el avance en el propio navegador y se imprime limpio.
+
+Cuando devuelva su archivo de observaciones, los ajustes se aplican en
+`domain/cuestionario.js` y `domain/puntaje.js`, que están escritos como
+configuración editable con las razones de cada decisión en comentarios.
