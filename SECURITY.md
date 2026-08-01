@@ -85,7 +85,13 @@ Estas reglas viven en la BASE, no solo en la interfaz — la UI se puede saltar,
 
 - **Firmas de aprobación:** `op_aprobaciones` exige `aprobado_por = auth.uid()` **y**
   `public.op_puede_aprobar(area)`. Nadie firma por otro ni firma un área que no le toca.
-  `op_puede_aprobar` es SECURITY **INVOKER** (lee el propio perfil; no levanta advisors).
+  `op_puede_aprobar` es SECURITY **INVOKER** (lee el propio perfil; no levanta advisors —
+  verificado con `get_advisors` tras aplicar: cero hallazgos nuevos).
+  El área se compara con `::text` contra los enums reales (`user_role` = admin/consultor,
+  `area_t` = comercial/finanzas/desarrollo/rrhh/operaciones/tecnologia/ventas/diseno).
+  Comparar un literal que **no** está en el enum revienta con `22P02`, no devuelve false:
+  por eso `op_es_lector()` castea a texto. `erp_role = 'gerencia'` no habilita firmas
+  (lo tienen 4 de 5 perfiles; como comodín anularía la regla de los tres socios).
 - **Historial infalsificable:** `op_actividad` solo acepta INSERT (`usuario = auth.uid()`).
   Sin políticas de UPDATE ni DELETE: el registro de decisiones no se reescribe.
 - **Puntaje ajustado a mano:** `op_puntajes_motivo_ck` exige motivo escrito.

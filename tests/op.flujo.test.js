@@ -249,10 +249,37 @@ test('el área también se reconoce en el slug que guarda la base', () => {
   assert.equal(capacidades({ role: 'consultor', area: 'tecnologia' }).aprobar.tecnica, true);
 });
 
-test('erp_role sirve de puente: gerencia firma comercial, finanzas firma financiera', () => {
-  assert.equal(capacidades({ role: 'consultor', erp_role: 'gerencia' }).aprobar.comercial, true);
-  assert.equal(capacidades({ role: 'consultor', erpRole: 'finanzas' }).aprobar.financiera, true);
+// En la base REAL nadie tiene área 'ventas': los comerciales están como
+// 'comercial' y el enum area_t también trae 'desarrollo'. Con el mapeo
+// anterior (solo 'ventas'/'tecnologia') había gente que no podía firmar nunca.
+test('las áreas del enum real firman: comercial y desarrollo', () => {
+  assert.equal(capacidades({ role: 'consultor', area: 'comercial' }).aprobar.comercial, true);
+  assert.equal(capacidades({ role: 'consultor', area: 'desarrollo' }).aprobar.tecnica, true);
+});
+
+test('erp_role solo abre lo suyo: operaciones→técnica, finanzas→financiera', () => {
   assert.equal(capacidades({ role: 'consultor', erp_role: 'operaciones' }).aprobar.tecnica, true);
+  assert.equal(capacidades({ role: 'consultor', erpRole: 'finanzas' }).aprobar.financiera, true);
+});
+
+// 4 de los 5 perfiles reales tienen erp_role='gerencia'. Si valiera de comodín,
+// una sola persona firmaría dos de las tres áreas y la regla de los tres socios
+// dejaría de significar algo.
+test('gerencia NO es comodín: no habilita ninguna firma por sí sola', () => {
+  const g = capacidades({ role: 'consultor', erp_role: 'gerencia' });
+  assert.deepEqual(g.aprobar, { comercial: false, tecnica: false, financiera: false });
+});
+
+test('el área manda sobre erp_role: gerencia + área comercial firma comercial', () => {
+  const c = capacidades({ role: 'consultor', area: 'comercial', erp_role: 'gerencia' });
+  assert.equal(c.aprobar.comercial, true);
+  assert.equal(c.aprobar.financiera, false);
+});
+
+test('diseño no firma ninguna de las tres áreas', () => {
+  const d = capacidades({ role: 'consultor', area: 'diseno', erp_role: 'gerencia' });
+  assert.deepEqual(d.aprobar, { comercial: false, tecnica: false, financiera: false });
+  assert.equal(d.perfil, 'Solo lectura');
 });
 
 test('solo lectura: no edita, no configura y no firma nada', () => {

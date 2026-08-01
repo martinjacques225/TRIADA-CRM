@@ -26,30 +26,39 @@
 --    usuario, que SIEMPRE puede leer su propio perfil.
 -- ────────────────────────────────────────────────────────────
 
--- ¿Este usuario es de solo lectura? Rol aditivo: hoy nadie lo tiene, así que
--- nada cambia; existe para poder invitar a un observador sin tocar código.
+-- ¿Este usuario es de solo lectura? Rol aditivo: hoy el enum `user_role` solo
+-- tiene 'admin' y 'consultor', así que esto SIEMPRE da false y nada cambia.
+-- Existe para poder invitar a un observador el día que se agregue el valor.
+-- OJO: la comparación va por ::text a propósito. Con `role = 'lector'` Postgres
+-- castea el literal al enum y revienta con 22P02 "invalid input value for enum"
+-- (lo cazó la aplicación real de esta migración, 31-jul-2026).
 create or replace function public.op_es_lector() returns boolean
 language sql stable security invoker set search_path = public as $$
-  select coalesce((select role = 'lector' from public.profiles where id = auth.uid()), false)
+  select coalesce((select p.role::text = 'lector' from public.profiles p where p.id = auth.uid()), false)
 $$;
 
 -- ¿Puede FIRMAR la aprobación de esta área? Se deriva del perfil que ya existe
--- (role + area + erp_role): no se inventa una tabla de permisos nueva.
---   comercial  → area 'ventas'     o erp_role 'gerencia'
---   tecnica    → area 'tecnologia' o erp_role 'operaciones'
---   financiera → area 'finanzas'   o erp_role 'finanzas'/'gerencia'
--- Un admin puede firmar cualquiera (Tríada son tres socios; si falta uno, el
--- admin destraba — pero queda registrado quién firmó qué).
+-- (role + area), sin inventar una tabla de permisos nueva. Los valores salen
+-- del enum REAL `area_t` (comercial, finanzas, desarrollo, rrhh, operaciones,
+-- tecnologia, ventas, diseno), no de una suposición:
+--   comercial  → area 'comercial' o 'ventas'
+--   tecnica    → area 'tecnologia' o 'desarrollo', o erp_role 'operaciones'
+--   financiera → area 'finanzas', o erp_role 'finanzas'
+-- `erp_role = 'gerencia'` NO abre las tres firmas a propósito: hoy 4 de los 5
+-- perfiles la tienen, y si valiera como comodín una sola persona podría firmar
+-- dos de las tres áreas y la regla de "los tres socios" quedaría en nada.
+-- Un admin sí puede firmar cualquiera (si falta un socio, destraba) — pero
+-- queda registrado quién firmó qué.
 create or replace function public.op_puede_aprobar(p_area text) returns boolean
 language sql stable security invoker set search_path = public as $$
   select exists (
     select 1 from public.profiles p
     where p.id = auth.uid()
       and (
-        p.role = 'admin'
-        or (p_area = 'comercial'  and (p.area::text = 'ventas'     or p.erp_role = 'gerencia'))
-        or (p_area = 'tecnica'    and (p.area::text = 'tecnologia' or p.erp_role = 'operaciones'))
-        or (p_area = 'financiera' and (p.area::text = 'finanzas'   or p.erp_role in ('finanzas', 'gerencia')))
+        p.role::text = 'admin'
+        or (p_area = 'comercial'  and p.area::text in ('comercial', 'ventas'))
+        or (p_area = 'tecnica'    and (p.area::text in ('tecnologia', 'desarrollo') or p.erp_role::text = 'operaciones'))
+        or (p_area = 'financiera' and (p.area::text = 'finanzas' or p.erp_role::text = 'finanzas'))
       )
   )
 $$;

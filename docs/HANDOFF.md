@@ -1,6 +1,6 @@
 # HANDOFF — TRIADA CRM
 > **Documento vivo. Fuente de verdad del estado del proyecto.**
-> Última actualización: **2026-07-30**
+> Última actualización: **2026-07-31**
 
 ---
 
@@ -45,7 +45,7 @@
 
 ## 1. Estado actual (al 2026-07-07)
 
-### 🆕 Oportunidades Públicas — Fase 1 (MVP manual) EN VIVO en el sitio (2026-07-30, commit `e3ae2c1`) · 🔴 falta aplicar el SQL
+### 🆕 Oportunidades Públicas — Fase 1 (MVP manual) ✅ EN VIVO Y CON BASE APLICADA (2026-07-31)
 > Módulo para **Mercado Público y Compra Ágil**: detectar, descartar rápido, analizar, puntuar, costear, aprobar entre los tres socios, preparar la oferta y seguir hasta el certificado de experiencia. Reglas de negocio tomadas del documento de decisión *Proyecto Mercado Público* (30-jul-2026), no inventadas.
 > 📄 **Doc del módulo: [`docs/OPORTUNIDADES_PUBLICAS.md`](OPORTUNIDADES_PUBLICAS.md)** — instalación, tablas, permisos y qué falta por fase.
 >
@@ -55,8 +55,12 @@
 > - **Dominio PURO y testeado** en `modules/oportunidades/domain/` (estados, puntaje, descarte, finanzas, aprobaciones, alertas, permisos, analítica, sincronización): **111 tests nuevos, 284/284 en verde**.
 > - **Verificado en el preview con mocks (E2E por DOM):** crear a mano pegando el enlace (el ID `4321-77-LE26` se extrae solo) → puntuar (41 → 71, "Recomendada para participar") → cotizar (50 h + $80.000 → neto $1.257.143, IVA $238.857, utilidad 30%) → firmar las tres áreas → checklist de 12 documentos (bloquea "lista" con 8 obligatorios pendientes) → presentada → adjudicada → **la OC que no coincide se rechaza hasta escribir la observación** → factura → pago → certificado → proyecto del ERP → cerrada. Sin errores de consola; los 3 temas y las 2 densidades OK, sin scroll horizontal.
 > - **Deploy verificado en vivo (31-jul 02:21 GMT):** el `Last-Modified` de github.io avanzó y los archivos del módulo responden 200; el `index.html` servido enlaza `oportunidades.css?v=461c08a6` y el `app.js` servido importa `modules/oportunidades/oportunidades.js` (se comprobó el gotcha de `deploy-pages`, no solo que el push llegó).
-> - **🔴 PENDIENTE BLOQUEANTE:** *nadie ha corrido `supabase/oportunidades_f1.sql`*. Hasta que se aplique, el módulo muestra un aviso explicando qué ejecutar y **no rompe nada** del CRM. Sin eso, no hay verificación con datos reales ni con sesión autenticada.
-> - **⬜ Falta:** aplicar el SQL y verificar RLS logueado (aislamiento cross-org + firma de área ajena rechazada) · `get_advisors` tras la migración · paridad móvil (`movil/`) · Fase 2 (API oficial), Fase 3 (IA) y Fase 4 (generador de documentos DOCX/PDF).
+> - **✅ Migración APLICADA (31-jul-2026)** en 5 pasos (`oportunidades_f1_parte1_tablas_base` … `_parte5_semilla`). **Verificado contra la base real:** 17 tablas · 17 con RLS · 66 policies · 30 triggers · bucket privado + 3 policies de storage · 8 plantillas · 1 fila de config. Las **columnas de las 17 tablas se compararon una a una contra el `.sql` del repo: idénticas**. Las 3 funciones (`op_es_lector`, `op_puede_aprobar`, `op_guard_oc`) coinciden con el repo y son INVOKER.
+> - **✅ Guardas probados EN LA BASE** (dentro de una transacción que se deshizo sola, sin dejar datos): aceptar una OC que no coincide sin observación → **rechazado**; pisar el puntaje sugerido sin motivo → **rechazado**; con la observación escrita → **pasa**.
+> - **✅ `get_advisors` (security): CERO hallazgos nuevos.** Ninguna tabla `op_*` aparece en `rls_enabled_no_policy` y ninguna función `op_*` aparece como SECURITY DEFINER expuesta (por eso se hicieron INVOKER). Lo que sale es todo preexistente (academia, correlativos, `auth_leaked_password_protection`).
+> - **🐛 Dos bugs que solo aparecieron al aplicar de verdad:** (1) `role = 'lector'` reventaba con `22P02` porque `user_role` es un enum de `admin/consultor` — se compara con `::text`; (2) el mapeo de áreas era una **suposición**: NADIE tiene área `'ventas'`, los comerciales están como `'comercial'`, así que uno de ellos no habría podido firmar jamás. Corregido en el SQL, en `domain/permisos.js` y con 4 tests nuevos.
+> - **⚠️ Hueco operativo real:** fuera del admin, **nadie puede firmar la aprobación técnica** — ningún perfil tiene área `tecnologia`/`desarrollo` ni `erp_role='operaciones'` (salvo el propio admin). El socio TI necesita que le ajusten el área en Configuración → Equipo.
+> - **⬜ Falta:** la mirada de un usuario **logueado** en el CRM real (desde acá no hay sesión: lo verificado es la base y el preview con mocks) · paridad móvil (`movil/`) · Fase 2 (API oficial), Fase 3 (IA) y Fase 4 (generador DOCX/PDF).
 > - **⚠️ Hallazgo de paso:** el documento de decisión (pág. 12) titula el ejemplo del marcador como **"83 / 100"**, pero sus seis parciales suman **93**. El sistema hace la suma real; el titular del PDF está equivocado y conviene corregirlo antes de mostrarlo a un socio.
 
 ### 🏗️ ERP Tríada — F0·F1·F2·F3·F4·F5 EN VIVO (2026-07-08) · la capa de OPERACIÓN del CRM
@@ -449,9 +453,11 @@ index.html
 ## 4. Próximos pasos (por prioridad)
 
 ### 4.0 · 🆕 Oportunidades Públicas — cerrar la Fase 1 en vivo
-- [ ] **Correr `supabase/oportunidades_f1.sql`** en el SQL Editor de Supabase (idempotente). Verificar: `select count(*) from op_plantillas;` → 8 y `select * from op_config;` → 1 fila.
-- [ ] **Verificar la RLS logueado** (no solo por REST anon): desde otra org no se ven las oportunidades; firmar un área que no corresponde debe fallar; `op_actividad` no acepta UPDATE ni DELETE.
-- [ ] **`get_advisors`** después de aplicar la migración (que no aparezca ningún `rls_enabled_no_policy` nuevo).
+- [x] ~~**Correr `supabase/oportunidades_f1.sql`**~~ ✅ **(31-jul-2026)** — aplicada en 5 migraciones; 17 tablas verificadas columna por columna contra el repo.
+- [x] ~~**`get_advisors`**~~ ✅ **(31-jul-2026)** — cero hallazgos nuevos.
+- [ ] **Abrir el módulo logueado** en https://martinjacques225.github.io/TRIADA-CRM/ (Ctrl+Shift+R) y crear una oportunidad de prueba: es lo único que no se pudo verificar desde acá (no hay sesión de usuario).
+- [ ] **Ajustar el área del socio TI** (Configuración → Equipo): hoy solo el admin puede firmar la aprobación técnica.
+- [ ] **Verificar el aislamiento cross-org** cuando exista una segunda organización (hoy solo hay una).
 - [ ] **Revisar las 8 plantillas semilla** (horas, valores hora y precios mínimos) — hoy están marcadas `es_demo = true` y rotuladas "estimación interna": son referencias sin validar.
 - [ ] **Corregir el "83 / 100"** de la página 12 del PDF *Proyecto Mercado Público*: los parciales suman 93.
 - [ ] Paridad móvil del módulo (`movil/js/screens/`), si se decide que Martín lo use en terreno.
@@ -655,6 +661,14 @@ Columnas del calendario agregadas a `citas` y verificadas en vivo. Persistencia 
 - **Ojo:** el módulo Contratos **no se tocó** (`contratos.js` / `contratos.css` intactos). El cambio son las 10 plantillas de `modules/contratos/plantillas/`.
 - **✅ DESPLEGADO en producción (commit `66887ed`):** push a `main` → GitHub Pages. Verificado **en vivo por HTTP**, no solo por el push: las **10/10** plantillas servidas desde github.io traen `sign::before` y `.pgpad{ padding:0; }` (`Last-Modified: Fri, 31 Jul 2026 17:51:06 GMT`). Esta vez el publish no falló; si alguna vez falla, ver el GOTCHA de §0 (*Re-run failed jobs*).
 - **⚠️ Caché:** las plantillas se piden **sin sello** (`loadTemplate()` hace `fetch` de la URL pelada), así que un navegador que ya las tenga sigue sirviendo la vieja hasta que expire (~10 min en Pages) o se haga **Ctrl+Shift+R**. Durante la verificación hizo falta `fetch(url, {cache:'reload'})` para ver el cambio. Queda como pendiente meterlas al sellado por hash de `scripts/stamp-assets.mjs`.
+
+### 2026-07-31 — Oportunidades Públicas: migración aplicada y dos bugs que solo salen al aplicar
+- **Qué pasó:** al pegar `oportunidades_f1.sql` en el editor SQL, el script llegó **cortado a los ~6,7 KB** y con un `;` agregado al final, dando un `42601` en mitad del `CREATE TABLE`. El archivo estaba bien; lo que falló fue el traslado. Se aplicó la migración por conexión directa, en 5 pasos.
+- **Bug 1 — `22P02`:** `op_es_lector()` comparaba `role = 'lector'`, pero `user_role` es un enum de `admin/consultor`: Postgres castea el literal al enum y **revienta** (no devuelve false). Ahora compara `role::text`.
+- **Bug 2 — el mapeo de áreas era una suposición:** la regla decía `area = 'ventas'` para firmar lo comercial. En la base **nadie** tiene esa área: los comerciales están como `'comercial'` y el enum trae además `'desarrollo'`. Uno de los socios no habría podido firmar nunca. Corregido en el SQL, en `domain/permisos.js` (las dos deben decir lo mismo) y con 4 tests nuevos, incluido uno que fija que `erp_role='gerencia'` **no** es comodín.
+- **Verificación contra la base real:** 17 tablas / 17 con RLS / 66 policies / 30 triggers / bucket + 3 policies / 8 plantillas · columnas comparadas una a una con el repo (idénticas) · las 3 funciones idénticas y INVOKER · los 3 guardas probados en una transacción que se deshizo sola · `get_advisors` sin hallazgos nuevos.
+- **Hallazgo operativo:** fuera del admin **nadie puede firmar la aprobación técnica**; el socio TI necesita área `tecnologia`/`desarrollo` o `erp_role='operaciones'`.
+- **Honestidad:** falta abrir el módulo **logueado** en el CRM real. Desde acá se verificó la base y el preview con mocks, no una sesión de usuario.
 
 ### 2026-07-30 — 🆕 Módulo Oportunidades Públicas (Fase 1, MVP manual)
 - **Qué se pidió:** un módulo para Mercado Público / Compra Ágil integrado de verdad al CRM (no una maqueta), con Fase 1 completa antes que cuatro fases a medias.

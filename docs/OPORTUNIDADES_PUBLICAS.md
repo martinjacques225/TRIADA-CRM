@@ -12,9 +12,17 @@ documento de decisión *Proyecto Mercado Público* (Tríada, 30-jul-2026).
 
 ## 1. Instalación
 
+> **Estado: la migración YA ESTÁ APLICADA** en el proyecto `pqrjndirqtucoumijben`
+> (31-jul-2026), en cinco migraciones: `oportunidades_f1_parte1_tablas_base`,
+> `_parte2_tablas_analisis`, `_parte3_oferta_resultado`, `_parte4_triggers_rls_storage`
+> y `_parte5_semilla`. Lo de abajo sirve para un tenant nuevo o para reconstruir.
+
 1. **Migración de base de datos.** Supabase → SQL Editor → New query → pegar y ejecutar
    `supabase/oportunidades_f1.sql`. Es idempotente: se puede correr más de una vez.
    Requiere que ya estén aplicados `multitenancy.sql` y `erp_f1.sql` (tabla `proyectos`).
+   Si la pegada llega cortada (pasó una vez: el editor recibió el script truncado y le
+   agregó un `;`, dando un `42601` en mitad de un `CREATE TABLE`), partir el archivo por
+   sus secciones numeradas y correrlas en orden — cada sección es autocontenida.
 2. **Verificación** (con la sesión de un usuario de la organización):
    ```sql
    select count(*) from op_plantillas;   -- 8
@@ -104,16 +112,36 @@ Reglas que vive la **base de datos**, no solo la interfaz:
 
 ## 6. Permisos
 
-Se **derivan** del perfil que el CRM ya tiene (`role` + `area` + `erp_role`), sin inventar un
-sistema nuevo:
+Se **derivan** del perfil que el CRM ya tiene, sin inventar un sistema nuevo. Los valores
+salen de los enums REALES de Supabase, no de una suposición: `user_role` solo tiene
+`admin` y `consultor`, y `area_t` trae `comercial, finanzas, desarrollo, rrhh, operaciones,
+tecnologia, ventas, diseno`.
 
 | Perfil del encargo | Cómo se reconoce | Qué puede firmar |
 |---|---|---|
 | Administrador | `role = 'admin'` | las tres áreas |
-| Comercial | `area = 'Ventas'` o `erp_role = 'gerencia'` | comercial |
-| Técnico | `area = 'Tecnología'` o `erp_role = 'operaciones'` | técnica |
-| Finanzas | `area = 'Finanzas'` o `erp_role = 'finanzas'` | financiera |
-| Solo lectura | `role = 'lector'` (rol aditivo, hoy nadie lo tiene) | nada |
+| Comercial | `area` en (`comercial`, `ventas`) | comercial |
+| Técnico | `area` en (`tecnologia`, `desarrollo`) o `erp_role = 'operaciones'` | técnica |
+| Finanzas | `area = 'finanzas'` o `erp_role = 'finanzas'` | financiera |
+| Solo lectura | `role = 'lector'` (valor que el enum todavía no tiene) | nada |
+
+`erp_role = 'gerencia'` **no** es comodín: hoy lo tienen 4 de los 5 perfiles, y si valiera
+una sola persona podría firmar dos de las tres áreas y la regla de los tres socios quedaría
+en nada.
+
+Estado real del equipo al 31-jul-2026, consultado contra la función ya aplicada:
+
+| role | area | firma comercial | firma técnica | firma financiera |
+|---|---|:---:|:---:|:---:|
+| admin | tecnologia | sí | sí | sí |
+| consultor | comercial (×2) | sí | no | no |
+| consultor | finanzas | no | no | sí |
+| consultor | diseno | no | no | no |
+
+> ⚠️ **Hueco operativo:** fuera del administrador, **nadie puede firmar la aprobación
+> técnica**. Para que el socio TI pueda hacerlo, su perfil necesita `area = 'tecnologia'`
+> o `'desarrollo'`, o `erp_role = 'operaciones'` (se cambia desde Configuración → Equipo,
+> solo un admin).
 
 ## 7. Lo que el módulo NO hace (a propósito)
 
