@@ -39,6 +39,8 @@ import {
   opProvDocFromSupa, opProvDocToSupa,
   opConfigFromSupa, opConfigToSupa,
   opSyncFromSupa,
+  dctFromSupa, dctToSupa,
+  dctActFromSupa, dctActToSupa,
 } from './mappers.js';
 
 // Reexport para no romper a quien importe isMissingTable desde db.js (módulos
@@ -1373,5 +1375,100 @@ export const opSyncLogs = {
     const { data, error } = await supabase.from('op_sync_logs').select('*')
       .order('inicio', { ascending: false }).limit(limit);
     _throw(error); return (data || []).map(opSyncFromSupa);
+  },
+};
+
+// ─── DIAGNÓSTICO CONTABLE Y TRIBUTARIO (dct_*) ────────────────
+// Módulo INDEPENDIENTE del Diagnóstico 360 (`diagnosticos`, arriba): otra tabla,
+// otro cuestionario, otro puntaje, otro historial. Requiere
+// supabase/diagnostico_contable_f1.sql; si no está corrido, el módulo lo detecta
+// con isMissingTable() y explica qué ejecutar en vez de romperse.
+export const dctEvaluaciones = {
+  /**
+   * Historial paginado. Los filtros se resuelven en Postgres: traer la tabla
+   * entera al navegador para filtrar en JS es justo lo que prohíbe AGENTS.md
+   * §5.9 (y lo que se cae el día que haya 2.000 evaluaciones).
+   */
+  page: async ({ limit = 25, offset = 0, q = '', estado = '', riesgo = '', industria = '',
+                 ejecutivo = '', desde = '', hasta = '', puntajeMin = null, puntajeMax = null,
+                 archivadas = false, orden = 'reciente' } = {}) => {
+    let sel = supabase.from('dct_evaluaciones').select('*', { count: 'exact' })
+      .eq('archivada', !!archivadas);
+    if (estado)     sel = sel.eq('estado', estado);
+    if (riesgo)     sel = sel.eq('nivel_riesgo', riesgo);
+    if (industria)  sel = sel.eq('industria', industria);
+    if (ejecutivo)  sel = sel.eq('ejecutivo', ejecutivo);
+    if (desde)      sel = sel.gte('fecha', desde);
+    if (hasta)      sel = sel.lte('fecha', hasta);
+    if (puntajeMin != null) sel = sel.gte('puntaje_general', puntajeMin);
+    if (puntajeMax != null) sel = sel.lte('puntaje_general', puntajeMax);
+    if (q) {
+      // El texto va escapado: una coma o un paréntesis sin escapar rompe el
+      // filtro `or` de PostgREST (mismo cuidado que en oportunidades.page).
+      const safe = String(q).replace(/[(),*]/g, ' ').trim();
+      if (safe) sel = sel.or(`razon_social.ilike.%${safe}%,nombre_fantasia.ilike.%${safe}%,codigo.ilike.%${safe}%,rut.ilike.%${safe}%,industria.ilike.%${safe}%`);
+    }
+    if (orden === 'puntaje')      sel = sel.order('puntaje_general', { ascending: false, nullsFirst: false });
+    else if (orden === 'empresa') sel = sel.order('razon_social', { ascending: true });
+    else if (orden === 'fecha')   sel = sel.order('fecha', { ascending: false });
+    else                          sel = sel.order('created_at', { ascending: false });
+
+    const { data, error, count } = await sel.range(offset, offset + limit - 1);
+    _throw(error);
+    return { rows: (data || []).map(dctFromSupa), total: count || 0 };
+  },
+
+  /** Solo para los indicadores de la portada (una lectura acotada por org). */
+  getAll: async () => _cachedAll('dct_evaluaciones', async () => {
+    const { data, error } = await supabase.from('dct_evaluaciones').select('*')
+      .order('created_at', { ascending: false });
+    _throw(error); return (data || []).map(dctFromSupa);
+  }),
+
+  get: async (id) => {
+    const { data, error } = await supabase.from('dct_evaluaciones').select('*').eq('id', id).single();
+    _throw(error); return dctFromSupa(data);
+  },
+
+  add: async (d) => {
+    const payload = dctToSupa(d);
+    if (!payload.ejecutivo && _uid) payload.ejecutivo = _uid;
+    const { data, error } = await supabase.from('dct_evaluaciones').insert(payload).select('id').single();
+    _throw(error); _invalidate('dct_evaluaciones'); return data.id;
+  },
+
+  update: async (d) => {
+    const { id, ...rest } = d;
+    const { error } = await supabase.from('dct_evaluaciones').update(dctToSupa(rest)).eq('id', id);
+    _throw(error); _invalidate('dct_evaluaciones');
+  },
+
+  delete: async (id) => {
+    const { error } = await supabase.from('dct_evaluaciones').delete().eq('id', id);
+    _throw(error); _invalidate('dct_evaluaciones');
+  },
+
+  /** Industrias ya cargadas (para el filtro del historial). */
+  industrias: async () => {
+    const { data, error } = await supabase.from('dct_evaluaciones')
+      .select('industria').not('industria', 'is', null);
+    _throw(error);
+    return [...new Set((data || []).map((r) => r.industria).filter(Boolean))].sort();
+  },
+};
+
+// Historial de la evaluación. Append-only: sin update ni delete (la RLS tampoco
+// los permite), igual que op_actividad.
+export const dctActividad = {
+  byEvaluacion: async (evalId) => {
+    const { data, error } = await supabase.from('dct_actividad').select('*')
+      .eq('evaluacion_id', evalId).order('created_at', { ascending: false });
+    _throw(error); return (data || []).map(dctActFromSupa);
+  },
+  add: async (d) => {
+    const payload = dctActToSupa(d);
+    if (_uid) payload.usuario = _uid;      // la RLS exige usuario = auth.uid()
+    const { error } = await supabase.from('dct_actividad').insert(payload);
+    _throw(error);
   },
 };

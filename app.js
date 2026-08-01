@@ -44,6 +44,7 @@ import * as ModFinanciero    from './modules/financiero/financiero.js';
 import * as ModErp           from './modules/erp/erp.js';
 import * as ModAcademia      from './modules/academia/academia.js';
 import * as ModOportunidades from './modules/oportunidades/oportunidades.js';
+import * as ModDiagContable from './modules/diagnostico-contable/diagnostico-contable.js';
 
 import {
   closeModal,
@@ -71,10 +72,17 @@ const NAV_SECTIONS = [
     { id: 'pipeline',     icon: _icoPipe(),       label: 'Pipeline' },
     { id: 'agenda',       icon: _icoAgenda(),     label: 'Agenda' },
   ]},
+  // Los dos diagnósticos son instrumentos DISTINTOS y no se mezclan: el 360
+  // mide madurez empresarial en 8 pilares; el Contable y Tributario es un
+  // prediagnóstico para empresas de mayor complejidad. Datos, puntajes,
+  // historiales y estados separados.
+  { label: 'Diagnósticos', items: [
+    { id: 'diagnosticos',        icon: _icoDiag(),         label: 'Diagnóstico 360' },
+    { id: 'diagnostico-contable', icon: _icoDiagContable(), label: 'Contable y Tributario' },
+  ]},
   { label: 'Gestión', items: [
     { id: 'oportunidades', icon: _icoOportunidades(), label: 'Oportunidades Públicas' },
     { id: 'prospectos',   icon: _icoProspectos(), label: 'Prospectos' },
-    { id: 'diagnosticos', icon: _icoDiag(),       label: 'Diagnóstico' },
     { id: 'propuestas',   icon: _icoProp(),       label: 'Propuesta' },
     { id: 'presupuestos', icon: _icoPresup(),     label: 'Presupuesto' },
     { id: 'contratos',    icon: _icoContrato(),   label: 'Contratos' },
@@ -126,6 +134,7 @@ async function refreshCenter() {
     erp:          ModErp.render,
     academia:     ModAcademia.render,
     oportunidades: ModOportunidades.render,
+    'diagnostico-contable': ModDiagContable.render,
     informes:     ModInformes.render,
     config:       ModConfig.render,
   };
@@ -500,6 +509,8 @@ function _icoPresup() { return _ln('<rect x="4" y="3" width="16" height="18" rx=
 function _icoBiblioteca(){ return _ln('<path d="M4 4.8A2.8 2.8 0 0 1 6.8 2H20v15H6.8A2.8 2.8 0 0 0 4 19.8z"/><path d="M20 17v5H6.8A2.8 2.8 0 0 1 4 19.2"/><path d="M8 6.5h7M8 9.5h5"/>'); }
 function _icoFinanciero(){ return _ln('<path d="M4 4v16h16"/><path d="M8 14l3-3 3 2 4.5-5.5"/><path d="M18.5 7.5H15M18.5 7.5V11"/>'); }
 function _icoErp()     { return _ln('<rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/>'); }
+// Diagnóstico Contable y Tributario: libro contable + marca de revisión
+function _icoDiagContable() { return _ln('<path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H19v14H6.5A2.5 2.5 0 0 0 4 19.5z"/><path d="M19 17v4H6.5A2.5 2.5 0 0 1 4 18.5"/><path d="M8 7.5h7M8 10.5h4"/><path d="m12.5 14 1.8 1.8 3.4-3.6"/>'); }
 // Oportunidades Públicas: edificio institucional + lupa (buscar en el Estado)
 function _icoOportunidades() { return _ln('<path d="M3 21h13M4.5 21V9.5L10.5 6l6 3.5V12"/><path d="M7.5 12.5v3M13 12.5v1"/><circle cx="17.5" cy="17" r="3"/><path d="m20 19.5 1.5 1.5"/>'); }
 

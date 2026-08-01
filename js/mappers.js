@@ -1188,3 +1188,123 @@ export function opSyncFromSupa(row) {
     mensaje: row.mensaje || '', parametros: row.parametros || {},
   };
 }
+
+// ═════════════════════════════════════════════════════════════
+// DIAGNÓSTICO CONTABLE Y TRIBUTARIO (dct_*)
+//
+// Módulo INDEPENDIENTE del Diagnóstico 360 (diagFromSupa/diagToSupa, arriba):
+// otra tabla, otro cuestionario, otro puntaje y otro historial. Estos mappers no
+// comparten ni una clave con aquellos, a propósito.
+//
+// `respuestas` viaja como jsonb tal cual lo arma el cuestionario: el motor de
+// puntaje (modules/diagnostico-contable/domain/) es el único que lo interpreta,
+// y así se puede cambiar la metodología sin migrar la base.
+// ═════════════════════════════════════════════════════════════
+
+export function dctFromSupa(row) {
+  if (!row) return null;
+  return {
+    id:                 row.id,
+    codigo:             row.codigo || '',
+    leadId:             row.lead_id || null,
+    clienteId:          row.cliente_id || null,
+
+    // Identificación
+    razonSocial:        row.razon_social || '',
+    nombreFantasia:     row.nombre_fantasia || '',
+    rut:                row.rut || '',
+    actividadEconomica: row.actividad_economica || '',
+    industria:          row.industria || '',
+    entrevistadoNombre: row.entrevistado_nombre || '',
+    entrevistadoCargo:  row.entrevistado_cargo || '',
+    entrevistadoEmail:  row.entrevistado_email || '',
+    entrevistadoFono:   row.entrevistado_fono || '',
+    ejecutivo:          row.ejecutivo || null,
+    fecha:              row.fecha,
+    trabajadores:       _n(row.trabajadores),
+    sociedadesGrupo:    _n(row.sociedades_grupo),
+    observacionesIni:   row.observaciones_ini || '',
+
+    // Cuestionario
+    respuestas:         row.respuestas || {},
+    observacionesEjec:  row.observaciones_ejec || '',
+    etapaActual:        Number(row.etapa_actual) || 1,
+
+    // Resultado
+    puntajeGeneral:     _n(row.puntaje_general),
+    puntajeFinanciero:  _n(row.puntaje_financiero),
+    puntajeTributario:  _n(row.puntaje_tributario),
+    nivelRiesgo:        row.nivel_riesgo || null,
+    basePreparacion:    row.base_preparacion || null,
+    enfoque:            _arr(row.enfoque),
+    alertas:            _arr(row.alertas),
+    desconocidas:       Number(row.desconocidas) || 0,
+    precioInicialUf:    _n(row.precio_inicial_uf),
+    precioRegla:        row.precio_regla || '',
+
+    // Seguimiento
+    estado:             row.estado || 'borrador',
+    archivada:          !!row.archivada,
+    oportunidadLeadId:  row.oportunidad_lead_id || null,
+    citaId:             row.cita_id || null,
+    cerradoMotivo:      row.cerrado_motivo || '',
+
+    creadoPor:          row.creado_por || null,
+    createdAt:          row.created_at,
+    updatedAt:          row.updated_at,
+  };
+}
+
+export function dctToSupa(d) {
+  return clean({
+    lead_id:             d.leadId === '' ? null : d.leadId,
+    cliente_id:          d.clienteId === '' ? null : d.clienteId,
+
+    razon_social:        _txt(d.razonSocial),
+    nombre_fantasia:     _txt(d.nombreFantasia),
+    rut:                 _rut(d.rut),
+    actividad_economica: d.actividadEconomica,
+    industria:           d.industria,
+    entrevistado_nombre: _txt(d.entrevistadoNombre),
+    entrevistado_cargo:  _txt(d.entrevistadoCargo),
+    entrevistado_email:  _mail(d.entrevistadoEmail),
+    entrevistado_fono:   _tel(d.entrevistadoFono),
+    ejecutivo:           d.ejecutivo === '' ? null : d.ejecutivo,
+    fecha:               d.fecha === '' ? null : d.fecha,
+    trabajadores:        d.trabajadores === '' ? null : d.trabajadores,
+    sociedades_grupo:    d.sociedadesGrupo === '' ? null : d.sociedadesGrupo,
+    observaciones_ini:   d.observacionesIni,
+
+    respuestas:          d.respuestas,
+    observaciones_ejec:  d.observacionesEjec,
+    etapa_actual:        d.etapaActual,
+
+    puntaje_general:     d.puntajeGeneral === '' ? null : d.puntajeGeneral,
+    puntaje_financiero:  d.puntajeFinanciero === '' ? null : d.puntajeFinanciero,
+    puntaje_tributario:  d.puntajeTributario === '' ? null : d.puntajeTributario,
+    nivel_riesgo:        d.nivelRiesgo,
+    base_preparacion:    d.basePreparacion,
+    enfoque:             d.enfoque,
+    alertas:             d.alertas,
+    desconocidas:        d.desconocidas,
+    precio_inicial_uf:   d.precioInicialUf === '' ? null : d.precioInicialUf,
+    precio_regla:        d.precioRegla,
+
+    estado:              d.estado,
+    archivada:           d.archivada,
+    oportunidad_lead_id: d.oportunidadLeadId === '' ? null : d.oportunidadLeadId,
+    cita_id:             d.citaId === '' ? null : d.citaId,
+    cerrado_motivo:      d.cerradoMotivo,
+  });
+}
+
+export function dctActFromSupa(row) {
+  if (!row) return null;
+  return {
+    id: row.id, evaluacionId: row.evaluacion_id, tipo: row.tipo,
+    detalle: row.detalle || '', usuario: row.usuario, createdAt: row.created_at,
+  };
+}
+export function dctActToSupa(d) {
+  return clean({ evaluacion_id: d.evaluacionId, tipo: d.tipo, detalle: d.detalle });
+}
