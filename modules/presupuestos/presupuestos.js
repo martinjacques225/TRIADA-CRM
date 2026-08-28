@@ -3,10 +3,11 @@
 // le agrega mano de obra, IVA (19%) y el plan de servicio (si se contrata).
 // Cuelga del cliente y puede referenciar la propuesta de origen.
 // Requiere supabase/presupuestos.sql; si falta la tabla, muestra el aviso.
-import { presupuestos, clientes, config, isMissingTable } from '../../js/db.js';
+import { presupuestos, clientes, config, isMissingTable, docLogos } from '../../js/db.js';
 import { escHtml, formatDate, formatCLP, toast } from '../../js/utils.js';
 import { parseCLP } from '../../js/format.js';
-import { openCorporateDoc } from '../../js/pdf.js';
+import { openCorporateDoc, datosEmisor } from '../../js/pdf.js';
+import { mountLogoPicker } from '../../js/logo-picker.js';
 
 const _i = (n, s) => (window.icon ? window.icon(n, '', s) : '');
 const IVA_RATE = 0.19;
@@ -142,6 +143,11 @@ export function renderPresupuestoModal(clientesList, propuestasList, prospectosL
     </div>
 
     <div class="form-group">
+      <label>Logo del cliente <span style="font-weight:400;color:var(--text3)">(opcional)</span></label>
+      <div id="presLogoBox"></div>
+    </div>
+
+    <div class="form-group">
       <label>Programa / Ítems</label>
       <div style="border:1px solid var(--border);border-radius:8px;overflow:hidden">
         <table style="width:100%;border-collapse:collapse">
@@ -209,6 +215,13 @@ export function renderPresupuestoModal(clientesList, propuestasList, prospectosL
     el.value = d ? Number(d).toLocaleString('es-CL') : '';
   });
 
+  // El logo cuelga del CLIENTE: se carga una vez y lo usan todos sus documentos.
+  const selCli  = document.getElementById('presCliente');
+  const logoBox = mountLogoPicker(document.getElementById('presLogoBox'),
+    { clienteId: selCli.value || null },
+    { mensajeSinEntidad: 'Elige primero el cliente para poder cargar su logo.' });
+  selCli.addEventListener('change', () => logoBox?.setRef({ clienteId: selCli.value || null }));
+
   // Importar ítems desde una propuesta
   const propMapById = Object.fromEntries(propuestasList.map(x => [x.id, x]));
   document.getElementById('presPropuesta').addEventListener('change', (e) => {
@@ -218,7 +231,12 @@ export function renderPresupuestoModal(clientesList, propuestasList, prospectosL
     if (pr.prospectoId) {
       const lead = prMap[pr.prospectoId];
       const match = clientesList.find(c => c.leadId === pr.prospectoId);
-      if (match) document.getElementById('presCliente').value = match.id;
+      if (match) {
+        document.getElementById('presCliente').value = match.id;
+        // Asignar .value por código NO dispara 'change': hay que re-apuntar a mano
+        // o el selector de logo se queda mostrando el del cliente anterior.
+        logoBox?.setRef({ clienteId: match.id });
+      }
     }
     document.getElementById('presNotas').value = pr.notas || document.getElementById('presNotas').value;
     _renderItemRows(); _updateTotalsUI();
@@ -290,10 +308,12 @@ function _updateTotalsUI() {
 export async function presupuestoPDF(id) {
   const p = await presupuestos.get(id);
   if (!p) { toast('Presupuesto no encontrado', 'error'); return; }
-  const [cli, empresa, autor] = await Promise.all([
+  const [cli, empresa, autor, cargo, logo] = await Promise.all([
     p.clienteId ? clientes.get(p.clienteId) : null,
-    config.get('empresa'), config.get('userName'),
+    config.get('empresa'), config.get('userName'), config.get('cargo'),
+    p.clienteId ? docLogos.get({ clienteId: p.clienteId }) : null,
   ]);
+  const emisor = await datosEmisor();
   const items = _initItems(p);
   const progTotal = items.reduce((s, it) => s + it.cantidad * it.precioUnit, 0);
 
@@ -306,9 +326,9 @@ export async function presupuestoPDF(id) {
       </tbody>
     </table>
     <div class="totals">
-      <div class="row"><span class="lbl">Neto</span><span>${formatCLP(p.neto)}</span></div>
+      <div class="row"><span class="lbl">Subtotal neto</span><span>${formatCLP(p.neto)}</span></div>
       <div class="row"><span class="lbl">IVA 19%</span><span>${formatCLP(p.iva)}</span></div>
-      <div class="row grand"><span class="lbl" style="color:inherit">Total con IVA</span><span>${formatCLP(p.total)}</span></div>
+      <div class="row grand"><span class="lbl">Total a facturar</span><span>${formatCLP(p.total)}</span></div>
     </div>
     ${(p.planServicio || +p.planMensual) ? `<div class="block">
       <h4>Plan de servicio</h4>
@@ -317,8 +337,11 @@ export async function presupuestoPDF(id) {
     ${p.notas ? `<div class="notes"><strong>Notas:</strong> ${escHtml(p.notas)}</div>` : ''}`;
 
   const ok = openCorporateDoc({
-    tipo: 'Presupuesto', titulo: 'Presupuesto de servicios', empresa: empresa || 'Tríada Consultoría', autor: autor || '',
+    tipo: 'Presupuesto', titulo: 'Presupuesto de servicios',
+    empresa: empresa || 'Tríada Consultoría', autor: autor || '', cargo: cargo || '',
     clienteNombre: cli ? (cli.razonSocial || cli.nombre) : '', clienteRut: cli?.rut || '',
+    clienteLogo: logo?.dataUri || '',
+    ...emisor,
     correlativo: p.correlativo, fecha: p.fecha, vigencia: p.vigencia, bodyHtml,
   });
   if (!ok) toast('Permite ventanas emergentes para generar el PDF', 'error');

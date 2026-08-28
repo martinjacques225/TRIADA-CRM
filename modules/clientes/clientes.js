@@ -7,6 +7,7 @@
 import { clientes, facturas } from '../../js/db.js';
 import { escHtml, formatCLP, toast } from '../../js/utils.js';
 import { attachFormatting, validateRut, formatRut, normalizeText } from '../../js/format.js';
+import { mountLogoPicker } from '../../js/logo-picker.js';
 
 const _i = (n, s) => (window.icon ? window.icon(n, '', s) : '');
 
@@ -86,6 +87,7 @@ export async function render() {
                   </td>
                   <td>
                     <div style="display:flex;gap:4px">
+                      <button class="btn btn-ghost btn-sm" onclick="window._app.openClienteLogoModal('${c.id}')" title="Logo que sale en la cabecera de sus documentos">Logo</button>
                       <button class="btn btn-ghost btn-sm" onclick="window._app.openFacturaModalForCliente('${c.id}')" title="Crear factura para este cliente">${_i('factura', 14)} Facturar</button>
                       <button class="btn btn-ghost btn-sm" onclick="window._app.deleteCliente('${c.id}')" style="color:var(--danger)">Eliminar</button>
                     </div>
@@ -138,9 +140,17 @@ export function renderAddClienteModal(prospectosAll, onSave, preselLeadId = null
     <div class="form-group">
       <label>Dirección</label>
       <input id="cliDireccion" data-fmt="upper" placeholder="CALLE 123, COMUNA, CIUDAD">
+    </div>
+    <div class="form-group">
+      <label>Logo del cliente <span style="font-weight:400;color:var(--text3)">(opcional)</span></label>
+      <div id="cliLogoBox"></div>
     </div>`;
 
   attachFormatting(body);
+
+  // Diferido: la ficha todavía no tiene id, así que el archivo se procesa y se
+  // previsualiza acá y se escribe recién cuando `clientes.add` devuelve el id.
+  const logoBox = mountLogoPicker(document.getElementById('cliLogoBox'), {}, { diferido: true });
 
   const prospMap = Object.fromEntries(prospectosAll.map(p => [p.id, p]));
   const sel = document.getElementById('cliProspecto');
@@ -173,7 +183,10 @@ export function renderAddClienteModal(prospectosAll, onSave, preselLeadId = null
       direccion: normalizeText(document.getElementById('cliDireccion').value),
     };
     try {
-      await clientes.add(data);
+      const nuevoId = await clientes.add(data);
+      // El logo se guarda DESPUÉS y sin bloquear: si falla, la ficha ya existe y
+      // el logo se puede cargar desde el botón "Logo" de la fila.
+      await logoBox?.flush({ clienteId: nuevoId });
       if (onSave) onSave();
     } catch (err) {
       console.error('Error al crear cliente:', err);

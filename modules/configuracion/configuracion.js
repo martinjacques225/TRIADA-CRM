@@ -18,9 +18,11 @@ const FONT_SCALES = [
 ];
 
 export async function render() {
-  const [nombre, cargo, empresa, tema, densidad, fontScale] = await Promise.all([
+  const [nombre, cargo, empresa, tema, densidad, fontScale,
+         emiRut, emiDir, emiMail] = await Promise.all([
     config.get('userName'), config.get('cargo'), config.get('empresa'),
     config.get('theme'), config.get('density'), config.get('fontScale'),
+    config.get('emisorRut'), config.get('emisorDireccion'), config.get('emisorEmail'),
   ]);
   let acctEmail = '';
   try { acctEmail = (await supabase.auth.getUser())?.data?.user?.email || ''; }
@@ -72,6 +74,18 @@ export async function render() {
       </div>
       <div class="form-group"><label>Empresa / Filial</label><input id="cfgEmpresa" value="${(empresa || '')}" placeholder="Ej: Tríada Consultoría"></div>
       <button class="btn btn-primary" onclick="_saveProfile()">Guardar perfil</button>
+    </div>
+
+    <div class="card card-pad" style="margin-bottom:18px">
+      <h3 class="cfg-h">Datos del emisor en los documentos</h3>
+      <p style="font-size:13px;color:var(--text3);margin-bottom:14px">
+        Salen bajo la marca Tríada en la cabecera de cotizaciones, presupuestos e informes.
+        En blanco, se usan los de Tríada.
+      </p>
+      <div class="form-group"><label>RUT</label><input id="cfgEmiRut" value="${(emiRut || '')}" placeholder="78.450.911-7"></div>
+      <div class="form-group"><label>Dirección</label><input id="cfgEmiDir" value="${(emiDir || '')}" placeholder="2 Sur 870, Talca · Región del Maule"></div>
+      <div class="form-group"><label>Correo de contacto</label><input id="cfgEmiMail" value="${(emiMail || '')}" placeholder="contacto@grupotriada.cl"></div>
+      <button class="btn btn-primary" onclick="_saveEmisor()">Guardar datos del emisor</button>
     </div>
 
     <div class="card card-pad" style="margin-bottom:18px">
@@ -171,6 +185,15 @@ export async function render() {
     ]);
     toast('Perfil guardado', 'success');
     window._app?.renderNav?.();
+  };
+
+  window._saveEmisor = async () => {
+    await Promise.all([
+      config.set('emisorRut',       document.getElementById('cfgEmiRut').value.trim()),
+      config.set('emisorDireccion', document.getElementById('cfgEmiDir').value.trim()),
+      config.set('emisorEmail',     document.getElementById('cfgEmiMail').value.trim()),
+    ]);
+    toast('Datos del emisor guardados', 'success');
   };
 
   // ── Mi cuenta (Supabase Auth) ──

@@ -670,6 +670,31 @@ Columnas del calendario agregadas a `citas` y verificadas en vivo. Persistencia 
 
 ## 7. Bitácora de sesiones (más reciente arriba)
 
+### 2026-08-28 — 📄 Una sola plantilla para TODOS los documentos + logo del cliente
+
+- **Lo que pidió el dueño:** *"trabaja en el crm para que todos los documentos salgan así"* — así = la cotización **COT-2026-08-28-OT** (Olivos de Talca), que se había armado a mano fuera del CRM tras dos vueltas de diseño. Y: *"si necesita el logo del cliente que lo pida, como que haya una caja… que pida el logo en .png o jpg"*.
+
+- **Qué cambió, y por qué toca a cuatro módulos de una vez:** `js/pdf.js` es la plantilla ÚNICA que usan Propuestas, Presupuestos, Informes y Diagnóstico Contable. Se reescribió entera con el diseño aprobado: **A4** (antes Carta), cabecera con la marca Tríada y los datos del emisor a la izquierda y el logo del cliente a la derecha, el **tipo de documento como título** (COTIZACIÓN, 23 px, no una tipografía editorial gigante), franja de datos marfil, tabla sobria y **resumen financiero** con subtotal / IVA / total a facturar en bloque oscuro. Las clases que consumen los módulos (`table.items`, `td.num`, `.totals .row/.row.grand`, `.block`, `.notes`) se conservaron a propósito: **los cuatro módulos heredaron el diseño sin tocarles el `bodyHtml`**.
+
+- **La numeración 01, 02, 03… es un contador CSS**, no la emiten los módulos. `counter-increment` sobre `tbody tr:not(.no-num)`; la fila "Sin ítems" lleva `.no-num` para no numerar la nada.
+
+- **🆕 El logo del cliente vive en su propia tabla** (`supabase/doc_logos_2026-08-28.sql`, **falta correrla**). Una fila por lead o por cliente, con `check (num_nonnulls(lead_id, cliente_id) = 1)`, org_id + RLS con los helpers ya existentes. **No es una columna en `leads`/`clientes` a propósito:** esas dos se leen con `select('*')` y un base64 de decenas de KB viajaría en cada carga de lista sin que nadie lo mire.
+  - **Se guarda como data URI, no en Storage**, porque el documento se imprime en una ventana abierta con `window.open()`+`document.write()` que **no hereda la sesión**: una URL firmada daría 403 justo al imprimir.
+  - `js/logo-picker.js` es la caja reutilizable: acepta PNG/JPG, **redimensiona a 600×200 en canvas** antes de guardar (un PNG de 4 MB serían 5,3 MB de base64 en *cada* cotización), previsualiza, permite quitar y tiene **modo diferido** para el alta de un cliente que todavía no tiene id.
+  - Montada en: el editor de Propuesta (cuelga del prospecto), el de Presupuesto (del cliente), el alta de cliente y un **modal propio** por fila en Clientes — que es la única vía de cargarlo en una ficha ya creada, porque **`clientes` no tenía `update`**. Se le agregó.
+
+- **⚠️ Cambio de regla de negocio en la cotización impresa:** antes decía *"Valores netos, sin IVA… el presupuesto detallado se entrega por separado"*. Ahora la **cotización desglosa IVA 19% y total a facturar**. El `valor` GUARDADO de la propuesta **sigue siendo neto** (es el que suman el pipeline y los KPI) — no confundir las dos cifras.
+
+- **🐛 Tres trampas que costaron una corrección cada una:**
+  1. **Comillas invertidas en un comentario CSS** dentro del template literal de `pdf.js` → `ReferenceError` al generar. Pasó **dos veces**. El `<style>` de ese archivo no puede contener ni una comilla invertida.
+  2. **El pie `position:fixed`** se repetía en cada hoja (bonito) pero se dibuja dentro del área de contenido: hay que reservarle banda con el margen de `@page`, y esos 26 mm **partieron en dos una cotización de 7 ítems**. Se devolvió al flujo con `margin-top:auto` sobre `.page` en flex.
+  3. **Los márgenes de `@page` los aplica el navegador en TODAS las hojas; el `padding` de `.page`, solo en la primera.** Sin margen superior en `@page`, la página 2 de un informe arrancaba pegada al borde del papel.
+
+- **Verificado, no supuesto:** arnés en Node que sustituye `window.open` y captura el HTML, renderizado con Chrome headless y **mirado**. Cotización → **1 página A4** con las tres cifras cuadrando ($645.000 + $122.550 = $767.550) y el logo incrustado. Informe largo → **3 páginas**, sin cortes ni solapes. `PROP-000006` no aparece. Los **384 tests pasan** y `npm run stamp` quedó al día.
+
+- **⬜ Pendiente antes de usarlo:** correr `supabase/doc_logos_2026-08-28.sql`. Sin eso el CRM funciona igual, pero el selector de logo avisa que falta la migración y los documentos salen solo con la marca Tríada.
+
+
 ### 2026-08-01 — 🩹 Agenda: los días se pisaban entre sí (y cuatro cosas más que estaban mal)
 
 - **Lo que reportó el dueño:** una captura de la vista Mes donde *"se cortan y traslapan los días por ingresar un título muy largo"*. Pidió, además, arreglar lo que apareciera de estética, funcionalidad o ergonomía.

@@ -53,7 +53,7 @@ import {
   openCitaModal, openCitaModalForProspecto,
   openPropuestaModal, openPropuestaModalForProspecto,
   openFacturaModal, openFacturaModalForCliente, editFactura, deleteFactura,
-  convertirACliente, openAddClienteModal, deleteCliente,
+  convertirACliente, openAddClienteModal, deleteCliente, openClienteLogoModal,
   openPresupuestoModal, deletePresupuesto,
   deleteProspecto, deleteCita, deletePropuesta,
 } from './modules/modals/modals.js';
@@ -267,7 +267,7 @@ async function init() {
     editCita:      (id) => openCitaModal(id),
     editPropuesta: (id) => openPropuestaModal(id),
     openFacturaModal, openFacturaModalForCliente, editFactura, deleteFactura,
-    convertirACliente, openAddClienteModal, deleteCliente,
+    convertirACliente, openAddClienteModal, deleteCliente, openClienteLogoModal,
     openPresupuestoModal, deletePresupuesto,
     editPresupuesto: (id) => openPresupuestoModal(id),
     propuestaPDF:    (id) => ModPropuestas.propuestaPDF(id),

@@ -9,6 +9,7 @@ import { renderPropuestaModal } from '../propuestas/propuestas.js';
 import { renderDiagnosticoModal } from '../diagnosticos/diagnosticos.js';
 import { renderFacturaModal } from '../facturacion/facturacion.js';
 import { renderAddClienteModal } from '../clientes/clientes.js';
+import { mountLogoPicker } from '../../js/logo-picker.js';
 import { renderPresupuestoModal } from '../presupuestos/presupuestos.js';
 
 const _i = (n, s) => (window.icon ? window.icon(n, '', s) : '');
@@ -355,6 +356,26 @@ export async function openAddClienteModal(preselLeadId = null) {
     toast('Cliente creado', 'success');
     window._app?.refreshView?.();
   }, preselLeadId);
+}
+
+// Logo del cliente para la cabecera de sus documentos. Modal propio porque la
+// ficha de cliente no tiene edición: es la única vía para cargarlo o cambiarlo
+// en un cliente ya creado.
+export async function openClienteLogoModal(clienteId) {
+  const cli = await clientes.get(clienteId);
+  if (!cli) { toast('Cliente no encontrado', 'error'); return; }
+  _openModal(`Logo · ${cli.razonSocial || cli.nombre || 'Cliente'}`);
+  // El selector guarda solo al elegir el archivo: no hay nada que "Guardar".
+  document.getElementById('modalSave').style.display = 'none';
+  document.getElementById('modalCancel').textContent = 'Listo';
+  const body = document.getElementById('modalBody');
+  body.innerHTML = `
+    <p style="font-size:13px;color:var(--text3);margin-bottom:14px">
+      Se usa en la esquina superior derecha de las cotizaciones, presupuestos e
+      informes de este cliente. Un PNG con fondo transparente es lo que mejor sale.
+    </p>
+    <div id="cliLogoModalBox"></div>`;
+  mountLogoPicker(document.getElementById('cliLogoModalBox'), { clienteId });
 }
 
 export async function openPresupuestoModal(id = null) {

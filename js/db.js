@@ -363,9 +363,63 @@ export const clientes = {
     const { data: row, error } = await supabase.from('clientes').insert(payload).select('id').single();
     _throw(error); _invalidate('clientes'); return row.id;
   },
+  update: async (data) => {
+    const { id, ...rest } = data;
+    const { error } = await supabase.from('clientes').update(clienteToSupa(rest)).eq('id', id);
+    _throw(error); _invalidate('clientes');
+  },
   delete: async (id) => {
     const { error } = await supabase.from('clientes').delete().eq('id', id);
     _throw(error); _invalidate('clientes');
+  },
+};
+
+// ─── LOGOS DE CLIENTE PARA DOCUMENTOS ─────────────────────────
+// Un logo por lead o por cliente (supabase/doc_logos_2026-08-28.sql). Vive en su
+// propia tabla y NO en `leads`/`clientes` a propósito: esas dos se leen con
+// select('*') y un base64 de decenas de KB viajaría en cada carga de lista sin
+// que nadie lo mire. Acá se pide solo al abrir el selector o al generar un PDF.
+//
+// `docLogos` NO usa _cachedAll: la caché de db.js es por tabla completa y el
+// acceso natural de un logo es por entidad. Se consulta de a uno.
+function _logoRef(ref) {
+  const col = ref?.clienteId ? 'cliente_id' : 'lead_id';
+  const val = ref?.clienteId || ref?.leadId || null;
+  return { col, val };
+}
+
+export const docLogos = {
+  // Devuelve el data URI, o null si esa entidad no tiene logo cargado.
+  get: async (ref) => {
+    const { col, val } = _logoRef(ref);
+    if (!val) return null;
+    const { data, error } = await supabase.from('doc_logos')
+      .select('id,mime,data_uri,nombre,bytes').eq(col, val).maybeSingle();
+    // La tabla puede no existir todavía (migración sin correr): el documento
+    // debe salir igual, solo que sin logo. Nunca romper la generación del PDF.
+    if (error) { console.warn('doc_logos no disponible:', error.message); return null; }
+    return data ? { id: data.id, mime: data.mime, dataUri: data.data_uri, nombre: data.nombre, bytes: data.bytes } : null;
+  },
+  // Alta o reemplazo. Un upsert manual: el índice único es parcial (where ... is
+  // not null) y PostgREST no sabe apuntarle con on_conflict.
+  set: async (ref, { mime, dataUri, nombre, bytes }) => {
+    const { col, val } = _logoRef(ref);
+    if (!val) throw new Error('Falta el cliente o prospecto al que asociar el logo');
+    const previo = await docLogos.get(ref);
+    const payload = { mime, data_uri: dataUri, nombre: nombre || null, bytes: bytes || null };
+    if (previo) {
+      const { error } = await supabase.from('doc_logos').update(payload).eq('id', previo.id);
+      _throw(error); return previo.id;
+    }
+    const { data: row, error } = await supabase.from('doc_logos')
+      .insert({ ...payload, [col]: val }).select('id').single();
+    _throw(error); return row.id;
+  },
+  remove: async (ref) => {
+    const { col, val } = _logoRef(ref);
+    if (!val) return;
+    const { error } = await supabase.from('doc_logos').delete().eq(col, val);
+    _throw(error);
   },
 };
 

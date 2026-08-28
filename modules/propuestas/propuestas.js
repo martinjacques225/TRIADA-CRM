@@ -1,11 +1,18 @@
 // modules/propuestas/propuestas.js
-// La Propuesta presenta SOLO el programa a ofrecer (valores netos, sin IVA): es
-// la cotización preliminar que se envía al cliente. El IVA, la mano de obra y el
-// plan de servicio se formalizan después en el módulo Presupuesto.
-import { propuestas, prospectos, config } from '../../js/db.js';
+// La Propuesta presenta el programa a ofrecer: es la cotización que se envía al
+// cliente. La mano de obra y el plan de servicio se formalizan después en el
+// módulo Presupuesto.
+//
+// EL VALOR GUARDADO ES NETO — el `valor` de la propuesta (el que suma el pipeline
+// y los KPI) sigue siendo sin IVA, y así debe quedarse. Lo que cambió el 28-ago-2026
+// es el DOCUMENTO IMPRESO: desglosa subtotal neto, IVA 19% y total a facturar,
+// porque una cotización que no dice cuánto hay que pagar al final no sirve.
+// Decisión del dueño sobre COT-2026-08-28-OT. No confundir las dos cifras.
+import { propuestas, prospectos, config, docLogos } from '../../js/db.js';
 import { escHtml, formatDate, formatCLP, toast, PROP_ESTADOS, propEstadoLabel } from '../../js/utils.js';
 import { parseCLP } from '../../js/format.js';
-import { openCorporateDoc } from '../../js/pdf.js';
+import { openCorporateDoc, datosEmisor } from '../../js/pdf.js';
+import { mountLogoPicker } from '../../js/logo-picker.js';
 
 function _normItems(servicios) {
   if (!Array.isArray(servicios) || !servicios.length) return [];
@@ -163,6 +170,11 @@ export function renderPropuestaModal(prospectosAll, onSave, existing = null) {
     </div>
 
     <div class="form-group">
+      <label>Logo del cliente <span style="font-weight:400;color:var(--text3)">(opcional)</span></label>
+      <div id="propLogoBox"></div>
+    </div>
+
+    <div class="form-group">
       <label>Servicios / Ítems</label>
       <div style="border:1px solid var(--border);border-radius:8px;overflow:hidden">
         <table style="width:100%;border-collapse:collapse">
@@ -184,7 +196,7 @@ export function renderPropuestaModal(prospectosAll, onSave, existing = null) {
     </div>
 
     <div style="background:var(--surface2);border-radius:8px;padding:12px 16px;margin-top:4px;font-size:13.5px">
-      <div style="font-size:12px;color:var(--text3);margin-bottom:8px">La propuesta presenta solo el programa, en valores netos. El IVA, la mano de obra y el plan de servicio se detallan en el Presupuesto.</div>
+      <div style="font-size:12px;color:var(--text3);margin-bottom:8px">Este total es <strong>neto</strong> y es el que usa el pipeline. La cotización impresa agrega debajo el IVA 19% y el total a facturar. La mano de obra y el plan de servicio se detallan en el Presupuesto.</div>
       <div style="display:flex;justify-content:space-between;border-top:1px solid var(--border);padding-top:8px"><span style="font-weight:700;color:var(--navy)">Total del programa (neto)</span><span id="propTotal" style="font-weight:800;font-size:16px;color:var(--navy)">—</span></div>
     </div>
 
@@ -207,6 +219,14 @@ export function renderPropuestaModal(prospectosAll, onSave, existing = null) {
 
   _renderItemRows();
   _updateTotalsUI();
+
+  // El logo cuelga del PROSPECTO, no de la propuesta: sirve para todas las que
+  // se le hagan. Si se cambia el prospecto, el selector se re-apunta solo.
+  const selProsp = document.getElementById('propProspecto');
+  const logoBox  = mountLogoPicker(document.getElementById('propLogoBox'),
+    { leadId: selProsp.value || null },
+    { mensajeSinEntidad: 'Elige primero el prospecto para poder cargar su logo.' });
+  selProsp.addEventListener('change', () => logoBox?.setRef({ leadId: selProsp.value || null }));
 
   document.getElementById('propAddItem').addEventListener('click', () => {
     _items.push(_newItem());
@@ -243,10 +263,17 @@ export async function propuestaPDF(id) {
   const p = await propuestas.get(id);
   if (!p) { toast('Propuesta no encontrada', 'error'); return; }
   const pr = p.prospectoId ? await prospectos.get(p.prospectoId) : null;
-  const empresa = await config.get('empresa') || 'Tríada Consultoría';
-  const autor   = await config.get('userName') || '';
-  const items   = _normItems(p.servicios);
-  const neto    = items.reduce((s, it) => s + it.cantidad * it.precioUnit, 0);
+  const [empresa, autor, cargo, logo] = await Promise.all([
+    config.get('empresa'), config.get('userName'), config.get('cargo'),
+    p.prospectoId ? docLogos.get({ leadId: p.prospectoId }) : null,
+  ]);
+  const emisor = await datosEmisor();
+  const items = _normItems(p.servicios);
+  const neto  = items.reduce((s, it) => s + it.cantidad * it.precioUnit, 0);
+  // IVA 19%: se redondea el impuesto y el total se calcula como neto + IVA, para
+  // que las tres cifras impresas sumen exactamente. Calcular el total como
+  // neto*1.19 y redondear aparte dejaría diferencias de un peso.
+  const iva   = Math.round(neto * 0.19);
 
   const bodyHtml = `
     <table class="items">
@@ -257,18 +284,23 @@ export async function propuestaPDF(id) {
           <td class="num">${it.cantidad}</td>
           <td class="num">${formatCLP(it.precioUnit)}</td>
           <td class="num">${formatCLP(it.cantidad * it.precioUnit)}</td>
-        </tr>`).join('') : `<tr><td colspan="4" style="color:#94A0B6">Sin ítems</td></tr>`}
+        </tr>`).join('') : `<tr class="no-num"><td colspan="4" style="color:#94A0B6">Sin ítems</td></tr>`}
       </tbody>
     </table>
     <div class="totals">
-      <div class="row grand"><span class="lbl" style="color:inherit">Total del programa (neto)</span><span>${formatCLP(neto)}</span></div>
+      <div class="row"><span class="lbl">Subtotal neto</span><span>${formatCLP(neto)}</span></div>
+      <div class="row"><span class="lbl">IVA 19%</span><span>${formatCLP(iva)}</span></div>
+      <div class="row grand"><span class="lbl">Total a facturar</span><span>${formatCLP(neto + iva)}</span></div>
     </div>
     ${p.notas ? `<div class="notes"><strong>Notas:</strong> ${escHtml(p.notas)}</div>` : ''}
-    <div class="notes">Valores netos, sin IVA. Este documento presenta el programa propuesto; el presupuesto detallado —con IVA, mano de obra y plan de servicio— se entrega por separado.</div>`;
+    <div class="notes">Valores expresados en pesos chilenos (CLP). IVA incluido únicamente en el total final indicado.</div>`;
 
   const ok = openCorporateDoc({
-    tipo: 'Cotización', titulo: 'Propuesta de programa', empresa, autor,
+    tipo: 'Cotización', titulo: 'Propuesta de programa',
+    empresa: empresa || 'Tríada Consultoría', autor: autor || '', cargo: cargo || '',
     clienteNombre: pr?.empresa || pr?.nombre || '', clienteRut: pr?.rut || '',
+    clienteLogo: logo?.dataUri || '',
+    ...emisor,
     correlativo: p.correlativo, fecha: p.fecha, vigencia: p.vigencia, bodyHtml,
   });
   if (!ok) toast('Permite ventanas emergentes para generar el PDF', 'error');
