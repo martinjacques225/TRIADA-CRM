@@ -76,6 +76,26 @@ export const config = {
 
 function _throw(error) { if (error) throw error; }
 
+// ─── Borrado que NO miente ────────────────────────────────────
+// PostgREST responde **204 sin error** cuando la RLS filtra la fila: el DELETE
+// "funciona" y no borra nada. Con el patrón viejo —`const { error } = await
+// supabase.from(t).delete().eq('id', id)`— el CRM cantaba "eliminado", refrescaba
+// y el registro seguía ahí. Era el bug de "le doy eliminar y no pasa nada"
+// (28-ago-2026): pasa, por ejemplo, con `facturas`, cuyo DELETE exige is_admin().
+//
+// Pedir `.select()` hace que PostgREST devuelva las filas efectivamente borradas.
+// Si vuelve vacío, no se borró: hay que decirlo, no festejar.
+async function _deleteRow(table, id, cacheKey = table) {
+  const { data, error } = await supabase.from(table).delete().eq('id', id).select('id');
+  _throw(error);
+  if (!data || !data.length) {
+    const e = new Error('La base de datos no permitió eliminar este registro: puede que no tengas permiso o que ya no exista.');
+    e.code = 'SIN_FILAS_BORRADAS';
+    throw e;
+  }
+  _invalidate(cacheKey);
+}
+
 // ─── Caché de lecturas en memoria ────────────────────────────
 // Colapsa el patrón "traer todo en cada navegación": cada getAll() se cachea por
 // _READ_TTL y los requests concurrentes a la misma tabla se deduplican (mata el
@@ -165,10 +185,7 @@ export const prospectos = {
     const { error } = await supabase.from('leads').update(leadToSupa(rest)).eq('id', id);
     _throw(error); _invalidate('leads');
   },
-  delete:   async (id)     => {
-    const { error } = await supabase.from('leads').delete().eq('id', id);
-    _throw(error); _invalidate('leads');
-  },
+  delete: async (id) => _deleteRow('leads', id),
 };
 
 // ─── DIAGNÓSTICOS ─────────────────────────────────────────────
@@ -192,10 +209,7 @@ export const diagnosticos = {
     const { error } = await supabase.from('diagnosticos').update(diagToSupa(rest)).eq('id', id);
     _throw(error); _invalidate('diagnosticos');
   },
-  delete:      async (id)  => {
-    const { error } = await supabase.from('diagnosticos').delete().eq('id', id);
-    _throw(error); _invalidate('diagnosticos');
-  },
+  delete: async (id) => _deleteRow('diagnosticos', id),
   byProspecto: async (pid) => {
     const { data, error } = await supabase.from('diagnosticos').select('*').eq('lead_id', pid).order('created_at', { ascending: false });
     _throw(error); return data.map(diagFromSupa);
@@ -249,10 +263,7 @@ export const citas = {
     }
     _throw(error); _invalidate('citas');
   },
-  delete:      async (id)  => {
-    const { error } = await supabase.from('citas').delete().eq('id', id);
-    _throw(error); _invalidate('citas');
-  },
+  delete: async (id) => _deleteRow('citas', id),
   byProspecto: async (pid) => {
     const { data, error } = await supabase.from('citas').select('*').eq('lead_id', pid).order('fecha', { ascending: true });
     _throw(error); return data.map(citaFromSupa);
@@ -333,10 +344,7 @@ export const propuestas = {
     const { error } = await supabase.from('propuestas').update(propToSupa(rest)).eq('id', id);
     _throw(error); _invalidate('propuestas');
   },
-  delete:      async (id)  => {
-    const { error } = await supabase.from('propuestas').delete().eq('id', id);
-    _throw(error); _invalidate('propuestas');
-  },
+  delete: async (id) => _deleteRow('propuestas', id),
   byProspecto: async (pid) => {
     const { data, error } = await supabase.from('propuestas').select('*').eq('lead_id', pid).order('created_at', { ascending: false });
     _throw(error); return data.map(propFromSupa);
@@ -368,10 +376,7 @@ export const clientes = {
     const { error } = await supabase.from('clientes').update(clienteToSupa(rest)).eq('id', id);
     _throw(error); _invalidate('clientes');
   },
-  delete: async (id) => {
-    const { error } = await supabase.from('clientes').delete().eq('id', id);
-    _throw(error); _invalidate('clientes');
-  },
+  delete: async (id) => _deleteRow('clientes', id),
 };
 
 // ─── LOGOS DE CLIENTE PARA DOCUMENTOS ─────────────────────────
@@ -418,8 +423,11 @@ export const docLogos = {
   remove: async (ref) => {
     const { col, val } = _logoRef(ref);
     if (!val) return;
-    const { error } = await supabase.from('doc_logos').delete().eq(col, val);
+    // Con .select(): si la RLS filtrara la fila, el DELETE volvería sin error y
+    // el selector mostraría "sin logo" mientras el documento lo sigue imprimiendo.
+    const { data, error } = await supabase.from('doc_logos').delete().eq(col, val).select('id');
     _throw(error);
+    if (!data || !data.length) throw new Error('No se pudo quitar el logo: la base no permitió borrarlo.');
   },
 };
 
@@ -437,10 +445,7 @@ export const autodiags = {
     const { data, error } = await supabase.from('autodiagnosticos').select('*').eq('lead_id', pid).order('created_at', { ascending: false });
     _throw(error); return data.map(autodiagFromSupa);
   },
-  delete: async (id) => {
-    const { error } = await supabase.from('autodiagnosticos').delete().eq('id', id);
-    _throw(error); _invalidate('autodiagnosticos');
-  },
+  delete: async (id) => _deleteRow('autodiagnosticos', id),
 };
 
 // ─── FACTURAS ────────────────────────────────────────────────
@@ -462,10 +467,7 @@ export const facturas = {
     const { error } = await supabase.from('facturas').update(facturaToSupa(rest)).eq('id', id);
     _throw(error); _invalidate('facturas');
   },
-  delete: async (id) => {
-    const { error } = await supabase.from('facturas').delete().eq('id', id);
-    _throw(error); _invalidate('facturas');
-  },
+  delete: async (id) => _deleteRow('facturas', id),
   byCliente: async (clienteId) => {
     const { data, error } = await supabase.from('facturas').select('*').eq('cliente_id', clienteId).order('created_at', { ascending: false });
     _throw(error); return data.map(facturaFromSupa);
@@ -497,12 +499,16 @@ export const presupuestos = {
     const { error } = await supabase.from('presupuestos').update(presupToSupa(rest)).eq('id', id);
     _throw(error); _invalidate('presupuestos');
   },
-  delete: async (id) => {
-    const { error } = await supabase.from('presupuestos').delete().eq('id', id);
-    _throw(error); _invalidate('presupuestos');
-  },
+  delete: async (id) => _deleteRow('presupuestos', id),
   byCliente: async (clienteId) => {
     const { data, error } = await supabase.from('presupuestos').select('*').eq('cliente_id', clienteId).order('created_at', { ascending: false });
+    _throw(error); return data.map(presupFromSupa);
+  },
+  // `presupuestos.propuesta_id` referencia a `propuestas` SIN on delete cascade:
+  // borrar una propuesta con presupuesto asociado revienta con 23503. Esto deja
+  // avisarlo antes, en vez de mostrar el error crudo de Postgres.
+  byPropuesta: async (propuestaId) => {
+    const { data, error } = await supabase.from('presupuestos').select('*').eq('propuesta_id', propuestaId);
     _throw(error); return data.map(presupFromSupa);
   },
 };
@@ -532,10 +538,7 @@ export const proyectos = {
     const { error } = await supabase.from('proyectos').update(proyectoToSupa(rest)).eq('id', id);
     _throw(error); _invalidate('proyectos');
   },
-  delete: async (id) => {
-    const { error } = await supabase.from('proyectos').delete().eq('id', id);
-    _throw(error); _invalidate('proyectos');
-  },
+  delete: async (id) => _deleteRow('proyectos', id),
   byCliente: async (clienteId) => {
     const { data, error } = await supabase.from('proyectos').select('*').eq('cliente_id', clienteId).order('created_at', { ascending: false });
     _throw(error); return data.map(proyectoFromSupa);
@@ -564,10 +567,7 @@ export const horas = {
     const { error } = await supabase.from('horas').update(horaToSupa(rest)).eq('id', id);
     _throw(error); _invalidate('horas');
   },
-  delete: async (id) => {
-    const { error } = await supabase.from('horas').delete().eq('id', id);
-    _throw(error); _invalidate('horas');
-  },
+  delete: async (id) => _deleteRow('horas', id),
 };
 
 // ─── ERP · GASTOS (cuentas por pagar · CONFIDENCIAL, RLS finanzas) ──
@@ -594,10 +594,7 @@ export const gastos = {
     const { error } = await supabase.from('gastos').update(gastoToSupa(rest)).eq('id', id);
     _throw(error); _invalidate('gastos');
   },
-  delete: async (id) => {
-    const { error } = await supabase.from('gastos').delete().eq('id', id);
-    _throw(error); _invalidate('gastos');
-  },
+  delete: async (id) => _deleteRow('gastos', id),
 };
 
 // ─── ERP · MOVIMIENTOS (caja real · CONFIDENCIAL, RLS finanzas) ──
@@ -616,10 +613,7 @@ export const movimientos = {
     const { error } = await supabase.from('movimientos').update(movimientoToSupa(rest)).eq('id', id);
     _throw(error); _invalidate('movimientos');
   },
-  delete: async (id) => {
-    const { error } = await supabase.from('movimientos').delete().eq('id', id);
-    _throw(error); _invalidate('movimientos');
-  },
+  delete: async (id) => _deleteRow('movimientos', id),
 };
 
 // ─── ERP · PARÁMETROS TRIBUTARIOS (UF/UTM/topes · RLS finanzas) ──
@@ -664,10 +658,7 @@ export const proveedores = {
     const { error } = await supabase.from('proveedores').update(proveedorToSupa(rest)).eq('id', id);
     _throw(error); _invalidate('proveedores');
   },
-  delete: async (id) => {
-    const { error } = await supabase.from('proveedores').delete().eq('id', id);
-    _throw(error); _invalidate('proveedores');
-  },
+  delete: async (id) => _deleteRow('proveedores', id),
 };
 
 // ─── ERP · ÓRDENES DE COMPRA (CONFIDENCIAL, RLS finanzas) ────
@@ -690,10 +681,7 @@ export const ordenesCompra = {
     const { error } = await supabase.from('ordenes_compra').update(ocToSupa(rest)).eq('id', id);
     _throw(error); _invalidate('ordenes_compra');
   },
-  delete: async (id) => {
-    const { error } = await supabase.from('ordenes_compra').delete().eq('id', id);
-    _throw(error); _invalidate('ordenes_compra');
-  },
+  delete: async (id) => _deleteRow('ordenes_compra', id),
 };
 
 // ─── ERP · ACTIVOS / LICENCIAS (CONFIDENCIAL, RLS finanzas) ──
@@ -712,10 +700,7 @@ export const activosLicencias = {
     const { error } = await supabase.from('activos_licencias').update(activoToSupa(rest)).eq('id', id);
     _throw(error); _invalidate('activos_licencias');
   },
-  delete: async (id) => {
-    const { error } = await supabase.from('activos_licencias').delete().eq('id', id);
-    _throw(error); _invalidate('activos_licencias');
-  },
+  delete: async (id) => _deleteRow('activos_licencias', id),
 };
 
 // ─── ERP · NÓMINA (F4 · CONFIDENCIAL — schema `erp` NO expuesto, solo por RPC) ──
@@ -1150,10 +1135,7 @@ export const oportunidades = {
     _throw(error); _invalidate('op_oportunidades');
   },
 
-  delete: async (id) => {
-    const { error } = await supabase.from('op_oportunidades').delete().eq('id', id);
-    _throw(error); _invalidate('op_oportunidades');
-  },
+  delete: async (id) => _deleteRow('op_oportunidades', id),
 
   /** Lista de instituciones ya cargadas (para el filtro y para "institución nueva"). */
   instituciones: async () => {
@@ -1250,10 +1232,7 @@ export const opCostoItems = {
     const { error } = await supabase.from('op_costo_items').update(opItemToSupa(rest)).eq('id', id);
     _throw(error);
   },
-  delete: async (id) => {
-    const { error } = await supabase.from('op_costo_items').delete().eq('id', id);
-    _throw(error);
-  },
+  delete: async (id) => _deleteRow('op_costo_items', id),
 };
 
 // Documentos del paquete de oferta (checklist).
@@ -1311,10 +1290,7 @@ export const opPlantillas = {
     const { error } = await supabase.from('op_plantillas').update(opPlantillaToSupa(rest)).eq('id', id);
     _throw(error); _invalidate('op_plantillas');
   },
-  delete: async (id) => {
-    const { error } = await supabase.from('op_plantillas').delete().eq('id', id);
-    _throw(error); _invalidate('op_plantillas');
-  },
+  delete: async (id) => _deleteRow('op_plantillas', id),
 };
 
 // Documentos del proceso (bases y anexos) → bucket privado 'oportunidades'.
@@ -1497,10 +1473,7 @@ export const dctEvaluaciones = {
     _throw(error); _invalidate('dct_evaluaciones');
   },
 
-  delete: async (id) => {
-    const { error } = await supabase.from('dct_evaluaciones').delete().eq('id', id);
-    _throw(error); _invalidate('dct_evaluaciones');
-  },
+  delete: async (id) => _deleteRow('dct_evaluaciones', id),
 
   /** Industrias ya cargadas (para el filtro del historial). */
   industrias: async () => {

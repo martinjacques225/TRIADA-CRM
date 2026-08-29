@@ -287,9 +287,14 @@ async function init() {
     },
     deleteDiagnostico: async (id) => {
       if (!confirm('¿Eliminar este diagnóstico y su informe?')) return;
-      await diagnosticos.delete(id);
-      toast('Diagnóstico eliminado', 'info');
-      await refreshView();
+      try {
+        await diagnosticos.delete(id);
+        toast('Diagnóstico eliminado', 'info');
+        await refreshView();
+      } catch (err) {
+        console.error('Error al eliminar diagnóstico:', err);
+        toast(err?.message || 'No se pudo eliminar el diagnóstico', 'error', 6000);
+      }
     },
     callProspecto: async (id) => {
       const p = await prospectos.get(id);

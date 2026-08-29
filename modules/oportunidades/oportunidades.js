@@ -1170,7 +1170,14 @@ async function _guardarConfig() {
 // ── Borrado genérico con confirmación ────────────────────────────────────────
 async function _borrar(que, fn) {
   if (!confirm(`¿Eliminar este ${que}?`)) return;
-  await fn();
-  toast(`${que.charAt(0).toUpperCase()}${que.slice(1)} eliminado`, 'info');
-  await render();
+  // Sin este try, un rechazo de la base moría en la consola como promesa no
+  // atendida: el usuario apretaba Eliminar y no pasaba absolutamente nada.
+  try {
+    await fn();
+    toast(`${que.charAt(0).toUpperCase()}${que.slice(1)} eliminado`, 'info');
+    await render();
+  } catch (err) {
+    console.error(`Error al eliminar ${que}:`, err);
+    toast(err?.message || `No se pudo eliminar el ${que}`, 'error', 6000);
+  }
 }

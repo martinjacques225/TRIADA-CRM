@@ -670,6 +670,44 @@ Columnas del calendario agregadas a `citas` y verificadas en vivo. Persistencia 
 
 ## 7. Bitácora de sesiones (más reciente arriba)
 
+### 2026-08-28 — 🐛 "Le doy Eliminar y no pasa nada": eran DOS bugs, no uno
+
+- **Lo que reportó el dueño:** *"no puedo eliminar documentos creados, les pongo eliminar y no pasa nada"*.
+
+- **Bug 1 — el borrado que MIENTE.** Las 19 funciones `delete` de `js/db.js` hacían
+  `const { error } = await supabase.from(t).delete().eq('id', id)`. **PostgREST responde 204 SIN error
+  cuando la RLS filtra la fila**: el CRM veía `error = null`, mostraba "eliminado", refrescaba… y el
+  registro seguía ahí. **Verificado contra la API real**, no deducido:
+
+  | | Respuesta |
+  |---|---|
+  | `DELETE /doc_logos?id=eq.<uuid>` (como estaba) | **HTTP 204, 0 bytes, sin error** |
+  | `DELETE …&select=id` con `Prefer: return=representation` (como quedó) | **HTTP 200 con `[]`** |
+
+  Arreglo: helper `_deleteRow(tabla, id)` que pide `.select('id')` y **lanza si no volvió ninguna fila**.
+  Aplicado a las 19. Quedaron fuera a propósito el borrado por RPC de remuneraciones, la fábrica
+  genérica y los dos de Storage, que tienen lógica extra.
+
+  **A quién le pegaba de verdad:** la policy `facturas_del` de `multitenancy.sql` exige `is_admin()`.
+  Para un consultor, borrar una factura no borraba nada **y el CRM felicitaba igual**.
+
+- **Bug 2 — el error que se comía la consola.** `deletePropuesta`, `deleteCita`, `deleteFactura`,
+  `deleteDiagnostico` (app.js) y `_borrar()` de Oportunidades —que comparten **5 botones**— llamaban al
+  borrado **sin `try/catch`**. Un rechazo real de la base moría como promesa no atendida: sin toast, sin
+  refresco, sin nada. Literalmente "no pasa nada". Los cinco quedaron protegidos.
+
+- **🔗 Y la causa de fondo del caso concreto: `presupuestos` bloquea a sus tres padres.**
+  `presupuestos.cliente_id`, `.lead_id` y `.propuesta_id` referencian sin `on delete cascade`, así que
+  borrar la propuesta, el cliente o el lead rebotaba con **23503**. Ahora:
+  - `deletePropuesta` avisa **con los correlativos a la vista** antes de intentarlo (nuevo `presupuestos.byPropuesta`).
+  - `deleteCliente` chequea presupuestos además de facturas.
+  - `deleteProspecto` **borra los presupuestos primero** — nunca lo hacía, y eran justamente los que
+    trababan el resto de la cascada manual.
+
+- **Verificado:** 384 tests pasan, los 4 archivos parsean, `npm run stamp` al día, y el
+  comportamiento de PostgREST comprobado contra el proyecto real con la clave pública.
+
+
 ### 2026-08-28 — 📄 Una sola plantilla para TODOS los documentos + logo del cliente
 
 - **Lo que pidió el dueño:** *"trabaja en el crm para que todos los documentos salgan así"* — así = la cotización **COT-2026-08-28-OT** (Olivos de Talca), que se había armado a mano fuera del CRM tras dos vueltas de diseño. Y: *"si necesita el logo del cliente que lo pida, como que haya una caja… que pida el logo en .png o jpg"*.

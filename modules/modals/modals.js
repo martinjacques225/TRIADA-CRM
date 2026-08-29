@@ -414,6 +414,13 @@ export async function deleteCliente(id) {
     toast(`No se puede eliminar: el cliente tiene ${facts.length} factura(s). Elimínalas primero.`, 'error');
     return;
   }
+  // `presupuestos.cliente_id` también lo referencia sin cascade.
+  let presup = [];
+  try { presup = await presupuestos.byCliente(id); } catch (_) { /* tabla ausente: seguir */ }
+  if (presup.length) {
+    toast(`No se puede eliminar: el cliente tiene ${presup.length} presupuesto(s). Elimínalos primero.`, 'error', 6000);
+    return;
+  }
   if (!confirm('¿Eliminar esta ficha de cliente?')) return;
   try {
     await clientes.delete(id);
@@ -471,6 +478,14 @@ export async function deleteProspecto(id) {
       const facts = await facturas.byCliente(c.id);
       for (const f of facts) await facturas.delete(f.id);
     }
+    // Los presupuestos referencian lead, cliente Y propuesta: si no se van
+    // primero, cualquiera de los tres borrados de abajo rebota con 23503.
+    try {
+      const vistos = new Set();
+      for (const c of clis) for (const x of await presupuestos.byCliente(c.id)) vistos.add(x.id);
+      for (const p of props) for (const x of await presupuestos.byPropuesta(p.id)) vistos.add(x.id);
+      for (const pid of vistos) await presupuestos.delete(pid);
+    } catch (_) { /* tabla de presupuestos ausente: seguir */ }
     for (const x of props) await propuestas.delete(x.id);
     for (const x of diags) await diagnosticos.delete(x.id);
     for (const x of cits)  await citas.delete(x.id);
@@ -487,21 +502,50 @@ export async function deleteProspecto(id) {
 
 export async function deleteCita(id) {
   if (!confirm('¿Eliminar esta cita?')) return;
-  await citas.delete(id);
-  toast('Cita eliminada', 'info');
-  window._app?.refreshView?.();
+  try {
+    await citas.delete(id);
+    toast('Cita eliminada', 'info');
+    window._app?.refreshView?.();
+  } catch (err) {
+    console.error('Error al eliminar cita:', err);
+    toast(err?.message || 'No se pudo eliminar la cita', 'error', 6000);
+  }
 }
 
 export async function deletePropuesta(id) {
+  // `presupuestos.propuesta_id` la referencia SIN on delete cascade: si hay un
+  // presupuesto colgando, Postgres rebota con 23503. Vale más avisar con el
+  // correlativo a la vista que mostrar el error crudo.
+  let presup = [];
+  try { presup = await presupuestos.byPropuesta(id); } catch (_) { /* tabla ausente: seguir */ }
+  if (presup.length) {
+    toast(`No se puede eliminar: tiene ${presup.length} presupuesto(s) asociado(s) (${presup.map(p => p.correlativo || '—').join(', ')}). Elimínalos primero.`, 'error', 7000);
+    return;
+  }
   if (!confirm('¿Eliminar esta propuesta?')) return;
-  await propuestas.delete(id);
-  toast('Propuesta eliminada', 'info');
-  window._app?.refreshView?.();
+  try {
+    await propuestas.delete(id);
+    toast('Propuesta eliminada', 'info');
+    window._app?.refreshView?.();
+  } catch (err) {
+    console.error('Error al eliminar propuesta:', err);
+    toast(err?.message || 'No se pudo eliminar la propuesta', 'error', 6000);
+  }
 }
 
 export async function deleteFactura(id) {
   if (!confirm('¿Eliminar esta factura?')) return;
-  await facturas.delete(id);
-  toast('Factura eliminada', 'info');
-  window._app?.refreshView?.();
+  try {
+    await facturas.delete(id);
+    toast('Factura eliminada', 'info');
+    window._app?.refreshView?.();
+  } catch (err) {
+    console.error('Error al eliminar factura:', err);
+    // La policy `facturas_del` de multitenancy.sql exige is_admin(): para un
+    // consultor el DELETE no borra nada y vuelve sin error. Vale la pena
+    // nombrarlo, porque el mensaje genérico no explicaría por qué.
+    toast(err?.code === 'SIN_FILAS_BORRADAS'
+      ? 'Eliminar facturas está reservado a administradores. Pídeselo a un admin.'
+      : (err?.message || 'No se pudo eliminar la factura'), 'error', 7000);
+  }
 }
