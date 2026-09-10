@@ -670,6 +670,33 @@ Columnas del calendario agregadas a `citas` y verificadas en vivo. Persistencia 
 
 ## 7. Bitácora de sesiones (más reciente arriba)
 
+### 2026-09-09 — 🚨 El editor de Equipo listaba (y podía editar) a gente de OTRAS empresas
+
+**El síntoma.** Martín vio en Configuración → Equipo un correo que no reconocía. Resultó ser el
+dueño de **Santinos Barbers**, una empresa cliente de la Suite a la que él mismo lo había dado de
+alta. No se había colado nadie: la lista no filtraba.
+
+**La causa.** `profiles.getAll()` y `profiles.listAll()` (`js/db.js`) pedían `profiles` **sin
+`.eq('org_id')`**, confiando en que la RLS recortara. Pero la política es
+`id = auth.uid() or comparte_org(id) or is_superadmin()`, y esa última rama no es un filtro: es un
+pase. Para cualquiera del equipo de Tríada —que es superadmin de la Suite— la consulta devolvía los
+perfiles de **todas** las empresas.
+
+**Lo que era peor que verlos.** `profiles.update()` acepta cualquier `id` y `guard_profile_privesc`
+lo deja pasar por ser admin. Un clic en la casilla «Activo» de la fila equivocada **desactivaba la
+cuenta de un cliente**, y el editor mostraba esas filas como si fueran de la casa.
+
+**El arreglo.** Las dos consultas filtran por `_getOrgId()`. `getAll()` alimenta los selectores de
+participantes y los avatares, así que también dejaban de aparecer ahí personas ajenas.
+
+**La lección, que vale para todo el CRM:** una consulta que no filtra y descansa en una política con
+excepción, para el que tiene la excepción no filtra nada. La misma familia de defecto se arregló el
+mismo día en la Suite (`equipo()`, `invitaciones()`, `cargos()` y cuatro escrituras).
+
+**Verificado:** `npm test` → 384 en verde. ⚠️ `js/db.js` se importa **sin sello**, así que en vivo
+hace falta un `Ctrl+Shift+R` (o esperar la caché de GitHub Pages).
+
+
 ### 2026-08-28 — 🐛 "Le doy Eliminar y no pasa nada": eran DOS bugs, no uno
 
 - **Lo que reportó el dueño:** *"no puedo eliminar documentos creados, les pongo eliminar y no pasa nada"*.

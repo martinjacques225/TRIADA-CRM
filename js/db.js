@@ -285,17 +285,32 @@ function _profileFromRow(p) {
   };
 }
 export const profiles = {
+  // 🚨 EL `.eq('org_id')` DE LAS DOS DE ABAJO NO SOBRA.
+  // La RLS de `profiles` es `id = auth.uid() or comparte_org(id) or
+  // is_superadmin()`. Esa última rama convierte el filtro en un pase: a alguien
+  // del equipo de Tríada estas consultas le devolvían los perfiles de TODAS las
+  // empresas de la Suite —clientes incluidos—, y el editor de Equipo los
+  // mostraba como si fueran de la casa. El 9-sep-2026 apareció ahí el dueño de
+  // una barbería cliente. No se había colado nadie: la lista no filtraba.
+  // Peor que verlos era poder EDITARLOS: `update` acepta cualquier id y
+  // `guard_profile_privesc` lo deja pasar por ser admin, así que un clic en
+  // «Activo» de la fila equivocada desactivaba la cuenta de un cliente.
+
   // Equipo ACTIVO (pickers de participantes, avatares). Cacheado.
   getAll: async () => _cachedAll('profiles', async () => {
+    const orgId = await _getOrgId();
     const { data, error } = await supabase.from('profiles')
-      .select('id, nombre, email, role, area, activo, cargo, erp_role').order('nombre');
+      .select('id, nombre, email, role, area, activo, cargo, erp_role')
+      .eq('org_id', orgId).order('nombre');
     _throw(error);
     return data.filter(p => p.activo !== false).map(_profileFromRow);
   }),
   // Todo el equipo (incluye inactivos) para el editor de Configuración (admin).
   listAll: async () => {
+    const orgId = await _getOrgId();
     const { data, error } = await supabase.from('profiles')
-      .select('id, nombre, email, role, area, activo, cargo, erp_role').order('nombre');
+      .select('id, nombre, email, role, area, activo, cargo, erp_role')
+      .eq('org_id', orgId).order('nombre');
     _throw(error);
     return data.map(p => ({ ..._profileFromRow(p), activo: p.activo !== false }));
   },
